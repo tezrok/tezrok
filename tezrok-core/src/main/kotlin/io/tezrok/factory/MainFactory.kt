@@ -1,6 +1,6 @@
 package io.tezrok.factory
 
-import io.tezrok.TezrokException
+import io.tezrok.error.TezrokException
 import io.tezrok.generator.MainAppGenerator
 
 /**

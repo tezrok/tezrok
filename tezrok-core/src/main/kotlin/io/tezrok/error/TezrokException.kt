@@ -1,4 +1,4 @@
-package io.tezrok
+package io.tezrok.error
 
 import java.lang.RuntimeException
 
