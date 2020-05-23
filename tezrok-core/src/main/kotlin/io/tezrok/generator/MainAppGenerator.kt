@@ -1,5 +1,6 @@
 package io.tezrok.generator
 
+import io.tezrok.api.Generator
 import org.slf4j.LoggerFactory
 
 /**
