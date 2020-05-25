@@ -14,6 +14,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <logback.version>1.2.3</logback.version>
         <kotlin.version>1.3.72</kotlin.version>
+        <commons-lang3.version>3.7</commons-lang3.version>
+        <verlocity.version>1.7</verlocity.version>
     </properties>
 
     <dependencies>
@@ -21,6 +23,21 @@
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib-jdk8</artifactId>
             <version>${kotlin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons-lang3.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.velocity</groupId>
+            <artifactId>velocity</artifactId>
+            <version>${verlocity.version}</version>
         </dependency>
     </dependencies>
 
