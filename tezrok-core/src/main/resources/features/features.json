@@ -1,0 +1,31 @@
+{
+  "features": [
+    {
+      "name": "Core",
+      "description": "Minimal structure of executable application with MainApp class and main() method",
+      "generator": "io.tezrok.core.generator.CoreGenerator",
+      "dependsOn": [
+        {
+          "name": "Maven",
+          "mandatory": false
+        }
+      ]
+    },
+    {
+      "name": "Maven",
+      "description": "Adding maven supports",
+      "generator": "io.tezrok.core.generator.MavenGenerator"
+    },
+    {
+      "name": "HelloWorld",
+      "description": "Implements world's famous program",
+      "generator": "io.tezrok.core.generator.HelloWorldGenerator",
+      "dependsOn": [
+        {
+          "name": "Core",
+          "mandatory": true
+        }
+      ]
+    }
+  ]
+}

@@ -12,4 +12,6 @@ public interface GeneratorContext {
     Type ofType(Class clazz);
 
     ModuleNode getModule(Type type);
+
+    <T> T getInstance(Class<T> clazz);
 }
