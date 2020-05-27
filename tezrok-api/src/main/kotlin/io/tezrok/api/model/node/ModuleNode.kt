@@ -1,6 +1,9 @@
 package io.tezrok.api.model.node
 
-class ModuleNode(name: String, description: String = "") : Node(name, KIND, description) {
+class ModuleNode(name: String,
+                 val packagePath: String,
+                 val version: String,
+                 description: String = "") : Node(name, KIND, description) {
     /**
      * Used features in the module
      */

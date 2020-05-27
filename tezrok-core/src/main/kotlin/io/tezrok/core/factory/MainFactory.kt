@@ -2,21 +2,27 @@ package io.tezrok.core.factory
 
 import io.tezrok.api.Generator
 import io.tezrok.api.model.node.ProjectNode
+import io.tezrok.api.visitor.MavenVisitor
 import io.tezrok.core.feature.FeatureManager
-import io.tezrok.error.TezrokException
+import io.tezrok.core.error.TezrokException
 import io.tezrok.core.generator.CoreGenerator
 import io.tezrok.core.generator.HelloWorldGenerator
 import io.tezrok.core.generator.MavenGenerator
 import io.tezrok.core.generator.StartUpGenerator
+import java.io.File
 import java.lang.IllegalStateException
 import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Implementation of Factory
  */
-class MainFactory(private val project: ProjectNode) : Factory {
-    private val context = MainContext(project, this)
+class MainFactory(private val project: ProjectNode,
+                  private val targetDir: File) : Factory {
+    private val context = MainContext(project, targetDir, this)
     private val created = ConcurrentHashMap<Class<*>, Any>()
+    private val mavenVisitors = mutableListOf<MavenVisitor>()
+
+    override fun getMavenVisitors(): List<MavenVisitor> = mavenVisitors
 
     override fun <T> getInstance(clazz: Class<T>): T {
         val obj = created.computeIfAbsent(clazz) {
@@ -27,6 +33,10 @@ class MainFactory(private val project: ProjectNode) : Factory {
                 HelloWorldGenerator::class.java -> HelloWorldGenerator(context)
                 MavenGenerator::class.java -> MavenGenerator(context)
                 else -> throw TezrokException("Unsupported type: $clazz")
+            }.also {
+                if (it is MavenVisitor) {
+                    mavenVisitors.add(it)
+                }
             }
         }
 
@@ -44,8 +54,8 @@ class MainFactory(private val project: ProjectNode) : Factory {
     }
 
     companion object {
-        fun create(project: ProjectNode): MainFactory {
-            return MainFactory(project)
+        fun create(project: ProjectNode, targetDir: File): MainFactory {
+            return MainFactory(project, targetDir)
         }
     }
 }
