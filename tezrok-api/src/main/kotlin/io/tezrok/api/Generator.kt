@@ -7,5 +7,5 @@ package io.tezrok.api
  * @since 1.0
  */
 interface Generator {
-    fun generate()
+    fun execute(context: ExecuteContext)
 }

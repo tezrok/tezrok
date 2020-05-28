@@ -18,6 +18,6 @@ class StartUpGeneratorTest {
         val mainFactory = MainFactory.create(project, targetDir)
         val generator = mainFactory.getInstance(StartUpGenerator::class.java)
 
-        generator.generate()
+        generator.execute(mainFactory.context)
     }
 }

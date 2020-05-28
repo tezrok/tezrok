@@ -1,13 +1,13 @@
 package io.tezrok.core.builder
 
-import io.tezrok.api.GeneratorContext
+import io.tezrok.api.ExecuteContext
 import io.tezrok.api.model.maven.Pom
 import io.tezrok.api.util.VelocityUtil
 import org.apache.commons.lang3.StringUtils
 import org.apache.velocity.Template
 import org.apache.velocity.VelocityContext
 
-class PomBuilder(private val pom: Pom, context: GeneratorContext) : BaseBuilder(context) {
+class PomBuilder(private val pom: Pom, context: ExecuteContext) : BaseBuilder(context) {
     override fun onBuild(velContext: VelocityContext) {
         velContext.put("version", pom.version)
         velContext.put("type", pom.type)

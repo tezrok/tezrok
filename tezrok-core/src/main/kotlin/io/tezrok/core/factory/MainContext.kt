@@ -5,7 +5,6 @@ import io.tezrok.api.builder.Builder
 import io.tezrok.api.builder.type.Type
 import io.tezrok.api.model.node.ModuleNode
 import io.tezrok.api.model.node.ProjectNode
-import io.tezrok.api.visitor.MavenVisitor
 import io.tezrok.core.generator.toMavenVersion
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -35,8 +34,6 @@ class MainContext(private val project: ProjectNode,
         // TODO: make selectable module
         return project.modules().first()
     }
-
-    override fun getMavenVisitors(): List<MavenVisitor> = factory.getMavenVisitors()
 
     override fun render(builder: Builder) {
         val targetDir = File(moduleRootDir, builder.path.replace('.', '/'))

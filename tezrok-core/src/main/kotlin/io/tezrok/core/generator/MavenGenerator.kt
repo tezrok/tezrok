@@ -1,37 +1,46 @@
 package io.tezrok.core.generator
 
+import io.tezrok.api.ExecuteContext
 import io.tezrok.api.Generator
-import io.tezrok.api.GeneratorContext
+import io.tezrok.api.Phase
 import io.tezrok.api.model.maven.Pom
 import io.tezrok.api.model.maven.Version
 import io.tezrok.api.model.node.ModuleNode
+import io.tezrok.api.visitor.MavenVisitor
+import io.tezrok.core.MavenVisitorsProvider
 import io.tezrok.core.builder.PomBuilder
 import io.tezrok.core.error.TezrokException
 import java.lang.Exception
 
-class MavenGenerator(private val context: GeneratorContext) : Generator {
-    private var pom: Pom? = null
+class MavenGenerator : Generator {
+    private val poms = mutableMapOf<ModuleNode, Pom>()
 
-    override fun generate() {
-        val module = context.module
+    override fun execute(context: ExecuteContext) {
+        val module = context.getModule()
 
-        if (pom == null) {
-            pom = Pom(module.toMavenVersion(),
+        if (context.getPhase() == Phase.Init) {
+            poms.remove(context.getModule())
+        }
+
+        val pom = poms.computeIfAbsent(context.getModule()) {
+            Pom(module.toMavenVersion(),
                     type = "",
                     properties = mutableListOf(),
                     dependencies = mutableListOf()
             )
         }
 
-        populatePom(pom!!)
+        populatePom(pom, context)
 
-        val builder = PomBuilder(pom!!, context)
+        if (context.getPhase() == Phase.Generate) {
+            val builder = PomBuilder(pom, context)
 
-        context.render(builder)
+            context.render(builder)
+        }
     }
 
-    private fun populatePom(pom: Pom) {
-        context.mavenVisitors.forEach { visitor ->
+    private fun populatePom(pom: Pom, context: ExecuteContext) {
+        context.getMavenRepositories().forEach { visitor ->
             try {
                 visitor.visit(pom)
             } catch (e: Exception) {
@@ -45,4 +54,8 @@ fun ModuleNode.toMavenVersion(): Version {
     return Version(groupId = packagePath,
             artifactId = name.toLowerCase().replace(' ', '-'),
             version = version)
+}
+
+fun ExecuteContext.getMavenRepositories(): List<MavenVisitor> {
+    return getInstance(MavenVisitorsProvider::class.java).mavenVisitors
 }

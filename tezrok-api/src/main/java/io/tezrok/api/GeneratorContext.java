@@ -4,9 +4,6 @@ import io.tezrok.api.builder.Builder;
 import io.tezrok.api.builder.type.Type;
 import io.tezrok.api.model.node.ModuleNode;
 import io.tezrok.api.model.node.ProjectNode;
-import io.tezrok.api.visitor.MavenVisitor;
-
-import java.util.List;
 
 public interface GeneratorContext {
     boolean isGenerateTime();
@@ -20,8 +17,6 @@ public interface GeneratorContext {
     ModuleNode getModule(Type type);
 
     <T> T getInstance(Class<T> clazz);
-
-    List<MavenVisitor> getMavenVisitors();
 
     void render(Builder builder);
 }

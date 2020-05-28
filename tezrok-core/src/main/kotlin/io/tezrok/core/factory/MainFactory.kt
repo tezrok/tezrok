@@ -3,6 +3,7 @@ package io.tezrok.core.factory
 import io.tezrok.api.Generator
 import io.tezrok.api.model.node.ProjectNode
 import io.tezrok.api.visitor.MavenVisitor
+import io.tezrok.core.MavenVisitorsProvider
 import io.tezrok.core.feature.FeatureManager
 import io.tezrok.core.error.TezrokException
 import io.tezrok.core.generator.CoreGenerator
@@ -18,20 +19,19 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class MainFactory(private val project: ProjectNode,
                   private val targetDir: File) : Factory {
-    private val context = MainContext(project, targetDir, this)
+    val context = MainExecuteContext(project, targetDir, this)
     private val created = ConcurrentHashMap<Class<*>, Any>()
     private val mavenVisitors = mutableListOf<MavenVisitor>()
-
-    override fun getMavenVisitors(): List<MavenVisitor> = mavenVisitors
 
     override fun <T> getInstance(clazz: Class<T>): T {
         val obj = created.computeIfAbsent(clazz) {
             when (clazz) {
-                CoreGenerator::class.java -> CoreGenerator(context)
-                StartUpGenerator::class.java -> StartUpGenerator(context)
+                CoreGenerator::class.java -> CoreGenerator()
+                StartUpGenerator::class.java -> StartUpGenerator()
                 FeatureManager::class.java -> FeatureManager(this)
-                HelloWorldGenerator::class.java -> HelloWorldGenerator(context)
-                MavenGenerator::class.java -> MavenGenerator(context)
+                HelloWorldGenerator::class.java -> HelloWorldGenerator()
+                MavenGenerator::class.java -> MavenGenerator()
+                MavenVisitorsProvider::class.java -> MavenVisitorsProvider(mavenVisitors)
                 else -> throw TezrokException("Unsupported type: $clazz")
             }.also {
                 if (it is MavenVisitor) {
