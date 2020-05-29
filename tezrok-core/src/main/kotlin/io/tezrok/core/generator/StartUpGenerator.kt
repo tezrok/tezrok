@@ -4,8 +4,11 @@ import io.tezrok.api.ExecuteContext
 import io.tezrok.api.Generator
 import io.tezrok.api.Phase
 import io.tezrok.api.builder.Builder
+import io.tezrok.api.builder.type.NamedType
+import io.tezrok.api.builder.type.Type
 import io.tezrok.api.model.node.ModuleNode
 import io.tezrok.api.model.node.ProjectNode
+import io.tezrok.core.factory.Factory
 import io.tezrok.core.factory.MainExecuteContext
 import io.tezrok.core.feature.FeatureManager
 import io.tezrok.core.feature.FeatureTree
@@ -16,7 +19,7 @@ import java.io.FileWriter
 /**
  * Entry point generator. Create and call all related generators
  */
-class StartUpGenerator : Generator {
+class StartUpGenerator(private val factory: Factory) : Generator {
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun execute(context: ExecuteContext) {
@@ -41,7 +44,8 @@ class StartUpGenerator : Generator {
             }
             val currContext = SelectedContext(selectedPhase = phase,
                     selectedModule = module,
-                    parent = context)
+                    parent = context,
+                    factory = factory)
 
             trees.forEach { runGenerator(it, currContext) }
             log.debug("------End phase: {}, module: {}--------", phase, module.name)
@@ -53,47 +57,7 @@ class StartUpGenerator : Generator {
             tree.dependsOn.forEach { runGenerator(it, context) }
         }
 
-        log.debug("Call {}", tree.generator)
+        log.debug("Call {}", tree.generator::class.java.name)
         tree.generator.execute(context)
-    }
-
-    private class SelectedContext(val selectedPhase: Phase,
-                                  val selectedModule: ModuleNode,
-                                  val parent: ExecuteContext) : ExecuteContext {
-        private val log = LoggerFactory.getLogger(javaClass)
-
-        override fun getPhase(): Phase = selectedPhase
-
-        override fun getModule(): ModuleNode = selectedModule
-
-        override fun <T> getInstance(clazz: Class<T>): T = parent.getInstance(clazz)
-
-        override fun getProject(): ProjectNode = parent.getProject()
-
-        override fun isGenerateTime(): Boolean = parent.isGenerateTime()
-
-        override fun render(builder: Builder) {
-            if (getPhase() != Phase.Generate) {
-                return
-            }
-
-            parent as MainExecuteContext
-            val moduleRootDir = File(parent.getTargetDir(), getModule().toMavenVersion().artifactId)
-            val targetDir = File(moduleRootDir, builder.path.replace('.', '/'))
-            val targetFile = File(targetDir, builder.fileName)
-
-            if (!targetDir.exists()) {
-                targetDir.mkdirs()
-            }
-
-            if (!targetFile.exists()) {
-                log.debug("Generating {}", targetFile)
-                val fw = FileWriter(targetFile)
-                builder.build(fw)
-                fw.close()
-            } else {
-                log.warn("Skip generating {}, already exists", targetFile)
-            }
-        }
     }
 }

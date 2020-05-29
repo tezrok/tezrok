@@ -6,4 +6,7 @@ package io.tezrok.api.builder.expression;
 public abstract class JavaExpression {
     public final static JavaExpression NEWLINE = new JavaExpression() {
     };
+
+    public final static JavaExpression EMPTY = new JavaExpression() {
+    };
 }

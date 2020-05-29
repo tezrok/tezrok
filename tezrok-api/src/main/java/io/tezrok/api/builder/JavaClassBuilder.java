@@ -1,15 +1,12 @@
 package io.tezrok.api.builder;
 
-import io.tezrok.api.GeneratorContext;
+import io.tezrok.api.ExecuteContext;
 import io.tezrok.api.builder.expression.FieldAssignExpression;
 import io.tezrok.api.builder.expression.ReturnExp;
 import io.tezrok.api.builder.type.PrimitiveType;
 import io.tezrok.api.builder.type.Type;
-import io.tezrok.api.model.node.ModuleNode;
-import io.tezrok.api.util.VelocityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
-import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,11 +16,10 @@ import java.util.*;
 
 import static java.util.stream.Collectors.toList;
 
-public class JavaClassBuilder extends BaseBuilder implements Annotationable<JavaClassBuilder> {
-    protected final Logger log = LoggerFactory.getLogger(this.getClass());
+public abstract class JavaClassBuilder extends VelocityBuilder implements Annotationable<JavaClassBuilder> {
+    protected final Logger log = LoggerFactory.getLogger(getClass());
     private static final String MAIN_PATH = "src/main/java/";
 
-    private static Template template;
     private final Type type;
     private final JMod mod;
     private final Set<JavaField> fields = new LinkedHashSet<>();
@@ -38,23 +34,11 @@ public class JavaClassBuilder extends BaseBuilder implements Annotationable<Java
     private boolean customCode = false;
     private final AnnotationableImpl<JavaClassBuilder> annotationable;
 
-    static {
-        template = VelocityUtil.getTemplate("templates/javaClass.vm");
-    }
-
-    protected JavaClassBuilder(Type type, int mod, ModuleNode module, final GeneratorContext context) {
-        super(module, context);
+    protected JavaClassBuilder(Type type, int mod, final ExecuteContext context) {
+        super(context);
         this.type = Validate.notNull(type, "type");
         this.mod = JMod.valueOf(mod);
         annotationable = new AnnotationableImpl<>(this);
-    }
-
-    public static JavaClassBuilder create(Type type, int mod, ModuleNode module, final GeneratorContext context) {
-        return new JavaClassBuilder(type, mod, module, context);
-    }
-
-    public static JavaClassBuilder create(Type type, ModuleNode module, final GeneratorContext context) {
-        return create(type, JMod.EMPTY, module, context);
     }
 
     @Override
@@ -86,11 +70,6 @@ public class JavaClassBuilder extends BaseBuilder implements Annotationable<Java
 
     private String getKind() {
         return mod.isInterface() ? "interface" : "class";
-    }
-
-    @Override
-    protected Template getTemplate() {
-        return template;
     }
 
     private String getModificator() {
@@ -381,9 +360,9 @@ public class JavaClassBuilder extends BaseBuilder implements Annotationable<Java
         }
     }
 
-    public JavaMethod methodMain(final GeneratorContext context) {
+    public JavaMethod methodMain() {
         JavaMethod method = method("main", PrimitiveType.VOID, JMod.PUBLIC | JMod.STATIC);
-        method.param("args", context.ofType(String[].class));
+        method.param("args", getContext().ofType(String[].class));
 
         return method;
     }

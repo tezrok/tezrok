@@ -1,7 +1,6 @@
 package io.tezrok.api.builder;
 
-import io.tezrok.api.GeneratorContext;
-import io.tezrok.api.model.node.ModuleNode;
+import io.tezrok.api.ExecuteContext;
 import io.tezrok.api.model.node.ProjectNode;
 import org.apache.commons.lang3.Validate;
 import org.apache.velocity.Template;
@@ -11,13 +10,14 @@ import java.io.Writer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public abstract class BaseBuilder implements Builder {
-    private final GeneratorContext generatorContext;
-    private final ModuleNode module;
+/**
+ * Builder based on Velocity template
+ */
+public abstract class VelocityBuilder implements Builder {
+    private final ExecuteContext context;
 
-    protected BaseBuilder(ModuleNode module, GeneratorContext generatorContext) {
-        this.generatorContext = Validate.notNull(generatorContext, "generatorContext");
-        this.module = Validate.notNull(module, "module");
+    protected VelocityBuilder(ExecuteContext context) {
+        this.context = Validate.notNull(context, "context");
     }
 
     @Override
@@ -45,8 +45,8 @@ public abstract class BaseBuilder implements Builder {
         return false;
     }
 
-    public GeneratorContext getContext() {
-        return generatorContext;
+    public ExecuteContext getContext() {
+        return context;
     }
 
     public ProjectNode getProject() {

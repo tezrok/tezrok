@@ -1,13 +1,14 @@
 package io.tezrok.core.builder
 
 import io.tezrok.api.ExecuteContext
+import io.tezrok.api.builder.VelocityBuilder
 import io.tezrok.api.model.maven.Pom
 import io.tezrok.api.util.VelocityUtil
 import org.apache.commons.lang3.StringUtils
 import org.apache.velocity.Template
 import org.apache.velocity.VelocityContext
 
-class PomBuilder(private val pom: Pom, context: ExecuteContext) : BaseBuilder(context) {
+class PomBuilder(private val pom: Pom, context: ExecuteContext) : VelocityBuilder(context) {
     override fun onBuild(velContext: VelocityContext) {
         velContext.put("version", pom.version)
         velContext.put("type", pom.type)
@@ -19,7 +20,7 @@ class PomBuilder(private val pom: Pom, context: ExecuteContext) : BaseBuilder(co
 
     override fun getFileName(): String = "pom.xml"
 
-    override fun getTemplate(): Template = template
+    override fun getTemplate(): Template = PomBuilder.template
 
     companion object {
         private val template: Template = VelocityUtil.getTemplate("templates/pom.xml.vm")

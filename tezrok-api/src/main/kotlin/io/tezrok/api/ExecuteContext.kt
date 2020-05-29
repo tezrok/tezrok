@@ -1,9 +1,13 @@
 package io.tezrok.api
 
 import io.tezrok.api.builder.Builder
+import io.tezrok.api.builder.type.Type
 import io.tezrok.api.model.node.ModuleNode
 import io.tezrok.api.model.node.ProjectNode
 
+/**
+ * Used while generating
+ */
 interface ExecuteContext {
     /**
      * Get current phase
@@ -25,6 +29,19 @@ interface ExecuteContext {
      */
     fun isGenerateTime(): Boolean
 
+    /**
+     * Returns Type by specified class
+     */
+    fun ofType(clazz: Class<*>): Type
+
+    /**
+     * Returns Type by name with current module's package
+     */
+    fun ofType(name: String): Type
+
+    /**
+     * Gets instance of specified class
+     */
     fun <T> getInstance(clazz: Class<T>): T
 
     /**

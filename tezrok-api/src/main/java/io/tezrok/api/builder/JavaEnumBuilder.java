@@ -1,14 +1,12 @@
 package io.tezrok.api.builder;
 
-import io.tezrok.api.GeneratorContext;
+import io.tezrok.api.ExecuteContext;
 import io.tezrok.api.builder.type.EnumNodeType;
 import io.tezrok.api.builder.type.Type;
 import io.tezrok.api.model.node.EnumItemNode;
 import io.tezrok.api.model.node.EnumNode;
-import io.tezrok.api.util.VelocityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
-import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 
 import java.util.List;
@@ -18,18 +16,12 @@ import java.util.stream.Collectors;
  * @author Ruslan Absalyamov
  * @since 1.0
  */
-public class JavaEnumBuilder extends JavaClassBuilder {
-    private static final Template template;
+public abstract class JavaEnumBuilder extends JavaClassBuilder {
     private final EnumNode enumNode;
 
-    protected JavaEnumBuilder(Type type, GeneratorContext context) {
-//        super(type, JMod.PUBLIC, ((EnumNodeType) type).getEnumNode().getModule(), context);
-        super(type, JMod.PUBLIC, context.getModule(type), context);
+    protected JavaEnumBuilder(Type type, ExecuteContext context) {
+        super(type, JMod.PUBLIC, context);
         enumNode = ((EnumNodeType) type).getEnumNode();
-    }
-
-    static {
-        template = VelocityUtil.getTemplate("templates/javaEnum.vm");
     }
 
     @Override
@@ -37,11 +29,6 @@ public class JavaEnumBuilder extends JavaClassBuilder {
         super.onBuild(context);
 
         context.put("enums", getEnums());
-    }
-
-    @Override
-    protected Template getTemplate() {
-        return template;
     }
 
     public List<EnumValue> getEnums() {
@@ -87,9 +74,5 @@ public class JavaEnumBuilder extends JavaClassBuilder {
         public void setLast(boolean last) {
             this.last = last;
         }
-    }
-
-    public static JavaEnumBuilder create(Type type, GeneratorContext context) {
-        return new JavaEnumBuilder(type, context);
     }
 }

@@ -1,5 +1,6 @@
 package io.tezrok.core.factory
 
+import io.tezrok.api.ExecuteContext
 import io.tezrok.api.Generator
 
 /**
@@ -7,6 +8,8 @@ import io.tezrok.api.Generator
  */
 interface Factory {
     fun <T> getInstance(clazz: Class<T>): T
+
+    fun <T> getInstance(clazz: Class<T>, context: ExecuteContext): T
 
     fun getGenerator(className: String): Generator
 }

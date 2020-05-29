@@ -7,11 +7,14 @@ import io.tezrok.api.model.maven.Pom
 import io.tezrok.api.model.maven.Version
 import io.tezrok.api.model.node.ModuleNode
 import io.tezrok.api.visitor.MavenVisitor
-import io.tezrok.core.MavenVisitorsProvider
+import io.tezrok.core.service.MavenVisitorsProvider
 import io.tezrok.core.builder.PomBuilder
 import io.tezrok.core.error.TezrokException
 import java.lang.Exception
 
+/**
+ * Generates pom.xml
+ */
 class MavenGenerator : Generator {
     private val poms = mutableMapOf<ModuleNode, Pom>()
 
@@ -40,7 +43,7 @@ class MavenGenerator : Generator {
     }
 
     private fun populatePom(pom: Pom, context: ExecuteContext) {
-        context.getMavenRepositories().forEach { visitor ->
+        context.getMavenVisitors().forEach { visitor ->
             try {
                 visitor.visit(pom)
             } catch (e: Exception) {
@@ -56,6 +59,6 @@ fun ModuleNode.toMavenVersion(): Version {
             version = version)
 }
 
-fun ExecuteContext.getMavenRepositories(): List<MavenVisitor> {
-    return getInstance(MavenVisitorsProvider::class.java).mavenVisitors
+fun ExecuteContext.getMavenVisitors(): List<MavenVisitor> {
+    return getInstance(MavenVisitorsProvider::class.java).visitors
 }

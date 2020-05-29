@@ -22,7 +22,7 @@ public class JavaMethod extends AnnotationableImpl<JavaMethod> {
     private final Type type;
     private final List<JavaMethodParam> params = new ArrayList<>();
     private final List<Type> throwsList = new ArrayList<>();
-    private String body;
+    private JavaExpression body;
     private int indent = 1;
 
     public JavaMethod(@NotNull final String name, final Type type, int mod,
@@ -55,16 +55,12 @@ public class JavaMethod extends AnnotationableImpl<JavaMethod> {
         return ownerClass;
     }
 
-    public String getBody() {
+    public JavaExpression getBody() {
         return body;
     }
 
     public JavaMethod setBody(JavaExpression expression) {
-        return setBody(expression.toString());
-    }
-
-    public JavaMethod setBody(String body) {
-        if (body != null) {
+        if (expression != null) {
             if (mod.isAbstract()) {
                 throw new IllegalStateException("Abstract method cannot have a body");
             }
@@ -74,7 +70,7 @@ public class JavaMethod extends AnnotationableImpl<JavaMethod> {
             }
         }
 
-        this.body = body;
+        this.body = expression;
 
         return this;
     }
