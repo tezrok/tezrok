@@ -1,6 +1,7 @@
 package io.tezrok.api.builder.expression;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class BlockExp extends JavaExpression {
@@ -10,6 +11,15 @@ public class BlockExp extends JavaExpression {
         expressions.add(expression);
 
         return this;
+    }
+
+    public BlockExp addAll(JavaExpression... expression) {
+        expressions.addAll(Arrays.asList(expression));
+        return this;
+    }
+
+    public void clear() {
+        expressions.clear();
     }
 
     @Override
@@ -32,5 +42,9 @@ public class BlockExp extends JavaExpression {
         }
 
         return result.toString();
+    }
+
+    public static BlockExp asList(JavaExpression... expressions) {
+        return new BlockExp().addAll(expressions);
     }
 }

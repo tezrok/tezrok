@@ -79,6 +79,10 @@ public class JavaMethod extends AnnotationableImpl<JavaMethod> {
         return body != null;
     }
 
+    public boolean noBodyOrEmpty() {
+        return body == null || body.isEmpty();
+    }
+
     public JavaMethodParam param(final String name, final Type type) {
         JavaMethodParam param = new JavaMethodParam(name, type, this);
 
