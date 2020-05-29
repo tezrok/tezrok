@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory
 import java.lang.Exception
 
 /**
- * Main application class generator
+ * Main application class service
  */
 class CoreGenerator : Generator {
     private val log = LoggerFactory.getLogger(CoreGenerator::class.java)
@@ -34,7 +34,11 @@ class CoreGenerator : Generator {
     private fun visitMainApp(mainApp: JavaClassBuilder, context: ExecuteContext) {
         context.getMainAppVisitors().forEach { visitor ->
             try {
+                log.debug("Begin MainApp visitor {}", visitor.javaClass.name)
+
                 visitor.visit(mainApp)
+
+                log.debug("End MainApp visitor {}", visitor.javaClass.name)
             } catch (e: Exception) {
                 throw TezrokException("MainApp visitor (${visitor.javaClass.name}) failed: ${e.message}", e)
             }

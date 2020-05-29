@@ -1,6 +1,7 @@
 package io.tezrok.core.generator
 
 import io.tezrok.api.ExecuteContext
+import io.tezrok.api.Generator
 import io.tezrok.api.Phase
 import io.tezrok.api.model.node.ModuleNode
 import io.tezrok.api.model.node.ProjectNode
@@ -49,7 +50,11 @@ class StartUpGenerator(private val factory: Factory) {
             tree.dependsOn.forEach { runGenerator(it, context) }
         }
 
-        log.debug("Call {}", tree.generator::class.java.name)
-        tree.generator.execute(context)
+        val generator = tree.service as? Generator
+
+        if (generator != null) {
+            log.debug("Call {}", generator::class.java.name)
+            generator.execute(context)
+        }
     }
 }

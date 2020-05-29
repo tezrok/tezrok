@@ -2,7 +2,7 @@ package io.tezrok.core.feature
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import io.tezrok.api.Generator
+import io.tezrok.api.service.Service
 import io.tezrok.core.factory.Factory
 import java.lang.IllegalStateException
 
@@ -22,7 +22,7 @@ class FeatureManager(private val factory: Factory) {
             return FeatureTree(feature.name,
                     feature.description,
                     mandatory = mandatory,
-                    generator = factory.getGenerator(feature.generator),
+                    service = factory.createService(feature.service),
                     dependsOn = (feature.dependsOn ?: emptyList())
                             .mapNotNull { getFeatureTree(it.name, it.mandatory) })
         }
@@ -50,7 +50,7 @@ private data class FeaturesRoot(var features: List<FeatureDef>)
 
 data class FeatureDef(val name: String,
                       val description: String,
-                      val generator: String,
+                      val service: String,
                       val dependsOn: List<FeatureRef>?)
 
 data class FeatureRef(val name: String,
@@ -58,6 +58,6 @@ data class FeatureRef(val name: String,
 
 data class FeatureTree(val name: String,
                        val description: String,
-                       val generator: Generator,
+                       val service: Service,
                        val mandatory: Boolean,
                        val dependsOn: List<FeatureTree>)

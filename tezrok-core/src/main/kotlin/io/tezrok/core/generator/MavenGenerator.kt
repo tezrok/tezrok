@@ -10,12 +10,14 @@ import io.tezrok.api.visitor.MavenVisitor
 import io.tezrok.core.service.MavenVisitorsProvider
 import io.tezrok.core.builder.PomBuilder
 import io.tezrok.core.error.TezrokException
+import org.slf4j.LoggerFactory
 import java.lang.Exception
 
 /**
  * Generates pom.xml
  */
 class MavenGenerator : Generator {
+    private val log = LoggerFactory.getLogger(javaClass)
     private val poms = mutableMapOf<ModuleNode, Pom>()
 
     override fun execute(context: ExecuteContext) {
@@ -45,7 +47,11 @@ class MavenGenerator : Generator {
     private fun populatePom(pom: Pom, context: ExecuteContext) {
         context.getMavenVisitors().forEach { visitor ->
             try {
+                log.debug("Begin Maven visitor {}", visitor.javaClass.name)
+
                 visitor.visit(pom)
+
+                log.debug("End Maven visitor {}", visitor.javaClass.name)
             } catch (e: Exception) {
                 throw TezrokException("Maven visitor (${visitor.javaClass.name}) failed: ${e.message}", e)
             }

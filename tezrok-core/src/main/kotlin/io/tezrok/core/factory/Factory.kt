@@ -1,8 +1,8 @@
 package io.tezrok.core.factory
 
 import io.tezrok.api.ExecuteContext
-import io.tezrok.api.Generator
 import io.tezrok.api.model.node.ProjectNode
+import io.tezrok.api.service.Service
 import java.io.File
 
 /**
@@ -13,7 +13,7 @@ interface Factory {
 
     fun <T> getInstance(clazz: Class<T>, context: ExecuteContext): T
 
-    fun getGenerator(className: String): Generator
+    fun createService(className: String): Service
 
     fun getProject(): ProjectNode
 

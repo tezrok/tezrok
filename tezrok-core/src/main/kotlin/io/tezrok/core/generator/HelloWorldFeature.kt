@@ -1,16 +1,11 @@
 package io.tezrok.core.generator
 
-import io.tezrok.api.ExecuteContext
-import io.tezrok.api.Generator
 import io.tezrok.api.builder.JavaClassBuilder
 import io.tezrok.api.builder.expression.BlockExp
 import io.tezrok.api.builder.expression.ExpressionBuilder
 import io.tezrok.api.visitor.MainAppVisitor
-import org.slf4j.LoggerFactory
 
-class HelloWorldGenerator : Generator, MainAppVisitor {
-    private val log = LoggerFactory.getLogger(javaClass)
-
+class HelloWorldFeature : MainAppVisitor {
     override fun visit(clazz: JavaClassBuilder) {
         clazz.findMethod("main")
                 .ifPresent { method ->
@@ -22,8 +17,5 @@ class HelloWorldGenerator : Generator, MainAppVisitor {
                         BlockExp.asList(method.body, expression)
                     }
                 }
-    }
-
-    override fun execute(context: ExecuteContext) {
     }
 }
