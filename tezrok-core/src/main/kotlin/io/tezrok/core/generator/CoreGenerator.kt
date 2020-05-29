@@ -5,6 +5,7 @@ import io.tezrok.api.Generator
 import io.tezrok.api.Phase
 import io.tezrok.api.builder.JMod
 import io.tezrok.api.builder.JavaClassBuilder
+import io.tezrok.api.builder.expression.JavaExpression
 import io.tezrok.api.service.CodeService
 import io.tezrok.api.visitor.MainAppVisitor
 import io.tezrok.core.error.TezrokException
@@ -23,7 +24,7 @@ class CoreGenerator : Generator {
             val codeGen = context.getInstance(CodeService::class.java)
             val mainApp = codeGen.createClass(context.ofType("MainApp"), JMod.PUBLIC)
             val mainMethod = mainApp.methodMain()
-
+            mainMethod.body = JavaExpression.EMPTY
             visitMainApp(mainApp, context)
 
             context.render(mainApp)

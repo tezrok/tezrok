@@ -9,11 +9,11 @@ import io.tezrok.core.util.VelocityUtil
 import org.apache.velocity.Template
 
 class CodeServiceImpl(private val context: ExecuteContext) : CodeService {
-    override fun create(type: Type, mod: Int): JavaClassBuilder {
+    override fun createClass(type: Type, mod: Int): JavaClassBuilder {
         return JavaClassBuilderImpl(type, mod, context)
     }
 
-    override fun create(type: Type): JavaEnumBuilder {
+    override fun createEnum(type: Type): JavaEnumBuilder {
         return JavaEnumBuilderImpl(type, context)
     }
 }

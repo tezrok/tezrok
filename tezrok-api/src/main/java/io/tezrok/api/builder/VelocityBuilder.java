@@ -7,8 +7,7 @@ import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 
 import java.io.Writer;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.OffsetDateTime;
 
 /**
  * Builder based on Velocity template
@@ -25,7 +24,7 @@ public abstract class VelocityBuilder implements Builder {
         VelocityContext context = new VelocityContext();
 
         if (getContext().isGenerateTime()) {
-            context.put("generateTime", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+            context.put("generateTime", OffsetDateTime.now().toString());
         }
 
         onBuild(context);

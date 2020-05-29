@@ -48,6 +48,8 @@ interface ExecuteContext {
      * Render specified builder
      */
     fun render(builder: Builder)
+
+    fun overwriteIfExists(): Boolean
 }
 
 enum class Phase {

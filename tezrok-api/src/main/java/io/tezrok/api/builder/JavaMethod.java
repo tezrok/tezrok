@@ -186,9 +186,13 @@ public class JavaMethod extends AnnotationableImpl<JavaMethod> {
         if (hasBody()) {
             result.append(" {");
             result.append(StringUtil.NEWLINE);
-            result.append(StringUtil.tab(indent + 1));
-            result.append(getBody());
-            result.append(StringUtil.NEWLINE);
+
+            if (!getBody().isEmpty()) {
+                result.append(StringUtil.tab(indent + 1));
+                result.append(getBody());
+                result.append(StringUtil.NEWLINE);
+            }
+
             result.append(StringUtil.tab(indent));
             result.append("}");
         } else {

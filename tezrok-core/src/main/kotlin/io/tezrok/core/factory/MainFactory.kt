@@ -24,7 +24,6 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class MainFactory(private val project: ProjectNode,
                   private val targetDir: File) : Factory {
-    val context = MainExecuteContext(project, targetDir)
     private val created = ConcurrentHashMap<Class<*>, Any>()
     private val mavenVisitors = mutableListOf<MavenVisitor>()
     private val mainAppVisitors = mutableListOf<MainAppVisitor>();
@@ -70,6 +69,10 @@ class MainFactory(private val project: ProjectNode,
 
         throw IllegalStateException("Class name is not generator: $className")
     }
+
+    override fun getProject(): ProjectNode = project
+
+    override fun getTargetDir(): File = targetDir
 
     companion object {
         fun create(project: ProjectNode, targetDir: File): MainFactory {

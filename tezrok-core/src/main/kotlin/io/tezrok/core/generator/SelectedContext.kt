@@ -8,17 +8,13 @@ import io.tezrok.api.builder.type.Type
 import io.tezrok.api.model.node.ModuleNode
 import io.tezrok.api.model.node.ProjectNode
 import io.tezrok.core.factory.Factory
-import io.tezrok.core.factory.MainExecuteContext
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileWriter
 
 internal class SelectedContext(val selectedPhase: Phase,
                                val selectedModule: ModuleNode,
-                               val parent: ExecuteContext,
                                val factory: Factory) : ExecuteContext {
-
-
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun getPhase(): Phase = selectedPhase
@@ -27,17 +23,18 @@ internal class SelectedContext(val selectedPhase: Phase,
 
     override fun <T> getInstance(clazz: Class<T>): T = factory.getInstance(clazz, this)
 
-    override fun getProject(): ProjectNode = parent.getProject()
+    override fun getProject(): ProjectNode = factory.getProject()
 
-    override fun isGenerateTime(): Boolean = parent.isGenerateTime()
+    override fun isGenerateTime(): Boolean = true
+
+    override fun overwriteIfExists(): Boolean = true
 
     override fun render(builder: Builder) {
         if (getPhase() != Phase.Generate) {
             return
         }
 
-        parent as MainExecuteContext
-        val moduleRootDir = File(parent.getTargetDir(), getModule().toMavenVersion().artifactId)
+        val moduleRootDir = File(factory.getTargetDir(), getModule().toMavenVersion().artifactId)
         val targetDir = File(moduleRootDir, builder.path.replace('.', '/'))
         val targetFile = File(targetDir, builder.fileName)
 
@@ -45,7 +42,7 @@ internal class SelectedContext(val selectedPhase: Phase,
             targetDir.mkdirs()
         }
 
-        if (!targetFile.exists()) {
+        if (!targetFile.exists() || overwriteIfExists()) {
             log.debug("Generating {}", targetFile)
             val fw = FileWriter(targetFile)
             builder.build(fw)

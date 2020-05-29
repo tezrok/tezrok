@@ -3,7 +3,7 @@ package io.tezrok.core.builder
 import io.tezrok.api.ExecuteContext
 import io.tezrok.api.builder.VelocityBuilder
 import io.tezrok.api.model.maven.Pom
-import io.tezrok.api.util.VelocityUtil
+import io.tezrok.core.util.VelocityUtil
 import org.apache.commons.lang3.StringUtils
 import org.apache.velocity.Template
 import org.apache.velocity.VelocityContext
