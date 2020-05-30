@@ -21,13 +21,13 @@ class MavenGenerator : Generator {
     private val poms = mutableMapOf<ModuleNode, Pom>()
 
     override fun execute(context: ExecuteContext) {
-        val module = context.getModule()
+        val module = context.module
 
-        if (context.getPhase() == Phase.Init) {
-            poms.remove(context.getModule())
+        if (context.phase == Phase.Init) {
+            poms.remove(module)
         }
 
-        val pom = poms.computeIfAbsent(context.getModule()) {
+        val pom = poms.computeIfAbsent(module) {
             Pom(module.toMavenVersion(),
                     type = "",
                     properties = mutableListOf(),
@@ -37,7 +37,7 @@ class MavenGenerator : Generator {
 
         populatePom(pom, context)
 
-        if (context.getPhase() == Phase.Generate) {
+        if (context.phase == Phase.Generate) {
             val builder = PomBuilder(pom, context)
 
             context.render(builder)

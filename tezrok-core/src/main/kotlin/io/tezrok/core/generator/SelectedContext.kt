@@ -17,24 +17,24 @@ internal class SelectedContext(val selectedPhase: Phase,
                                val factory: Factory) : ExecuteContext {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    override fun getPhase(): Phase = selectedPhase
+    override val phase: Phase = selectedPhase
 
-    override fun getModule(): ModuleNode = selectedModule
+    override val module: ModuleNode = selectedModule
+
+    override val project: ProjectNode = factory.getProject()
+
+    override val generateTime: Boolean = true
+
+    override val overwriteIfExists: Boolean = true
 
     override fun <T> getInstance(clazz: Class<T>): T = factory.getInstance(clazz, this)
 
-    override fun getProject(): ProjectNode = factory.getProject()
-
-    override fun isGenerateTime(): Boolean = true
-
-    override fun overwriteIfExists(): Boolean = true
-
     override fun render(builder: Builder) {
-        if (getPhase() != Phase.Generate) {
+        if (phase != Phase.Generate) {
             return
         }
 
-        val moduleRootDir = File(factory.getTargetDir(), getModule().toMavenVersion().artifactId)
+        val moduleRootDir = File(factory.getTargetDir(), module.toMavenVersion().artifactId)
         val targetDir = File(moduleRootDir, builder.path.replace('.', '/'))
         val targetFile = File(targetDir, builder.fileName)
 
@@ -42,7 +42,7 @@ internal class SelectedContext(val selectedPhase: Phase,
             targetDir.mkdirs()
         }
 
-        if (!targetFile.exists() || overwriteIfExists()) {
+        if (!targetFile.exists() || overwriteIfExists) {
             log.debug("Generating {}", targetFile)
             val fw = FileWriter(targetFile)
             builder.build(fw)
@@ -53,7 +53,7 @@ internal class SelectedContext(val selectedPhase: Phase,
     }
 
     override fun ofType(name: String): Type {
-        return NamedType(name, getModule().packagePath)
+        return NamedType(name, module.packagePath)
     }
 
     override fun ofType(clazz: Class<*>): Type {

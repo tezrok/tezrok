@@ -23,7 +23,7 @@ public abstract class VelocityBuilder implements Builder {
     public void build(final Writer writer) {
         VelocityContext context = new VelocityContext();
 
-        if (getContext().isGenerateTime()) {
+        if (getContext().getGenerateTime()) {
             context.put("generateTime", OffsetDateTime.now().toString());
         }
 

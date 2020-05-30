@@ -12,22 +12,22 @@ interface ExecuteContext {
     /**
      * Get current phase
      */
-    fun getPhase(): Phase
+    val phase: Phase
 
     /**
      * Gets project
      */
-    fun getProject(): ProjectNode
+    val project: ProjectNode
 
     /**
      * Gets current generating module
      */
-    fun getModule(): ModuleNode
+    val module: ModuleNode
 
     /**
      * Generate comment if possible with time of generation
      */
-    fun isGenerateTime(): Boolean
+    val generateTime: Boolean
 
     /**
      * Returns Type by specified class
@@ -49,7 +49,7 @@ interface ExecuteContext {
      */
     fun render(builder: Builder)
 
-    fun overwriteIfExists(): Boolean
+    val overwriteIfExists: Boolean
 }
 
 enum class Phase {

@@ -20,7 +20,7 @@ class CoreGenerator : Generator {
     private val log = LoggerFactory.getLogger(CoreGenerator::class.java)
 
     override fun execute(context: ExecuteContext) {
-        if (context.getPhase() == Phase.Generate) {
+        if (context.phase == Phase.Generate) {
             val codeGen = context.getInstance(CodeService::class.java)
             val mainApp = codeGen.createClass(context.ofType("MainApp"), JMod.PUBLIC)
             val mainMethod = mainApp.methodMain()

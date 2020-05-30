@@ -3,8 +3,8 @@ package io.tezrok.core.feature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import io.tezrok.api.service.Service
+import io.tezrok.core.error.TezrokException
 import io.tezrok.core.factory.Factory
-import java.lang.IllegalStateException
 
 class FeatureManager(private val factory: Factory) {
     private val features = loadFeatures()
@@ -28,7 +28,7 @@ class FeatureManager(private val factory: Factory) {
         }
 
         if (mandatory) {
-            throw IllegalStateException("Mandatory feature '$featureName' not found")
+            throw TezrokException("Mandatory feature '$featureName' not found")
         }
 
         return null
