@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory
 import java.lang.Exception
 
 /**
- * Generates pom.xml
+ * Generates maven related files (pom.xml and other)
  */
 class MavenGenerator : Generator {
     private val log = LoggerFactory.getLogger(javaClass)

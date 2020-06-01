@@ -4,7 +4,7 @@ import io.tezrok.api.model.maven.Pom
 import io.tezrok.api.service.Service
 
 /**
- * Visitor to change pom-file's content
+ * Visitor to change maven-related files
  */
 interface MavenVisitor : Service {
     /**

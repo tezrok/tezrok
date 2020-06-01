@@ -30,6 +30,11 @@ interface ExecuteContext {
     val generateTime: Boolean
 
     /**
+     * Overwrite target file if it already exists
+     */
+    val overwriteIfExists: Boolean
+
+    /**
      * Returns Type by specified class
      */
     fun ofType(clazz: Class<*>): Type
@@ -48,8 +53,6 @@ interface ExecuteContext {
      * Render specified builder
      */
     fun render(builder: Builder)
-
-    val overwriteIfExists: Boolean
 }
 
 enum class Phase {

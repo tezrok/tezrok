@@ -12,6 +12,9 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileWriter
 
+/**
+ * Implementation of {@link ExecuteContext} when Phase and Module changed
+ */
 internal class SelectedContext(val selectedPhase: Phase,
                                val selectedModule: ModuleNode,
                                val factory: Factory) : ExecuteContext {
@@ -34,12 +37,14 @@ internal class SelectedContext(val selectedPhase: Phase,
             return
         }
 
+        // TODO: rewrite getting module's dir name
         val moduleRootDir = File(factory.getTargetDir(), module.toMavenVersion().artifactId)
         val targetDir = File(moduleRootDir, builder.path.replace('.', '/'))
         val targetFile = File(targetDir, builder.fileName)
 
         if (!targetDir.exists()) {
-            targetDir.mkdirs()
+            val success = targetDir.mkdirs()
+            log.debug("Create dir {}, success: {}", targetDir, success)
         }
 
         if (!targetFile.exists() || overwriteIfExists) {
