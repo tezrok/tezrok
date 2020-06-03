@@ -18,20 +18,19 @@ class CodeServiceImpl(private val context: ExecuteContext) : CodeService {
     }
 }
 
-
 class JavaClassBuilderImpl(type: Type, mod: Int, context: ExecuteContext)
     : JavaClassBuilder(type, mod, context) {
-    override fun getTemplate(): Template = JavaClassBuilderImpl.template
+    override fun getTemplate(): Template = TEMPLATE
 
     companion object {
-        val template: Template = VelocityUtil.getTemplate("templates/javaClass.vm")
+        private val TEMPLATE: Template = VelocityUtil.getTemplate("templates/javaClass.vm")
     }
 }
 
 class JavaEnumBuilderImpl(type: Type, context: ExecuteContext) : JavaEnumBuilder(type, context) {
-    override fun getTemplate(): Template = JavaEnumBuilderImpl.template
+    override fun getTemplate(): Template = TEMPLATE
 
     companion object {
-        val template: Template = VelocityUtil.getTemplate("templates/javaEnum.vm")
+        private val TEMPLATE: Template = VelocityUtil.getTemplate("templates/javaEnum.vm")
     }
 }

@@ -20,9 +20,9 @@ class PomBuilder(private val pom: Pom, context: ExecuteContext) : VelocityBuilde
 
     override fun getFileName(): String = "pom.xml"
 
-    override fun getTemplate(): Template = PomBuilder.template
+    override fun getTemplate(): Template = TEMPLATE
 
     companion object {
-        private val template: Template = VelocityUtil.getTemplate("templates/pom.xml.vm")
+        private val TEMPLATE: Template = VelocityUtil.getTemplate("templates/pom.xml.vm")
     }
 }

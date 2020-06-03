@@ -8,13 +8,28 @@
         {
           "name": "Maven",
           "mandatory": false
+        },
+        {
+          "name": "Log",
+          "mandatory": false
         }
       ]
     },
     {
       "name": "Maven",
-      "description": "Adding maven supports",
+      "description": "Adds maven supports",
       "service": "io.tezrok.core.generator.MavenGenerator"
+    },
+    {
+      "name": "Log",
+      "description": "Adds logging supports",
+      "service": "io.tezrok.core.generator.LogGenerator",
+      "dependsOn": [
+        {
+          "name": "Maven",
+          "mandatory": false
+        }
+      ]
     },
     {
       "name": "HelloWorld",

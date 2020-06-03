@@ -65,6 +65,6 @@ fun ModuleNode.toMavenVersion(): Version {
             version = version)
 }
 
-fun ExecuteContext.getMavenVisitors(): List<MavenVisitor> {
+fun ExecuteContext.getMavenVisitors(): Set<MavenVisitor> {
     return getInstance(MavenVisitorsProvider::class.java).visitors
 }

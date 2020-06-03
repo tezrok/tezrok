@@ -19,7 +19,7 @@
         <dependency>
             <groupId>$dep.groupId</groupId>
             <artifactId>$dep.artifactId</artifactId>
-            <artifactId>$dep.version</artifactId>
+            <version>$dep.version</version>
         </dependency>
     #end
     </dependencies>

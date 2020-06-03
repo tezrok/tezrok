@@ -1,8 +1,11 @@
 package io.tezrok.core.service
 
+import io.tezrok.api.visitor.EachClassVisitor
 import io.tezrok.api.visitor.MainAppVisitor
 import io.tezrok.api.visitor.MavenVisitor
 
-class MavenVisitorsProvider(val visitors: List<MavenVisitor>)
+internal class MavenVisitorsProvider(val visitors: Set<MavenVisitor>)
 
-class MainAppVisitorsProvider(val visitors: List<MainAppVisitor>)
+internal class MainAppVisitorsProvider(val visitors: Set<MainAppVisitor>)
+
+internal class EachClassVisitorsProvider(val visitors: Set<EachClassVisitor>)

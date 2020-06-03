@@ -115,6 +115,14 @@ public abstract class JavaClassBuilder extends VelocityBuilder implements Annota
         return field(name, type, JMod.PRIVATE | JMod.GETSET);
     }
 
+    public JavaField field(String name, Class<?> type) {
+        return field(name, type, JMod.PRIVATE | JMod.GETSET);
+    }
+
+    public JavaField field(String name, Class<?> type, int mod) {
+        return field(name, getContext().ofType(type), mod);
+    }
+
     public JavaField field(String name, Type type, int mod) {
         JavaField field = new JavaField(name, type, mod, this);
         fields.add(field);
@@ -150,6 +158,16 @@ public abstract class JavaClassBuilder extends VelocityBuilder implements Annota
         }
 
         throw new IllegalStateException("Field not found by type: " + clazz.getType());
+    }
+
+    public Optional<JavaField> getField(String name) {
+        return fields.stream()
+                .filter(p -> p.getName().equals(name))
+                .findFirst();
+    }
+
+    public boolean hasField(String name) {
+        return getField(name).isPresent();
     }
 
     public JavaClassBuilder comment(String comment) {
