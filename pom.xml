@@ -13,5 +13,6 @@
     <modules>
         <module>tezrok-api</module>
         <module>tezrok-core</module>
+        <module>tezrok-spring</module>
     </modules>
 </project>
