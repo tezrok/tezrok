@@ -1,5 +1,7 @@
 package io.tezrok.api.builder.type;
 
+import io.tezrok.api.builder.type.resolver.ByClassTypeResolver;
+import io.tezrok.api.builder.type.resolver.PrimitiveTypeResolver;
 import io.tezrok.api.builder.type.resolver.TypeResolver;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;

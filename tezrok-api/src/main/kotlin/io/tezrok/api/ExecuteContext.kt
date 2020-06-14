@@ -42,7 +42,12 @@ interface ExecuteContext {
     /**
      * Returns Type by name with current module's package
      */
-    fun ofType(name: String): Type
+    fun ofType(name: String, subPath: String = ""): Type
+
+    /**
+     * Resolves type by name
+     */
+    fun resolveType(name: String): Type
 
     /**
      * Gets instance of specified class

@@ -11,7 +11,7 @@ public class PrimitiveTypeResolver extends BaseTypeResolver {
         this(null);
     }
 
-    protected PrimitiveTypeResolver(TypeResolver nextResolver) {
+    public PrimitiveTypeResolver(TypeResolver nextResolver) {
         super(nextResolver);
     }
 

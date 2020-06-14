@@ -12,7 +12,7 @@ import java.util.Optional;
  * if current resolver cannot resolve type itself.
  */
 public abstract class BaseTypeResolver implements TypeResolver {
-    protected final Logger log = LoggerFactory.getLogger(this.getClass());
+    protected final Logger log = LoggerFactory.getLogger(getClass());
     private final TypeResolver nextResolver;
 
     protected BaseTypeResolver(TypeResolver nextResolver) {
@@ -21,7 +21,8 @@ public abstract class BaseTypeResolver implements TypeResolver {
 
     @Override
     public Type resolveByName(String typeName) {
-        log.debug(String.format("Try to resolve type '%s' by %s", typeName, this.getClass().getName()));
+        log.debug("Try to resolve type '{}' by {}", typeName, getClass().getName());
+        
         Optional<Type> foundType = tryResolveByName(typeName);
 
         return foundType.orElseThrow(() ->
@@ -29,7 +30,7 @@ public abstract class BaseTypeResolver implements TypeResolver {
     }
 
     /**
-     * In overrding method, please, call this method at the end.
+     * In overriding method, please, call this method at the end.
      *
      * @param typeName Name of the type.
      * @return

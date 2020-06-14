@@ -16,7 +16,22 @@ class ModuleNode(name: String,
     fun enums(): List<EnumNode> = children().filterIsInstance<EnumNode>()
 
     fun use(feature: FeatureNode): ModuleNode {
-        add(feature)
+        super.add(feature)
+        return this
+    }
+
+    fun add(entity: EntityNode): ModuleNode {
+        super.add(entity)
+        return this
+    }
+
+    fun add(service: ServiceNode): ModuleNode {
+        super.add(service)
+        return this
+    }
+
+    fun add(enum: EnumNode): ModuleNode {
+        super.add(enum)
         return this
     }
 

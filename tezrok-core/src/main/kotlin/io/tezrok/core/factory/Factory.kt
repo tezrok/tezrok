@@ -1,6 +1,7 @@
 package io.tezrok.core.factory
 
 import io.tezrok.api.ExecuteContext
+import io.tezrok.api.builder.type.Type
 import io.tezrok.api.model.node.ProjectNode
 import io.tezrok.api.service.Service
 import java.io.File
@@ -18,4 +19,6 @@ interface Factory {
     fun getProject(): ProjectNode
 
     fun getTargetDir(): File
+
+    fun resolveType(name: String, context: ExecuteContext): Type
 }

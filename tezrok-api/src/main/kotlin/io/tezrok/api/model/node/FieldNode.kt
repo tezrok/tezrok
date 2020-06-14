@@ -5,7 +5,6 @@ package io.tezrok.api.model.node
  */
 class FieldNode(name: String,
                 val type: String,
-                val value: Any?,
                 val primary: Boolean = false,
                 val isNullable: Boolean = true,
                 val unique: Boolean = false,

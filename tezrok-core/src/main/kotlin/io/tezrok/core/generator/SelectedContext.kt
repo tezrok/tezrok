@@ -8,6 +8,7 @@ import io.tezrok.api.builder.type.Type
 import io.tezrok.api.model.node.ModuleNode
 import io.tezrok.api.model.node.ProjectNode
 import io.tezrok.core.factory.Factory
+import io.tezrok.core.util.PackageUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileWriter
@@ -57,11 +58,15 @@ internal class SelectedContext(val selectedPhase: Phase,
         }
     }
 
-    override fun ofType(name: String): Type {
-        return NamedType(name, module.packagePath)
+    override fun ofType(name: String, subPath: String): Type {
+        return NamedType(name, PackageUtil.concat(module.packagePath, subPath))
     }
 
     override fun ofType(clazz: Class<*>): Type {
         return NamedType(clazz)
+    }
+
+    override fun resolveType(name: String): Type {
+        return factory.resolveType(name, this)
     }
 }

@@ -12,8 +12,17 @@
         {
           "name": "Log",
           "mandatory": false
+        },
+        {
+          "name": "Entity",
+          "mandatory": false
         }
       ]
+    },
+    {
+      "name": "Entity",
+      "description": "Generates entity classes",
+      "service": "io.tezrok.core.generator.EntityGenerator"
     },
     {
       "name": "Maven",

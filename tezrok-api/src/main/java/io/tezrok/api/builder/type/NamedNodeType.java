@@ -1,5 +1,6 @@
 package io.tezrok.api.builder.type;
 
+import io.tezrok.api.model.node.EntityNode;
 import io.tezrok.api.model.node.Node;
 import org.apache.commons.lang3.Validate;
 
@@ -17,6 +18,6 @@ public class NamedNodeType extends Type {
 
     @Override
     public boolean isEntity() {
-        return node instanceof Node;
+        return node instanceof EntityNode;
     }
 }
