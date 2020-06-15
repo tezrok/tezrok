@@ -4,6 +4,7 @@ import io.tezrok.api.builder.Builder
 import io.tezrok.api.builder.type.Type
 import io.tezrok.api.model.node.ModuleNode
 import io.tezrok.api.model.node.ProjectNode
+import io.tezrok.api.service.Service
 
 /**
  * Used while generating
@@ -53,6 +54,16 @@ interface ExecuteContext {
      * Gets instance of specified class
      */
     fun <T> getInstance(clazz: Class<T>): T
+
+    /**
+     * Gets list of an Type. Used for getting visitors list
+     */
+    fun <T : Service> getServiceList(clazz: Class<T>): Set<T>
+
+    /**
+     * Call specified visitors
+     */
+    fun <T : Service> applyVisitors(clazz: Class<T>, action: (T) -> Unit)
 
     /**
      * Render specified builder

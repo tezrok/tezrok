@@ -8,8 +8,6 @@ import io.tezrok.api.builder.JavaClassBuilder
 import io.tezrok.api.model.node.EntityNode
 import io.tezrok.api.service.CodeService
 import io.tezrok.api.visitor.EntityClassVisitor
-import io.tezrok.core.error.TezrokException
-import io.tezrok.core.service.EntityClassVisitorsProvider
 import org.slf4j.LoggerFactory
 import java.io.Serializable
 
@@ -17,21 +15,12 @@ class EntityGenerator : Generator {
     override fun execute(context: ExecuteContext) {
         if (context.phase == Phase.Generate) {
             val codeGen = context.getInstance(CodeService::class.java)
-            val visitors = context.getEntityClassVisitors()
 
             context.module.entities().forEach { entity ->
                 val entityClass = createClazz(codeGen, context, entity)
 
-                visitors.forEach { visitor ->
-                    try {
-                        log.debug("Begin EntityClass visitor {}", visitor.javaClass.name)
-
-                        visitor.visit(entityClass)
-
-                        log.debug("End EntityClass visitor {}", visitor.javaClass.name)
-                    } catch (e: Exception) {
-                        throw TezrokException("EntityClass visitor (${visitor.javaClass.name}) failed: ${e.message}", e)
-                    }
+                context.applyVisitors(EntityClassVisitor::class.java) { visitor ->
+                    visitor.visit(entityClass)
                 }
 
                 context.render(entityClass)
@@ -64,8 +53,4 @@ class EntityGenerator : Generator {
     companion object {
         private val log = LoggerFactory.getLogger(EntityGenerator::class.java)
     }
-}
-
-fun ExecuteContext.getEntityClassVisitors(): Set<EntityClassVisitor> {
-    return getInstance(EntityClassVisitorsProvider::class.java).visitors
 }

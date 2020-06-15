@@ -21,4 +21,6 @@ interface Factory {
     fun getTargetDir(): File
 
     fun resolveType(name: String, context: ExecuteContext): Type
+
+    fun <T : Service> getServiceList(clazz: Class<T>): Set<T>
 }

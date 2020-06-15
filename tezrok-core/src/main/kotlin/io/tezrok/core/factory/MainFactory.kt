@@ -12,10 +12,6 @@ import io.tezrok.core.feature.FeatureManager
 import io.tezrok.core.error.TezrokException
 import io.tezrok.core.generator.*
 import io.tezrok.core.service.*
-import io.tezrok.core.service.EachClassVisitorsProvider
-import io.tezrok.core.service.EntityClassVisitorsProvider
-import io.tezrok.core.service.MainAppVisitorsProvider
-import io.tezrok.core.service.MavenVisitorsProvider
 import java.io.File
 import java.lang.IllegalStateException
 import java.util.concurrent.ConcurrentHashMap
@@ -45,10 +41,6 @@ class MainFactory(private val project: ProjectNode,
                 MavenGenerator::class.java -> MavenGenerator()
                 LogGenerator::class.java -> LogGenerator()
                 EntityGenerator::class.java -> EntityGenerator()
-                MavenVisitorsProvider::class.java -> MavenVisitorsProvider(mavenVisitors)
-                MainAppVisitorsProvider::class.java -> MainAppVisitorsProvider(mainAppVisitors)
-                EachClassVisitorsProvider::class.java -> EachClassVisitorsProvider(eachClassVisitors)
-                EntityClassVisitorsProvider::class.java -> EntityClassVisitorsProvider(entityClassVisitors)
                 CodeService::class.java -> throw TezrokException("Class CodeService is context related")
                 else -> throw TezrokException("Unsupported type: $clazz")
             }.findVisitors()
@@ -64,6 +56,16 @@ class MainFactory(private val project: ProjectNode,
         }
 
         return obj as T
+    }
+
+    override fun <T : Service> getServiceList(clazz: Class<T>): Set<T> {
+        return when (clazz) {
+            MavenVisitor::class.java -> mavenVisitors
+            MainAppVisitor::class.java -> mainAppVisitors
+            EachClassVisitor::class.java -> eachClassVisitors
+            EntityClassVisitor::class.java -> entityClassVisitors
+            else -> throw TezrokException("Type not supported: $clazz")
+        } as Set<T>
     }
 
     override fun createService(className: String): Service {

@@ -7,11 +7,8 @@ import io.tezrok.api.model.maven.Pom
 import io.tezrok.api.model.maven.Version
 import io.tezrok.api.model.node.ModuleNode
 import io.tezrok.api.visitor.MavenVisitor
-import io.tezrok.core.service.MavenVisitorsProvider
 import io.tezrok.core.builder.PomBuilder
-import io.tezrok.core.error.TezrokException
 import org.slf4j.LoggerFactory
-import java.lang.Exception
 
 /**
  * Generates maven related files (pom.xml and other)
@@ -35,26 +32,14 @@ class MavenGenerator : Generator {
             )
         }
 
-        populatePom(pom, context)
+        context.applyVisitors(MavenVisitor::class.java) { visitor ->
+            visitor.visit(pom)
+        }
 
         if (context.phase == Phase.Generate) {
             val builder = PomBuilder(pom, context)
 
             context.render(builder)
-        }
-    }
-
-    private fun populatePom(pom: Pom, context: ExecuteContext) {
-        context.getMavenVisitors().forEach { visitor ->
-            try {
-                log.debug("Begin Maven visitor {}", visitor.javaClass.name)
-
-                visitor.visit(pom)
-
-                log.debug("End Maven visitor {}", visitor.javaClass.name)
-            } catch (e: Exception) {
-                throw TezrokException("Maven visitor (${visitor.javaClass.name}) failed: ${e.message}", e)
-            }
         }
     }
 }
@@ -63,8 +48,4 @@ fun ModuleNode.toMavenVersion(): Version {
     return Version(groupId = packagePath,
             artifactId = name.toLowerCase().replace(' ', '-'),
             version = version)
-}
-
-fun ExecuteContext.getMavenVisitors(): Set<MavenVisitor> {
-    return getInstance(MavenVisitorsProvider::class.java).visitors
 }

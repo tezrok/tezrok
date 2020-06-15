@@ -7,11 +7,14 @@ import io.tezrok.api.builder.type.NamedType
 import io.tezrok.api.builder.type.Type
 import io.tezrok.api.model.node.ModuleNode
 import io.tezrok.api.model.node.ProjectNode
+import io.tezrok.api.service.Service
+import io.tezrok.core.error.TezrokException
 import io.tezrok.core.factory.Factory
 import io.tezrok.core.util.PackageUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileWriter
+import java.lang.Exception
 
 /**
  * Implementation of {@link ExecuteContext} when Phase and Module changed
@@ -19,8 +22,6 @@ import java.io.FileWriter
 internal class SelectedContext(val selectedPhase: Phase,
                                val selectedModule: ModuleNode,
                                val factory: Factory) : ExecuteContext {
-    private val log = LoggerFactory.getLogger(javaClass)
-
     override val phase: Phase = selectedPhase
 
     override val module: ModuleNode = selectedModule
@@ -32,6 +33,8 @@ internal class SelectedContext(val selectedPhase: Phase,
     override val overwriteIfExists: Boolean = true
 
     override fun <T> getInstance(clazz: Class<T>): T = factory.getInstance(clazz, this)
+
+    override fun <T : Service> getServiceList(clazz: Class<T>): Set<T> = factory.getServiceList(clazz)
 
     override fun render(builder: Builder) {
         if (phase != Phase.Generate) {
@@ -58,6 +61,23 @@ internal class SelectedContext(val selectedPhase: Phase,
         }
     }
 
+    override fun <T : Service> applyVisitors(clazz: Class<T>, action: (T) -> Unit) {
+        val visitors = getServiceList(clazz)
+
+        visitors.forEach {visitor ->
+            try {
+                log.debug("Begin visitor {}", visitor.javaClass.name)
+
+                action(visitor)
+
+                log.debug("End visitor {}", visitor.javaClass.name)
+            } catch (e: Exception) {
+                throw TezrokException("Visitor (${visitor.javaClass.name}) failed: ${e.message}", e)
+            }
+        }
+    }
+
+
     override fun ofType(name: String, subPath: String): Type {
         return NamedType(name, PackageUtil.concat(module.packagePath, subPath))
     }
@@ -68,5 +88,9 @@ internal class SelectedContext(val selectedPhase: Phase,
 
     override fun resolveType(name: String): Type {
         return factory.resolveType(name, this)
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(javaClass)
     }
 }
