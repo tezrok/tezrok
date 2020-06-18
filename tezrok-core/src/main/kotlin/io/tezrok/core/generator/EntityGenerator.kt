@@ -20,7 +20,7 @@ class EntityGenerator : Generator {
                 val entityClass = createClazz(codeGen, context, entity)
 
                 context.applyVisitors(EntityClassVisitor::class.java) { visitor ->
-                    visitor.visit(entityClass)
+                    visitor.visit(entityClass, entity)
                 }
 
                 context.render(entityClass)

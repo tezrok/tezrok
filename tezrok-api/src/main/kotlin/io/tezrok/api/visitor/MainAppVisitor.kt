@@ -1,9 +1,9 @@
 package io.tezrok.api.visitor
 
 import io.tezrok.api.builder.JavaClassBuilder
-import io.tezrok.api.service.Service
+import io.tezrok.api.service.Visitor
 
-interface MainAppVisitor : Service {
+interface MainAppVisitor : Visitor {
     /**
      * Called on class with entry point method (main)
      */

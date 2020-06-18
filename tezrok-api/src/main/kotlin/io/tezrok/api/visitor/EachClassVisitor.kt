@@ -1,9 +1,9 @@
 package io.tezrok.api.visitor
 
 import io.tezrok.api.builder.JavaClassBuilder
-import io.tezrok.api.service.Service
+import io.tezrok.api.service.Visitor
 
-interface EachClassVisitor : Service {
+interface EachClassVisitor : Visitor {
     /**
      * Called on each class
      */
