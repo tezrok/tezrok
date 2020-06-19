@@ -9,13 +9,14 @@ class StartUpGeneratorTest {
     @Test
     fun testMainAppGenerator() {
         val project = ProjectNode("Hello World", "Simple Hello World App")
-        val module = ModuleNode("Hello World", "com.company", "1.0")
-                .use(FeatureNode("HelloWorld"))
-                .add(EntityNode("Post", "Blog post")
-                        .add(FieldNode("id", "Long", primary = true))
-                        .add(FieldNode("title", "String", max = 100))
-                        .add(FieldNode("text", "String", max = 8000)))
-
+        val module = ModuleNode("Hello World", "com.company", "1.0", project).apply {
+            use(FeatureNode("HelloWorld", this))
+            add(EntityNode("Post", this, "Blog post").apply {
+                add(FieldNode("id", "Long", this, primary = true))
+                add(FieldNode("title", "String", this, max = 100))
+                add(FieldNode("text", "String", this, max = 8000))
+            })
+        }
 
         project.add(module)
 

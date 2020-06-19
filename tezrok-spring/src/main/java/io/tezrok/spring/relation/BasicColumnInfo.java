@@ -64,13 +64,13 @@ public class BasicColumnInfo extends ColumnInfo {
     public static class Column {
         private final String name;
         private final String dbType;
-        private final Integer length;
+        private final Long length;
         private final boolean isNullable;
         private final boolean isUnique;
         private final boolean isPrimary;
         private final boolean autoIncrement;
 
-        public Column(String name, String dbType, Integer length, boolean isNullable, boolean isUnique,
+        public Column(String name, String dbType, Long length, boolean isNullable, boolean isUnique,
                       boolean isPrimary, boolean autoIncrement) {
             this.name = Validate.notBlank(name, "name");
             this.dbType = Validate.notBlank(dbType, "dbType");
@@ -85,7 +85,7 @@ public class BasicColumnInfo extends ColumnInfo {
             return name;
         }
 
-        public Integer getLength() {
+        public Long getLength() {
             return length;
         }
 

@@ -2,9 +2,9 @@ package io.tezrok.api.visitor
 
 import io.tezrok.api.builder.JavaClassBuilder
 import io.tezrok.api.model.node.EntityNode
-import io.tezrok.api.service.Service
+import io.tezrok.api.service.Visitor
 
-interface EntityClassVisitor : Service {
+interface EntityClassVisitor : Visitor {
     /**
      * Called on each class generated from EntityNode
      *

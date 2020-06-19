@@ -1,20 +1,20 @@
 package io.tezrok.spring.relation;
 
-import io.arusland.tezrok.parser.EntityFieldNode;
+import io.tezrok.api.model.node.FieldNode;
 import org.apache.commons.lang3.Validate;
 
 /**
  * Created by ruslan on 02.04.2016.
  */
 public class OneToManyColumnInfo extends ColumnInfo {
-    private final EntityFieldNode mappedBy;
+    private final FieldNode mappedBy;
 
-    public OneToManyColumnInfo(EntityFieldNode field, EntityFieldNode mappedBy) {
+    public OneToManyColumnInfo(FieldNode field, FieldNode mappedBy) {
         super(field);
         this.mappedBy = Validate.notNull(mappedBy, "mappedBy");
     }
 
-    public EntityFieldNode getMappedBy() {
+    public FieldNode getMappedBy() {
         return mappedBy;
     }
 }

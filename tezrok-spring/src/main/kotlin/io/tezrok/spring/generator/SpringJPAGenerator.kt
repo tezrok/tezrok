@@ -2,6 +2,7 @@ package io.tezrok.spring.generator
 
 import io.tezrok.api.ExecuteContext
 import io.tezrok.api.Generator
+import io.tezrok.api.GlobalContext
 import io.tezrok.api.builder.JavaClassBuilder
 import io.tezrok.api.builder.JavaField
 import io.tezrok.api.model.node.EntityNode
@@ -10,6 +11,7 @@ import io.tezrok.api.model.node.ProjectNode
 import io.tezrok.api.visitor.EntityClassVisitor
 import io.tezrok.api.visitor.LogicModelVisitor
 import io.tezrok.api.visitor.ModelPhase
+import io.tezrok.spring.relation.EntityRelationResolver
 import io.tezrok.spring.util.NameUtil
 import org.slf4j.LoggerFactory
 import javax.persistence.Entity
@@ -19,9 +21,11 @@ import javax.persistence.Id
  * Generates jpa-repositories
  */
 class SpringJPAGenerator : Generator, EntityClassVisitor, LogicModelVisitor {
-    override fun visit(project: ProjectNode, phase: ModelPhase) {
+    private var resolver: EntityRelationResolver? = null
+
+    override fun visit(project: ProjectNode, phase: ModelPhase, context: GlobalContext) {
         if (phase == ModelPhase.PostEdit) {
-            // TODO: build entity relations
+            resolver = EntityRelationResolver(project).init(context)
         }
     }
 

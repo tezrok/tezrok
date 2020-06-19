@@ -3,7 +3,12 @@ package io.tezrok.api.model.node
 class ModuleNode(name: String,
                  val packagePath: String,
                  val version: String,
-                 description: String = "") : Node(name, KIND, description) {
+                 parent: ProjectNode,
+                 description: String = "") : Node(name, KIND, description, parent) {
+
+    override val parent: ProjectNode
+        get() = super.parent as ProjectNode
+
     /**
      * Used features in the module
      */

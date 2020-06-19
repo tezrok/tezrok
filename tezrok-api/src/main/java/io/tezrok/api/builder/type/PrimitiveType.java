@@ -37,6 +37,6 @@ public class PrimitiveType extends Type {
     }
 
     public static boolean isPrimitive(String typeName) {
-        return PrimitiveTypeMapper.isPrimitive(typeName);
+        return PrimitiveTypeHelper.isPrimitive(typeName);
     }
 }

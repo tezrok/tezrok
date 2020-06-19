@@ -5,11 +5,12 @@ import io.tezrok.api.builder.type.Type
 import io.tezrok.api.model.node.ModuleNode
 import io.tezrok.api.model.node.ProjectNode
 import io.tezrok.api.service.Service
+import io.tezrok.api.service.Visitor
 
 /**
  * Used while generating
  */
-interface ExecuteContext {
+interface ExecuteContext : GlobalContext {
     /**
      * Get current phase
      */
@@ -46,24 +47,9 @@ interface ExecuteContext {
     fun ofType(name: String, subPath: String = ""): Type
 
     /**
-     * Resolves type by name
-     */
-    fun resolveType(name: String): Type
-
-    /**
-     * Gets instance of specified class
-     */
-    fun <T> getInstance(clazz: Class<T>): T
-
-    /**
-     * Gets list of an Type. Used for getting visitors list
-     */
-    fun <T : Service> getServiceList(clazz: Class<T>): Set<T>
-
-    /**
      * Call specified visitors
      */
-    fun <T : Service> applyVisitors(clazz: Class<T>, action: (T) -> Unit)
+    fun <T : Visitor> applyVisitors(clazz: Class<T>, action: (T) -> Unit)
 
     /**
      * Render specified builder

@@ -3,7 +3,7 @@ package io.tezrok.core.feature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import io.tezrok.api.service.Service
-import io.tezrok.core.error.TezrokException
+import io.tezrok.api.error.TezrokException
 import io.tezrok.core.factory.Factory
 
 class FeatureManager(private val factory: Factory) {

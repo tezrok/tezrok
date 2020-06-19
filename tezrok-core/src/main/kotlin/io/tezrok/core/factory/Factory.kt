@@ -2,8 +2,11 @@ package io.tezrok.core.factory
 
 import io.tezrok.api.ExecuteContext
 import io.tezrok.api.builder.type.Type
+import io.tezrok.api.model.node.FieldNode
+import io.tezrok.api.model.node.ModuleNode
 import io.tezrok.api.model.node.ProjectNode
 import io.tezrok.api.service.Service
+import io.tezrok.api.service.Visitor
 import java.io.File
 
 /**
@@ -20,7 +23,11 @@ interface Factory {
 
     fun getTargetDir(): File
 
-    fun resolveType(name: String, context: ExecuteContext): Type
+    fun resolveType(name: String, module: ModuleNode): Type
+
+    fun resolveType(field: FieldNode): Type
 
     fun <T : Service> getServiceList(clazz: Class<T>): Set<T>
+
+    fun <T : Visitor> applyVisitors(clazz: Class<T>, action: (T) -> Unit)
 }

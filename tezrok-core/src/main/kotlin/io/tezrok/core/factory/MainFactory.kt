@@ -4,15 +4,20 @@ import io.tezrok.api.ExecuteContext
 import io.tezrok.api.builder.type.Type
 import io.tezrok.api.builder.type.resolver.NamedNodeTypeResolver
 import io.tezrok.api.builder.type.resolver.PrimitiveTypeResolver
+import io.tezrok.api.model.node.FieldNode
 import io.tezrok.api.model.node.ProjectNode
 import io.tezrok.api.service.CodeService
 import io.tezrok.api.service.Service
 import io.tezrok.api.visitor.*
 import io.tezrok.core.feature.FeatureManager
-import io.tezrok.core.error.TezrokException
+import io.tezrok.api.error.TezrokException
+import io.tezrok.api.model.node.ModuleNode
+import io.tezrok.api.service.Visitor
 import io.tezrok.core.generator.*
 import io.tezrok.core.service.*
+import org.slf4j.LoggerFactory
 import java.io.File
+import java.lang.Exception
 import java.lang.IllegalStateException
 import java.util.concurrent.ConcurrentHashMap
 
@@ -26,6 +31,7 @@ class MainFactory(private val project: ProjectNode,
     private val mainAppVisitors = mutableSetOf<MainAppVisitor>()
     private val eachClassVisitors = mutableSetOf<EachClassVisitor>()
     private val entityClassVisitors = mutableSetOf<EntityClassVisitor>()
+    private val logicModelVisitors = mutableSetOf<LogicModelVisitor>()
 
     override fun <T> getInstance(clazz: Class<T>): T {
         if (!created.contains(clazz) && (MavenVisitor::class.java.isAssignableFrom(clazz)
@@ -64,8 +70,25 @@ class MainFactory(private val project: ProjectNode,
             MainAppVisitor::class.java -> mainAppVisitors
             EachClassVisitor::class.java -> eachClassVisitors
             EntityClassVisitor::class.java -> entityClassVisitors
+            LogicModelVisitor::class.java -> logicModelVisitors
             else -> throw TezrokException("Type not supported: $clazz")
         } as Set<T>
+    }
+
+    override fun <T : Visitor> applyVisitors(clazz: Class<T>, action: (T) -> Unit) {
+        val visitors = getServiceList(clazz)
+
+        visitors.forEach { visitor ->
+            try {
+                log.debug("Begin visitor {}", visitor.javaClass.name)
+
+                action(visitor)
+
+                log.debug("End visitor {}", visitor.javaClass.name)
+            } catch (e: Exception) {
+                throw TezrokException("Visitor (${visitor.javaClass.name}) failed: ${e.message}", e)
+            }
+        }
     }
 
     override fun createService(className: String): Service {
@@ -82,13 +105,17 @@ class MainFactory(private val project: ProjectNode,
 
     override fun getTargetDir(): File = targetDir
 
-    override fun resolveType(name: String, context: ExecuteContext): Type {
-        val typeResolver = PrimitiveTypeResolver(NamedNodeTypeResolver(context.module, context.project))
+    override fun resolveType(field: FieldNode): Type = resolveType(field.type, field.module)
+
+    override fun resolveType(name: String, module: ModuleNode): Type {
+        val typeResolver = PrimitiveTypeResolver(NamedNodeTypeResolver(module, module.project))
 
         return typeResolver.resolveByName(name)
     }
 
     companion object {
+        private val log = LoggerFactory.getLogger(MainFactory::class.java)
+
         fun create(project: ProjectNode, targetDir: File): MainFactory {
             return MainFactory(project, targetDir)
         }
@@ -106,6 +133,9 @@ class MainFactory(private val project: ProjectNode,
         }
         if (this is EntityClassVisitor) {
             entityClassVisitors.add(this)
+        }
+        if (this is LogicModelVisitor) {
+            logicModelVisitors.add(this)
         }
 
         if (this is VisitorsProvider) {

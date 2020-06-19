@@ -5,16 +5,16 @@ import io.tezrok.api.Phase
 import io.tezrok.api.builder.Builder
 import io.tezrok.api.builder.type.NamedType
 import io.tezrok.api.builder.type.Type
+import io.tezrok.api.model.node.FieldNode
 import io.tezrok.api.model.node.ModuleNode
 import io.tezrok.api.model.node.ProjectNode
 import io.tezrok.api.service.Service
-import io.tezrok.core.error.TezrokException
+import io.tezrok.api.service.Visitor
 import io.tezrok.core.factory.Factory
 import io.tezrok.core.util.PackageUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileWriter
-import java.lang.Exception
 
 /**
  * Implementation of {@link ExecuteContext} when Phase and Module changed
@@ -61,22 +61,7 @@ internal class SelectedContext(val selectedPhase: Phase,
         }
     }
 
-    override fun <T : Service> applyVisitors(clazz: Class<T>, action: (T) -> Unit) {
-        val visitors = getServiceList(clazz)
-
-        visitors.forEach {visitor ->
-            try {
-                log.debug("Begin visitor {}", visitor.javaClass.name)
-
-                action(visitor)
-
-                log.debug("End visitor {}", visitor.javaClass.name)
-            } catch (e: Exception) {
-                throw TezrokException("Visitor (${visitor.javaClass.name}) failed: ${e.message}", e)
-            }
-        }
-    }
-
+    override fun <T : Visitor> applyVisitors(clazz: Class<T>, action: (T) -> Unit) = factory.applyVisitors(clazz, action)
 
     override fun ofType(name: String, subPath: String): Type {
         return NamedType(name, PackageUtil.concat(module.packagePath, subPath))
@@ -86,9 +71,9 @@ internal class SelectedContext(val selectedPhase: Phase,
         return NamedType(clazz)
     }
 
-    override fun resolveType(name: String): Type {
-        return factory.resolveType(name, this)
-    }
+    override fun resolveType(name: String): Type = factory.resolveType(name, module)
+
+    override fun resolveType(field: FieldNode): Type = factory.resolveType(field)
 
     companion object {
         private val log = LoggerFactory.getLogger(javaClass)
