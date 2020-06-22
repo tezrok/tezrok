@@ -185,7 +185,7 @@ public abstract class JavaClassBuilder extends VelocityBuilder implements Annota
     public JavaClassBuilder addImplements(Class... classes) {
         for (Class clazz : classes) {
             interfaces.add(clazz.getSimpleName());
-            checkAndAddImportClass(clazz.getName());
+            addImportClass(clazz.getName());
         }
 
         return this;
@@ -193,7 +193,7 @@ public abstract class JavaClassBuilder extends VelocityBuilder implements Annota
 
     public JavaClassBuilder setExtends(Class clazz) {
         setExtends(clazz.getSimpleName());
-        checkAndAddImportClass(clazz.getName());
+        addImportClass(clazz.getName());
 
         return this;
     }
@@ -215,13 +215,19 @@ public abstract class JavaClassBuilder extends VelocityBuilder implements Annota
         return this;
     }
 
+    @Override
     public JavaClassBuilder addImports(String... imports) {
         return addImportsEx(Arrays.asList(imports));
     }
 
+    @Override
+    public JavaClassBuilder addImports(Class... imports) {
+        return addImports(Arrays.asList(imports));
+    }
+
     public JavaClassBuilder addImportsEx(List<String> imports) {
         for (String importClass : imports) {
-            checkAndAddImportClass(importClass);
+            addImportClass(importClass);
         }
 
         return this;
@@ -229,14 +235,10 @@ public abstract class JavaClassBuilder extends VelocityBuilder implements Annota
 
     public JavaClassBuilder addImports(List<Class> imports) {
         for (Class clazz : imports) {
-            checkAndAddImportClass(clazz.getName());
+            addImportClass(clazz.getName());
         }
 
         return this;
-    }
-
-    public JavaClassBuilder addImports(Class... imports) {
-        return addImports(Arrays.asList(imports));
     }
 
     public String getPackage() {
@@ -339,17 +341,17 @@ public abstract class JavaClassBuilder extends VelocityBuilder implements Annota
         return "CLASS: " + getName();
     }
 
-    private void checkAndAddImportClass(String importClass) {
+    private void addImportClass(String importClass) {
         Validate.notBlank(importClass, "importClass");
 
-        if (!imports.contains(importClass) && !"java.lang.Override".equals(importClass)) {
+        if (!"java.lang.Override".equals(importClass)) {
             imports.add(importClass);
         }
     }
 
     private void addImportsFromAnnotated() {
         for (String clazz : getImportClasses()) {
-            checkAndAddImportClass(clazz);
+            addImportClass(clazz);
         }
 
         addImportsFromAnnotated(fields);
@@ -359,7 +361,7 @@ public abstract class JavaClassBuilder extends VelocityBuilder implements Annota
     private void addImportsFromAnnotated(Set<? extends Annotationable<?>> items) {
         for (Annotationable<?> item : items) {
             for (String clazz : item.getImportClasses()) {
-                checkAndAddImportClass(clazz);
+                addImportClass(clazz);
             }
         }
     }
@@ -367,13 +369,13 @@ public abstract class JavaClassBuilder extends VelocityBuilder implements Annota
     private void addImportsFromFieldsAndMethods() {
         for (JavaField field : fields) {
             for (String clazz : field.getType().getImports()) {
-                checkAndAddImportClass(clazz);
+                addImportClass(clazz);
             }
         }
 
         for (JavaMethod method : methods) {
             for (String clazz : method.getType().getImports()) {
-                checkAndAddImportClass(clazz);
+                addImportClass(clazz);
             }
         }
     }

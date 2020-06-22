@@ -1,14 +1,14 @@
 package io.tezrok.api.builder;
 
 import io.tezrok.api.util.StringUtil;
+import org.apache.commons.lang3.Validate;
 
 import java.lang.annotation.Annotation;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class AnnotationableImpl<TReturn> implements Annotationable<TReturn> {
     private final List<JavaAnnotation> javaAnnotations = new LinkedList<>();
-    private final Set<String> importClasses = new HashSet<>();
+    private final Set<String> imports = new HashSet<>();
     private final TReturn returnType;
 
     public AnnotationableImpl() {
@@ -30,11 +30,11 @@ public class AnnotationableImpl<TReturn> implements Annotationable<TReturn> {
     public TReturn annotate(JavaAnnotation annotation) {
         javaAnnotations.add(annotation);
         if (annotation.getAnnotationClass() != null) {
-            addAnnotationClass(annotation.getAnnotationClass().getName());
+            addImportClass(annotation.getAnnotationClass().getName());
         }
         annotation.getAdditionalImports()
                 .stream()
-                .forEach(p -> addAnnotationClass(p));
+                .forEach(p -> addImportClass(p));
 
         return returnType != null ? returnType : (TReturn) this;
     }
@@ -48,27 +48,39 @@ public class AnnotationableImpl<TReturn> implements Annotationable<TReturn> {
     }
 
     public Set<String> getImportClasses() {
-        return importClasses;
+        return imports;
     }
 
-    private void addAnnotationClass(String clazz) {
-        if (clazz != null && !importClasses.contains(clazz)) {
-            importClasses.add(clazz);
+    @Override
+    public TReturn addImports(String... imports) {
+        for (String clazz : imports) {
+            addImportClass(clazz);
+        }
+
+        return returnType != null ? returnType : (TReturn) this;
+    }
+
+    @Override
+    public TReturn addImports(Class... imports) {
+        for (Class clazz : imports) {
+            addImportClass(clazz.getName());
+        }
+
+        return returnType != null ? returnType : (TReturn) this;
+    }
+
+    private void addImportClass(String importClass) {
+        Validate.notBlank(importClass, "importClass");
+
+        if (!"java.lang.Override".equals(importClass)) {
+            imports.add(importClass);
         }
     }
 
     protected Set<String> mergeImportClasses(Collection<? extends AnnotationableImpl<?>> items) {
-        final Set<String> classes = importClasses
-                .stream()
-                .collect(Collectors.toSet());
+        final Set<String> classes = new HashSet(imports);
 
-        for (AnnotationableImpl<?> param : items) {
-            for (String clazz : param.getImportClasses()) {
-                if (!classes.contains(clazz)) {
-                    classes.add(clazz);
-                }
-            }
-        }
+        items.stream().flatMap(p -> p.getImportClasses().stream()).forEach(classes::add);
 
         return Collections.unmodifiableSet(classes);
     }

@@ -16,4 +16,8 @@ public interface Annotationable<TReturn> {
     boolean hasAnnotations();
 
     Set<String> getImportClasses();
+
+    TReturn addImports(String... imports);
+
+    TReturn addImports(Class... imports);
 }

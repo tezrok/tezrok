@@ -18,15 +18,16 @@ import org.slf4j.LoggerFactory
  */
 class StartUpGenerator(private val factory: Factory) {
     private val log = LoggerFactory.getLogger(javaClass)
+    private val featureManager = factory.getInstance(FeatureManager::class.java)
 
     fun execute() {
         val project = factory.getProject()
-        val featureManager = factory.getInstance(FeatureManager::class.java)
         val cache = mutableMapOf<ModuleNode, List<FeatureTree>>()
 
+        loadFeatures(project, cache)
         applyModelVisitors(project)
-        executeOnPhase(project, Phase.Init, cache, featureManager)
-        executeOnPhase(project, Phase.Generate, cache, featureManager)
+        executeOnPhase(project, Phase.Init, cache)
+        executeOnPhase(project, Phase.Generate, cache)
     }
 
     private fun applyModelVisitors(project: ProjectNode) {
@@ -51,9 +52,18 @@ class StartUpGenerator(private val factory: Factory) {
         log.info("End model visitors: {}", ModelPhase.PostEdit)
     }
 
+    private fun loadFeatures(project: ProjectNode, cache: MutableMap<ModuleNode, List<FeatureTree>>) {
+        project.modules().forEach { module ->
+            cache.computeIfAbsent(module) {
+                it.features()
+                        .map { f -> f.also { log.info("Loading feature: {}", f.name) } }
+                        .map { f -> featureManager.getFeatureTree(f.name) }
+            }
+        }
+    }
+
     private fun executeOnPhase(project: ProjectNode, phase: Phase,
-                               cache: MutableMap<ModuleNode, List<FeatureTree>>,
-                               featureManager: FeatureManager) {
+                               cache: MutableMap<ModuleNode, List<FeatureTree>>) {
 
         project.modules().forEach { module ->
             log.debug("------Start phase: {}, module: {}--------", phase, module.name)

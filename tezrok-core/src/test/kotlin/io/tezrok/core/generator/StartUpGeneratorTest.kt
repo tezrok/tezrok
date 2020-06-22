@@ -11,6 +11,7 @@ class StartUpGeneratorTest {
         val project = ProjectNode("Hello World", "Simple Hello World App")
         val module = ModuleNode("Hello World", "com.company", "1.0", project).apply {
             use(FeatureNode("HelloWorld", this))
+            use(FeatureNode("SpringJPA", this))
             add(EntityNode("Post", this, "Blog post").apply {
                 add(FieldNode("id", "Long", this, primary = true))
                 add(FieldNode("title", "String", this, max = 100))

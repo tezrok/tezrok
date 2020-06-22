@@ -1,6 +1,7 @@
 package io.tezrok.core.factory
 
 import io.tezrok.api.ExecuteContext
+import io.tezrok.api.Generator
 import io.tezrok.api.builder.type.Type
 import io.tezrok.api.builder.type.resolver.NamedNodeTypeResolver
 import io.tezrok.api.builder.type.resolver.PrimitiveTypeResolver
@@ -34,22 +35,8 @@ class MainFactory(private val project: ProjectNode,
     private val logicModelVisitors = mutableSetOf<LogicModelVisitor>()
 
     override fun <T> getInstance(clazz: Class<T>): T {
-        if (!created.contains(clazz) && (MavenVisitor::class.java.isAssignableFrom(clazz)
-                        || MainAppVisitor::class.java.isAssignableFrom(clazz))) {
-            created[clazz] = clazz.newInstance()!!.findVisitors()
-        }
-
         val obj = created.computeIfAbsent(clazz) {
-            when (clazz) {
-                CoreGenerator::class.java -> CoreGenerator()
-                StartUpGenerator::class.java -> StartUpGenerator(this)
-                FeatureManager::class.java -> FeatureManager(this)
-                MavenGenerator::class.java -> MavenGenerator()
-                LogGenerator::class.java -> LogGenerator()
-                EntityGenerator::class.java -> EntityGenerator()
-                CodeService::class.java -> throw TezrokException("Class CodeService is context related")
-                else -> throw TezrokException("Unsupported type: $clazz")
-            }.findVisitors()
+            createInstance(clazz).findVisitors()
         }
 
         return obj as T
@@ -113,12 +100,18 @@ class MainFactory(private val project: ProjectNode,
         return typeResolver.resolveByName(name)
     }
 
-    companion object {
-        private val log = LoggerFactory.getLogger(MainFactory::class.java)
-
-        fun create(project: ProjectNode, targetDir: File): MainFactory {
-            return MainFactory(project, targetDir)
+    private fun <T> createInstance(clazz: Class<T>): Any {
+        val obj = if (StartUpGenerator::class.java == clazz || FeatureManager::class.java == clazz) {
+            clazz.getDeclaredConstructor(Factory::class.java).newInstance(this)!!
+        } else if (CodeService::class.java == clazz) {
+            throw TezrokException("Class CodeService is context related")
+        } else if (Visitor::class.java.isAssignableFrom(clazz) || Generator::class.java.isAssignableFrom(clazz)) {
+            clazz.newInstance()!!
+        } else {
+            throw TezrokException("Unsupported type: $clazz")
         }
+
+        return obj
     }
 
     private fun Any.findVisitors(): Any {
@@ -143,5 +136,13 @@ class MainFactory(private val project: ProjectNode,
         }
 
         return this
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(MainFactory::class.java)
+
+        fun create(project: ProjectNode, targetDir: File): MainFactory {
+            return MainFactory(project, targetDir)
+        }
     }
 }

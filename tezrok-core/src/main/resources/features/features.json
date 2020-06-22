@@ -30,6 +30,11 @@
       "service": "io.tezrok.core.generator.MavenGenerator"
     },
     {
+      "name": "SpringJPA",
+      "description": "Supports saving entity",
+      "service": "io.tezrok.spring.generator.SpringJPAGenerator"
+    },
+    {
       "name": "Log",
       "description": "Adds logging supports",
       "service": "io.tezrok.core.generator.LogGenerator",
