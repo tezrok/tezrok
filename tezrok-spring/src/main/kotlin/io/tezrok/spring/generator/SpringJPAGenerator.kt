@@ -3,6 +3,8 @@ package io.tezrok.spring.generator
 import io.tezrok.api.ExecuteContext
 import io.tezrok.api.Generator
 import io.tezrok.api.GlobalContext
+import io.tezrok.api.Phase
+import io.tezrok.api.builder.JMod
 import io.tezrok.api.builder.JavaClassBuilder
 import io.tezrok.api.builder.JavaField
 import io.tezrok.api.model.maven.Dependency
@@ -10,6 +12,7 @@ import io.tezrok.api.model.maven.Pom
 import io.tezrok.api.model.node.EntityNode
 import io.tezrok.api.model.node.FieldNode
 import io.tezrok.api.model.node.ProjectNode
+import io.tezrok.api.service.CodeService
 import io.tezrok.api.visitor.EntityClassVisitor
 import io.tezrok.api.visitor.LogicModelVisitor
 import io.tezrok.api.visitor.MavenVisitor
@@ -19,6 +22,7 @@ import io.tezrok.spring.relation.JoinColumn
 import io.tezrok.spring.relation.JoinTable
 import io.tezrok.spring.util.NameUtil
 import org.slf4j.LoggerFactory
+import org.springframework.data.repository.CrudRepository
 import javax.persistence.*
 
 /**
@@ -26,6 +30,7 @@ import javax.persistence.*
  */
 class SpringJPAGenerator : Generator, EntityClassVisitor, LogicModelVisitor, MavenVisitor {
     private lateinit var resolver: EntityRelationResolver
+    private val entityClasses = mutableMapOf<JavaClassBuilder, EntityNode>()
 
     override fun visit(project: ProjectNode, phase: ModelPhase, context: GlobalContext) {
         if (phase == ModelPhase.PostEdit) {
@@ -34,7 +39,18 @@ class SpringJPAGenerator : Generator, EntityClassVisitor, LogicModelVisitor, Mav
     }
 
     override fun execute(context: ExecuteContext) {
-        log.warn("execute method not implemented")
+        when (context.phase) {
+            Phase.Init -> entityClasses.clear()
+            Phase.Generate -> {
+                entityClasses.forEach { entity ->
+                    run {
+                        val repoClass = generateRepo(entity.key, entity.value, context)
+                        context.render(repoClass)
+                    }
+                }
+
+            }
+        }
     }
 
     override fun visit(clazz: JavaClassBuilder, node: EntityNode) {
@@ -47,10 +63,27 @@ class SpringJPAGenerator : Generator, EntityClassVisitor, LogicModelVisitor, Mav
         node.fields().forEach { fNode ->
             clazz.getField(fNode.name).ifPresent { annotateField(it, fNode) }
         }
+
+        entityClasses[clazz] = node
     }
 
     override fun visit(pom: Pom) {
+        // TODO: versions must be configured
         pom.add(Dependency("org.hibernate.javax.persistence", "hibernate-jpa-2.1-api", "1.0.2.Final"))
+        pom.add(Dependency("org.springframework.data", "spring-data-jpa", "2.0.8.RELEASE"))
+    }
+
+    private fun generateRepo(entity: JavaClassBuilder, node: EntityNode, context: ExecuteContext): JavaClassBuilder {
+        val name = entity.name
+        val primaryField = node.getPrimaryField()
+        val codeGen = context.getInstance(CodeService::class.java)
+        val repoClass = codeGen.createClass(context.ofType(name + "Repository", "repository"), JMod.INTERFACE)
+                .comment("Repository for {@link $name}")
+                .setExtends("CrudRepository<$name, ${primaryField.type}> ")
+                .addImports(CrudRepository::class.java)
+                .addImports(entity.fullName)
+
+        return repoClass
     }
 
     private fun annotateField(field: JavaField, node: FieldNode) {
