@@ -22,7 +22,7 @@ import io.tezrok.spring.relation.JoinColumn
 import io.tezrok.spring.relation.JoinTable
 import io.tezrok.spring.util.NameUtil
 import org.slf4j.LoggerFactory
-import org.springframework.data.repository.CrudRepository
+import org.springframework.data.jpa.repository.JpaRepository
 import javax.persistence.*
 
 /**
@@ -48,7 +48,6 @@ class SpringJPAGenerator : Generator, EntityClassVisitor, LogicModelVisitor, Mav
                         context.render(repoClass)
                     }
                 }
-
             }
         }
     }
@@ -70,7 +69,7 @@ class SpringJPAGenerator : Generator, EntityClassVisitor, LogicModelVisitor, Mav
     override fun visit(pom: Pom) {
         // TODO: versions must be configured
         pom.add(Dependency("org.hibernate.javax.persistence", "hibernate-jpa-2.1-api", "1.0.2.Final"))
-        pom.add(Dependency("org.springframework.data", "spring-data-jpa", "2.0.8.RELEASE"))
+        pom.add(Dependency("org.springframework.data", "spring-data-jpa", "2.3.1.RELEASE"))
     }
 
     private fun generateRepo(entity: JavaClassBuilder, node: EntityNode, context: ExecuteContext): JavaClassBuilder {
@@ -79,8 +78,8 @@ class SpringJPAGenerator : Generator, EntityClassVisitor, LogicModelVisitor, Mav
         val codeGen = context.getInstance(CodeService::class.java)
         val repoClass = codeGen.createClass(context.ofType(name + "Repository", "repository"), JMod.INTERFACE)
                 .comment("Repository for {@link $name}")
-                .setExtends("CrudRepository<$name, ${primaryField.type}> ")
-                .addImports(CrudRepository::class.java)
+                .setExtends("JpaRepository<$name, ${primaryField.type}> ")
+                .addImports(JpaRepository::class.java)
                 .addImports(entity.fullName)
 
         return repoClass
