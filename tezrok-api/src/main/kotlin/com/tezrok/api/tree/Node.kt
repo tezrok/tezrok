@@ -4,6 +4,8 @@ import java.util.stream.Stream
 
 /**
  * Basic node interface
+ *
+ * TODO: manage files
  */
 interface Node : Cloneable {
     /**
