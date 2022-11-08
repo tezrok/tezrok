@@ -5,7 +5,7 @@ import java.util.stream.Stream
 /**
  * Basic node interface
  */
-interface Node {
+interface Node : Cloneable {
     /**
      * Returns unique identifier
      */
@@ -15,6 +15,11 @@ interface Node {
      * Returns name of the node
      */
     fun getName(): String
+
+    /**
+     * Returns type of the node
+     */
+    fun getType(): NodeType
 
     /**
      * Adds new node or throws exception
@@ -31,26 +36,41 @@ interface Node {
     /**
      * Return children nodes
      *
-     * Note: children can be of infinitive size. Use nodesSize before.
+     * Note: children can be of infinite size. Use nodesSize before.
      */
     fun getChildren(): Stream<Node>
 
     /**
      * Returns count of children
      *
-     * @return Int.MAX_VALUE for infinitive data
+     * @return Int.MAX_VALUE for infinite data
      */
     fun getChildrenSize(): Int
 
     /**
      * Updates property
      *
-     * @return previous proverty value
+     * @return previous property value
      */
-    fun setProperty(name: String, value: Any?): Any?
+    fun setProperty(name: NodeProperty, value: Any?): Any?
 
     /**
      * Returns property value or null if property not set
      */
-    fun getProperty(name: String): Any?
+    fun getProperty(name: NodeProperty): Any?
+
+    /**
+     * Returns names of all properties. Can return names which not set yet (properties schema)
+     */
+    fun getPropertiesNames(): List<NodeProperty>
+
+    /**
+     * Return attributes of the node
+     */
+    fun getAttributes(): NodeAttributes
+
+    /**
+     * Return clone of the node
+     */
+    override fun clone(): Node
 }
