@@ -10,6 +10,9 @@ data class NodeProperty(val name: String) {
         val Name = of("name")
         val Type = of("type")
         val Child = of("child")
+        val File = of("file")
+        val FileHash = of("fileHash")
+        val FileContentType = of("fileContentType")
 
         // All known properties
         val All = listOf(Id, Name, Type, Child)

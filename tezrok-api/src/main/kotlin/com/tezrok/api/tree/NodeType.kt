@@ -15,7 +15,12 @@ data class NodeType(val name: String) {
          */
         val Container = of("Container")
 
-        val All = listOf(Item, Container)
+        /**
+         * Node contains file reference. By default, empty file is created
+         */
+        val File = of("File")
+
+        val All = listOf(Item, Container, File)
 
         fun of(name: String): NodeType = NodeType(name)
 
