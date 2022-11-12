@@ -6,13 +6,13 @@ package com.tezrok.api.tree
 data class NodeProperty(val name: String) {
     // TODO: add validation of name
     companion object {
-        val Id = of("id")
-        val Name = of("name")
-        val Type = of("type")
-        val Child = of("child")
-        val File = of("file")
-        val FileHash = of("fileHash")
-        val FileContentType = of("fileContentType")
+        val Id = of("_id")
+        val Name = of("_name")
+        val Type = of("_type")
+        val Child = of("_child")
+        val File = of("_file")
+        val FileHash = of("_fileHash")
+        val FileContentType = of("_fileContentType")
 
         // All known properties
         val All = listOf(Id, Name, Type, Child)

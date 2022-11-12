@@ -6,8 +6,6 @@ import java.util.stream.Stream
 
 /**
  * Basic node interface
- *
- * TODO: manage files
  */
 interface Node : Cloneable {
     /**
@@ -24,6 +22,13 @@ interface Node : Cloneable {
      * Returns type of the node
      */
     fun getType(): NodeType
+
+    /**
+     * Returns parent
+     *
+     * Root node returns null
+     */
+    fun getParent(): Node?
 
     /**
      * Returns reference of the node

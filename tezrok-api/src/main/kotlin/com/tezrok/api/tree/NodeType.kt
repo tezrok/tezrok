@@ -13,14 +13,14 @@ data class NodeType(val name: String) {
         /**
          * Node can contains children
          */
-        val Container = of("Container")
+        val Directory = of("Directory")
 
         /**
          * Node contains file reference. By default, empty file is created
          */
         val File = of("File")
 
-        val All = listOf(Item, Container, File)
+        val All = listOf(Item, Directory, File)
 
         fun of(name: String): NodeType = NodeType(name)
 
