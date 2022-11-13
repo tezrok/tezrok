@@ -43,14 +43,14 @@ interface Node : Cloneable {
     /**
      * Remove specified nodes
      *
-     * @return returns count of removed nodes
+     * @return `true` if any of the specified nodes was removed from the node
      */
-    fun remove(nodes: List<Node>): Int
+    fun remove(nodes: List<Node>): Boolean
 
     /**
      * Return children nodes
      *
-     * Note: children can be of infinite size. Use nodesSize before.
+     * Note: children can be of infinite size. Call `getChildrenSize` before.
      */
     fun getChildren(): Stream<Node>
 

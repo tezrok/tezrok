@@ -7,12 +7,12 @@ import java.util.stream.Stream
 class NodeIml(
     private val id: Long,
     private val parentNode: Node?,
-    private val properties: Map<String, Any?>,
+    private val properties: Map<NodeProperty, Any?>,
     private val nodeSupport: NodeSupport
 ) : Node {
     override fun getId(): Long = id
 
-    override fun getName(): String = getStringProp(NodeProperty.Id)
+    override fun getName(): String = getStringProp(NodeProperty.Name)
 
     override fun getType(): NodeType = NodeType.getOrCreate(getStringProp(NodeProperty.Type))
 
@@ -22,17 +22,11 @@ class NodeIml(
         nodeSupport.findByPath(path)
     }
 
-    override fun add(info: NodeInfo): Node {
-        TODO("Not yet implemented")
-    }
+    override fun add(info: NodeInfo): Node = nodeSupport.add(this, info )
 
-    override fun remove(nodes: List<Node>): Int {
-        TODO("Not yet implemented")
-    }
+    override fun remove(nodes: List<Node>): Boolean = nodeSupport.remove(this, nodes)
 
-    override fun getChildren(): Stream<Node> {
-        TODO("Not yet implemented")
-    }
+    override fun getChildren(): Stream<Node> = nodeSupport.getChildren(this)
 
     override fun getChildrenSize(): Int {
         TODO("Not yet implemented")
@@ -58,12 +52,10 @@ class NodeIml(
         TODO("Not yet implemented")
     }
 
-    private fun getStringPropSafe(name: String): String? = properties[name] as String?
+    private fun getStringPropSafe(name: NodeProperty): String? = properties[name] as String?
 
-    private fun getStringProp(name: String): String =
+    private fun getStringProp(name: NodeProperty): String =
         Validate.notBlank(getStringPropSafe(name), "Property '%s' cannot be empty", name)!!
-
-    private fun getStringProp(property: NodeProperty): String = getStringProp(property.name)
 
     private fun calcPath(): String {
         val nodes = LinkedList<Node>()
