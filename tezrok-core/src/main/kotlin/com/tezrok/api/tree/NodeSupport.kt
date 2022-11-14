@@ -1,5 +1,6 @@
 package com.tezrok.api.tree
 
+import com.tezrok.util.runIn
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.stream.Stream
@@ -12,7 +13,7 @@ class NodeSupport(lastId: Long) {
     private val readLock = lock.readLock()
 
     fun findByPath(path: String): Node? {
-        return null;
+        return null
     }
 
     fun add(parent: Node, info: NodeInfo): Node {
@@ -20,8 +21,7 @@ class NodeSupport(lastId: Long) {
         properties[NodeProperty.Name] = info.name
         properties[NodeProperty.Type] = info.type.name
 
-        writeLock.lock()
-        try {
+        writeLock.runIn {
             val nextId = lastIdCounter.incrementAndGet()
             properties[NodeProperty.Id] = nextId
             // TODO: validate new node
@@ -30,26 +30,30 @@ class NodeSupport(lastId: Long) {
             nodes.computeIfAbsent(node) { ArrayList() }.add(node)
 
             return node
-        } finally {
-            writeLock.unlock()
         }
     }
 
     fun remove(parent: Node, nodes: List<Node>): Boolean {
-        writeLock.lock()
-        try {
+        writeLock.runIn {
             return this.nodes[parent]?.removeAll(nodes) ?: false
-        } finally {
-            writeLock.unlock()
         }
     }
 
     fun getChildren(parent: Node): Stream<Node> {
-        readLock.lock()
-        return try {
-            (nodes[parent] as List<Node>? ?: emptyList()).toList().stream()
-        } finally {
-            readLock.unlock()
+        readLock.runIn {
+            return getListByParent(parent).toList().stream()
         }
     }
+
+    fun getChildrenSize(parent: Node): Int {
+        readLock.runIn {
+            return getListByParent(parent).size
+        }
+    }
+
+    fun clone(node: Node): Node {
+        TODO("Not yet implemented")
+    }
+
+    private fun getListByParent(parent: Node): List<Node> = (nodes[parent] as List<Node>? ?: emptyList())
 }

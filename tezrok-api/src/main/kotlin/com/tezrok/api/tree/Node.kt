@@ -66,17 +66,17 @@ interface Node : Cloneable {
      *
      * @return previous property value
      */
-    fun setProperty(name: NodeProperty, value: Any?): Any?
+    fun setProperty(property: NodeProperty, value: Any?): Any?
 
     /**
      * Returns property value or null if property not exists
      */
-    fun getProperty(name: NodeProperty): Any?
+    fun getProperty(property: NodeProperty): Any?
 
     /**
      * Returns names of all properties. Can return names which not set yet (properties schema)
      */
-    fun getPropertiesNames(): List<NodeProperty>
+    fun getPropertiesNames(): Set<NodeProperty>
 
     /**
      * Return attributes of the node

@@ -2,14 +2,17 @@ package com.tezrok.api.tree
 
 import org.apache.commons.lang3.Validate
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Stream
 
 class NodeIml(
     private val id: Long,
     private val parentNode: Node?,
-    private val properties: Map<NodeProperty, Any?>,
+    private val props: Map<NodeProperty, Any?>,
     private val nodeSupport: NodeSupport
 ) : Node {
+    private val properties: MutableMap<NodeProperty, Any?> = ConcurrentHashMap(props)
+
     override fun getId(): Long = id
 
     override fun getName(): String = getStringProp(NodeProperty.Name)
@@ -28,35 +31,32 @@ class NodeIml(
 
     override fun getChildren(): Stream<Node> = nodeSupport.getChildren(this)
 
-    override fun getChildrenSize(): Int {
-        TODO("Not yet implemented")
+    override fun getChildrenSize(): Int = nodeSupport.getChildrenSize(this)
+
+    override fun setProperty(property: NodeProperty, value: Any?): Any? {
+        val oldProp = properties.put(property, value)
+        // TODO: check input
+        return oldProp
     }
 
-    override fun setProperty(name: NodeProperty, value: Any?): Any? {
-        TODO("Not yet implemented")
-    }
+    override fun getProperty(property: NodeProperty): Any? = properties[property]
 
-    override fun getProperty(name: NodeProperty): Any? {
-        TODO("Not yet implemented")
-    }
-
-    override fun getPropertiesNames(): List<NodeProperty> {
-        TODO("Not yet implemented")
-    }
+    override fun getPropertiesNames(): Set<NodeProperty> = properties.keys
 
     override fun getAttributes(): NodeAttributes {
         TODO("Not yet implemented")
     }
 
-    override fun clone(): Node {
-        TODO("Not yet implemented")
-    }
+    override fun clone(): Node = nodeSupport.clone(this)
 
-    private fun getStringPropSafe(name: NodeProperty): String? = properties[name] as String?
+    private fun getStringPropSafe(property: NodeProperty): String? = properties[property] as String?
 
-    private fun getStringProp(name: NodeProperty): String =
-        Validate.notBlank(getStringPropSafe(name), "Property '%s' cannot be empty", name)!!
+    private fun getStringProp(property: NodeProperty): String =
+        Validate.notBlank(getStringPropSafe(property), "Property '%s' cannot be empty", property)!!
 
+    /**
+     * Calculating path for current node
+     */
     private fun calcPath(): String {
         val nodes = LinkedList<Node>()
         var parent: Node? = this
