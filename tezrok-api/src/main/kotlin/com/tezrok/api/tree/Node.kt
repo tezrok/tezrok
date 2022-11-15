@@ -1,7 +1,5 @@
 package com.tezrok.api.tree
 
-import com.tezrok.api.FileRef
-import com.tezrok.api.error.TezrokException
 import java.util.stream.Stream
 
 /**
@@ -62,31 +60,9 @@ interface Node : Cloneable {
     fun getChildrenSize(): Int
 
     /**
-     * Updates property
-     *
-     * @return previous property value
+     * Return properties of the node
      */
-    fun setProperty(property: NodeProperty, value: Any?): Any?
-
-    /**
-     * Returns property value or null if property not exists
-     */
-    fun getProperty(property: NodeProperty): Any?
-
-    /**
-     * Returns names of all properties. Can return names which not set yet (properties schema)
-     */
-    fun getPropertiesNames(): Set<NodeProperty>
-
-    /**
-     * Return attributes of the node
-     */
-    fun getAttributes(): NodeAttributes
-
-    /**
-     * Returns FileRef if the node is File node
-     */
-    fun getFile(): FileRef = getProperty(NodeProperty.File) as? FileRef ?: throw TezrokException("Node is not File")
+    fun getProperties(): NodeProperties
 
     /**
      * Return clone of the node

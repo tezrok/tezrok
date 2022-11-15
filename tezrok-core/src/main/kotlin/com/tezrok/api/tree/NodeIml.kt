@@ -1,23 +1,21 @@
 package com.tezrok.api.tree
 
-import org.apache.commons.lang3.Validate
 import java.util.*
-import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Stream
 
 class NodeIml(
     private val id: Long,
     private val parentNode: Node?,
-    private val props: Map<NodeProperty, Any?>,
+    private val props: Map<PropertyName, Any?>,
     private val nodeSupport: NodeSupport
 ) : Node {
-    private val properties: MutableMap<NodeProperty, Any?> = ConcurrentHashMap(props)
+    private val properties = NodePropertiesImpl(props, this)
 
     override fun getId(): Long = id
 
-    override fun getName(): String = getStringProp(NodeProperty.Name)
+    override fun getName(): String = properties.getStringProp(PropertyName.Name)
 
-    override fun getType(): NodeType = NodeType.getOrCreate(getStringProp(NodeProperty.Type))
+    override fun getType(): NodeType = NodeType.getOrCreate(properties.getStringProp(PropertyName.Type))
 
     override fun getParent(): Node? = parentNode
 
@@ -25,7 +23,7 @@ class NodeIml(
         nodeSupport.findByPath(path)
     }
 
-    override fun add(info: NodeInfo): Node = nodeSupport.add(this, info )
+    override fun add(info: NodeInfo): Node = nodeSupport.add(this, info)
 
     override fun remove(nodes: List<Node>): Boolean = nodeSupport.remove(this, nodes)
 
@@ -33,26 +31,9 @@ class NodeIml(
 
     override fun getChildrenSize(): Int = nodeSupport.getChildrenSize(this)
 
-    override fun setProperty(property: NodeProperty, value: Any?): Any? {
-        val oldProp = properties.put(property, value)
-        // TODO: check input
-        return oldProp
-    }
-
-    override fun getProperty(property: NodeProperty): Any? = properties[property]
-
-    override fun getPropertiesNames(): Set<NodeProperty> = properties.keys
-
-    override fun getAttributes(): NodeAttributes {
-        TODO("Not yet implemented")
-    }
+    override fun getProperties(): NodeProperties = properties
 
     override fun clone(): Node = nodeSupport.clone(this)
-
-    private fun getStringPropSafe(property: NodeProperty): String? = properties[property] as String?
-
-    private fun getStringProp(property: NodeProperty): String =
-        Validate.notBlank(getStringPropSafe(property), "Property '%s' cannot be empty", property)!!
 
     /**
      * Calculating path for current node
@@ -78,4 +59,6 @@ class NodeIml(
 
         return sb.toString()
     }
+
+    override fun toString(): String  = "${getType().name}: ${getName()}"
 }

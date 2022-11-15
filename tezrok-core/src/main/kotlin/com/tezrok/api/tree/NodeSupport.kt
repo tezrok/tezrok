@@ -18,12 +18,12 @@ class NodeSupport(lastId: Long) {
 
     fun add(parent: Node, info: NodeInfo): Node {
         val properties = HashMap(info.properties)
-        properties[NodeProperty.Name] = info.name
-        properties[NodeProperty.Type] = info.type.name
+        properties[PropertyName.Name] = info.name
+        properties[PropertyName.Type] = info.type.name
 
         writeLock.runIn {
             val nextId = lastIdCounter.incrementAndGet()
-            properties[NodeProperty.Id] = nextId
+            properties[PropertyName.Id] = nextId
             // TODO: validate new node
 
             val node = NodeIml(nextId, parent, properties, this)

@@ -5,5 +5,5 @@ data class NodeInfo(
 
     val type: NodeType,
 
-    val properties: Map<NodeProperty, Any?> = emptyMap()
+    val properties: Map<PropertyName, Any?> = emptyMap()
 )
