@@ -1,5 +1,6 @@
 package com.tezrok.api.tree
 
+import com.tezrok.api.error.TezrokException
 import org.apache.commons.lang3.Validate
 import java.util.concurrent.ConcurrentHashMap
 
@@ -8,9 +9,12 @@ class NodePropertiesImpl(props: Map<PropertyName, Any?>, private val node: Node)
 
     override fun getNode(): Node = node
 
-    override fun isEnabled(): Boolean = getProperty(PropertyName.Enabled) as Boolean? ?: true
+    override fun isDisabled(): Boolean = getBooleanPropertySafe(PropertyName.Disabled) ?: false
 
-    override fun setEnabled(enabled: Boolean): Boolean = setProperty(PropertyName.Enabled, enabled) as Boolean? ?: true
+    override fun setDisabled(disabled: Boolean): Boolean =
+        setProperty(PropertyName.Disabled, disabled) as Boolean? ?: false
+
+    override fun isDeleted(): Boolean = getBooleanPropertySafe(PropertyName.Deleted) ?: false
 
     override fun isInfinite(): Boolean {
         TODO("Not yet implemented")
@@ -33,6 +37,10 @@ class NodePropertiesImpl(props: Map<PropertyName, Any?>, private val node: Node)
     }
 
     override fun setProperty(name: PropertyName, value: Any?): Any? {
+        if (!canEdit(name)) {
+            throw TezrokException("Property cannot be edited: $name")
+        }
+
         val oldProp = properties.put(name, value)
         // TODO: check input
         return oldProp
@@ -45,9 +53,11 @@ class NodePropertiesImpl(props: Map<PropertyName, Any?>, private val node: Node)
     override fun can(action: NodeAction, name: PropertyName): Boolean {
         TODO("Not yet implemented")
     }
-
-    fun getStringPropSafe(name: PropertyName): String? = properties[name] as String?
-
-    fun getStringProp(name: PropertyName): String =
-        Validate.notBlank(getStringPropSafe(name), "Property '%s' cannot be empty", name)!!
 }
+
+internal fun NodeProperties.getStringPropSafe(name: PropertyName): String? = getProperty(name) as String?
+
+internal fun NodeProperties.getBooleanPropertySafe(name: PropertyName) = getProperty(name) as Boolean?
+
+internal fun NodeProperties.getStringProp(name: PropertyName): String =
+    Validate.notBlank(getStringPropSafe(name), "Property '%s' cannot be empty", name)!!

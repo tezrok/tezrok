@@ -8,6 +8,7 @@ import java.util.stream.Stream
 class NodeSupport(lastId: Long) {
     private val lastIdCounter = AtomicLong(lastId)
     private val nodes: MutableMap<Node, MutableList<Node>> = HashMap()
+    private val nodesProperties: MutableMap<Node, NodeProperties> = HashMap()
     private val lock = ReentrantReadWriteLock()
     private val writeLock = lock.writeLock()
     private val readLock = lock.readLock()
@@ -24,10 +25,11 @@ class NodeSupport(lastId: Long) {
         writeLock.runIn {
             val nextId = lastIdCounter.incrementAndGet()
             properties[PropertyName.Id] = nextId
+            val node = NodeIml(nextId, parent, this)
+            nodesProperties[node] = NodePropertiesImpl(properties, node);
             // TODO: validate new node
 
-            val node = NodeIml(nextId, parent, properties, this)
-            nodes.computeIfAbsent(node) { ArrayList() }.add(node)
+            nodes.computeIfAbsent(parent) { ArrayList() }.add(node)
 
             return node
         }
@@ -56,4 +58,6 @@ class NodeSupport(lastId: Long) {
     }
 
     private fun getListByParent(parent: Node): List<Node> = (nodes[parent] as List<Node>? ?: emptyList())
+
+    fun getProperties(node: Node): NodeProperties = readLock.runIn { nodesProperties[node]!! }
 }

@@ -22,6 +22,14 @@ interface Node : Cloneable {
     fun getType(): NodeType
 
     /**
+     * Unique name related with functionality
+     *
+     * By default, equals to the name. But can be used by plugin as unique id
+     * for node which not changes if the name changing
+     */
+    fun getFuncName(): String = getName()
+
+    /**
      * Returns parent
      *
      * Root node returns null

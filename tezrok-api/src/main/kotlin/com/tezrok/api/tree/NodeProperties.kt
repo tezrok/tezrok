@@ -13,14 +13,28 @@ interface NodeProperties {
     fun getNode(): Node
 
     /**
-     * Returns true if node is enabled. Disabled nodes are ignored
+     * Returns true if node is disabled
+     *
+     * Disabled nodes are visible and ignored
      */
-    fun isEnabled(): Boolean
+    fun isDisabled(): Boolean
 
     /**
-     * Enable node if it is possible
+     * Returns true if node is deleted
+     *
+     * Deleted nodes are not visible and ignored
      */
-    fun setEnabled(enabled: Boolean): Boolean
+    fun isDeleted(): Boolean
+
+    /**
+     * Return true if node is enabled and not deleted
+     */
+    fun isActive(): Boolean = !isDisabled() && !isDeleted()
+
+    /**
+     * Disable node if it's possible
+     */
+    fun setDisabled(disabled: Boolean): Boolean
 
     /**
      * This node cannot be saved. It's generated only in memory
@@ -33,7 +47,7 @@ interface NodeProperties {
     fun isInfinite(): Boolean
 
     /**
-     * Node and it's children cannot be edited
+     * Node properties and it's children cannot be edited
      */
     fun isReadonly(): Boolean
 

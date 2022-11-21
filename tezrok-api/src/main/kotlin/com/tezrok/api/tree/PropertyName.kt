@@ -10,13 +10,14 @@ data class PropertyName(val name: String) {
         val Name = of("_name")
         val Type = of("_type")
         val Child = of("_child")
-        val Enabled = of("_enabled")
+        val Disabled = of("_disabled")
+        val Deleted = of("_deleted")
         val File = of("_file")
         val FileHash = of("_fileHash")
         val FileContentType = of("_fileContentType")
 
         // All known properties
-        val All = listOf(Id, Name, Type, Child, Enabled, File, FileHash, FileContentType)
+        val All = listOf(Id, Name, Type, Child, Disabled, Deleted, File, FileHash, FileContentType)
 
         fun of(name: String): PropertyName = PropertyName(name)
 

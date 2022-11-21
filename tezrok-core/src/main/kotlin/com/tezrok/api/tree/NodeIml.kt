@@ -6,16 +6,15 @@ import java.util.stream.Stream
 class NodeIml(
     private val id: Long,
     private val parentNode: Node?,
-    private val props: Map<PropertyName, Any?>,
     private val nodeSupport: NodeSupport
 ) : Node {
-    private val properties = NodePropertiesImpl(props, this)
+    private val properties: Lazy<NodeProperties> = lazy { nodeSupport.getProperties(this) }
 
     override fun getId(): Long = id
 
-    override fun getName(): String = properties.getStringProp(PropertyName.Name)
+    override fun getName(): String = properties.value.getStringProp(PropertyName.Name)
 
-    override fun getType(): NodeType = NodeType.getOrCreate(properties.getStringProp(PropertyName.Type))
+    override fun getType(): NodeType = NodeType.getOrCreate(properties.value.getStringProp(PropertyName.Type))
 
     override fun getParent(): Node? = parentNode
 
@@ -31,7 +30,7 @@ class NodeIml(
 
     override fun getChildrenSize(): Int = nodeSupport.getChildrenSize(this)
 
-    override fun getProperties(): NodeProperties = properties
+    override fun getProperties(): NodeProperties = properties.value
 
     override fun clone(): Node = nodeSupport.clone(this)
 
@@ -60,5 +59,5 @@ class NodeIml(
         return sb.toString()
     }
 
-    override fun toString(): String  = "${getType().name}: ${getName()}"
+    override fun toString(): String = "${getType().name}: ${getName()}"
 }
