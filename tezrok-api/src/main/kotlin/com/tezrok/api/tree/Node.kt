@@ -24,10 +24,10 @@ interface Node : Cloneable {
     /**
      * Unique name related with functionality
      *
-     * By default, equals to the name. But can be used by plugin as unique id
+     * By default, is empty. Can be used by plugin as unique id
      * for node which not changes if the name changing
      */
-    fun getFuncName(): String = getName()
+    fun getUName(): String = ""
 
     /**
      * Returns parent

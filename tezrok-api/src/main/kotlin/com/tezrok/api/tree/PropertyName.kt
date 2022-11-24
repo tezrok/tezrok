@@ -3,27 +3,42 @@ package com.tezrok.api.tree
 /**
  * Name of the property
  */
-data class PropertyName(val name: String) {
+data class PropertyName(val name: String, val description: String, val parent: PropertyName?) {
+    fun isSystem(): Boolean = parent?.isSystem() ?: (this == System)
+
+    override fun toString(): String = if (parent != null) "$parent.$name" else name
+
     // TODO: add validation of name
     companion object {
-        val Id = of("_id")
-        val Name = of("_name")
-        val Type = of("_type")
-        val Child = of("_child")
-        val Disabled = of("_disabled")
-        val Deleted = of("_deleted")
-        val File = of("_file")
-        val FileHash = of("_fileHash")
-        val FileContentType = of("_fileContentType")
+        val System = of("system", "Root for system properties", null)
+        val Id = system("id", "Unique id of the node")
+        val Name = system("name", "Name of the node")
+        val Type = system("type", "Type of the node")
+        val Child = system("child", "Node's child")
+        val Disabled = system("disabled", "Node is disabled")
+        val Deleted = system("deleted", "Node is deleted")
+        val File = system("file", "File reference of the node")
+        val FileHash = system("fileHash", "Hash of file content")
+        val FileContentType = system("fileContentType", "File content mime-type")
 
-        // All known properties
+        // All system properties
         val All = listOf(Id, Name, Type, Child, Disabled, Deleted, File, FileHash, FileContentType)
 
-        fun of(name: String): PropertyName = PropertyName(name)
+        fun of(name: String, description: String, parent: PropertyName?): PropertyName =
+            PropertyName(name, description, parent)
 
+        /**
+         * Return system property by name
+         */
         fun get(name: String): PropertyName? = cache[name]
 
-        fun getOrCreate(name: String): PropertyName = get(name) ?: of(name)
+        /**
+         * Return system property by name or creates new one
+         */
+        fun getOrCreate(name: String, description: String, parent: PropertyName?): PropertyName =
+            get(name) ?: of(name, description, parent)
+
+        private fun system(name: String, description: String) = of(name, description, System)
 
         private val cache: Map<String, PropertyName> = All.associateBy { it.name }
     }
