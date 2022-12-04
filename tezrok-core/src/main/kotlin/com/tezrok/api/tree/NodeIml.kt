@@ -59,7 +59,25 @@ class NodeIml(
         return sb.toString()
     }
 
-    override fun toString(): String = "${getType().name}: ${getName()}"
+    override fun toString(): String = "Node-${getType().name}: ${getName()}"
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + (parentNode?.hashCode() ?: 0)
+        result = 31 * result + properties.hashCode()
+        return result
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Node) return false
+
+        if (id != other.getId()) return false
+        if (parentNode != other.getParent()) return false
+        if (properties.value != other.getProperties()) return false
+
+        return true
+    }
 }
 
 private fun Node.toElem(): NodeElem =

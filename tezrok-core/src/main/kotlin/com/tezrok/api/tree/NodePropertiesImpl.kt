@@ -53,6 +53,24 @@ class NodePropertiesImpl(props: Map<PropertyName, Any?>, private val node: Node)
     override fun can(action: NodeAction, name: PropertyName): Boolean {
         TODO("Not yet implemented")
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as NodePropertiesImpl
+
+        if (node.getId() != other.node.getId()) return false
+        if (properties != other.properties) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = node.getId().hashCode()
+        result = 31 * result + properties.hashCode()
+        return result
+    }
 }
 
 internal fun NodeProperties.getStringPropSafe(name: PropertyName): String? = getProperty(name) as String?

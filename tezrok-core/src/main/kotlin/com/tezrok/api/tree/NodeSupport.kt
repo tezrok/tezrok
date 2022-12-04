@@ -5,22 +5,25 @@ import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.stream.Stream
 
-class NodeSupport(lastId: Long) {
-    private val lastIdCounter = AtomicLong(lastId)
+class NodeSupport(private val nodeRepo: NodeRepository) {
+    private val lastIdCounter = AtomicLong(nodeRepo.getLastId())
     private val nodes: MutableMap<Node, MutableList<Node>> = HashMap()
     private val nodesProperties: MutableMap<Node, NodeProperties> = HashMap()
     private val lock = ReentrantReadWriteLock()
     private val writeLock = lock.writeLock()
     private val readLock = lock.readLock()
+    private val root = lazy { createRoot() }
 
     fun findByPath(path: String): Node? {
         return null
     }
 
-    fun add(parent: Node, info: NodeElem): Node {
-        val properties = HashMap(info.properties)
-        properties[PropertyName.Name] = info.name
-        properties[PropertyName.Type] = info.type.name
+    fun getRoot(): Node = root.value
+
+    fun add(parent: Node, elem: NodeElem): Node {
+        val properties = HashMap(elem.properties)
+        properties[PropertyName.Name] = elem.name
+        properties[PropertyName.Type] = elem.type.name
 
         writeLock.runIn {
             val nextId = lastIdCounter.incrementAndGet()
@@ -57,7 +60,24 @@ class NodeSupport(lastId: Long) {
         TODO("Not yet implemented")
     }
 
+    private fun createRoot(): Node {
+        val rootElem = nodeRepo.getRoot()
+        val properties = HashMap(rootElem.properties)
+        properties[PropertyName.Name] = rootElem.name
+        properties[PropertyName.Type] = rootElem.type.name
+        properties[PropertyName.Id] = rootElem.id
+
+        writeLock.runIn {
+            val node = NodeIml(rootElem.id, null, this)
+            nodesProperties[node] = NodePropertiesImpl(properties, node)
+
+            return node
+        }
+    }
+
     private fun getListByParent(parent: Node): List<Node> = (nodes[parent] as List<Node>? ?: emptyList())
 
-    fun getProperties(node: Node): NodeProperties = readLock.runIn { nodesProperties[node]!! }
+    fun getProperties(node: Node): NodeProperties = readLock.runIn {
+        nodesProperties[node] ?: throw IllegalStateException("Properties not found")
+    }
 }

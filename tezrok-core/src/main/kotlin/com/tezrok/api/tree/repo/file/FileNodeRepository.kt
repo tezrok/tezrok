@@ -1,6 +1,9 @@
 package com.tezrok.api.tree.repo.file
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinFeature
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.tezrok.api.tree.NodeElem
 import com.tezrok.api.tree.NodeRepository
 import org.apache.commons.lang3.Validate
@@ -11,23 +14,25 @@ import java.util.stream.Stream
  * File-based repository (json-format)
  */
 class FileNodeRepository(private val file: File) : NodeRepository {
+    // mapping[parentId]=List of child
+    private var lastUsedId: Long = 0L;
     private val nodes: MutableMap<Long, MutableMap<Long, NodeElem>> = HashMap()
+    private val mapper = createObjectMapper()
 
-    /**
-     * Loads all nodes from file
-     */
-    fun load() {
-        val mapper = ObjectMapper()
-        val root = mapper.readValue(file, FileNodeElem::class.java)
-            ?: throw IllegalStateException("Root elem not found in file $file")
-
-        Validate.isTrue(root.id == 0L, "Root element id expected zero but found: %d", root.id)
-
-        nodes[0L] = mutableMapOf(0L to root.toElem())
-        loadNodes(root)
+    init {
+        load()
     }
 
-    override fun getRoot(): NodeElem = nodes[0]?.getValue(0L) ?: throw IllegalStateException("Root element not found")
+    /**
+     * Clear inner cache
+     */
+    fun clear() {
+        lastUsedId = 0
+        nodes.clear()
+    }
+
+    override fun getRoot(): NodeElem = nodes[0]?.values?.first()
+        ?: throw IllegalStateException("Root element not found")
 
     override fun getChildren(parentId: Long): Stream<NodeElem> =
         nodes[parentId]?.values?.stream() ?: Stream.empty()
@@ -36,12 +41,62 @@ class FileNodeRepository(private val file: File) : NodeRepository {
         nodes.computeIfAbsent(parentId) { HashMap() }[node.id] = node
     }
 
-    override fun flush() {
-        TODO("Not yet implemented")
+    override fun save() {
+        mapper.writerWithDefaultPrettyPrinter().writeValue(file, getRoot().toFileElem())
+    }
+
+    override fun getLastId(): Long = lastUsedId
+
+    /**
+     * Loads all nodes from file
+     */
+    private fun load() {
+        val root = if (file.exists()) mapper.readValue(file, FileNodeElem::class.java)
+            ?: throw IllegalStateException("Root elem not found in file $file")
+        else
+            FileNodeElem.ROOT
+
+        Validate.isTrue(
+            root.id == FileNodeElem.ROOT_ID,
+            "Root element id expected ${FileNodeElem.ROOT_ID} but found: %d", root.id
+        )
+
+        nodes[0L] = mutableMapOf(0L to root.toElem())
+        loadNodes(root)
     }
 
     private fun loadNodes(elem: FileNodeElem) {
-        nodes[elem.id] = elem.items.associate { it.id to it.toElem() }.toMutableMap()
-        elem.items.forEach { child -> loadNodes(child) }
+        lastUsedId = Math.max(lastUsedId, elem.id)
+
+        elem.items?.let { items ->
+            nodes[elem.id] = items.associate { it.id to it.toElem() }.toMutableMap()
+            items.forEach { child -> loadNodes(child) }
+        }
+    }
+
+    private fun NodeElem.toFileElem(): FileNodeElem =
+        FileNodeElem(
+            id, name,
+            type = type.name,
+            properties = properties.map { it.key.name to it.value }.toMap()
+                .let { if (it.isEmpty()) null else it },
+            items = getChildren(id).map { it.toFileElem() }.toList()
+                .let { if (it.isEmpty()) null else it }
+        )
+
+    private companion object {
+        fun createObjectMapper(): ObjectMapper =
+            ObjectMapper().registerModule(
+                KotlinModule.Builder()
+                    .withReflectionCacheSize(512)
+                    .configure(KotlinFeature.NullToEmptyCollection, false)
+                    .configure(KotlinFeature.NullToEmptyMap, false)
+                    .configure(KotlinFeature.NullIsSameAsDefault, false)
+                    .configure(KotlinFeature.SingletonSupport, false)
+                    .configure(KotlinFeature.StrictNullChecks, false)
+                    .build()
+            ).apply {
+                setSerializationInclusion(JsonInclude.Include.NON_NULL)
+            }
     }
 }

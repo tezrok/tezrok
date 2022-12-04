@@ -11,13 +11,24 @@ data class FileNodeElem(
 
     val type: String,
 
-    val properties: Map<String, Any?> = emptyMap(),
+    val properties: Map<String, Any?>? = null,
 
-    val items: List<FileNodeElem>
+    val items: List<FileNodeElem>? = null
 ) {
     fun toElem(): NodeElem = NodeElem(
         id, name = name,
         type = NodeType.getOrCreate(type),
-        properties = properties.map { PropertyName.getOrCreate(it.key) to it.value }.toMap()
+        properties = properties?.map { PropertyName.getOrCreate(it.key) to it.value }?.toMap() ?: emptyMap()
     )
+
+    companion object {
+        const val ROOT_ID = 1000L
+
+        const val ROOT_NAME = "Root"
+
+        /**
+         * Default root element
+         */
+        val ROOT = FileNodeElem(ROOT_ID, ROOT_NAME, NodeType.Root.name)
+    }
 }

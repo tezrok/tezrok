@@ -6,9 +6,9 @@ import java.util.stream.Stream
  * Implementation of NodeManager
  */
 class NodeManagerImpl(private val nodeRepo: NodeRepository) : NodeManager {
-    override fun getRootNode(): Node {
-        TODO("Not yet implemented")
-    }
+    private val nodeSupport = NodeSupport(nodeRepo)
+
+    override fun getRootNode(): Node = nodeSupport.getRoot()
 
     override fun findNodes(term: String): Stream<Node> {
         TODO("Not yet implemented")

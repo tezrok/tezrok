@@ -5,6 +5,8 @@ package com.tezrok.api.tree
  */
 data class NodeType(val name: String, val description: String) {
     companion object {
+        val Root = of("Root", "Root of the tree")
+
         /**
          * Node cannot contains children
          */
@@ -20,7 +22,7 @@ data class NodeType(val name: String, val description: String) {
          */
         val File = of("File", "Node is file reference")
 
-        val All = listOf(Item, Directory, File)
+        val All = listOf(Root, Item, Directory, File)
 
         fun of(name: String, description: String): NodeType = NodeType(name, description)
 
