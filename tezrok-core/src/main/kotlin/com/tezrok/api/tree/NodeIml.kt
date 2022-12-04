@@ -22,7 +22,7 @@ class NodeIml(
         nodeSupport.findByPath(path)
     }
 
-    override fun add(info: NodeInfo): Node = nodeSupport.add(this, info)
+    override fun add(info: NodeElem): Node = nodeSupport.add(this, info)
 
     override fun remove(nodes: List<Node>): Boolean = nodeSupport.remove(this, nodes)
 
@@ -61,3 +61,9 @@ class NodeIml(
 
     override fun toString(): String = "${getType().name}: ${getName()}"
 }
+
+private fun Node.toElem(): NodeElem =
+    NodeElem(id = getId(), name = getName(), type = getType(), properties = toProps(getProperties()))
+
+private fun toProps(properties: NodeProperties): Map<PropertyName, Any?> =
+    properties.getPropertiesNames().associateWith { properties.getProperty(it) }

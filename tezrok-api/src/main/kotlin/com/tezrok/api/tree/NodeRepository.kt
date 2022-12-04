@@ -7,24 +7,22 @@ import java.util.stream.Stream
  */
 interface NodeRepository {
     /**
-     * Saves node and all it's children
-     *
-     * @return count of actually saved nodes
-     */
-    fun save(node: Node): Int
-
-    /**
      * Returns root node
      */
-    fun getRoot(): Node
+    fun getRoot(): NodeElem
 
     /**
-     * Returns lazy list of nodes by search string
+     * Returns all children by parent Id
      */
-    fun findNodes(term: String): Stream<Node>
+    fun getChildren(parentId: Long): Stream<NodeElem>
 
     /**
-     * Flushes cached data into storage
+     * Update single node by parentId
+     */
+    fun put(parentId: Long, node: NodeElem)
+
+    /**
+     * Flushes cached data into real storage
      */
     fun flush()
 }

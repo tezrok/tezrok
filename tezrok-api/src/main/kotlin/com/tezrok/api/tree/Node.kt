@@ -32,7 +32,7 @@ interface Node : Cloneable {
     /**
      * Returns parent
      *
-     * Root node returns null
+     * Only root node returns null
      */
     fun getParent(): Node?
 
@@ -44,7 +44,7 @@ interface Node : Cloneable {
     /**
      * Adds new node or throws exception
      */
-    fun add(info: NodeInfo): Node
+    fun add(info: NodeElem): Node
 
     /**
      * Remove specified nodes

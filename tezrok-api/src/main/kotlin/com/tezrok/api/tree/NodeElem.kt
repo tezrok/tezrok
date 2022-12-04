@@ -1,6 +1,8 @@
 package com.tezrok.api.tree
 
-data class NodeInfo(
+class NodeElem(
+    val id: Long,
+
     val name: String,
 
     val type: NodeType,

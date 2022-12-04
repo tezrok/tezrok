@@ -3,14 +3,13 @@ package com.tezrok.api.tree
 /**
  * Name of the property
  */
-data class PropertyName(val name: String, val description: String, val parent: PropertyName?) {
-    fun isSystem(): Boolean = parent?.isSystem() ?: (this == System)
+data class PropertyName(val name: String, val description: String) {
+    fun isSystem(): Boolean = name.startsWith(SYSTEM_PREFIX)
 
-    override fun toString(): String = if (parent != null) "$parent.$name" else name
+    override fun toString(): String = name
 
     // TODO: add validation of name
     companion object {
-        val System = of("system", "Root for system properties", null)
         val Id = system("id", "Unique id of the node")
         val Name = system("name", "Name of the node")
         val Type = system("type", "Type of the node")
@@ -24,8 +23,7 @@ data class PropertyName(val name: String, val description: String, val parent: P
         // All system properties
         val All = listOf(Id, Name, Type, Child, Disabled, Deleted, File, FileHash, FileContentType)
 
-        fun of(name: String, description: String, parent: PropertyName?): PropertyName =
-            PropertyName(name, description, parent)
+        fun of(name: String, description: String): PropertyName = PropertyName(name, description)
 
         /**
          * Return system property by name
@@ -35,11 +33,12 @@ data class PropertyName(val name: String, val description: String, val parent: P
         /**
          * Return system property by name or creates new one
          */
-        fun getOrCreate(name: String, description: String, parent: PropertyName?): PropertyName =
-            get(name) ?: of(name, description, parent)
+        fun getOrCreate(name: String, description: String = ""): PropertyName = get(name) ?: of(name, description)
 
-        private fun system(name: String, description: String) = of(name, description, System)
+        private fun system(name: String, description: String) = of(SYSTEM_PREFIX + name, description)
 
         private val cache: Map<String, PropertyName> = All.associateBy { it.name }
+
+        private const val SYSTEM_PREFIX = "system."
     }
 }

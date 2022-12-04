@@ -17,7 +17,7 @@ class NodeSupport(lastId: Long) {
         return null
     }
 
-    fun add(parent: Node, info: NodeInfo): Node {
+    fun add(parent: Node, info: NodeElem): Node {
         val properties = HashMap(info.properties)
         properties[PropertyName.Name] = info.name
         properties[PropertyName.Type] = info.type.name
