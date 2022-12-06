@@ -15,4 +15,9 @@ interface NodeManager {
      * Returns lazy list of nodes by search string
      */
     fun findNodes(term: String): Stream<Node>
+
+    /**
+     * Save all changes to the repository
+     */
+    fun save()
 }

@@ -1,5 +1,8 @@
 package com.tezrok.api.tree
 
+/**
+ * Reference to the node
+ */
 class NodeRefImpl(
     private val path: String,
     private val handler: (String) -> Node?
@@ -7,4 +10,19 @@ class NodeRefImpl(
     override fun getPath(): String = path
 
     override fun getNode(): Node? = handler(path)
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is NodeRef) return false
+
+        if (path != other.getPath()) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return path.hashCode()
+    }
+
+    override fun toString(): String = "NodeRefImpl(path='$path')"
 }

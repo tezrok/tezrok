@@ -44,7 +44,7 @@ interface Node : Cloneable {
     /**
      * Adds new node or throws exception
      */
-    fun add(info: NodeElem): Node
+    fun add(name: String, type: NodeType): Node
 
     /**
      * Remove specified nodes
@@ -71,6 +71,11 @@ interface Node : Cloneable {
      * Return properties of the node
      */
     fun getProperties(): NodeProperties
+
+    /**
+     * Returns true if node is root
+     */
+    fun isRoot(): Boolean = getParent() == null
 
     /**
      * Return clone of the node

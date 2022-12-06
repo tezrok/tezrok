@@ -1,5 +1,6 @@
 package com.tezrok.api.tree
 
+import com.tezrok.util.calcPath
 import com.tezrok.util.runIn
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantReadWriteLock
@@ -14,16 +15,33 @@ class NodeSupport(private val nodeRepo: NodeRepository) {
     private val readLock = lock.readLock()
     private val root = lazy { createRoot() }
 
-    fun findByPath(path: String): Node? {
-        return null
+    private fun findByPath(path: String): Node? {
+        if (path == "/") {
+            return root.value
+        }
+
+        val pathParts = path.split("/".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        var node: Node? = root.value
+        for (pathPart in pathParts) {
+            if (pathPart.isEmpty()) {
+                continue
+            }
+
+            node = getChildren(node!!).filter { it.getName() == pathPart }.findFirst().orElse(null)
+            if (node == null) {
+                return null
+            }
+        }
+
+        return node
     }
 
     fun getRoot(): Node = root.value
 
-    fun add(parent: Node, elem: NodeElem): Node {
-        val properties = HashMap(elem.properties)
-        properties[PropertyName.Name] = elem.name
-        properties[PropertyName.Type] = elem.type.name
+    fun add(parent: Node, name: String, type: NodeType): Node {
+        val properties = HashMap<PropertyName, Any?>()
+        properties[PropertyName.Name] = name
+        properties[PropertyName.Type] = type.name
 
         writeLock.runIn {
             val nextId = lastIdCounter.incrementAndGet()
@@ -63,8 +81,6 @@ class NodeSupport(private val nodeRepo: NodeRepository) {
     private fun createRoot(): Node {
         val rootElem = nodeRepo.getRoot()
         val properties = HashMap(rootElem.properties)
-        properties[PropertyName.Name] = rootElem.name
-        properties[PropertyName.Type] = rootElem.type.name
         properties[PropertyName.Id] = rootElem.id
 
         writeLock.runIn {
@@ -80,4 +96,7 @@ class NodeSupport(private val nodeRepo: NodeRepository) {
     fun getProperties(node: Node): NodeProperties = readLock.runIn {
         nodesProperties[node] ?: throw IllegalStateException("Properties not found")
     }
+
+    // TODO: add NodeRef cache
+    fun getNodeRef(node: NodeIml): NodeRef = NodeRefImpl(node.calcPath()) { path -> findByPath(path) }
 }

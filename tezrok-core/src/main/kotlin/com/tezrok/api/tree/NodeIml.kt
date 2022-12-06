@@ -1,6 +1,6 @@
 package com.tezrok.api.tree
 
-import java.util.*
+import com.tezrok.util.calcPath
 import java.util.stream.Stream
 
 class NodeIml(
@@ -18,11 +18,9 @@ class NodeIml(
 
     override fun getParent(): Node? = parentNode
 
-    override fun getRef(): NodeRef = NodeRefImpl(calcPath()) { path ->
-        nodeSupport.findByPath(path)
-    }
+    override fun getRef(): NodeRef = nodeSupport.getNodeRef(this)
 
-    override fun add(info: NodeElem): Node = nodeSupport.add(this, info)
+    override fun add(name: String, type: NodeType): Node = nodeSupport.add(this, name, type)
 
     override fun remove(nodes: List<Node>): Boolean = nodeSupport.remove(this, nodes)
 
@@ -33,31 +31,6 @@ class NodeIml(
     override fun getProperties(): NodeProperties = properties.value
 
     override fun clone(): Node = nodeSupport.clone(this)
-
-    /**
-     * Calculating path for current node
-     */
-    private fun calcPath(): String {
-        val nodes = LinkedList<Node>()
-        var parent: Node? = this
-        var size = 0;
-
-        while (parent != null) {
-            size += parent.getName().length
-            nodes.addFirst(parent)
-            parent = parent.getParent()
-        }
-
-        val sb = StringBuilder(size + nodes.size - 1)
-        for (node in nodes) {
-            if (sb.isNotEmpty()) {
-                sb.append('/')
-            }
-            sb.append(node.getName())
-        }
-
-        return sb.toString()
-    }
 
     override fun toString(): String = "Node-${getType().name}: ${getName()}"
 
@@ -80,8 +53,4 @@ class NodeIml(
     }
 }
 
-private fun Node.toElem(): NodeElem =
-    NodeElem(id = getId(), name = getName(), type = getType(), properties = toProps(getProperties()))
 
-private fun toProps(properties: NodeProperties): Map<PropertyName, Any?> =
-    properties.getPropertiesNames().associateWith { properties.getProperty(it) }

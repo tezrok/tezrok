@@ -23,7 +23,7 @@ class NodeManagerTest : BaseTest() {
         assertEmpty(root.getChildren().toList())
 
         val properties = root.getProperties()
-        assertEmpty(properties.getPropertiesNames())
+        assertEquals(3, properties.getPropertiesNames().size)
         assertFalse(file.exists()) { "File must not exist: $file" }
     }
 
@@ -35,7 +35,7 @@ class NodeManagerTest : BaseTest() {
             val repository = FileNodeRepository(file)
             val manager = NodeManagerImpl(repository)
             val root = manager.getRootNode()
-            repository.save()
+            manager.save()
 
             assertTrue(file.exists())
 
@@ -50,11 +50,64 @@ class NodeManagerTest : BaseTest() {
         }
     }
 
+    @Test
+    fun testAddSingleNode() {
+        val file = File(tempDir, UUID.randomUUID().toString())
+
+        try {
+            val repository = FileNodeRepository(file)
+            val manager = NodeManagerImpl(repository)
+            val root = manager.getRootNode()
+            val node = root.add("test", NodeType.Directory)
+
+            assertEquals("test", node.getName())
+            assertEquals(1001L, node.getId())
+            assertEquals(0, node.getChildrenSize())
+            assertEmpty(node.getChildren().toList())
+            assertEquals(root, node.getParent())
+            assertEquals(NodeType.Directory, node.getType())
+            assertEquals("/test", node.getRef().getPath())
+            assertEquals(node, node.getRef().getNode())
+            assertEquals(node.getRef(), node.getRef())
+
+            manager.save()
+
+            assertTrue(file.exists())
+
+            val repository2 = FileNodeRepository(file)
+            val manager2 = NodeManagerImpl(repository2)
+            val root2 = manager2.getRootNode()
+
+            assertEquals(root, root2)
+            assertEquals(ROOT_WITH_SINGLE_CHILD, file.readText())
+        } finally {
+            file.delete()
+        }
+    }
+
+
     private companion object {
         const val SINGLE_ROOT = """{
   "id" : 1000,
-  "name" : "Root",
-  "type" : "Root"
+  "properties" : {
+    "system.type" : "Root",
+    "system.name" : "Root"
+  }
+}"""
+
+        const val ROOT_WITH_SINGLE_CHILD = """{
+  "id" : 1000,
+  "properties" : {
+    "system.type" : "Root",
+    "system.name" : "Root"
+  },
+  "items" : [ {
+    "id" : 1001,
+    "properties" : {
+      "system.type" : "Directory",
+      "system.name" : "test"
+    }
+  } ]
 }"""
     }
 }

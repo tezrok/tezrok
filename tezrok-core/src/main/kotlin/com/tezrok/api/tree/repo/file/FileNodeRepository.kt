@@ -76,12 +76,11 @@ class FileNodeRepository(private val file: File) : NodeRepository {
 
     private fun NodeElem.toFileElem(): FileNodeElem =
         FileNodeElem(
-            id, name,
-            type = type.name,
+            id,
             properties = properties.map { it.key.name to it.value }.toMap()
-                .let { if (it.isEmpty()) null else it },
+                .let { it.ifEmpty { null } },
             items = getChildren(id).map { it.toFileElem() }.toList()
-                .let { if (it.isEmpty()) null else it }
+                .let { it.ifEmpty { null } }
         )
 
     private companion object {
