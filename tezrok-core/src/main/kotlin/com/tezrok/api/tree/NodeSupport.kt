@@ -15,25 +15,31 @@ class NodeSupport(private val nodeRepo: NodeRepository) {
     private val readLock = lock.readLock()
     private val root = lazy { createRoot() }
 
-    private fun findByPath(path: String): Node? {
+    /**
+     * Find first node by path
+     */
+    fun findNodeByPath(path: String): Node? = findNodeByPath(root.value, path)
+
+    /**
+     * Find first child node by path
+     */
+    fun findNodeByPath(node: Node, path: String): Node? {
+        if (path.isBlank() || path[0] != '/') {
+            return null
+        }
+
         if (path == "/") {
-            return root.value
+            return node
         }
 
-        val pathParts = path.split("/".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-        var node: Node? = root.value
-        for (pathPart in pathParts) {
-            if (pathPart.isEmpty()) {
-                continue
-            }
-
-            node = getChildren(node!!).filter { it.getName() == pathPart }.findFirst().orElse(null)
-            if (node == null) {
-                return null
-            }
+        val index = path.indexOf('/', 1)
+        val name = if (index == -1) path.substring(1) else path.substring(1, index)
+        if (name.isBlank()) {
+            return null
         }
+        val child = node.getChild(name) ?: return null
 
-        return node
+        return if (index == -1) child else findNodeByPath(child, path.substring(index))
     }
 
     fun getRoot(): Node = root.value
@@ -98,5 +104,5 @@ class NodeSupport(private val nodeRepo: NodeRepository) {
     }
 
     // TODO: add NodeRef cache
-    fun getNodeRef(node: NodeIml): NodeRef = NodeRefImpl(node.calcPath()) { path -> findByPath(path) }
+    fun getNodeRef(node: NodeIml): NodeRef = NodeRefImpl(node.calcPath()) { path -> findNodeByPath(path) }
 }

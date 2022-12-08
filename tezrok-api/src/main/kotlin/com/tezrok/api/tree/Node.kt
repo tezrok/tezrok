@@ -22,6 +22,11 @@ interface Node : Cloneable {
     fun getType(): NodeType
 
     /**
+     * Returns full path of the node
+     */
+    fun getPath(): String
+
+    /**
      * Unique name related with functionality
      *
      * By default, is empty. Can be used by plugin as unique id
@@ -68,6 +73,20 @@ interface Node : Cloneable {
     fun getChildrenSize(): Int
 
     /**
+     * Return child node by name. If not found, returns null
+     */
+    fun getChild(name: String): Node? = getChildren().filter { it.getName() == name }.findFirst().orElse(null)
+
+    /**
+     * Returns first child by path. If not found, returns null
+     *
+     * By path "/" returns self
+     *
+     * @param path path to child
+     */
+    fun findNodeByPath(path: String): Node?
+
+    /**
      * Return properties of the node
      */
     fun getProperties(): NodeProperties
@@ -75,7 +94,7 @@ interface Node : Cloneable {
     /**
      * Returns true if node is root
      */
-    fun isRoot(): Boolean = getParent() == null
+    fun isRoot(): Boolean = getType() == NodeType.Root
 
     /**
      * Return clone of the node

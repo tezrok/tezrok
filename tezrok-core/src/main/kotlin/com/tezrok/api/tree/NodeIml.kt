@@ -16,6 +16,8 @@ class NodeIml(
 
     override fun getType(): NodeType = NodeType.getOrCreate(properties.value.getStringProp(PropertyName.Type))
 
+    override fun getPath(): String = this.calcPath()
+
     override fun getParent(): Node? = parentNode
 
     override fun getRef(): NodeRef = nodeSupport.getNodeRef(this)
@@ -27,6 +29,8 @@ class NodeIml(
     override fun getChildren(): Stream<Node> = nodeSupport.getChildren(this)
 
     override fun getChildrenSize(): Int = nodeSupport.getChildrenSize(this)
+
+    override fun findNodeByPath(path: String): Node? = nodeSupport.findNodeByPath(this, path)
 
     override fun getProperties(): NodeProperties = properties.value
 

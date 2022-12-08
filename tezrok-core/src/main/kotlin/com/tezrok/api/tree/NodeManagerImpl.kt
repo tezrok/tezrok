@@ -29,4 +29,6 @@ class NodeManagerImpl(private val nodeRepo: NodeRepository) : NodeManager {
         nodeRepo.put(parentId, node.toElem())
         node.getChildren().forEach { prepareNodesToRepo(node.getId(), it) }
     }
+
+    fun findNodeByPath(path: String): Node? = nodeSupport.findNodeByPath(path)
 }
