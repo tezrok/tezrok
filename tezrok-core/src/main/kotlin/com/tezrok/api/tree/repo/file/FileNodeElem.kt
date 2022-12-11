@@ -10,13 +10,13 @@ import com.tezrok.api.tree.PropertyName
 data class FileNodeElem(
     val id: Long,
 
-    val properties: Map<String, Any?>? = null,
+    val props: Map<String, Any?>? = null,
 
     val items: List<FileNodeElem>? = null
 ) {
     fun toElem(): NodeElem = NodeElem(
         id,
-        properties = properties?.map { PropertyName.getOrCreate(it.key) to it.value }?.toMap() ?: emptyMap()
+        properties = props?.map { PropertyName.getOrCreate(it.key) to it.value }?.toMap() ?: emptyMap()
     )
 
     companion object {
@@ -27,7 +27,7 @@ data class FileNodeElem(
         fun of(id: Long, name: String, type: NodeType): FileNodeElem =
             FileNodeElem(
                 id = id,
-                properties = mapOf(PropertyName.Name.name to name, PropertyName.Type.name to type.name)
+                props = mapOf(PropertyName.Name.name to name, PropertyName.Type.name to type.name)
             )
 
         /**

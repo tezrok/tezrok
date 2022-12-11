@@ -77,7 +77,7 @@ class FileNodeRepository(private val file: File) : NodeRepository {
     private fun NodeElem.toFileElem(): FileNodeElem =
         FileNodeElem(
             id,
-            properties = properties.map { it.key.name to it.value }.toMap()
+            props = properties.map { it.key.name to it.value }.toMap()
                 .let { it.ifEmpty { null } },
             items = getChildren(id).map { it.toFileElem() }.toList()
                 .let { it.ifEmpty { null } }

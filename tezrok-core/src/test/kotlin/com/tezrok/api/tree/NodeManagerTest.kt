@@ -106,7 +106,7 @@ class NodeManagerTest : BaseTest() {
         val root2 = manager2.getRootNode()
 
         assertEquals(root, root2)
-        assertEquals(ROOT_WITH_SINGLE_CHILD_AND_GRANDSON, file.readText())
+        assertEquals(ROOT_WITH_SINGLE_CHILD_AND_CHILD, file.readText())
     }
 
     @Test
@@ -165,43 +165,44 @@ class NodeManagerTest : BaseTest() {
     private companion object {
         const val SINGLE_ROOT = """{
   "id" : 1000,
-  "properties" : {
-    "system.type" : "Root",
-    "system.name" : "Root"
+  "props" : {
+    "name" : "Root",
+    "type" : "Root"
   }
 }"""
 
         const val ROOT_WITH_SINGLE_CHILD = """{
   "id" : 1000,
-  "properties" : {
-    "system.type" : "Root",
-    "system.name" : "Root"
+  "props" : {
+    "name" : "Root",
+    "type" : "Root"
   },
   "items" : [ {
     "id" : 1001,
-    "properties" : {
-      "system.type" : "Directory",
-      "system.name" : "test"
+    "props" : {
+      "name" : "test",
+      "type" : "Directory"
     }
   } ]
 }"""
-        const val ROOT_WITH_SINGLE_CHILD_AND_GRANDSON = """{
+
+        const val ROOT_WITH_SINGLE_CHILD_AND_CHILD = """{
   "id" : 1000,
-  "properties" : {
-    "system.type" : "Root",
-    "system.name" : "Root"
+  "props" : {
+    "name" : "Root",
+    "type" : "Root"
   },
   "items" : [ {
     "id" : 1001,
-    "properties" : {
-      "system.type" : "Directory",
-      "system.name" : "test"
+    "props" : {
+      "name" : "test",
+      "type" : "Directory"
     },
     "items" : [ {
       "id" : 1002,
-      "properties" : {
-        "system.type" : "Item",
-        "system.name" : "child"
+      "props" : {
+        "name" : "child",
+        "type" : "Item"
       }
     } ]
   } ]
