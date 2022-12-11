@@ -2,7 +2,6 @@ package com.tezrok.api.tree
 
 import com.tezrok.BaseTest
 import com.tezrok.api.tree.repo.file.FileNodeElem
-import com.tezrok.api.tree.repo.file.FileNodeRepository
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
@@ -10,8 +9,7 @@ class NodeManagerTest : BaseTest() {
 
     @Test
     fun getRootNodeWhenFileNotExists() {
-        val repository = FileNodeRepository(file)
-        val manager = NodeManagerImpl(repository)
+        val manager = nodeManagerFromFile(file)
         val root = manager.getRootNode()
 
         assertEquals(FileNodeElem.ROOT_NAME, root.getName())
@@ -29,15 +27,13 @@ class NodeManagerTest : BaseTest() {
 
     @Test
     fun saveSingleRootTest() {
-        val repository = FileNodeRepository(file)
-        val manager = NodeManagerImpl(repository)
+        val manager = nodeManagerFromFile(file)
         val root = manager.getRootNode()
         manager.save()
 
         assertTrue(file.exists())
 
-        val repository2 = FileNodeRepository(file)
-        val manager2 = NodeManagerImpl(repository2)
+        val manager2 = nodeManagerFromFile(file)
         val root2 = manager2.getRootNode()
 
         assertEquals(root, root2)
@@ -46,8 +42,7 @@ class NodeManagerTest : BaseTest() {
 
     @Test
     fun testAddSingleNode() {
-        val repository = FileNodeRepository(file)
-        val manager = NodeManagerImpl(repository)
+        val manager = nodeManagerFromFile(file)
         val root = manager.getRootNode()
         val node = root.add("test", NodeType.Directory)
 
@@ -66,8 +61,7 @@ class NodeManagerTest : BaseTest() {
 
         assertTrue(file.exists())
 
-        val repository2 = FileNodeRepository(file)
-        val manager2 = NodeManagerImpl(repository2)
+        val manager2 = nodeManagerFromFile(file)
         val root2 = manager2.getRootNode()
 
         assertEquals(root, root2)
@@ -76,8 +70,7 @@ class NodeManagerTest : BaseTest() {
 
     @Test
     fun testAddSingleNodeWithChild() {
-        val repository = FileNodeRepository(file)
-        val manager = NodeManagerImpl(repository)
+        val manager = nodeManagerFromFile(file)
         val root = manager.getRootNode()
         val child = root.add("test", NodeType.Directory)
         val node = child.add("child", NodeType.Item)
@@ -101,8 +94,7 @@ class NodeManagerTest : BaseTest() {
 
         assertTrue(file.exists())
 
-        val repository2 = FileNodeRepository(file)
-        val manager2 = NodeManagerImpl(repository2)
+        val manager2 = nodeManagerFromFile(file)
         val root2 = manager2.getRootNode()
 
         assertEquals(root, root2)
@@ -111,8 +103,7 @@ class NodeManagerTest : BaseTest() {
 
     @Test
     fun testFindNodeByPath() {
-        val repository = FileNodeRepository(file)
-        val manager = NodeManagerImpl(repository)
+        val manager = nodeManagerFromFile(file)
         val root = manager.getRootNode()
         val child = root.add("child", NodeType.Directory)
         val node = child.add("node", NodeType.Item)
@@ -139,8 +130,7 @@ class NodeManagerTest : BaseTest() {
 
     @Test
     fun testFindChild() {
-        val repository = FileNodeRepository(file)
-        val manager = NodeManagerImpl(repository)
+        val manager = nodeManagerFromFile(file)
         val root = manager.getRootNode()
         val dir = root.add("Dir", NodeType.Directory)
         val item = dir.add("Item", NodeType.Item)

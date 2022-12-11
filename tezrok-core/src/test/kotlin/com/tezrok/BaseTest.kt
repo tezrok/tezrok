@@ -1,5 +1,8 @@
 package com.tezrok
 
+import com.tezrok.api.tree.NodeManager
+import com.tezrok.api.tree.NodeManagerImpl
+import com.tezrok.api.tree.repo.file.FileNodeRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
@@ -7,19 +10,25 @@ import java.io.File
 import java.util.*
 
 abstract class BaseTest {
-    protected val tempDir: File = File(System.getProperty("java.io.tmpdir"))
+    private val tempDir: File = File(System.getProperty("java.io.tmpdir"))
     protected val file = File(tempDir, UUID.randomUUID().toString())
 
     @BeforeEach
     fun setUp() {
-        if (file.exists())
+        if (file.exists()) {
             file.delete()
+        }
     }
 
     @AfterEach
     fun tearDown() {
-        if (file.exists())
+        if (file.exists()) {
             file.delete()
+        }
+    }
+
+    protected fun nodeManagerFromFile(file: File): NodeManager {
+        return NodeManagerImpl(FileNodeRepository(file))
     }
 
     protected fun <T> assertEmpty(collection: Collection<T>) {

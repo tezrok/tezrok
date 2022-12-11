@@ -12,6 +12,11 @@ interface NodeManager {
     fun getRootNode(): Node
 
     /**
+     * Find first node by path
+     */
+    fun findNodeByPath(path: String): Node?
+
+    /**
      * Returns lazy list of nodes by search string
      */
     fun findNodes(term: String): Stream<Node>
