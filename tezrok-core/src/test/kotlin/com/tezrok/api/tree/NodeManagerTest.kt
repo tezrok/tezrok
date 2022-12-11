@@ -177,6 +177,56 @@ class NodeManagerTest : BaseTest() {
     }
 
     @Test
+    fun testSaveAfterRemoveChildren() {
+        val manager = nodeManagerFromFile(file)
+        val root = manager.getRootNode()
+        val child = root.add("child", NodeType.Directory)
+        val node = child.add("node", NodeType.Item)
+
+        assertTrue(child.remove(listOf(node)))
+        assertTrue(root.remove(listOf(child)))
+
+        manager.save()
+
+        val manager2 = nodeManagerFromFile(file)
+        val root2 = manager2.getRootNode()
+
+        assertEquals(root, root2)
+        assertEquals(SINGLE_ROOT, file.readText())
+    }
+
+    @Test
+    fun testRemoveChildrenAfterSave() {
+        val manager = nodeManagerFromFile(file)
+        val root = manager.getRootNode()
+        val child = root.add("child", NodeType.Directory)
+        val node = child.add("node", NodeType.Item)
+
+        manager.save()
+
+        val manager2 = nodeManagerFromFile(file)
+        val root2 = manager2.getRootNode()
+        val child2 = root2.findNodeByPath("/child")!!
+        val node2 = child2.findNodeByPath("/node")!!
+
+        assertEquals(1, root2.getChildrenSize())
+        assertEquals(1, child2.getChildrenSize())
+        assertEquals(0, node2.getChildrenSize())
+        assertTrue(child2.remove(listOf(node2)))
+        assertTrue(root2.remove(listOf(child2)))
+        assertEquals(0, root2.getChildrenSize())
+
+        manager2.save()
+
+        val manager3 = nodeManagerFromFile(file)
+        val root3 = manager3.getRootNode()
+
+        assertEquals(root2, root3)
+        assertEquals(SINGLE_ROOT, file.readText())
+    }
+
+
+    @Test
     fun testRemoveReturnTrueIfAnyChildRemoved() {
         val manager = nodeManagerFromFile(file)
         val root = manager.getRootNode()
@@ -196,7 +246,7 @@ class NodeManagerTest : BaseTest() {
         assertEquals(node2, child.getChildren().findFirst().get())
     }
 
-        private companion object {
+    private companion object {
         const val SINGLE_ROOT = """{
   "id" : 1000,
   "props" : {

@@ -52,7 +52,7 @@ interface Node : Cloneable {
     fun add(name: String, type: NodeType): Node
 
     /**
-     * Remove specified nodes
+     * Remove specified child nodes
      *
      * @return `true` if any of the specified nodes was removed from the node
      */
@@ -76,6 +76,11 @@ interface Node : Cloneable {
      * Return child node by name. If not found, returns null
      */
     fun getChild(name: String): Node? = getChildren().filter { it.getName() == name }.findFirst().orElse(null)
+
+    /**
+     * Returns true if node has infinite children
+     */
+    fun isInfinite(): Boolean = getChildrenSize() == Int.MAX_VALUE
 
     /**
      * Returns first child by path. If not found, returns null

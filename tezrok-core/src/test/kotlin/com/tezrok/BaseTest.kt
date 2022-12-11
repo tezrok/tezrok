@@ -1,10 +1,12 @@
 package com.tezrok
 
+import com.tezrok.api.tree.Node
 import com.tezrok.api.tree.NodeManager
 import com.tezrok.api.tree.NodeManagerImpl
 import com.tezrok.api.tree.repo.file.FileNodeRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import java.io.File
 import java.util.*
@@ -32,6 +34,17 @@ abstract class BaseTest {
     }
 
     protected fun <T> assertEmpty(collection: Collection<T>) {
-        Assertions.assertTrue(collection.isEmpty()) { "Collection must be empty, but found: $collection" }
+        assertTrue(collection.isEmpty()) { "Collection must be empty, but found: $collection" }
+    }
+
+    protected fun assertEquals(expected: Node, actual: Node) {
+        Assertions.assertEquals(expected, actual)
+        Assertions.assertEquals(expected.getChildrenSize(), actual.getChildrenSize())
+
+        val actualChildren = actual.getChildren().toList()
+
+        expected.getChildren().toList().forEachIndexed { index, node ->
+            assertEquals(node, actualChildren[index])
+        }
     }
 }

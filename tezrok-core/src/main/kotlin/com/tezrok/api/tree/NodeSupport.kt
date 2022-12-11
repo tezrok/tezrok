@@ -4,6 +4,7 @@ import com.tezrok.util.calcPath
 import com.tezrok.util.runIn
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantReadWriteLock
+import java.util.stream.Collectors
 import java.util.stream.Stream
 
 class NodeSupport(private val nodeRepo: NodeRepository) {
@@ -64,25 +65,50 @@ class NodeSupport(private val nodeRepo: NodeRepository) {
 
     fun remove(parent: Node, nodes: List<Node>): Boolean {
         writeLock.runIn {
+            if (!this.nodes.containsKey(parent)) {
+                return loadChildren(parent).removeAll(nodes)
+            }
+
             return this.nodes[parent]?.removeAll(nodes) ?: false
         }
     }
 
     fun getChildren(parent: Node): Stream<Node> {
         readLock.runIn {
-            return getListByParent(parent).toList().stream()
+            if (nodes.containsKey(parent)) {
+                return getListByParent(parent).toList().stream()
+            }
+        }
+
+        // node not found in cache, try to load from repository
+        writeLock.runIn {
+            return loadChildren(parent).toList().stream()
         }
     }
 
     fun getChildrenSize(parent: Node): Int {
         readLock.runIn {
-            return getListByParent(parent).size
+            if (nodes.containsKey(parent)) {
+                return getListByParent(parent).size
+            }
+        }
+
+        // node not found in cache, try to load from repository
+        writeLock.runIn {
+            return loadChildren(parent).size
         }
     }
 
     fun clone(node: Node): Node {
         TODO("Not yet implemented")
     }
+
+    fun getProperties(node: Node): NodeProperties = readLock.runIn {
+        nodesProperties[node] ?: throw IllegalStateException("Properties not found")
+    }
+
+    // TODO: add NodeRef cache
+    fun getNodeRef(node: NodeIml): NodeRef = NodeRefImpl(node.calcPath()) { path -> findNodeByPath(path) }
 
     private fun createRoot(): Node {
         val rootElem = nodeRepo.getRoot()
@@ -97,12 +123,26 @@ class NodeSupport(private val nodeRepo: NodeRepository) {
         }
     }
 
-    private fun getListByParent(parent: Node): List<Node> = (nodes[parent] as List<Node>? ?: emptyList())
+    /**
+     * Load children from repository and add to cache
+     */
+    private fun loadChildren(parent: Node): MutableList<Node> {
+        val children = nodeRepo.getChildren(parent.getId())
+            .map { it.toNode(parent) }
+            .collect(Collectors.toList()) // don't use Stream.toList() because it's immutable
+        nodes[parent] = children
 
-    fun getProperties(node: Node): NodeProperties = readLock.runIn {
-        nodesProperties[node] ?: throw IllegalStateException("Properties not found")
+        return children
     }
 
-    // TODO: add NodeRef cache
-    fun getNodeRef(node: NodeIml): NodeRef = NodeRefImpl(node.calcPath()) { path -> findNodeByPath(path) }
+    private fun getListByParent(parent: Node): List<Node> = (nodes[parent] as List<Node>? ?: emptyList())
+
+    private fun NodeElem.toNode(parent: Node): Node {
+        val properties = HashMap(this.properties)
+        properties[PropertyName.Id] = this.id
+        val node = NodeIml(this.id, parent, this@NodeSupport)
+        nodesProperties[node] = NodePropertiesImpl(properties, node)
+
+        return node
+    }
 }
