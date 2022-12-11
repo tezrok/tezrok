@@ -152,7 +152,51 @@ class NodeManagerTest : BaseTest() {
         assertNull(dir.findNodeByPath("/Dir/Item"))
     }
 
-    private companion object {
+    @Test
+    fun testRemoveChildren() {
+        val manager = nodeManagerFromFile(file)
+        val root = manager.getRootNode()
+        val child = root.add("child", NodeType.Directory)
+        val node = child.add("node", NodeType.Item)
+
+        assertFalse(root.remove(listOf(node)))
+        assertFalse(node.remove(listOf(child)))
+        assertFalse(node.remove(listOf(node)))
+        assertFalse(child.remove(listOf(root)))
+        assertEquals(1, root.getChildrenSize())
+
+        assertEquals(1, child.getChildrenSize())
+        assertTrue(child.remove(listOf(node)))
+        assertEquals(0, child.getChildrenSize())
+        assertFalse(child.remove(listOf(node)))
+
+        assertEquals(1, root.getChildrenSize())
+        assertTrue(root.remove(listOf(child)))
+        assertEquals(0, root.getChildrenSize())
+        assertFalse(root.remove(listOf(child)))
+    }
+
+    @Test
+    fun testRemoveReturnTrueIfAnyChildRemoved() {
+        val manager = nodeManagerFromFile(file)
+        val root = manager.getRootNode()
+        val item = root.add("Item", NodeType.Item)
+        val child = root.add("child", NodeType.Directory)
+        val node1 = child.add("node1", NodeType.Item)
+        val node2 = child.add("node2", NodeType.Item)
+
+        assertEquals(2, root.getChildrenSize())
+        assertEquals(2, child.getChildrenSize())
+
+        assertTrue(child.remove(listOf(node1, item)))
+        assertEquals(1, child.getChildrenSize())
+        assertFalse(child.remove(listOf(node1, item)))
+        assertEquals(1, child.getChildrenSize())
+        assertEquals(2, root.getChildrenSize())
+        assertEquals(node2, child.getChildren().findFirst().get())
+    }
+
+        private companion object {
         const val SINGLE_ROOT = """{
   "id" : 1000,
   "props" : {
