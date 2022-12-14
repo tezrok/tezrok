@@ -67,6 +67,7 @@ class NodePropertiesImpl(props: Map<PropertyName, Any?>, private val node: Node)
     }
 
     override fun hashCode(): Int {
+        // TODO: check if it's correct
         var result = node.getId().hashCode()
         result = 31 * result + properties.hashCode()
         return result

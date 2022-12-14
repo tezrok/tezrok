@@ -1,5 +1,6 @@
 package com.tezrok.api.tree
 
+import com.tezrok.api.error.NodeAlreadyExistsException
 import com.tezrok.util.calcPath
 import com.tezrok.util.runIn
 import java.util.concurrent.atomic.AtomicLong
@@ -51,6 +52,10 @@ class NodeSupport(private val nodeRepo: NodeRepository) {
         properties[PropertyName.Type] = type.name
 
         writeLock.runIn {
+            parent.getChild(name)?.let { node ->
+                throw NodeAlreadyExistsException(name, node.getPath())
+            }
+
             val nextId = lastIdCounter.incrementAndGet()
             properties[PropertyName.Id] = nextId
             val node = NodeIml(nextId, parent, this)

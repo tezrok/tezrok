@@ -2,6 +2,8 @@ package com.tezrok.api.tree
 
 import java.util.stream.Stream
 
+import com.tezrok.api.error.NodeAlreadyExistsException
+
 /**
  * Basic node interface
  */
@@ -48,6 +50,8 @@ interface Node : Cloneable {
 
     /**
      * Adds new node or throws exception
+     *
+     * @throws NodeAlreadyExistsException if node with such name already exists
      */
     fun add(name: String, type: NodeType): Node
 

@@ -1,9 +1,11 @@
 package com.tezrok.api.tree
 
 import com.tezrok.BaseTest
+import com.tezrok.api.error.NodeAlreadyExistsException
 import com.tezrok.api.tree.repo.file.FileNodeElem
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class NodeManagerTest : BaseTest() {
 
@@ -244,6 +246,28 @@ class NodeManagerTest : BaseTest() {
         assertEquals(1, child.getChildrenSize())
         assertEquals(2, root.getChildrenSize())
         assertEquals(node2, child.getChildren().findFirst().get())
+    }
+
+    @Test
+    fun testAddNodeWithDuplicateNameMustFail() {
+        val manager = nodeManagerFromFile(file)
+        val root = manager.getRootNode()
+        val item = root.add("Item", NodeType.Item)
+        item.add("child", NodeType.Directory)
+
+        assertEquals(1, item.getChildrenSize())
+
+        val ex = assertThrows<NodeAlreadyExistsException> { item.add("child", NodeType.Item) }
+
+        assertEquals("Node with such name already exists: child", ex.message)
+        assertEquals("/Item/child", ex.path)
+        assertEquals(1, item.getChildrenSize())
+
+        val ex2 = assertThrows<NodeAlreadyExistsException> { item.add("child", NodeType.Directory) }
+
+        assertEquals("Node with such name already exists: child", ex2.message)
+        assertEquals("/Item/child", ex2.path)
+        assertEquals(1, item.getChildrenSize())
     }
 
     private companion object {
