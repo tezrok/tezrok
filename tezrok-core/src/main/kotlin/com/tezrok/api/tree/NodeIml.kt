@@ -39,10 +39,7 @@ class NodeIml(
     override fun toString(): String = "Node-${getType().name}: ${getName()}"
 
     override fun hashCode(): Int {
-        var result = id.hashCode()
-        result = 31 * result + (parentNode?.hashCode() ?: 0)
-        result = 31 * result + properties.hashCode()
-        return result
+        return 31 * id.hashCode() + (parentNode?.hashCode() ?: 0)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -51,10 +48,7 @@ class NodeIml(
 
         if (id != other.getId()) return false
         if (parentNode != other.getParent()) return false
-        if (properties.value != other.getProperties()) return false
 
         return true
     }
 }
-
-
