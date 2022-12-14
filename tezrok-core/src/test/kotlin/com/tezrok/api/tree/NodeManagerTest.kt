@@ -227,7 +227,6 @@ class NodeManagerTest : BaseTest() {
         assertEquals(SINGLE_ROOT, file.readText())
     }
 
-
     @Test
     fun testRemoveReturnTrueIfAnyChildRemoved() {
         val manager = nodeManagerFromFile(file)

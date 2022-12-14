@@ -13,23 +13,46 @@ data class PropertyName(val name: String, val description: String) {
 
     // TODO: add validation of name
     companion object {
+        @JvmField
         val Id = of("id", "Unique id of the node")
+
+        @JvmField
         val Name = of("name", "Name of the node")
+
+        @JvmField
         val Type = of("type", "Type of the node")
+
+        @JvmField
         val Child = of("child", "Node's child")
+
+        @JvmField
         val Disabled = of("disabled", "Node is disabled")
+
+        @JvmField
         val Deleted = of("deleted", "Node is deleted")
+
+        @JvmField
         val File = of("file", "File reference of the node")
+
+        @JvmField
         val FileHash = of("fileHash", "Hash of file content")
+
+        @JvmField
         val FileContentType = of("fileContentType", "File content mime-type")
 
-        // All system properties
-        val All = listOf(Id, Name, Type, Child, Disabled, Deleted, File, FileHash, FileContentType)
+        /**
+         * All known properties
+         */
+        @JvmField
+        val All: Set<PropertyName> = hashSetOf(Id, Name, Type, Child, Disabled, Deleted, File, FileHash, FileContentType)
 
+        /**
+         * Creates new [PropertyName]
+         */
         fun of(name: String, description: String): PropertyName = PropertyName(name, description)
 
         /**
-         * Return system property by name
+         * Return system property by name if exists
          */
         fun get(name: String): PropertyName? = cache[name]
 
