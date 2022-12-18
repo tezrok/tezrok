@@ -3,6 +3,9 @@ package com.tezrok.api.tree
 import com.tezrok.util.calcPath
 import java.util.stream.Stream
 
+/**
+ * Main implementation of the [Node]
+ */
 class NodeIml(
     private val id: Long,
     private val parentNode: Node?,

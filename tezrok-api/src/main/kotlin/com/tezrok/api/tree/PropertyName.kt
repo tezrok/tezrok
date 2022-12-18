@@ -41,10 +41,17 @@ data class PropertyName(val name: String, val description: String) {
         val FileContentType = of("fileContentType", "File content mime-type")
 
         /**
+         * Can be microservice, lib, desktop, web, etc
+         */
+        @JvmField
+        val ModuleType = of("moduleType", "Module type")
+
+        /**
          * All known properties
          */
         @JvmField
-        val All: Set<PropertyName> = hashSetOf(Id, Name, Type, Child, Disabled, Deleted, File, FileHash, FileContentType)
+        val All: Set<PropertyName> = hashSetOf(Id, Name, Type, Child, Disabled, Deleted, File, FileHash,
+            FileContentType, ModuleType)
 
         /**
          * Creates new [PropertyName]

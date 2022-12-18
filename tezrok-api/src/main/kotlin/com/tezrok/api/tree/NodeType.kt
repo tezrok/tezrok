@@ -33,7 +33,7 @@ data class NodeType(val name: String, val description: String) {
          * Module source code. Module can contain only one CodeRoot node
          */
         @JvmField
-        val CodeRoot = of("CodeRoot", "Module directory")
+        val CodeRoot = of("CodeRoot", "Module code directory")
 
         /**
          * Node contains file reference. By default, empty file is created

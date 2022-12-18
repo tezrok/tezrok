@@ -1,6 +1,7 @@
 package io.tezrok.core.feature
 
 import io.tezrok.core.factory.Factory
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import kotlin.test.assertEquals
@@ -8,6 +9,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 
+@Disabled
 class FeatureManagerTest {
     @Test
     fun loadFeaturesTest() {
