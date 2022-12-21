@@ -132,6 +132,10 @@ class NodeSupport(private val nodeRepo: NodeRepository) {
      * Load children from repository and add to cache
      */
     private fun loadChildren(parent: Node): MutableList<Node> {
+        nodes[parent]?.let {
+            return it
+        }
+
         val children = nodeRepo.getChildren(parent.getId())
             .map { it.toNode(parent) }
             .collect(Collectors.toList()) // don't use Stream.toList() because it's immutable
