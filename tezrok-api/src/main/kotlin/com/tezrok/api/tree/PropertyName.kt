@@ -2,6 +2,8 @@ package com.tezrok.api.tree
 
 /**
  * Name of the property
+ *
+ * If property starts with underscore, it is considered as hidden and not shown in UI
  */
 data class PropertyName(val name: String, val description: String) {
     /**
@@ -30,6 +32,12 @@ data class PropertyName(val name: String, val description: String) {
 
         @JvmField
         val Deleted = of("deleted", "Node is deleted")
+
+        @JvmField
+        val Author = of("_createdBy", "Author of the node")
+
+        @JvmField
+        val Created = of("_created", "Creation datetime of the node")
 
         @JvmField
         val File = of("file", "File reference of the node")
