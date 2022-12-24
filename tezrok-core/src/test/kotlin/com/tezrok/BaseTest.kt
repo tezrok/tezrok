@@ -13,17 +13,15 @@ import java.util.*
 
 abstract class BaseTest {
     private val tempDir: File = File(System.getProperty("java.io.tmpdir"))
-    protected val file = File(tempDir, UUID.randomUUID().toString())
+    protected lateinit var file: File
 
     @BeforeEach
-    fun setUp() {
-        if (file.exists()) {
-            file.delete()
-        }
+    open fun setUp() {
+        file = File(tempDir, UUID.randomUUID().toString())
     }
 
     @AfterEach
-    fun tearDown() {
+    open fun tearDown() {
         if (file.exists()) {
             file.delete()
         }
