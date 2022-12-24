@@ -59,7 +59,7 @@ data class PropertyName(val name: String, val description: String) {
          */
         @JvmField
         val All: Set<PropertyName> = hashSetOf(Id, Name, Type, Child, Disabled, Deleted, File, FileHash,
-            FileContentType, ModuleType)
+            FileContentType, ModuleType, Author, Created)
 
         /**
          * Creates new [PropertyName]
