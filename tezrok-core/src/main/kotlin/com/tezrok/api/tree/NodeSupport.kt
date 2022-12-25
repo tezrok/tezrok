@@ -1,6 +1,8 @@
 package com.tezrok.api.tree
 
 import com.tezrok.api.error.NodeAlreadyExistsException
+import com.tezrok.api.feature.CreateNodeFeature
+import com.tezrok.feature.FeatureManager
 import com.tezrok.util.calcPath
 import com.tezrok.util.runIn
 import java.util.concurrent.atomic.AtomicLong
@@ -8,10 +10,15 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.stream.Collectors
 import java.util.stream.Stream
 
-class NodeSupport(private val nodeRepo: NodeRepository) {
+/**
+ * Main implementation of the [Node]
+ */
+class NodeSupport(
+    private val nodeRepo: NodeRepository,
+    private val featureManager: FeatureManager
+) {
     private val lastIdCounter = AtomicLong(nodeRepo.getLastId())
     private val nodes: MutableMap<Node, MutableList<Node>> = HashMap()
-    private val nodesProperties: MutableMap<Node, NodeProperties> = HashMap()
     private val lock = ReentrantReadWriteLock()
     private val writeLock = lock.writeLock()
     private val readLock = lock.readLock()
@@ -47,24 +54,32 @@ class NodeSupport(private val nodeRepo: NodeRepository) {
     fun getRoot(): Node = root.value
 
     fun add(parent: Node, name: String, type: NodeType): Node {
-        val properties = HashMap<PropertyName, Any?>()
-        properties[PropertyName.Name] = name
-        properties[PropertyName.Type] = type.name
-
         writeLock.runIn {
-            parent.getChild(name)?.let { node ->
-                throw NodeAlreadyExistsException(name, node.getPath())
+            if (!parent.canAddDuplicateNode()) {
+                parent.getChild(name)?.let { node ->
+                    throw NodeAlreadyExistsException(name, node.getPath())
+                }
             }
 
+            val nodeProps = NodePropertiesImpl(mapOf(PropertyName.Name to name))
+            val node = tryCreateNodeByFeature(parent, type, nodeProps)
+
+            if (node != null) {
+                nodes.computeIfAbsent(parent) { ArrayList() }.add(node)
+                return node
+            }
+
+            val properties = HashMap<PropertyName, String?>()
+            properties[PropertyName.Name] = name
             val nextId = lastIdCounter.incrementAndGet()
-            properties[PropertyName.Id] = nextId
-            val node = NodeIml(nextId, parent, this)
-            nodesProperties[node] = NodePropertiesImpl(properties, node);
+            val nodeProperties = NodePropertiesImpl(properties)
+            val newNode = NodeIml(nextId, type, parent, nodeProperties, this)
+            nodeProperties.setNode(newNode)
             // TODO: validate new node
 
-            nodes.computeIfAbsent(parent) { ArrayList() }.add(node)
+            nodes.computeIfAbsent(parent) { ArrayList() }.add(newNode)
 
-            return node
+            return newNode
         }
     }
 
@@ -108,24 +123,39 @@ class NodeSupport(private val nodeRepo: NodeRepository) {
         TODO("Not yet implemented")
     }
 
-    fun getProperties(node: Node): NodeProperties = readLock.runIn {
-        nodesProperties[node] ?: throw IllegalStateException("Properties not found")
-    }
-
     // TODO: add NodeRef cache
     fun getNodeRef(node: NodeIml): NodeRef = NodeRefImpl(node.calcPath()) { path -> findNodeByPath(path) }
 
     private fun createRoot(): Node {
         val rootElem = nodeRepo.getRoot()
-        val properties = HashMap(rootElem.properties)
-        properties[PropertyName.Id] = rootElem.id
 
         writeLock.runIn {
-            val node = NodeIml(rootElem.id, null, this)
-            nodesProperties[node] = NodePropertiesImpl(properties, node)
-
+            val nodeProps = NodePropertiesImpl(rootElem.properties)
+            val node = NodeIml(rootElem.id, NodeType.Root, null, nodeProps, this)
+            nodeProps.setNode(node)
             return node
         }
+    }
+
+    private fun tryCreateNodeByFeature(
+        parent: Node,
+        type: NodeType,
+        properties: NodeProperties
+    ): Node? {
+        val features = featureManager.getFeatures(type)
+
+        if (features.isNotEmpty()) {
+            features.filterIsInstance<CreateNodeFeature>()
+                .forEach { feature ->
+                    val name = properties.getStringProp(PropertyName.Name)
+                    val node = feature.createNode(parent, name, type, properties) { lastIdCounter.incrementAndGet() }
+                    if (node != null) {
+                        return node
+                    }
+                }
+        }
+
+        return null
     }
 
     /**
@@ -147,11 +177,19 @@ class NodeSupport(private val nodeRepo: NodeRepository) {
     private fun getListByParent(parent: Node): List<Node> = (nodes[parent] as List<Node>? ?: emptyList())
 
     private fun NodeElem.toNode(parent: Node): Node {
-        val properties = HashMap(this.properties)
-        properties[PropertyName.Id] = this.id
-        val node = NodeIml(this.id, parent, this@NodeSupport)
-        nodesProperties[node] = NodePropertiesImpl(properties, node)
+        val nodeProps = NodePropertiesImpl(this.properties)
+        val nodeType = NodeType.getOrCreate(nodeProps.getStringProp(PropertyName.Type))
+        val node = tryCreateNodeByFeature(parent, nodeType, nodeProps)
+        if (node != null) {
+            nodeProps.setNode(node)
+            return node
+        }
 
-        return node
+        val newNode = NodeIml(this.id, nodeType, parent, nodeProps, this@NodeSupport)
+        nodeProps.setNode(newNode)
+        return newNode
     }
 }
+
+private fun Node.canAddDuplicateNode(): Boolean =
+    getProperties().getBooleanPropertySafe(PropertyName.DuplicateNode) ?: false

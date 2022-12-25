@@ -10,7 +10,7 @@ import com.tezrok.api.tree.PropertyName
 data class FileNodeElem(
     val id: Long,
 
-    val props: Map<String, Any?>? = null,
+    val props: Map<String, String?>? = null,
 
     val items: List<FileNodeElem>? = null
 ) {

@@ -5,6 +5,9 @@ package com.tezrok.api.tree
  */
 data class NodeType(val name: String, val description: String) {
     companion object {
+        @JvmField
+        val Any = of("Any", "Any node")
+
         /**
          * Root node contains only Module nodes and common properties
          */
@@ -45,7 +48,7 @@ data class NodeType(val name: String, val description: String) {
          * All known types
          */
         @JvmField
-        val All: Set<NodeType> = hashSetOf(Root, Module, CodeRoot, Item, Directory, File)
+        val All: Set<NodeType> = hashSetOf(Any, Root, Module, CodeRoot, Item, Directory, File)
 
         /**
          * Creates new [NodeType]

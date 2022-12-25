@@ -6,5 +6,5 @@ package com.tezrok.api.tree
 class NodeElem(
     val id: Long,
 
-    val properties: Map<PropertyName, Any?> = emptyMap()
+    val properties: Map<PropertyName, String?> = emptyMap()
 )

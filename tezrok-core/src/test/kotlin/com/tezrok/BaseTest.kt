@@ -4,6 +4,8 @@ import com.tezrok.api.tree.Node
 import com.tezrok.api.tree.NodeManager
 import com.tezrok.api.tree.NodeManagerImpl
 import com.tezrok.api.tree.repo.file.FileNodeRepository
+import com.tezrok.feature.FeatureManager
+import com.tezrok.plugin.PluginManager
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -12,6 +14,8 @@ import java.io.File
 import java.util.*
 
 abstract class BaseTest {
+    protected val pluginManager: PluginManager = PluginManager(listOf())
+    protected val featureManager: FeatureManager = FeatureManager(pluginManager)
     private val tempDir: File = File(System.getProperty("java.io.tmpdir"))
     protected lateinit var file: File
 
@@ -28,7 +32,7 @@ abstract class BaseTest {
     }
 
     protected fun nodeManagerFromFile(file: File): NodeManager {
-        return NodeManagerImpl(FileNodeRepository(file))
+        return NodeManagerImpl(FileNodeRepository(file), featureManager)
     }
 
     protected fun <T> assertEmpty(collection: Collection<T>) {

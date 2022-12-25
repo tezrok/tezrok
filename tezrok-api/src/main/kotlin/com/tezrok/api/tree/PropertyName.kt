@@ -49,6 +49,14 @@ data class PropertyName(val name: String, val description: String) {
         val FileContentType = of("fileContentType", "File content mime-type")
 
         /**
+         * Boolean property. If true, this node can contain children with duplicate names
+         *
+         * By default, property is false
+         */
+        @JvmField
+        val DuplicateNode: PropertyName = of("DuplicateNode", "Node can contain children with duplicate names")
+
+        /**
          * Can be microservice, lib, desktop, web, etc
          */
         @JvmField
@@ -58,8 +66,10 @@ data class PropertyName(val name: String, val description: String) {
          * All known properties
          */
         @JvmField
-        val All: Set<PropertyName> = hashSetOf(Id, Name, Type, Child, Disabled, Deleted, File, FileHash,
-            FileContentType, ModuleType, Author, Created)
+        val All: Set<PropertyName> = hashSetOf(
+            Id, Name, Type, Child, Disabled, Deleted, File, FileHash,
+            FileContentType, ModuleType, Author, Created, DuplicateNode
+        )
 
         /**
          * Creates new [PropertyName]

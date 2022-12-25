@@ -4,20 +4,20 @@ import com.tezrok.util.calcPath
 import java.util.stream.Stream
 
 /**
- * Main implementation of the [Node]
+ * Basic implementation of the [Node]
  */
 class NodeIml(
     private val id: Long,
+    private val type: NodeType,
     private val parentNode: Node?,
+    private val properties: NodeProperties,
     private val nodeSupport: NodeSupport
 ) : Node {
-    private val properties: Lazy<NodeProperties> = lazy { nodeSupport.getProperties(this) }
-
     override fun getId(): Long = id
 
-    override fun getName(): String = properties.value.getStringProp(PropertyName.Name)
+    override fun getName(): String = properties.getStringProp(PropertyName.Name)
 
-    override fun getType(): NodeType = NodeType.getOrCreate(properties.value.getStringProp(PropertyName.Type))
+    override fun getType(): NodeType = type
 
     override fun getPath(): String = this.calcPath()
 
@@ -35,7 +35,7 @@ class NodeIml(
 
     override fun findNodeByPath(path: String): Node? = nodeSupport.findNodeByPath(this, path)
 
-    override fun getProperties(): NodeProperties = properties.value
+    override fun getProperties(): NodeProperties = properties
 
     override fun clone(): Node = nodeSupport.clone(this)
 

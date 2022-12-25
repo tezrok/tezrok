@@ -1,14 +1,18 @@
 package com.tezrok.api.tree
 
 import com.tezrok.api.tree.repo.file.FileNodeRepository
+import com.tezrok.feature.FeatureManager
 import com.tezrok.util.toElem
 import java.util.stream.Stream
 
 /**
- * Implementation of NodeManager
+ * Implementation of [NodeManager]
  */
-class NodeManagerImpl(private val nodeRepo: NodeRepository) : NodeManager {
-    private val nodeSupport = NodeSupport(nodeRepo)
+class NodeManagerImpl(
+    private val nodeRepo: NodeRepository,
+    private val featureManager: FeatureManager
+) : NodeManager {
+    private val nodeSupport = NodeSupport(nodeRepo, featureManager)
 
     override fun getRootNode(): Node = nodeSupport.getRoot()
 

@@ -4,10 +4,15 @@ import com.tezrok.api.error.TezrokException
 import org.apache.commons.lang3.Validate
 import java.util.concurrent.ConcurrentHashMap
 
-class NodePropertiesImpl(props: Map<PropertyName, Any?>, private val node: Node) : NodeProperties {
+class NodePropertiesImpl(props: Map<PropertyName, String?>) : NodeProperties {
     private val properties: MutableMap<PropertyName, Any?> = ConcurrentHashMap(props)
+    private var _node: Node? = null
 
-    override fun getNode(): Node = node
+    fun setNode(node: Node) {
+        _node = node
+    }
+
+    override fun getNode(): Node = _node ?: throw TezrokException("Node is not set")
 
     override fun isDisabled(): Boolean = getBooleanPropertySafe(PropertyName.Disabled) ?: false
 
@@ -46,9 +51,9 @@ class NodePropertiesImpl(props: Map<PropertyName, Any?>, private val node: Node)
         return oldProp
     }
 
-    override fun getProperty(name: PropertyName): Any? = properties[name]
+    override fun getProperty(name: PropertyName): Any? = getKnownProperty(name) ?: properties[name]
 
-    override fun getPropertiesNames(): Set<PropertyName> = properties.keys
+    override fun getPropertiesNames(): Set<PropertyName> = properties.keys + getKnownPropertiesNames()
 
     override fun can(action: NodeAction, name: PropertyName): Boolean {
         TODO("Not yet implemented")
@@ -60,23 +65,34 @@ class NodePropertiesImpl(props: Map<PropertyName, Any?>, private val node: Node)
 
         other as NodePropertiesImpl
 
-        if (node.getId() != other.node.getId()) return false
         if (properties != other.properties) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        // TODO: check if it's correct
-        var result = node.getId().hashCode()
-        result = 31 * result + properties.hashCode()
-        return result
+        return properties.hashCode()
     }
+
+    private fun getKnownProperty(name: PropertyName): Any? {
+        if (_node == null) {
+            return null
+        }
+
+        return when (name) {
+            PropertyName.Id -> getNode().getId().toString()
+            PropertyName.Type -> getNode().getType().name
+            else -> null
+        }
+    }
+
+    private fun getKnownPropertiesNames(): Set<PropertyName> = setOf(PropertyName.Id, PropertyName.Type)
 }
 
 internal fun NodeProperties.getStringPropSafe(name: PropertyName): String? = getProperty(name) as String?
 
-internal fun NodeProperties.getBooleanPropertySafe(name: PropertyName) = getProperty(name) as Boolean?
+internal fun NodeProperties.getBooleanPropertySafe(name: PropertyName): Boolean? =
+    getProperty(name)?.let { "true" == it }
 
 internal fun NodeProperties.getStringProp(name: PropertyName): String =
     Validate.notBlank(getStringPropSafe(name), "Property '%s' cannot be empty", name)!!

@@ -1,12 +1,21 @@
 package com.tezrok.api
 
 /**
- * Plugin of the system
+ * Basic interface for all plugins
  */
 interface Plugin {
+    /**
+     * Returns name of the plugin
+     */
     fun getName(): String
 
+    /**
+     * Returns plugin version
+     */
     fun getVersion(): String
 
-    fun getService(): Service
+    /**
+     * Returns service by class if it is supported by the plugin
+     */
+    fun <T : Service> getService(clazz: Class<T>): T?
 }
