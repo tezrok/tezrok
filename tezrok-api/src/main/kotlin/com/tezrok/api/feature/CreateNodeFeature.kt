@@ -18,7 +18,13 @@ interface CreateNodeFeature : Feature {
         parent: Node,
         name: String,
         type: NodeType,
-        properties: NodeProperties,
         idGenerator: Supplier<Long>
+    ): Node?
+
+    fun loadNode(
+        parent: Node,
+        type: NodeType,
+        properties: NodeProperties,
+        id: Long
     ): Node?
 }

@@ -65,16 +65,14 @@ class NodeSupport(
             val node = tryCreateNodeByFeature(parent, type, nodeProps)
 
             if (node != null) {
+                nodeProps.setNode(node)
                 nodes.computeIfAbsent(parent) { ArrayList() }.add(node)
                 return node
             }
 
-            val properties = HashMap<PropertyName, String?>()
-            properties[PropertyName.Name] = name
             val nextId = lastIdCounter.incrementAndGet()
-            val nodeProperties = NodePropertiesImpl(properties)
-            val newNode = NodeIml(nextId, type, parent, nodeProperties, this)
-            nodeProperties.setNode(newNode)
+            val newNode = NodeIml(nextId, type, parent, nodeProps, this)
+            nodeProps.setNode(newNode)
             // TODO: validate new node
 
             nodes.computeIfAbsent(parent) { ArrayList() }.add(newNode)
@@ -140,15 +138,20 @@ class NodeSupport(
     private fun tryCreateNodeByFeature(
         parent: Node,
         type: NodeType,
-        properties: NodeProperties
+        properties: NodeProperties,
+        id: Long? = null
     ): Node? {
         val features = featureManager.getFeatures(type)
 
         if (features.isNotEmpty()) {
             features.filterIsInstance<CreateNodeFeature>()
                 .forEach { feature ->
-                    val name = properties.getStringProp(PropertyName.Name)
-                    val node = feature.createNode(parent, name, type, properties) { lastIdCounter.incrementAndGet() }
+                    val node = if (id != null) {
+                        feature.loadNode(parent, type, properties, id)
+                    } else {
+                        val name = properties.getStringProp(PropertyName.Name)
+                        feature.createNode(parent, name, type) { lastIdCounter.incrementAndGet() }
+                    }
                     if (node != null) {
                         return node
                     }
