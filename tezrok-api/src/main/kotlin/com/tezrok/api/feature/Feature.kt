@@ -20,4 +20,9 @@ interface Feature {
      * Returns supported node types
      */
     fun getNodeTypes(): List<NodeType>
+
+    /**
+     * Sets [InternalFeatureSupport] for the feature
+     */
+    fun setInternalFeatureSupport(internalFeatureSupport: InternalFeatureSupport)
 }

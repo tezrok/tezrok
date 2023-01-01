@@ -6,7 +6,7 @@ import java.util.stream.Stream
 /**
  * Basic implementation of the [Node]
  */
-class NodeIml(
+open class NodeIml(
     private val id: Long,
     private val type: NodeType,
     private val parentNode: Node?,

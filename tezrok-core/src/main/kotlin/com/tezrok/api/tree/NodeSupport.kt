@@ -1,7 +1,9 @@
 package com.tezrok.api.tree
 
 import com.tezrok.api.error.NodeAlreadyExistsException
+import com.tezrok.api.error.TezrokException
 import com.tezrok.api.feature.CreateNodeFeature
+import com.tezrok.api.feature.InternalFeatureSupport
 import com.tezrok.feature.FeatureManager
 import com.tezrok.util.calcPath
 import com.tezrok.util.runIn
@@ -16,13 +18,17 @@ import java.util.stream.Stream
 class NodeSupport(
     private val nodeRepo: NodeRepository,
     private val featureManager: FeatureManager
-) {
+) : InternalFeatureSupport {
     private val lastIdCounter = AtomicLong(nodeRepo.getLastId())
     private val nodes: MutableMap<Node, MutableList<Node>> = HashMap()
     private val lock = ReentrantReadWriteLock()
     private val writeLock = lock.writeLock()
     private val readLock = lock.readLock()
     private val root = lazy { createRoot() }
+
+    init {
+        featureManager.setInternalFeatureSupport(this)
+    }
 
     /**
      * Find first node by path
@@ -61,19 +67,16 @@ class NodeSupport(
                 }
             }
 
-            val nodeProps = NodePropertiesImpl(mapOf(PropertyName.Name to name))
-            val node = tryCreateNodeByFeature(parent, type, nodeProps)
-
-            if (node != null) {
-                nodeProps.setNode(node)
-                nodes.computeIfAbsent(parent) { ArrayList() }.add(node)
-                return node
-            }
-
-            val nextId = lastIdCounter.incrementAndGet()
-            val newNode = NodeIml(nextId, type, parent, nodeProps, this)
-            nodeProps.setNode(newNode)
+            val newNode = createNode(parent, NodeElem.of(name, type))
             // TODO: validate new node
+
+            if (newNode is FeatureNodeImpl && newNode.featureSupport.isSupportChildren()) {
+                if (newNode.featureSupport.addNode(newNode)) {
+                    return newNode
+                }
+
+                throw TezrokException("Node cannot be added")
+            }
 
             nodes.computeIfAbsent(parent) { ArrayList() }.add(newNode)
 
@@ -83,15 +86,19 @@ class NodeSupport(
 
     fun remove(parent: Node, nodes: List<Node>): Boolean {
         writeLock.runIn {
-            if (!this.nodes.containsKey(parent)) {
-                return loadChildren(parent).removeAll(nodes)
+            if (parent is FeatureNodeImpl && parent.featureSupport.isSupportChildren()) {
+                return parent.featureSupport.removeNodes(nodes)
             }
 
-            return this.nodes[parent]?.removeAll(nodes) ?: false
+            return loadChildren(parent).removeAll(nodes)
         }
     }
 
     fun getChildren(parent: Node): Stream<Node> {
+        if (parent is FeatureNodeImpl && parent.featureSupport.isSupportChildren()) {
+            return parent.featureSupport.getChildren()
+        }
+
         readLock.runIn {
             if (nodes.containsKey(parent)) {
                 return getListByParent(parent).toList().stream()
@@ -105,6 +112,10 @@ class NodeSupport(
     }
 
     fun getChildrenSize(parent: Node): Int {
+        if (parent is FeatureNodeImpl && parent.featureSupport.isSupportChildren()) {
+            return parent.featureSupport.getChildrenSize()
+        }
+
         readLock.runIn {
             if (nodes.containsKey(parent)) {
                 return getListByParent(parent).size
@@ -139,21 +150,16 @@ class NodeSupport(
         parent: Node,
         type: NodeType,
         properties: NodeProperties,
-        id: Long? = null
+        id: Long
     ): Node? {
         val features = featureManager.getFeatures(type)
 
         if (features.isNotEmpty()) {
             features.filterIsInstance<CreateNodeFeature>()
                 .forEach { feature ->
-                    val node = if (id != null) {
-                        feature.loadNode(parent, type, properties, id)
-                    } else {
-                        val name = properties.getStringProp(PropertyName.Name)
-                        feature.createNode(parent, name, type) { lastIdCounter.incrementAndGet() }
-                    }
-                    if (node != null) {
-                        return node
+                    val featureNodeSupport = feature.createNode(parent, properties, id)
+                    if (featureNodeSupport != null) {
+                        return FeatureNodeImpl(type, parent, featureNodeSupport, this)
                     }
                 }
         }
@@ -170,7 +176,7 @@ class NodeSupport(
         }
 
         val children = nodeRepo.getChildren(parent.getId())
-            .map { it.toNode(parent) }
+            .map { elem -> createNode(parent, elem) }
             .collect(Collectors.toList()) // don't use Stream.toList() because it's immutable
         nodes[parent] = children
 
@@ -179,16 +185,19 @@ class NodeSupport(
 
     private fun getListByParent(parent: Node): List<Node> = (nodes[parent] as List<Node>? ?: emptyList())
 
-    private fun NodeElem.toNode(parent: Node): Node {
-        val nodeProps = NodePropertiesImpl(this.properties)
+    override fun getNextNodeId(): Long = lastIdCounter.incrementAndGet()
+
+    override fun createNode(parent: Node, nodeElem: NodeElem): Node {
+        val nodeProps = NodePropertiesImpl(nodeElem.properties)
         val nodeType = NodeType.getOrCreate(nodeProps.getStringProp(PropertyName.Type))
-        val node = tryCreateNodeByFeature(parent, nodeType, nodeProps)
+        val node = tryCreateNodeByFeature(parent, nodeType, nodeProps, nodeElem.id)
         if (node != null) {
             nodeProps.setNode(node)
             return node
         }
 
-        val newNode = NodeIml(this.id, nodeType, parent, nodeProps, this@NodeSupport)
+        val id = if (nodeElem.id > 0) nodeElem.id else getNextNodeId()
+        val newNode = NodeIml(id, nodeType, parent, nodeProps, this@NodeSupport)
         nodeProps.setNode(newNode)
         return newNode
     }

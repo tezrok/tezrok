@@ -2,13 +2,14 @@ package com.tezrok.feature
 
 import com.tezrok.api.feature.Feature
 import com.tezrok.api.feature.FeatureService
+import com.tezrok.api.feature.InternalFeatureSupport
 import com.tezrok.api.tree.NodeType
 import com.tezrok.plugin.PluginManager
 
 /**
  * The feature manager is responsible for managing the [Feature]s.
  */
-class FeatureManager(private val pluginManager: PluginManager) {
+class FeatureManager(pluginManager: PluginManager) {
     private val allFeatures: Map<NodeType, List<Feature>> = loadFeatures(pluginManager)
 
     /**
@@ -16,6 +17,12 @@ class FeatureManager(private val pluginManager: PluginManager) {
      */
     fun getFeatures(nodeType: NodeType): List<Feature> {
         return allFeatures[nodeType] ?: emptyList()
+    }
+
+    fun setInternalFeatureSupport(internalFeatureSupport: InternalFeatureSupport) {
+        allFeatures.values.flatten().forEach { feature ->
+            feature.setInternalFeatureSupport(internalFeatureSupport)
+        }
     }
 
     private companion object {

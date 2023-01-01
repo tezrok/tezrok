@@ -2,29 +2,15 @@ package com.tezrok.api.feature
 
 import com.tezrok.api.tree.Node
 import com.tezrok.api.tree.NodeProperties
-import com.tezrok.api.tree.NodeType
-import java.util.function.Supplier
 
 /**
  * [Feature] for creating a new [Node]
  */
 interface CreateNodeFeature : Feature {
     /**
-     * Creates [Node] by name and [NodeType]
+     * Creates [FeatureNodeSupport] by [NodeProperties]
      *
      * Returns null if node cannot be created
      */
-    fun createNode(
-        parent: Node,
-        name: String,
-        type: NodeType,
-        idGenerator: Supplier<Long>
-    ): Node?
-
-    fun loadNode(
-        parent: Node,
-        type: NodeType,
-        properties: NodeProperties,
-        id: Long
-    ): Node?
+    fun createNode(parent: Node, properties: NodeProperties, id: Long): FeatureNodeSupport?
 }
