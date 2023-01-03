@@ -15,7 +15,7 @@ open class NodeIml(
 ) : Node {
     override fun getId(): Long = id
 
-    override fun getName(): String = properties.getStringProp(PropertyName.Name)
+    override fun getName(): String = properties.getStringProperty(PropertyName.Name, null)
 
     override fun getType(): NodeType = type
 

@@ -1,11 +1,14 @@
 package com.tezrok.api.tree
 
+import com.tezrok.api.TezrokService
 import com.tezrok.api.error.TezrokException
-import org.apache.commons.lang3.Validate
 import java.util.concurrent.ConcurrentHashMap
 
+/**
+ * Internal implementation of the [NodeProperties]
+ */
 class NodePropertiesImpl(props: Map<PropertyName, String?>) : NodeProperties {
-    private val properties: MutableMap<PropertyName, Any?> = ConcurrentHashMap(props)
+    private val properties: MutableMap<PropertyName, String?> = ConcurrentHashMap(props)
     private var _node: Node? = null
 
     fun setNode(node: Node) {
@@ -14,24 +17,18 @@ class NodePropertiesImpl(props: Map<PropertyName, String?>) : NodeProperties {
 
     override fun getNode(): Node = _node ?: throw TezrokException("Node is not set")
 
-    override fun isDisabled(): Boolean = getBooleanPropertySafe(PropertyName.Disabled) ?: false
+    override fun isDisabled(): Boolean = getBooleanProperty(PropertyName.Disabled, false)
 
     override fun setDisabled(disabled: Boolean): Boolean =
-        setProperty(PropertyName.Disabled, disabled) as Boolean? ?: false
+        setProperty(PropertyName.Disabled, disabled.toString()) as Boolean? ?: false
 
-    override fun isDeleted(): Boolean = getBooleanPropertySafe(PropertyName.Deleted) ?: false
+    override fun isDeleted(): Boolean = getBooleanProperty(PropertyName.Deleted, false)
 
-    override fun isInfinite(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isInfinite(): Boolean = getBooleanProperty(PropertyName.Infinite, false)
 
-    override fun isReadonly(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isReadonly(): Boolean = getBooleanProperty(PropertyName.Readonly, false)
 
-    override fun isTransient(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isTransient(): Boolean = getBooleanProperty(PropertyName.Transient, false)
 
     override fun hasErrors(): Boolean {
         TODO("Not yet implemented")
@@ -41,7 +38,7 @@ class NodePropertiesImpl(props: Map<PropertyName, String?>) : NodeProperties {
         TODO("Not yet implemented")
     }
 
-    override fun setProperty(name: PropertyName, value: Any?): Any? {
+    override fun setProperty(name: PropertyName, value: String?): String? {
         if (!canEdit(name)) {
             throw TezrokException("Property cannot be edited: $name")
         }
@@ -51,9 +48,13 @@ class NodePropertiesImpl(props: Map<PropertyName, String?>) : NodeProperties {
         return oldProp
     }
 
-    override fun getProperty(name: PropertyName): Any? = getKnownProperty(name) ?: properties[name]
+    override fun getProperty(name: PropertyName): String? = getKnownProperty(name) ?: properties[name]
 
     override fun getPropertiesNames(): Set<PropertyName> = properties.keys + getKnownPropertiesNames()
+
+    override fun <T : TezrokService> getService(name: PropertyName, clazz: Class<T>): T? {
+        TODO("Not yet implemented")
+    }
 
     override fun can(action: NodeAction, name: PropertyName): Boolean {
         TODO("Not yet implemented")
@@ -74,7 +75,8 @@ class NodePropertiesImpl(props: Map<PropertyName, String?>) : NodeProperties {
         return properties.hashCode()
     }
 
-    private fun getKnownProperty(name: PropertyName): Any? {
+    private fun getKnownProperty(name: PropertyName): String? {
+        // TODO: check when node is not set
         if (_node == null) {
             return null
         }
@@ -89,10 +91,5 @@ class NodePropertiesImpl(props: Map<PropertyName, String?>) : NodeProperties {
     private fun getKnownPropertiesNames(): Set<PropertyName> = setOf(PropertyName.Id, PropertyName.Type)
 }
 
-internal fun NodeProperties.getStringPropSafe(name: PropertyName): String? = getProperty(name) as String?
-
-internal fun NodeProperties.getBooleanPropertySafe(name: PropertyName): Boolean? =
-    getProperty(name)?.let { "true" == it }
-
-internal fun NodeProperties.getStringProp(name: PropertyName): String =
-    Validate.notBlank(getStringPropSafe(name), "Property '%s' cannot be empty", name)!!
+internal fun NodeProperties.getNodeType(): NodeType =
+    NodeType.getOrCreate(this.getStringProperty(PropertyName.Type, null))

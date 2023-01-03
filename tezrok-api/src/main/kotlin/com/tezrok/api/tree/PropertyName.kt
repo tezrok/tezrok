@@ -62,13 +62,22 @@ data class PropertyName(val name: String, val description: String) {
         @JvmField
         val ModuleType = of("moduleType", "Module type")
 
+        @JvmField
+        val Infinite = of("infinite", "Node contains infinite children")
+
+        @JvmField
+        val Readonly = of("readonly", "Node properties and it's children cannot be edited")
+
+        @JvmField
+        val Transient = of("transient", "This node cannot be saved")
+
         /**
          * All known properties
          */
         @JvmField
         val All: Set<PropertyName> = hashSetOf(
-            Id, Name, Type, Child, Disabled, Deleted, File, FileHash,
-            FileContentType, ModuleType, Author, Created, DuplicateNode
+            Id, Name, Type, Child, Disabled, Deleted, File, FileHash, Readonly, Transient,
+            FileContentType, ModuleType, Author, Created, DuplicateNode, Infinite
         )
 
         /**

@@ -1,12 +1,12 @@
 package com.tezrok.api.feature
 
-import com.tezrok.api.Service
+import com.tezrok.api.TezrokService
 import com.tezrok.api.tree.NodeType
 
 /**
  * Entry point for all features
  */
-interface FeatureService : Service {
+interface FeatureService : TezrokService {
     /**
      * Returns all supported node types
      */

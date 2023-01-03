@@ -12,7 +12,6 @@
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <logback.version>1.2.9</logback.version>
         <kotlin.version>1.7.22</kotlin.version>
         <commons-lang3.version>3.12.0</commons-lang3.version>
         <verlocity.version>1.7</verlocity.version>
@@ -24,11 +23,6 @@
             <artifactId>kotlin-stdlib-jdk8</artifactId>
             <version>${kotlin.version}</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>${logback.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

@@ -1,6 +1,8 @@
 package com.tezrok.util
 
-import com.tezrok.api.tree.*
+import com.tezrok.api.tree.Node
+import com.tezrok.api.tree.NodeElem
+import com.tezrok.api.tree.PropertyName
 import java.util.*
 
 /**
@@ -32,9 +34,5 @@ fun Node.calcPath(): String {
     return sb.toString()
 }
 
-fun Node.toElem(): NodeElem = NodeElem(id = getId(), properties = toProps(getProperties()))
-
-private fun toProps(properties: NodeProperties): Map<PropertyName, String?> =
-    properties.getPropertiesNames()
-        .filter { it != PropertyName.Id }
-        .associateWith { properties.getStringPropSafe(it) }
+fun Node.toElem(): NodeElem = NodeElem(id = getId(),
+    properties = getProperties().asMap().filter { it.key != PropertyName.Id })

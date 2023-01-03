@@ -6,7 +6,7 @@ import java.io.OutputStream
 /**
  * Reference to file
  */
-interface FileRef {
+interface FileRef : TezrokService {
     /**
      * Returns hash of file content (SHA-1)
      *
@@ -20,7 +20,7 @@ interface FileRef {
     fun getName(): String
 
     /**
-     * Returns full absolute path
+     * Returns absolute path
      */
     fun getPath(): String
 

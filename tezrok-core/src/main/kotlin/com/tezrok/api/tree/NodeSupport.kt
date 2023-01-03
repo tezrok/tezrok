@@ -189,7 +189,7 @@ class NodeSupport(
 
     override fun createNode(parent: Node, nodeElem: NodeElem): Node {
         val nodeProps = NodePropertiesImpl(nodeElem.properties)
-        val nodeType = NodeType.getOrCreate(nodeProps.getStringProp(PropertyName.Type))
+        val nodeType = nodeProps.getNodeType()
         val node = tryCreateNodeByFeature(parent, nodeType, nodeProps, nodeElem.id)
         if (node != null) {
             nodeProps.setNode(node)
@@ -204,4 +204,4 @@ class NodeSupport(
 }
 
 private fun Node.canAddDuplicateNode(): Boolean =
-    getProperties().getBooleanPropertySafe(PropertyName.DuplicateNode) ?: false
+    getProperties().getBooleanProperty(PropertyName.DuplicateNode, false)

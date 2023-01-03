@@ -1,7 +1,11 @@
 package com.tezrok.api.tree
 
+import com.tezrok.api.TezrokService
+
 /**
  * Node type definition and known types
+ *
+ * Plugin can define own types and public [TezrokService]
  */
 data class NodeType(val name: String, val description: String) {
     companion object {
@@ -27,13 +31,13 @@ data class NodeType(val name: String, val description: String) {
         val Directory = of("Directory", "Node with probably children")
 
         /**
-         * Module atomic entity and can contain other module related nodes
+         * Module entity and can contain other module related nodes
          */
         @JvmField
         val Module = of("Module", "Module directory")
 
         /**
-         * Module source code. Module can contain only one CodeRoot node
+         * Module source code. Module can contain only (?) one CodeRoot node
          */
         @JvmField
         val CodeRoot = of("CodeRoot", "Module code directory")

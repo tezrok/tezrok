@@ -14,7 +14,7 @@ import java.io.File
 import java.util.*
 
 abstract class BaseTest {
-    protected val pluginManager: PluginManager = PluginManager(listOf())
+    protected val pluginManager: PluginManager = PluginManager()
     protected val featureManager: FeatureManager = FeatureManager(pluginManager)
     private val tempDir: File = File(System.getProperty("java.io.tmpdir"))
     protected lateinit var file: File

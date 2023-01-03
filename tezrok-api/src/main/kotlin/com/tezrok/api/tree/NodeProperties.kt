@@ -1,6 +1,7 @@
 package com.tezrok.api.tree
 
 import com.tezrok.api.FileRef
+import com.tezrok.api.TezrokService
 import com.tezrok.api.error.TezrokException
 
 /**
@@ -66,12 +67,23 @@ interface NodeProperties {
      *
      * @return previous property value
      */
-    fun setProperty(name: PropertyName, value: Any?): Any?
+    fun setProperty(name: PropertyName, value: String?): String?
 
     /**
      * Returns property value or null if property not exists
      */
-    fun getProperty(name: PropertyName): Any?
+    fun getProperty(name: PropertyName): String?
+
+    /**
+     * Returns property value as string or default value if property not exists
+     *
+     * Throws exception if default value is null and property not exists
+     */
+    fun getStringProperty(name: PropertyName, defValue: String?): String =
+        getProperty(name) ?: defValue ?: throw TezrokException("Property '${name.name}' is not set")
+
+    fun getBooleanProperty(name: PropertyName, defValue: Boolean?): Boolean =
+        getStringProperty(name, defValue?.toString()) == "true"
 
     /**
      * Returns names of all properties. Can return names which not set yet (properties schema)
@@ -79,9 +91,21 @@ interface NodeProperties {
     fun getPropertiesNames(): Set<PropertyName>
 
     /**
-     * Returns FileRef if the node is File node
+     * Returns [FileRef] if the node supports it
      */
-    fun getFile(): FileRef = getProperty(PropertyName.File) as? FileRef ?: throw TezrokException("Node is not File")
+    fun getFile(): FileRef = getService(PropertyName.File, FileRef::class.java)
+        ?: throw TezrokException("Node is not File")
+
+    /**
+     * Returns property related [TezrokService]
+     */
+    fun <T : TezrokService> getService(name: PropertyName, clazz: Class<T>): T?
+
+    /**
+     * Returns [Map] of all properties
+     */
+    fun asMap(): Map<PropertyName, String?> = getPropertiesNames()
+        .associateWith { getProperty(it) }
 
     /**
      * Returns true if specified property can be edited
