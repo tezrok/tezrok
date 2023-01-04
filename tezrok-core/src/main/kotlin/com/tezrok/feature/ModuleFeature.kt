@@ -2,7 +2,6 @@ package com.tezrok.feature
 
 import com.tezrok.api.feature.CreateNodeFeature
 import com.tezrok.api.feature.Feature
-import com.tezrok.api.feature.FeatureNodeSupport
 import com.tezrok.api.feature.InternalFeatureSupport
 import com.tezrok.api.tree.Node
 import com.tezrok.api.tree.NodeProperties
@@ -28,13 +27,13 @@ class ModuleFeature : CreateNodeFeature {
         this.internalFeatureSupport = internalFeatureSupport
     }
 
-    override fun createNode(parent: Node, properties: NodeProperties, id: Long): FeatureNodeSupport? {
+    override fun createNode(parent: Node, properties: NodeProperties, id: Long): Node? {
         if (properties.getNodeType() != NodeType.Module) {
             return null
         }
 
         val finalId = if (id > 0) id else internalFeatureSupport.getNextNodeId()
 
-        return FeatureNodeSupportImpl(finalId, properties, false)
+        return FeatureNodeSupportImpl(finalId, parent, properties, internalFeatureSupport)
     }
 }

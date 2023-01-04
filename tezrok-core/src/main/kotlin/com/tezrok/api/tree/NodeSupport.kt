@@ -67,16 +67,16 @@ class NodeSupport(
                 }
             }
 
-            val newNode = createNode(parent, NodeElem.of(name, type))
+            val featureNode = if (parent is FeatureNodeImpl && parent.isSupportChildren())
+                parent.featureNode.add(name, type)
+            else
+                null
+
+            if (featureNode != null && !featureNode.isInternalNode())
+                throw TezrokException("Plugin must return internal node")
+
+            val newNode = featureNode ?: createNode(parent, NodeElem.of(name, type))
             // TODO: validate new node
-
-            if (newNode is FeatureNodeImpl && newNode.featureSupport.isSupportChildren()) {
-                if (newNode.featureSupport.addNode(newNode)) {
-                    return newNode
-                }
-
-                throw TezrokException("Node cannot be added")
-            }
 
             nodes.computeIfAbsent(parent) { ArrayList() }.add(newNode)
 
@@ -86,8 +86,8 @@ class NodeSupport(
 
     fun remove(parent: Node, nodes: List<Node>): Boolean {
         writeLock.runIn {
-            if (parent is FeatureNodeImpl && parent.featureSupport.isSupportChildren()) {
-                return parent.featureSupport.removeNodes(nodes)
+            if (parent is FeatureNodeImpl && parent.isSupportChildren()) {
+                return parent.featureNode.remove(nodes)
             }
 
             return loadChildren(parent).removeAll(nodes)
@@ -95,8 +95,8 @@ class NodeSupport(
     }
 
     fun getChildren(parent: Node): Stream<Node> {
-        if (parent is FeatureNodeImpl && parent.featureSupport.isSupportChildren()) {
-            return parent.featureSupport.getChildren()
+        if (parent is FeatureNodeImpl && parent.isSupportChildren()) {
+            return parent.featureNode.getChildren()
         }
 
         readLock.runIn {
@@ -112,8 +112,8 @@ class NodeSupport(
     }
 
     fun getChildrenSize(parent: Node): Int {
-        if (parent is FeatureNodeImpl && parent.featureSupport.isSupportChildren()) {
-            return parent.featureSupport.getChildrenSize()
+        if (parent is FeatureNodeImpl && parent.isSupportChildren()) {
+            return parent.featureNode.getChildrenSize()
         }
 
         readLock.runIn {
@@ -157,9 +157,10 @@ class NodeSupport(
         if (features.isNotEmpty()) {
             features.filterIsInstance<CreateNodeFeature>()
                 .forEach { feature ->
-                    val featureNodeSupport = feature.createNode(parent, properties, id)
-                    if (featureNodeSupport != null) {
-                        return FeatureNodeImpl(type, parent, featureNodeSupport, this)
+                    val featureNode = feature.createNode(parent, properties, id)
+
+                    if (featureNode?.isInternalNode() == false) {
+                        return FeatureNodeImpl(type, parent, featureNode, this)
                     }
                 }
         }
@@ -188,18 +189,30 @@ class NodeSupport(
     override fun getNextNodeId(): Long = lastIdCounter.incrementAndGet()
 
     override fun createNode(parent: Node, nodeElem: NodeElem): Node {
-        val nodeProps = NodePropertiesImpl(nodeElem.properties)
-        val nodeType = nodeProps.getNodeType()
-        val node = tryCreateNodeByFeature(parent, nodeType, nodeProps, nodeElem.id)
-        if (node != null) {
-            nodeProps.setNode(node)
+        writeLock.runIn {
+            val nodeProps = NodePropertiesImpl(nodeElem.properties)
+            val nodeType = nodeProps.getNodeType()
+            val node = tryCreateNodeByFeature(parent, nodeType, nodeProps, nodeElem.id)
+            if (node != null) {
+                nodeProps.setNode(node)
+                return node
+            }
+
+            val id = if (nodeElem.id > 0) nodeElem.id else getNextNodeId()
+            val newNode = NodeIml(id, nodeType, parent, nodeProps, this@NodeSupport)
+            nodeProps.setNode(newNode)
+            return newNode
+        }
+    }
+
+    override fun wrapNode(node: Node): Node {
+        if (node.isInternalNode()) {
             return node
         }
 
-        val id = if (nodeElem.id > 0) nodeElem.id else getNextNodeId()
-        val newNode = NodeIml(id, nodeType, parent, nodeProps, this@NodeSupport)
-        nodeProps.setNode(newNode)
-        return newNode
+        writeLock.runIn {
+            return FeatureNodeImpl(node.getType(), node.getParent()!!, node, this)
+        }
     }
 }
 

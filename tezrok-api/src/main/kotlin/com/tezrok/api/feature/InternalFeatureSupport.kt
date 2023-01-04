@@ -16,4 +16,9 @@ interface InternalFeatureSupport {
      * Creates [Node] by [NodeElem]
      */
     fun createNode(parent: Node, nodeElem: NodeElem): Node
+
+    /**
+     * Wraps plugin's implementation of [Node] as internal [Node]
+     */
+    fun wrapNode(node: Node): Node
 }

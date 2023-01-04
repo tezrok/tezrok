@@ -8,9 +8,9 @@ import com.tezrok.api.tree.NodeProperties
  */
 interface CreateNodeFeature : Feature {
     /**
-     * Creates [FeatureNodeSupport] by [NodeProperties]
+     * Creates [Node] by [NodeProperties]
      *
      * Returns null if node cannot be created
      */
-    fun createNode(parent: Node, properties: NodeProperties, id: Long): FeatureNodeSupport?
+    fun createNode(parent: Node, properties: NodeProperties, id: Long): Node?
 }
