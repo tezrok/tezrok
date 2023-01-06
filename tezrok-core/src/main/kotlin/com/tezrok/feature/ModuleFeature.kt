@@ -1,12 +1,10 @@
 package com.tezrok.feature
 
-import com.tezrok.api.feature.CreateNodeFeature
+import com.tezrok.api.event.EventResult
+import com.tezrok.api.event.NodeEvent
 import com.tezrok.api.feature.Feature
 import com.tezrok.api.feature.InternalFeatureSupport
-import com.tezrok.api.tree.Node
-import com.tezrok.api.tree.NodeProperties
 import com.tezrok.api.tree.NodeType
-import com.tezrok.api.tree.getNodeType
 
 /**
  * Implementation of [Feature] for [NodeType.Module]
@@ -14,7 +12,7 @@ import com.tezrok.api.tree.getNodeType
  * @see Feature
  * @since 1.0
  */
-class ModuleFeature : CreateNodeFeature {
+class ModuleFeature : Feature {
     private lateinit var internalFeatureSupport: InternalFeatureSupport
 
     override fun getName(): String = "CoreModuleFeature"
@@ -23,17 +21,11 @@ class ModuleFeature : CreateNodeFeature {
 
     override fun getNodeTypes(): List<NodeType> = listOf(NodeType.Module)
 
-    override fun setInternalFeatureSupport(internalFeatureSupport: InternalFeatureSupport) {
-        this.internalFeatureSupport = internalFeatureSupport
+    override fun onNodeEvent(event: NodeEvent): EventResult {
+        TODO("Not yet implemented")
     }
 
-    override fun createNode(parent: Node, properties: NodeProperties, id: Long): Node? {
-        if (properties.getNodeType() != NodeType.Module) {
-            return null
-        }
-
-        val finalId = if (id > 0) id else internalFeatureSupport.getNextNodeId()
-
-        return FeatureNodeSupportImpl(finalId, parent, properties, internalFeatureSupport)
+    override fun setInternalFeatureSupport(internalFeatureSupport: InternalFeatureSupport) {
+        this.internalFeatureSupport = internalFeatureSupport
     }
 }

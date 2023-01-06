@@ -1,7 +1,6 @@
 package com.tezrok.api.feature
 
 import com.tezrok.api.tree.Node
-import com.tezrok.api.tree.NodeElem
 
 /**
  * Used by a [Feature] to access internal [Node] functionality
@@ -13,12 +12,9 @@ interface InternalFeatureSupport {
     fun getNextNodeId(): Long
 
     /**
-     * Creates [Node] by [NodeElem]
+     * Apply some internal changes to the [Node]
+     *
+     * TODO: Add more information
      */
-    fun createNode(parent: Node, nodeElem: NodeElem): Node
-
-    /**
-     * Wraps plugin's implementation of [Node] as internal [Node]
-     */
-    fun wrapNode(node: Node): Node
+    fun applyNode(node: Node): Boolean
 }

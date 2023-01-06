@@ -48,7 +48,24 @@ class NodePropertiesImpl(props: Map<PropertyName, String?>) : NodeProperties {
         return oldProp
     }
 
+    override fun <T> setProperty(name: PropertyName, value: T): T? {
+        TODO("Not yet implemented")
+    }
+
     override fun getProperty(name: PropertyName): String? = getKnownProperty(name) ?: properties[name]
+
+    override fun <T> getProperty(name: PropertyName, clazz: Class<T>): T? {
+        if (clazz == String::class.java) {
+            return getProperty(name) as T
+        }
+        if (clazz == Boolean::class.java) {
+            return getBooleanProperty(name, false) as T
+        }
+        // TODO: other types: Int, Double, etc
+        // TODO: use PropertyValue to convert
+
+        TODO("Not yet implemented")
+    }
 
     override fun getPropertiesNames(): Set<PropertyName> = properties.keys + getKnownPropertiesNames()
 

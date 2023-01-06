@@ -70,9 +70,19 @@ interface NodeProperties {
     fun setProperty(name: PropertyName, value: String?): String?
 
     /**
+     * Updates property supported by [PropertyValue]
+     */
+    fun <T> setProperty(name: PropertyName, value: T): T?
+
+    /**
      * Returns property value or null if property not exists
      */
     fun getProperty(name: PropertyName): String?
+
+    /**
+     * Returns property value supplied by [PropertyValue]
+     */
+    fun <T> getProperty(name: PropertyName, clazz: Class<T>): T?
 
     /**
      * Returns property value as string or default value if property not exists
