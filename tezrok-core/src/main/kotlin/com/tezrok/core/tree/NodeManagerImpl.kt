@@ -13,9 +13,10 @@ import java.util.stream.Stream
  */
 internal class NodeManagerImpl(
     private val nodeRepo: NodeRepository,
-    private val featureManager: FeatureManager
+    private val featureManager: FeatureManager,
+    private val propertyValueManager: PropertyValueManager
 ) : NodeManager {
-    private val nodeSupport = NodeSupport(nodeRepo, featureManager)
+    private val nodeSupport = NodeSupport(nodeRepo, featureManager, propertyValueManager)
 
     override fun getRootNode(): Node = nodeSupport.getRoot()
 

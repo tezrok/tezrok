@@ -8,7 +8,10 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Internal implementation of the [NodeProperties]
  */
-internal class NodePropertiesImpl(props: Map<PropertyName, String?>) : NodeProperties {
+internal class NodePropertiesImpl(
+    props: Map<PropertyName, String?>,
+    private val propertyValueManager: PropertyValueManager
+) : NodeProperties {
     private val properties: MutableMap<PropertyName, String?> = ConcurrentHashMap(props)
     private var _node: Node? = null
 
@@ -44,13 +47,18 @@ internal class NodePropertiesImpl(props: Map<PropertyName, String?>) : NodePrope
             throw TezrokException("Property cannot be edited: $name")
         }
 
-        val oldProp = properties.put(name, value)
         // TODO: check input
-        return oldProp
+        // TODO: send pre & post events
+        return properties.put(name, value)
     }
 
     override fun <T> setProperty(name: PropertyName, value: T): T? {
-        TODO("Not yet implemented")
+        // TODO: handle known types like in getProperty
+
+        val rawString = propertyValueManager.toString(value)
+        val oldValue = setProperty(name, rawString)
+
+        return oldValue?.let { propertyValueManager.fromString(it, value!!::class.java)}
     }
 
     override fun getProperty(name: PropertyName): String? = getKnownProperty(name) ?: properties[name]
@@ -65,7 +73,9 @@ internal class NodePropertiesImpl(props: Map<PropertyName, String?>) : NodePrope
         // TODO: other types: Int, Double, etc
         // TODO: use PropertyValue to convert
 
-        TODO("Not yet implemented")
+        val rawString = getProperty(name) ?: return null
+
+        return propertyValueManager.fromString(rawString, clazz)
     }
 
     override fun getPropertiesNames(): Set<PropertyName> = properties.keys + getKnownPropertiesNames()

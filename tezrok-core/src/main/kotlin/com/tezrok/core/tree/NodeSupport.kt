@@ -2,9 +2,9 @@ package com.tezrok.core.tree
 
 import com.tezrok.api.error.NodeAlreadyExistsException
 import com.tezrok.api.error.TezrokException
-import com.tezrok.api.event.ResultType
 import com.tezrok.api.event.EventType
 import com.tezrok.api.event.NodeEvent
+import com.tezrok.api.event.ResultType
 import com.tezrok.api.feature.InternalFeatureSupport
 import com.tezrok.api.tree.*
 import com.tezrok.core.feature.FeatureManager
@@ -20,7 +20,8 @@ import java.util.stream.Stream
  */
 internal class NodeSupport(
     private val nodeRepo: NodeRepository,
-    private val featureManager: FeatureManager
+    private val featureManager: FeatureManager,
+    private val propertyValueManager: PropertyValueManager
 ) : InternalFeatureSupport {
     private val lastIdCounter = AtomicLong(nodeRepo.getLastId())
     private val nodes: MutableMap<Node, MutableList<Node>> = HashMap()
@@ -129,7 +130,7 @@ internal class NodeSupport(
         val rootElem = nodeRepo.getRoot()
 
         writeLock.runIn {
-            val nodeProps = NodePropertiesImpl(rootElem.properties)
+            val nodeProps = NodePropertiesImpl(rootElem.properties, propertyValueManager)
             val node = NodeIml(rootElem.id, NodeType.Root, null, nodeProps, this)
             nodeProps.setNode(node)
             return node
@@ -161,7 +162,7 @@ internal class NodeSupport(
     }
 
     private fun createNode(parent: Node, nodeElem: NodeElem): Node {
-        val nodeProps = NodePropertiesImpl(nodeElem.properties)
+        val nodeProps = NodePropertiesImpl(nodeElem.properties, propertyValueManager)
         val nodeType = nodeProps.getNodeType()
         val id = if (nodeElem.id > 0) nodeElem.id else getNextNodeId()
         val newNode = NodeIml(id, nodeType, parent, nodeProps, this@NodeSupport)
