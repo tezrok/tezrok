@@ -49,33 +49,46 @@ internal class NodePropertiesImpl(
 
         // TODO: check input
         // TODO: send pre & post events
+        if (value == null) {
+            return properties.remove(name)
+        }
+
         return properties.put(name, value)
     }
 
-    override fun <T> setProperty(name: PropertyName, value: T): T? {
-        // TODO: handle known types like in getProperty
-
-        val rawString = propertyValueManager.toString(value)
-        val oldValue = setProperty(name, rawString)
-
-        return oldValue?.let { propertyValueManager.fromString(it, value!!::class.java)}
+    override fun setProperty(name: PropertyName, list: List<String>): List<String> {
+        return setProperty(name, list)
     }
+
+    override fun <T> setProperty(name: PropertyName, value: T): T? =
+        when (value!!::class.java) {
+            java.lang.String::class.java, String::class.java -> setProperty(name, value as String) as T
+            java.lang.Boolean::class.java, Boolean::class.java -> setBooleanProperty(name, value as Boolean) as T
+            java.lang.Integer::class.java, Int::class.java -> setIntProperty(name, value as Int) as T
+            java.lang.Long::class.java, Long::class.java -> setLongProperty(name, value as Long) as T
+            java.lang.Double::class.java, Double::class.java -> setDoubleProperty(name, value as Double) as T
+            else -> {
+                val rawString = propertyValueManager.toString(value)
+                val oldValue = setProperty(name, rawString)
+
+                oldValue?.let { propertyValueManager.fromString(it, value!!::class.java) }
+            }
+        }
 
     override fun getProperty(name: PropertyName): String? = getKnownProperty(name) ?: properties[name]
 
-    override fun <T> getProperty(name: PropertyName, clazz: Class<T>): T? {
-        if (clazz == String::class.java) {
-            return getProperty(name) as T
+    override fun <T> getProperty(name: PropertyName, clazz: Class<T>): T? =
+        when (clazz) {
+            java.lang.String::class.java, String::class.java -> getProperty(name) as T
+            java.lang.Boolean::class.java, Boolean::class.java -> getBooleanProperty(name, false) as T
+            java.lang.Integer::class.java, Int::class.java -> getIntProperty(name, 0) as T
+            java.lang.Long::class.java, Long::class.java -> getLongProperty(name, 0) as T
+            java.lang.Double::class.java, Double::class.java -> getDoubleProperty(name, 0.0) as T
+            else -> getProperty(name)?.let { propertyValueManager.fromString(it, clazz) }
         }
-        if (clazz == Boolean::class.java) {
-            return getBooleanProperty(name, false) as T
-        }
-        // TODO: other types: Int, Double, etc
-        // TODO: use PropertyValue to convert
 
-        val rawString = getProperty(name) ?: return null
-
-        return propertyValueManager.fromString(rawString, clazz)
+    override fun getListProperty(name: PropertyName): List<String> {
+        return getProperty(name, java.util.List::class.java)?.let { it as List<String> } ?: emptyList()
     }
 
     override fun getPropertiesNames(): Set<PropertyName> = properties.keys + getKnownPropertiesNames()
@@ -84,9 +97,10 @@ internal class NodePropertiesImpl(
         TODO("Not yet implemented")
     }
 
-    override fun can(action: NodeAction, name: PropertyName): Boolean {
-        TODO("Not yet implemented")
-    }
+    /**
+     * By default, all properties are editable
+     */
+    override fun can(action: NodeAction, name: PropertyName): Boolean = true
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

@@ -1,11 +1,8 @@
 package com.tezrok.core.tree.repo.file
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinFeature
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.tezrok.api.tree.NodeElem
 import com.tezrok.api.tree.NodeRepository
+import com.tezrok.core.util.JsonUtil
 import org.apache.commons.lang3.Validate
 import java.io.File
 import java.util.stream.Stream
@@ -17,7 +14,7 @@ internal class FileNodeRepository(private val file: File) : NodeRepository {
     // mapping[parentId]=List of child
     private var lastUsedId: Long = 0L;
     private val nodes: MutableMap<Long, MutableMap<Long, NodeElem>> = HashMap()
-    private val mapper = createObjectMapper()
+    private val mapper = JsonUtil.createMapper()
 
     init {
         load()
@@ -82,20 +79,4 @@ internal class FileNodeRepository(private val file: File) : NodeRepository {
             items = getChildren(id).map { it.toFileElem() }.toList()
                 .let { it.ifEmpty { null } }
         )
-
-    private companion object {
-        fun createObjectMapper(): ObjectMapper =
-            ObjectMapper().registerModule(
-                KotlinModule.Builder()
-                    .withReflectionCacheSize(512)
-                    .configure(KotlinFeature.NullToEmptyCollection, false)
-                    .configure(KotlinFeature.NullToEmptyMap, false)
-                    .configure(KotlinFeature.NullIsSameAsDefault, false)
-                    .configure(KotlinFeature.SingletonSupport, false)
-                    .configure(KotlinFeature.StrictNullChecks, false)
-                    .build()
-            ).apply {
-                setSerializationInclusion(JsonInclude.Include.NON_NULL)
-            }
-    }
 }

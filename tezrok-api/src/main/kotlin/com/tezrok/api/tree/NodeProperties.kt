@@ -70,6 +70,11 @@ interface NodeProperties {
     fun setProperty(name: PropertyName, value: String?): String?
 
     /**
+     * Updates property as list of Strings
+     */
+    fun setProperty(name: PropertyName, list: List<String>): List<String>
+
+    /**
      * Updates property supported by [PropertyValue]
      */
     fun <T> setProperty(name: PropertyName, value: T): T?
@@ -85,15 +90,61 @@ interface NodeProperties {
     fun <T> getProperty(name: PropertyName, clazz: Class<T>): T?
 
     /**
-     * Returns property value as string or default value if property not exists
+     * Returns property values as list of String
+     */
+    fun getListProperty(name: PropertyName): List<String>
+
+    fun setBooleanProperty(name: PropertyName, value: Boolean): Boolean =
+        setProperty(name, value.toString()) == "true"
+
+    fun setIntProperty(name: PropertyName, value: Int): Int =
+        setProperty(name, value.toString())?.toInt() ?: 0
+
+    fun setLongProperty(name: PropertyName, value: Long): Long =
+        setProperty(name, value.toString())?.toLong() ?: 0L
+
+    fun setDoubleProperty(name: PropertyName, value: Double): Double =
+        setProperty(name, value.toString())?.toDouble() ?: 0.0
+
+    /**
+     * Returns property value as String or default value if property not exists
      *
      * Throws exception if default value is null and property not exists
      */
     fun getStringProperty(name: PropertyName, defValue: String?): String =
         getProperty(name) ?: defValue ?: throw TezrokException("Property '${name.name}' is not set")
 
+    /**
+     * Returns property value as Boolean or default value if property not exists
+     *
+     * Throws exception if default value is null and property not exists
+     */
     fun getBooleanProperty(name: PropertyName, defValue: Boolean?): Boolean =
         getStringProperty(name, defValue?.toString()) == "true"
+
+    /**
+     * Returns property value as Integer or default value if property not exists
+     *
+     * Throws exception if default value is null and property not exists
+     */
+    fun getIntProperty(name: PropertyName, defValue: Int?): Int =
+        getStringProperty(name, defValue?.toString()).toInt()
+
+    /**
+     * Returns property value as Long or default value if property not exists
+     *
+     * Throws exception if default value is null and property not exists
+     */
+    fun getLongProperty(name: PropertyName, defValue: Long?): Long =
+        getStringProperty(name, defValue?.toString()).toLong()
+
+    /**
+     * Returns property value as Double or default value if property not exists
+     *
+     * Throws exception if default value is null and property not exists
+     */
+    fun getDoubleProperty(name: PropertyName, defValue: Double?): Double =
+        getStringProperty(name, defValue?.toString()).toDouble()
 
     /**
      * Returns names of all properties. Can return names which not set yet (properties schema)

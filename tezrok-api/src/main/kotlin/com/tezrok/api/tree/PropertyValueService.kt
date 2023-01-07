@@ -8,5 +8,5 @@ import com.tezrok.api.TezrokService
 interface PropertyValueService : TezrokService {
     fun getSupportedTypes(): List<Class<Any>>
 
-    fun getPropertyType(clazz: Class<Any>): PropertyValue<Any>
+    fun getPropertyType(clazz: Class<Any>): PropertyValue
 }

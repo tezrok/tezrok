@@ -5,8 +5,8 @@ import com.tezrok.api.TezrokService
 /**
  * Converter for properties from and to string
  */
-interface PropertyValue<T> : TezrokService {
-    fun fromString(value: String): T?
+interface PropertyValue : TezrokService {
+    fun fromString(value: String): Any?
 
-    fun asString(value: T): String
+    fun asString(value: Any): String
 }
