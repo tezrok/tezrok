@@ -56,9 +56,8 @@ internal class NodePropertiesImpl(
         return properties.put(name, value)
     }
 
-    override fun setProperty(name: PropertyName, list: List<String>): List<String> {
-        return setProperty(name, list)
-    }
+    override fun setListProperty(name: PropertyName, list: List<String>): List<String> =
+        setProperty(name, list) ?: emptyList()
 
     override fun <T> setProperty(name: PropertyName, value: T): T? =
         when (value!!::class.java) {
@@ -90,6 +89,8 @@ internal class NodePropertiesImpl(
     override fun getListProperty(name: PropertyName): List<String> {
         return getProperty(name, java.util.List::class.java)?.let { it as List<String> } ?: emptyList()
     }
+
+    override fun removeProperty(name: PropertyName): String? = properties.remove(name)
 
     override fun getPropertiesNames(): Set<PropertyName> = properties.keys + getKnownPropertiesNames()
 

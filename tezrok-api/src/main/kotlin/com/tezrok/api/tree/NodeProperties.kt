@@ -72,7 +72,7 @@ interface NodeProperties {
     /**
      * Updates property as list of Strings
      */
-    fun setProperty(name: PropertyName, list: List<String>): List<String>
+    fun setListProperty(name: PropertyName, list: List<String>): List<String>
 
     /**
      * Updates property supported by [PropertyValue]
@@ -145,6 +145,11 @@ interface NodeProperties {
      */
     fun getDoubleProperty(name: PropertyName, defValue: Double?): Double =
         getStringProperty(name, defValue?.toString()).toDouble()
+
+    /**
+     * Removes property and returns its value
+     */
+    fun removeProperty(name: PropertyName): String?
 
     /**
      * Returns names of all properties. Can return names which not set yet (properties schema)

@@ -5,6 +5,7 @@ import com.tezrok.api.tree.PropertyValue
 import com.tezrok.api.tree.PropertyValueService
 import com.tezrok.core.plugin.PluginManager
 import com.tezrok.core.util.JsonUtil
+import java.util.Collections
 import java.util.List
 
 
@@ -15,7 +16,8 @@ internal class PropertyValueManager(pluginManager: PluginManager) {
     private val allPropertyValues: Map<Class<Any>, PropertyValue> = loadPropertyValues(pluginManager)
 
     fun <T> fromString(rawString: String, clazz: Class<T>): T? {
-        val propValue = allPropertyValues[clazz as Class<Any>]
+        val finalClass = if (List::class.java.isAssignableFrom(clazz)) List::class.java else clazz
+        val propValue = allPropertyValues[finalClass]
             ?: throw TezrokException("No property value converter for class $clazz")
 
         return propValue.fromString(rawString) as T
@@ -26,11 +28,14 @@ internal class PropertyValueManager(pluginManager: PluginManager) {
             return null
         }
 
-        val propValue = allPropertyValues[obj!!::class.java as Class<Any>]
+        val finalClass = getFinalClass<T>(obj)
+        val propValue = allPropertyValues[finalClass]
             ?: throw TezrokException("No property value converter for class ${obj!!::class.java}")
 
         return propValue.asString(obj)
     }
+
+    private fun <T> getFinalClass(obj: T & Any) = if (obj is List<*>) List::class.java else obj.javaClass
 
     private companion object {
         private fun loadPropertyValues(pluginManager: PluginManager): Map<Class<Any>, PropertyValue> {
@@ -51,7 +56,7 @@ internal class PropertyValueManager(pluginManager: PluginManager) {
 
         override fun fromString(value: String): Any? {
             val listType = mapper.typeFactory.constructCollectionType(MutableList::class.java, String::class.java)
-            return mapper.readValue(value, listType)
+            return Collections.unmodifiableList(mapper.readValue(value, listType) as MutableList<String>)
         }
 
         override fun asString(value: Any): String = mapper.writeValueAsString(value)

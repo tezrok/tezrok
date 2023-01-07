@@ -98,16 +98,19 @@ class PropertyName(val name: String, val description: String) {
         /**
          * Creates new [PropertyName]
          */
+        @JvmStatic
         fun of(name: String, description: String = ""): PropertyName = PropertyName(name, description)
 
         /**
          * Return system property by name if exists
          */
+        @JvmStatic
         fun get(name: String): PropertyName? = cache[name]
 
         /**
          * Return system property by name or creates new one
          */
+        @JvmStatic
         fun getOrCreate(name: String, description: String = ""): PropertyName = get(name) ?: of(name, description)
 
         private val cache: Map<String, PropertyName> = All.associateBy { it.name }

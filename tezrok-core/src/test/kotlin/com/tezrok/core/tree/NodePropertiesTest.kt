@@ -117,7 +117,20 @@ internal class NodePropertiesTest : BaseTest() {
 
         assertEquals(emptyList<String>(), properties.getListProperty(prop))
 
-        //TODO: test with other types
+        val expected = listOf("foo", "bar")
+        assertEquals(emptyList<String>(), properties.setListProperty(prop, expected))
+        val actual = properties.getListProperty(prop)
+        assertEquals(expected, actual)
+        assertTrue(actual is List<*>)
+        assertTrue(actual is java.util.List<*>)
+
+        val expected2 = listOf("foo", "bar", "baz")
+        assertEquals(expected, properties.setListProperty(prop, expected2))
+        val actual2 = properties.getListProperty(prop)
+        assertEquals(expected2, actual2)
+
+        assertTrue(actual2 is List<*>)
+        assertTrue(actual2 is java.util.List<*>)
     }
 
     @Test
