@@ -1,10 +1,10 @@
-package com.tezrok.service
+package com.tezrok.core.service
 
 import com.tezrok.api.feature.Feature
 import com.tezrok.api.feature.FeatureService
 import com.tezrok.api.tree.Node
 import com.tezrok.api.tree.NodeType
-import com.tezrok.feature.ModuleFeature
+import com.tezrok.core.feature.ModuleFeature
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory
  * @see NodeType
  * @since 1.0
  */
-class CoreFeatureService : FeatureService {
+internal class CoreFeatureService : FeatureService {
     private val moduleFeature: Lazy<ModuleFeature> = lazy { ModuleFeature() }
 
     init {

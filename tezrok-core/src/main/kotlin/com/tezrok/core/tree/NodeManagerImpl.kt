@@ -1,14 +1,17 @@
-package com.tezrok.api.tree
+package com.tezrok.core.tree
 
-import com.tezrok.api.tree.repo.file.FileNodeRepository
-import com.tezrok.feature.FeatureManager
-import com.tezrok.util.toElem
+import com.tezrok.api.tree.Node
+import com.tezrok.api.tree.NodeManager
+import com.tezrok.api.tree.NodeRepository
+import com.tezrok.core.tree.repo.file.FileNodeRepository
+import com.tezrok.core.feature.FeatureManager
+import com.tezrok.core.util.toElem
 import java.util.stream.Stream
 
 /**
  * Implementation of [NodeManager]
  */
-class NodeManagerImpl(
+internal class NodeManagerImpl(
     private val nodeRepo: NodeRepository,
     private val featureManager: FeatureManager
 ) : NodeManager {

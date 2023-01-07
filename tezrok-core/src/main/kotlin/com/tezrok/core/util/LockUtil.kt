@@ -1,4 +1,4 @@
-package com.tezrok.util
+package com.tezrok.core.util
 
 import java.util.concurrent.locks.Lock
 import kotlin.contracts.ExperimentalContracts

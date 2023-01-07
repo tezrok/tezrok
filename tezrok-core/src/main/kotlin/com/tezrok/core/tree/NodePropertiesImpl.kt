@@ -1,13 +1,14 @@
-package com.tezrok.api.tree
+package com.tezrok.core.tree
 
 import com.tezrok.api.TezrokService
 import com.tezrok.api.error.TezrokException
+import com.tezrok.api.tree.*
 import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Internal implementation of the [NodeProperties]
  */
-class NodePropertiesImpl(props: Map<PropertyName, String?>) : NodeProperties {
+internal class NodePropertiesImpl(props: Map<PropertyName, String?>) : NodeProperties {
     private val properties: MutableMap<PropertyName, String?> = ConcurrentHashMap(props)
     private var _node: Node? = null
 

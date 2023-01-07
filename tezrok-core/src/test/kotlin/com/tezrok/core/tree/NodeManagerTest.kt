@@ -1,13 +1,14 @@
-package com.tezrok.api.tree
+package com.tezrok.core.tree
 
-import com.tezrok.BaseTest
+import com.tezrok.core.BaseTest
 import com.tezrok.api.error.NodeAlreadyExistsException
-import com.tezrok.api.tree.repo.file.FileNodeElem
+import com.tezrok.api.tree.NodeType
+import com.tezrok.core.tree.repo.file.FileNodeElem
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
-class NodeManagerTest : BaseTest() {
+internal class NodeManagerTest : BaseTest() {
 
     @Test
     fun getRootNodeWhenFileNotExists() {

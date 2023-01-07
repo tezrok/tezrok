@@ -1,11 +1,12 @@
-package com.tezrok.api.tree
+package com.tezrok.core.tree
 
+import com.tezrok.api.tree.PropertyName
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.memberProperties
 
-class PropertyNameTest {
+internal class PropertyNameTest {
     /**
      * Tests that "All" field contains all known properties
      */
@@ -14,7 +15,7 @@ class PropertyNameTest {
         val expectedProperties = PropertyName.Companion::class.memberProperties
             .filter { it is KProperty<*> }
             .filter { it.name != "All" && it.name != "cache" }
-            .map { it.invoke(PropertyName.Companion) }
+            .map { it.invoke(PropertyName) }
             .map { it as PropertyName }
             .map { it.name }
             .sorted()

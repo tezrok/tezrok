@@ -1,9 +1,12 @@
-package com.tezrok.api.tree
+package com.tezrok.core.tree
+
+import com.tezrok.api.tree.Node
+import com.tezrok.api.tree.NodeRef
 
 /**
  * Reference to the node
  */
-class NodeRefImpl(
+internal class NodeRefImpl(
     private val path: String,
     private val handler: (String) -> Node?
 ) : NodeRef {

@@ -1,4 +1,4 @@
-package com.tezrok.feature
+package com.tezrok.core.feature
 
 import com.tezrok.api.event.EventResult
 import com.tezrok.api.event.NodeEvent
@@ -12,7 +12,7 @@ import com.tezrok.api.tree.NodeType
  * @see Feature
  * @since 1.0
  */
-class ModuleFeature : Feature {
+internal class ModuleFeature : Feature {
     private lateinit var internalFeatureSupport: InternalFeatureSupport
 
     override fun getName(): String = "CoreModuleFeature"

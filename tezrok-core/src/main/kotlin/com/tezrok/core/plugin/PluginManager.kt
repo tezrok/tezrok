@@ -1,11 +1,11 @@
-package com.tezrok.plugin
+package com.tezrok.core.plugin
 
 import com.tezrok.api.TezrokPlugin
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.Collections
 
-class PluginManager {
+internal class PluginManager {
     private val allPlugins: MutableList<TezrokPlugin> = Collections.synchronizedList(mutableListOf())
 
     init {

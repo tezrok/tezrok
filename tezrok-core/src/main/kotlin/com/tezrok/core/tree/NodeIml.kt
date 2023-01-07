@@ -1,12 +1,13 @@
-package com.tezrok.api.tree
+package com.tezrok.core.tree
 
-import com.tezrok.util.calcPath
+import com.tezrok.api.tree.*
+import com.tezrok.core.util.calcPath
 import java.util.stream.Stream
 
 /**
  * Basic implementation of the [Node]
  */
-open class NodeIml(
+internal class NodeIml(
     private val id: Long,
     private val type: NodeType,
     private val parentNode: Node?,

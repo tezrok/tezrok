@@ -1,4 +1,4 @@
-package com.tezrok.api.tree.repo.file
+package com.tezrok.core.tree.repo.file
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -13,7 +13,7 @@ import java.util.stream.Stream
 /**
  * File-based repository (json-format)
  */
-class FileNodeRepository(private val file: File) : NodeRepository {
+internal class FileNodeRepository(private val file: File) : NodeRepository {
     // mapping[parentId]=List of child
     private var lastUsedId: Long = 0L;
     private val nodes: MutableMap<Long, MutableMap<Long, NodeElem>> = HashMap()

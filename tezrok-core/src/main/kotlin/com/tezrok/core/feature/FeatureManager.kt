@@ -1,18 +1,18 @@
-package com.tezrok.feature
+package com.tezrok.core.feature
 
 import com.tezrok.api.event.EventResult
-import com.tezrok.api.event.ResultType
 import com.tezrok.api.event.NodeEvent
+import com.tezrok.api.event.ResultType
 import com.tezrok.api.feature.Feature
 import com.tezrok.api.feature.FeatureService
 import com.tezrok.api.feature.InternalFeatureSupport
 import com.tezrok.api.tree.NodeType
-import com.tezrok.plugin.PluginManager
+import com.tezrok.core.plugin.PluginManager
 
 /**
  * The feature manager is responsible for managing the [Feature]s
  */
-class FeatureManager(pluginManager: PluginManager) {
+internal class FeatureManager(pluginManager: PluginManager) {
     private val allFeatures: Map<NodeType, List<Feature>> = loadFeatures(pluginManager)
 
     /**

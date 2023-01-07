@@ -1,4 +1,4 @@
-package com.tezrok.api.tree.repo.file
+package com.tezrok.core.tree.repo.file
 
 import com.tezrok.api.tree.NodeElem
 import com.tezrok.api.tree.NodeType
@@ -7,7 +7,7 @@ import com.tezrok.api.tree.PropertyName
 /**
  * Dto for file repository purposes
  */
-data class FileNodeElem(
+internal data class FileNodeElem(
     val id: Long,
 
     val props: Map<String, String?>? = null,

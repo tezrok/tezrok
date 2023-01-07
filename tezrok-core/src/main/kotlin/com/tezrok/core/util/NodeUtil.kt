@@ -1,4 +1,4 @@
-package com.tezrok.util
+package com.tezrok.core.util
 
 import com.tezrok.api.tree.Node
 import com.tezrok.api.tree.NodeElem
@@ -8,7 +8,7 @@ import java.util.*
 /**
  * Calculating path for the node
  */
-fun Node.calcPath(): String {
+internal fun Node.calcPath(): String {
     val nodes = LinkedList<Node>()
     var nextNode: Node? = this
     var size = 0
@@ -34,5 +34,5 @@ fun Node.calcPath(): String {
     return sb.toString()
 }
 
-fun Node.toElem(): NodeElem = NodeElem(id = getId(),
+internal fun Node.toElem(): NodeElem = NodeElem(id = getId(),
     properties = getProperties().asMap().filter { it.key != PropertyName.Id })

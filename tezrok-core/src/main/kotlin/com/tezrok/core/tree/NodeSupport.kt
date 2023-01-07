@@ -1,4 +1,4 @@
-package com.tezrok.api.tree
+package com.tezrok.core.tree
 
 import com.tezrok.api.error.NodeAlreadyExistsException
 import com.tezrok.api.error.TezrokException
@@ -6,9 +6,10 @@ import com.tezrok.api.event.ResultType
 import com.tezrok.api.event.EventType
 import com.tezrok.api.event.NodeEvent
 import com.tezrok.api.feature.InternalFeatureSupport
-import com.tezrok.feature.FeatureManager
-import com.tezrok.util.calcPath
-import com.tezrok.util.runIn
+import com.tezrok.api.tree.*
+import com.tezrok.core.feature.FeatureManager
+import com.tezrok.core.util.calcPath
+import com.tezrok.core.util.runIn
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.stream.Collectors
@@ -17,7 +18,7 @@ import java.util.stream.Stream
 /**
  * Main implementation of the [Node]
  */
-class NodeSupport(
+internal class NodeSupport(
     private val nodeRepo: NodeRepository,
     private val featureManager: FeatureManager
 ) : InternalFeatureSupport {

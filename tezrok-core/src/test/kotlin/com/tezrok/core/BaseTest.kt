@@ -1,11 +1,11 @@
-package com.tezrok
+package com.tezrok.core
 
 import com.tezrok.api.tree.Node
 import com.tezrok.api.tree.NodeManager
-import com.tezrok.api.tree.NodeManagerImpl
-import com.tezrok.api.tree.repo.file.FileNodeRepository
-import com.tezrok.feature.FeatureManager
-import com.tezrok.plugin.PluginManager
+import com.tezrok.core.tree.NodeManagerImpl
+import com.tezrok.core.tree.repo.file.FileNodeRepository
+import com.tezrok.core.feature.FeatureManager
+import com.tezrok.core.plugin.PluginManager
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -13,7 +13,7 @@ import org.junit.jupiter.api.BeforeEach
 import java.io.File
 import java.util.*
 
-abstract class BaseTest {
+internal abstract class BaseTest {
     protected val pluginManager: PluginManager = PluginManager()
     protected val featureManager: FeatureManager = FeatureManager(pluginManager)
     private val tempDir: File = File(System.getProperty("java.io.tmpdir"))
