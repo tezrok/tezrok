@@ -2,11 +2,11 @@ package com.tezrok.core
 
 import com.tezrok.api.tree.Node
 import com.tezrok.api.tree.NodeManager
-import com.tezrok.core.tree.NodeManagerImpl
-import com.tezrok.core.tree.repo.file.FileNodeRepository
 import com.tezrok.core.feature.FeatureManager
 import com.tezrok.core.plugin.PluginManager
+import com.tezrok.core.tree.NodeManagerImpl
 import com.tezrok.core.tree.PropertyValueManager
+import com.tezrok.core.tree.repo.file.FileNodeRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -16,8 +16,6 @@ import java.util.*
 
 internal abstract class BaseTest {
     protected val pluginManager: PluginManager = PluginManager()
-    protected val featureManager: FeatureManager = FeatureManager(pluginManager)
-    protected val propertyValueManager: PropertyValueManager = PropertyValueManager(pluginManager)
     private val tempDir: File = File(System.getProperty("java.io.tmpdir"))
     protected lateinit var file: File
 
@@ -34,6 +32,8 @@ internal abstract class BaseTest {
     }
 
     protected fun nodeManagerFromFile(file: File): NodeManager {
+        val featureManager = FeatureManager(pluginManager)
+        val propertyValueManager = PropertyValueManager(pluginManager)
         return NodeManagerImpl(FileNodeRepository(file), featureManager, propertyValueManager)
     }
 

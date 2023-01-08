@@ -1,9 +1,11 @@
 package com.tezrok.core.feature
 
 import com.tezrok.api.event.EventResult
+import com.tezrok.api.event.EventType
 import com.tezrok.api.event.NodeEvent
 import com.tezrok.api.feature.Feature
 import com.tezrok.api.feature.InternalFeatureSupport
+import com.tezrok.api.tree.Node
 import com.tezrok.api.tree.NodeType
 
 /**
@@ -22,7 +24,24 @@ internal class ModuleFeature : Feature {
     override fun getNodeTypes(): List<NodeType> = listOf(NodeType.Module)
 
     override fun onNodeEvent(event: NodeEvent): EventResult {
-        TODO("Not yet implemented")
+        if (event.eventType == EventType.PostAdd) {
+            val node = event.node!!
+
+            if (node.getType() == NodeType.Module) {
+                addModuleFoldersIfNecessary(node)
+            }
+        }
+
+        return EventResult.Continue
+    }
+
+    private fun addModuleFoldersIfNecessary(node: Node) {
+        if (node.getChild("Types") == null) {
+            node.add("Types", NodeType.Types)
+        }
+        if (node.getChild("Features") == null) {
+            node.add("Services", NodeType.Services)
+        }
     }
 
     override fun setInternalFeatureSupport(internalFeatureSupport: InternalFeatureSupport) {

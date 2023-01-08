@@ -8,6 +8,21 @@ import com.tezrok.api.TezrokService
  * Plugin can define own types and public [TezrokService]
  */
 data class NodeType(val name: String, val description: String) {
+    override fun toString(): String = "NodeType(name='$name', description='$description')"
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is NodeType) return false
+
+        if (name != other.name) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return name.hashCode()
+    }
+
     companion object {
         @JvmField
         val Any = of("Any", "Any node")
@@ -37,6 +52,18 @@ data class NodeType(val name: String, val description: String) {
         val Module = of("Module", "Module directory")
 
         /**
+         * Folder with type definitions
+         */
+        @JvmField
+        val Types = of("Types", "Type definitions")
+
+        /**
+         * Folder with service definitions
+         */
+        @JvmField
+        val Services = of("Services", "Service definitions")
+
+        /**
          * Module source code. Module can contain only (?) one CodeRoot node
          */
         @JvmField
@@ -52,7 +79,7 @@ data class NodeType(val name: String, val description: String) {
          * All known types
          */
         @JvmField
-        val All: Set<NodeType> = hashSetOf(Any, Root, Module, CodeRoot, Item, Directory, File)
+        val All: Set<NodeType> = hashSetOf(Any, Root, Module, Services, Types, CodeRoot, Item, Directory, File)
 
         /**
          * Creates new [NodeType]

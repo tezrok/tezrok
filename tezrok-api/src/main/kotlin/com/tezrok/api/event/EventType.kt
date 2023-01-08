@@ -38,16 +38,19 @@ data class EventType(val name: String) {
         /**
          * Creates new [EventType]
          */
+        @JvmStatic
         fun of(name: String): EventType = EventType(name)
 
         /**
          * Gets known [EventType] by name or null
          */
+        @JvmStatic
         fun get(name: String): EventType? = cache[name]
 
         /**
          * Gets known [EventType] by name or creates new
          */
+        @JvmStatic
         fun getOrCreate(name: String): EventType = get(name) ?: of(name)
 
         private val cache: Map<String, EventType> = All.associateBy { it.name }

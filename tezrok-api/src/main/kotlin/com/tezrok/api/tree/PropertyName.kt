@@ -5,13 +5,13 @@ package com.tezrok.api.tree
  *
  * If property starts with underscore, it is considered as hidden and not shown in UI
  */
-class PropertyName(val name: String, val description: String) {
+data class PropertyName(val name: String, val description: String) {
     /**
      * Returns true if property is system (known) property
      */
     fun isSystem(): Boolean = cache.containsKey(name)
 
-    override fun toString(): String = name
+    override fun toString(): String = "PropertyName(name='$name', description='$description')"
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
