@@ -57,6 +57,9 @@ data class NodeType(val name: String, val description: String) {
         @JvmField
         val Types = of("Types", "Type definitions")
 
+        @JvmField
+        val Type = of("Type", "Type definition")
+
         /**
          * Folder with service definitions
          */
@@ -79,7 +82,8 @@ data class NodeType(val name: String, val description: String) {
          * All known types
          */
         @JvmField
-        val All: Set<NodeType> = hashSetOf(Any, Root, Module, Services, Types, CodeRoot, Item, Directory, File)
+        val All: Set<NodeType> = hashSetOf(Any, Root, Module, Services, Types, CodeRoot,
+            Item, Directory, File, Type)
 
         /**
          * Creates new [NodeType]

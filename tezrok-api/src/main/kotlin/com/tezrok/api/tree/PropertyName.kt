@@ -49,10 +49,23 @@ data class PropertyName(val name: String, val description: String) {
         val Deleted = of("deleted", "Node is deleted")
 
         @JvmField
-        val Author = of("_createdBy", "Author of the node")
+        val Author = of("_author", "Author of the node")
+
+        /**
+         * Author type can be "User", "System" or "Plugin"
+         */
+        @JvmField
+        val AuthorType = of("_authorType", "Author type of the node")
 
         @JvmField
-        val Created = of("_created", "Creation datetime of the node")
+        val Feature = of("_feature", "Feature which added this node")
+
+        @JvmField
+        val CreatedAt = of("_createdAt", "Creation datetime of the node")
+
+        // TODO: add tests for updating this property
+        @JvmField
+        val UpdatedAt = of("_updatedAt", "Last modified datetime of the node")
 
         @JvmField
         val File = of("file", "File reference of the node")
@@ -92,7 +105,8 @@ data class PropertyName(val name: String, val description: String) {
         @JvmField
         val All: Set<PropertyName> = hashSetOf(
             Id, Name, Type, Child, Disabled, Deleted, File, FileHash, Readonly, Transient,
-            FileContentType, ModuleType, Author, Created, DuplicateNode, Infinite
+            FileContentType, ModuleType, Author, CreatedAt, UpdatedAt, DuplicateNode, Infinite,
+            Feature, AuthorType
         )
 
         /**

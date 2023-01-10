@@ -1,19 +1,37 @@
 package com.tezrok.core.tree
 
-import com.tezrok.core.BaseTest
 import com.tezrok.api.error.NodeAlreadyExistsException
 import com.tezrok.api.tree.NodeType
+import com.tezrok.core.BaseTest
 import com.tezrok.core.tree.repo.file.FileNodeElem
+import com.tezrok.core.util.AuthorType
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 internal class NodeManagerTest : BaseTest() {
+    var manager: NodeManagerImpl? = null
+    var operation: NodeOperation? = null
+
+    @BeforeEach
+    override fun setUp() {
+        super.setUp()
+        manager = nodeManagerFromFile(file)
+        operation = manager!!.startOperation(AuthorType.User, "UserBar")
+    }
+
+    @AfterEach
+    override fun tearDown() {
+        operation!!.stop()
+        manager = null
+        super.tearDown()
+    }
 
     @Test
     fun getRootNodeWhenFileNotExists() {
-        val manager = nodeManagerFromFile(file)
-        val root = manager.getRootNode()
+        val root = manager!!.getRootNode()
 
         assertEquals(FileNodeElem.ROOT_NAME, root.getName())
         assertEquals(1000L, root.getId())
@@ -24,15 +42,14 @@ internal class NodeManagerTest : BaseTest() {
         assertNull(root.getParent())
 
         val properties = root.getProperties()
-        assertEquals(3, properties.getPropertiesNames().size)
+        assertEquals(7, properties.getPropertiesNames().size)
         assertFalse(file.exists()) { "File must not exist: $file" }
     }
 
     @Test
     fun saveSingleRootTest() {
-        val manager = nodeManagerFromFile(file)
-        val root = manager.getRootNode()
-        manager.save()
+        val root = manager!!.getRootNode()
+        manager!!.save()
 
         assertTrue(file.exists())
 
@@ -45,8 +62,7 @@ internal class NodeManagerTest : BaseTest() {
 
     @Test
     fun testAddSingleNode() {
-        val manager = nodeManagerFromFile(file)
-        val root = manager.getRootNode()
+        val root = manager!!.getRootNode()
         val node = root.add("test", NodeType.Directory)
 
         assertEquals("test", node.getName())
@@ -60,7 +76,7 @@ internal class NodeManagerTest : BaseTest() {
         assertEquals(node, node.getRef().getNode())
         assertEquals(node.getRef(), node.getRef())
 
-        manager.save()
+        manager!!.save()
 
         assertTrue(file.exists())
 
@@ -73,8 +89,7 @@ internal class NodeManagerTest : BaseTest() {
 
     @Test
     fun testAddSingleNodeWithChild() {
-        val manager = nodeManagerFromFile(file)
-        val root = manager.getRootNode()
+        val root = manager!!.getRootNode()
         val child = root.add("test", NodeType.Directory)
         val node = child.add("child", NodeType.Item)
 
@@ -93,7 +108,7 @@ internal class NodeManagerTest : BaseTest() {
         assertEquals(node, node.getRef().getNode())
         assertEquals(node.getRef(), node.getRef())
 
-        manager.save()
+        manager!!.save()
 
         assertTrue(file.exists())
 
@@ -106,7 +121,7 @@ internal class NodeManagerTest : BaseTest() {
 
     @Test
     fun testFindNodeByPath() {
-        val manager = nodeManagerFromFile(file)
+        val manager = this.manager!!
         val root = manager.getRootNode()
         val child = root.add("child", NodeType.Directory)
         val node = child.add("node", NodeType.Item)
@@ -133,8 +148,7 @@ internal class NodeManagerTest : BaseTest() {
 
     @Test
     fun testFindChild() {
-        val manager = nodeManagerFromFile(file)
-        val root = manager.getRootNode()
+        val root = manager!!.getRootNode()
         val dir = root.add("Dir", NodeType.Directory)
         val item = dir.add("Item", NodeType.Item)
 
@@ -157,8 +171,7 @@ internal class NodeManagerTest : BaseTest() {
 
     @Test
     fun testRemoveChildren() {
-        val manager = nodeManagerFromFile(file)
-        val root = manager.getRootNode()
+        val root = manager!!.getRootNode()
         val child = root.add("child", NodeType.Directory)
         val node = child.add("node", NodeType.Item)
 
@@ -181,15 +194,14 @@ internal class NodeManagerTest : BaseTest() {
 
     @Test
     fun testSaveAfterRemoveChildren() {
-        val manager = nodeManagerFromFile(file)
-        val root = manager.getRootNode()
+        val root = manager!!.getRootNode()
         val child = root.add("child", NodeType.Directory)
         val node = child.add("node", NodeType.Item)
 
         assertTrue(child.remove(listOf(node)))
         assertTrue(root.remove(listOf(child)))
 
-        manager.save()
+        manager!!.save()
 
         val manager2 = nodeManagerFromFile(file)
         val root2 = manager2.getRootNode()
@@ -200,14 +212,14 @@ internal class NodeManagerTest : BaseTest() {
 
     @Test
     fun testRemoveChildrenAfterSave() {
-        val manager = nodeManagerFromFile(file)
-        val root = manager.getRootNode()
+        val root = manager!!.getRootNode()
         val child = root.add("child", NodeType.Directory)
         val node = child.add("node", NodeType.Item)
 
-        manager.save()
+        manager!!.save()
 
         val manager2 = nodeManagerFromFile(file)
+        val operation = manager2.startOperation(AuthorType.User, "UserBar")
         val root2 = manager2.getRootNode()
         val child2 = root2.findNodeByPath("/child")!!
         val node2 = child2.findNodeByPath("/node")!!
@@ -218,6 +230,7 @@ internal class NodeManagerTest : BaseTest() {
         assertTrue(child2.remove(listOf(node2)))
         assertTrue(root2.remove(listOf(child2)))
         assertEquals(0, root2.getChildrenSize())
+        operation.stop()
 
         manager2.save()
 
@@ -230,8 +243,7 @@ internal class NodeManagerTest : BaseTest() {
 
     @Test
     fun testRemoveReturnTrueIfAnyChildRemoved() {
-        val manager = nodeManagerFromFile(file)
-        val root = manager.getRootNode()
+        val root = manager!!.getRootNode()
         val item = root.add("Item", NodeType.Item)
         val child = root.add("child", NodeType.Directory)
         val node1 = child.add("node1", NodeType.Item)
@@ -250,8 +262,7 @@ internal class NodeManagerTest : BaseTest() {
 
     @Test
     fun testAddNodeWithDuplicateNameMustFail() {
-        val manager = nodeManagerFromFile(file)
-        val root = manager.getRootNode()
+        val root = manager!!.getRootNode()
         val item = root.add("Item", NodeType.Item)
         item.add("child", NodeType.Directory)
 

@@ -3,9 +3,10 @@ package com.tezrok.core.tree
 import com.tezrok.api.tree.Node
 import com.tezrok.api.tree.NodeManager
 import com.tezrok.api.tree.NodeRepository
-import com.tezrok.core.tree.repo.file.FileNodeRepository
 import com.tezrok.core.feature.FeatureManager
+import com.tezrok.core.tree.repo.file.FileNodeRepository
 import com.tezrok.core.util.toElem
+import org.slf4j.LoggerFactory
 import java.util.stream.Stream
 
 /**
@@ -17,6 +18,11 @@ internal class NodeManagerImpl(
     private val propertyValueManager: PropertyValueManager
 ) : NodeManager {
     private val nodeSupport = NodeSupport(nodeRepo, featureManager, propertyValueManager)
+
+    init {
+        log.info("NodeManager initialized")
+        featureManager.setManager(this)
+    }
 
     override fun getRootNode(): Node = nodeSupport.getRoot()
 
@@ -38,5 +44,12 @@ internal class NodeManagerImpl(
         node.getChildren().forEach { prepareNodesToRepo(node.getId(), it) }
     }
 
+    fun startOperation(type: String, author: String): NodeOperation =
+        nodeSupport.startOperation(type, author)
+
     override fun findNodeByPath(path: String): Node? = nodeSupport.findNodeByPath(path)
+
+    private companion object {
+        private val log = LoggerFactory.getLogger(NodeManagerImpl::class.java)
+    }
 }

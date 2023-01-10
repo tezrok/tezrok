@@ -4,8 +4,7 @@ import com.tezrok.api.error.TezrokException
 import com.tezrok.api.tree.PropertyValue
 import com.tezrok.api.tree.PropertyValueService
 import com.tezrok.core.plugin.PluginManager
-import com.tezrok.core.util.JsonUtil
-import java.util.Collections
+import java.time.OffsetDateTime
 import java.util.List
 
 
@@ -46,19 +45,9 @@ internal class PropertyValueManager(pluginManager: PluginManager) {
                 .toMutableMap()
 
             map[List::class.java as Class<Any>] = ListPropertyValue()
+            map[OffsetDateTime::class.java as Class<Any>] = OffsetDateTimePropertyValue()
 
             return map
         }
-    }
-
-    private class ListPropertyValue : PropertyValue {
-        private val mapper = JsonUtil.createMapper()
-
-        override fun fromString(value: String): Any? {
-            val listType = mapper.typeFactory.constructCollectionType(MutableList::class.java, String::class.java)
-            return Collections.unmodifiableList(mapper.readValue(value, listType) as MutableList<String>)
-        }
-
-        override fun asString(value: Any): String = mapper.writeValueAsString(value)
     }
 }

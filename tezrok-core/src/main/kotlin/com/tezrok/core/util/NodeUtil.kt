@@ -3,6 +3,7 @@ package com.tezrok.core.util
 import com.tezrok.api.tree.Node
 import com.tezrok.api.tree.NodeElem
 import com.tezrok.api.tree.PropertyName
+import java.time.OffsetDateTime
 import java.util.*
 
 /**
@@ -36,3 +37,27 @@ internal fun Node.calcPath(): String {
 
 internal fun Node.toElem(): NodeElem = NodeElem(id = getId(),
     properties = getProperties().asMap().filter { it.key != PropertyName.Id })
+
+internal fun Node.createdAt(): OffsetDateTime? =
+    getProperties().getProperty(PropertyName.CreatedAt, OffsetDateTime::class.java)
+
+internal fun Node.createdAt(value: OffsetDateTime) =
+    getProperties().setProperty(PropertyName.CreatedAt, value)
+
+internal fun Node.updatedAt(): OffsetDateTime? =
+    getProperties().getProperty(PropertyName.UpdatedAt, OffsetDateTime::class.java)!!
+
+internal fun Node.updatedAt(value: OffsetDateTime) =
+    getProperties().setProperty(PropertyName.UpdatedAt, value)
+
+internal fun Node.author(): String? =
+    getProperties().getProperty(PropertyName.Author)
+
+internal fun Node.author(value: String) =
+    getProperties().setProperty(PropertyName.Author, value)
+
+internal fun Node.authorType(): String? =
+    getProperties().getProperty(PropertyName.AuthorType)
+
+internal fun Node.authorType(value: String) =
+    getProperties().setProperty(PropertyName.AuthorType, value)

@@ -8,8 +8,13 @@ import com.tezrok.api.event.ResultType
 import com.tezrok.api.feature.InternalFeatureSupport
 import com.tezrok.api.tree.*
 import com.tezrok.core.feature.FeatureManager
+import com.tezrok.core.util.*
+import com.tezrok.core.util.author
+import com.tezrok.core.util.authorType
 import com.tezrok.core.util.calcPath
-import com.tezrok.core.util.runIn
+import org.apache.commons.lang3.Validate
+import org.slf4j.LoggerFactory
+import java.time.OffsetDateTime
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.stream.Collectors
@@ -29,8 +34,10 @@ internal class NodeSupport(
     private val writeLock = lock.writeLock()
     private val readLock = lock.readLock()
     private val root = lazy { createRoot() }
+    private val operations = ArrayDeque<Pair<String, String>>()
 
     init {
+        log.info("NodeSupport initialized")
         featureManager.setInternalFeatureSupport(this)
     }
 
@@ -70,15 +77,19 @@ internal class NodeSupport(
                     throw NodeAlreadyExistsException(name, node.getPath())
                 }
             }
-
+            val (author, authorType) = getOperation()
             val eventResult = featureManager.onNodeEvent(NodeEvent(EventType.PreAdd, type, parent, null))
 
             if (eventResult.type == ResultType.CANCEL) {
                 val message = if (eventResult.message.isNullOrBlank()) "Node cannot be added" else eventResult.message
                 throw TezrokException(message)
             }
-
             val newNode = createNode(parent, NodeElem.of(name, type))
+            newNode.author(author)
+            newNode.authorType(authorType)
+            val now = OffsetDateTime.now()
+            newNode.createdAt(now)
+            newNode.updatedAt(now)
             // TODO: validate new node
             nodes.computeIfAbsent(parent) { ArrayList() }.add(newNode)
             featureManager.onNodeEvent(NodeEvent(EventType.PostAdd, type, parent, newNode))
@@ -89,6 +100,8 @@ internal class NodeSupport(
 
     fun remove(parent: Node, nodes: List<Node>): Boolean {
         writeLock.runIn {
+            val (author, authorType) = getOperation()
+            log.debug("{}:{} - Removing nodes: {}", authorType, author, nodes.map { it.getName() })
             return loadChildren(parent).removeAll(nodes)
         }
     }
@@ -133,6 +146,11 @@ internal class NodeSupport(
             val nodeProps = NodePropertiesImpl(rootElem.properties, propertyValueManager)
             val node = NodeIml(rootElem.id, NodeType.Root, null, nodeProps, this)
             nodeProps.setNode(node)
+            node.author(AuthorType.System)
+            node.authorType(AuthorType.System)
+            val now = OffsetDateTime.now()
+            node.createdAt(now)
+            node.updatedAt(now)
             return node
         }
     }
@@ -161,6 +179,37 @@ internal class NodeSupport(
         TODO("Not yet implemented")
     }
 
+    fun startOperation(type: String, author: String): NodeOperation {
+        val authorType = author to type
+        writeLock.runIn {
+            operations.add(authorType)
+        }
+
+        log.info("Started operation by {}: {}", authorType, author)
+
+        return object : NodeOperation {
+            override val author: String
+                get() = author
+            override val type: String
+                get() = type
+
+            override fun stop() {
+                writeLock.runIn {
+                    Validate.isTrue(operations.isNotEmpty(), "Operation queue is empty")
+                    Validate.isTrue(
+                        operations.removeLast() == authorType,
+                        "Operation is not started by %s", author
+                    )
+                }
+
+                log.info("Stopped operation by {}: {}", authorType, author)
+            }
+        }
+    }
+
+    private fun getOperation(): Pair<String, String> =
+        operations.lastOrNull() ?: throw TezrokException("Node operation not started")
+
     private fun createNode(parent: Node, nodeElem: NodeElem): Node {
         val nodeProps = NodePropertiesImpl(nodeElem.properties, propertyValueManager)
         val nodeType = nodeProps.getNodeType()
@@ -168,6 +217,10 @@ internal class NodeSupport(
         val newNode = NodeIml(id, nodeType, parent, nodeProps, this@NodeSupport)
         nodeProps.setNode(newNode)
         return newNode
+    }
+
+    private companion object {
+        private val log = LoggerFactory.getLogger(NodeSupport::class.java)
     }
 }
 

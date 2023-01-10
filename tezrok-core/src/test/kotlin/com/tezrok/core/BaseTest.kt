@@ -1,7 +1,6 @@
 package com.tezrok.core
 
 import com.tezrok.api.tree.Node
-import com.tezrok.api.tree.NodeManager
 import com.tezrok.core.feature.FeatureManager
 import com.tezrok.core.plugin.PluginManager
 import com.tezrok.core.tree.NodeManagerImpl
@@ -9,9 +8,11 @@ import com.tezrok.core.tree.PropertyValueManager
 import com.tezrok.core.tree.repo.file.FileNodeRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import java.io.File
+import java.time.OffsetDateTime
 import java.util.*
 
 internal abstract class BaseTest {
@@ -31,7 +32,7 @@ internal abstract class BaseTest {
         }
     }
 
-    protected fun nodeManagerFromFile(file: File): NodeManager {
+    protected fun nodeManagerFromFile(file: File): NodeManagerImpl {
         val featureManager = FeatureManager(pluginManager)
         val propertyValueManager = PropertyValueManager(pluginManager)
         return NodeManagerImpl(FileNodeRepository(file), featureManager, propertyValueManager)
@@ -50,5 +51,12 @@ internal abstract class BaseTest {
         expected.getChildren().toList().forEachIndexed { index, node ->
             assertEquals(node, actualChildren[index])
         }
+    }
+
+    protected fun assertRecentTime(time: OffsetDateTime?) {
+        assertNotNull(time, "Time must not be null")
+        val now = OffsetDateTime.now()
+        assertTrue(time!!.isAfter(now.minusSeconds(5)))
+        assertTrue(time.isBefore(now.plusSeconds(5)))
     }
 }
