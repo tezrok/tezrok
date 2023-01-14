@@ -171,11 +171,4 @@ internal class NodePropertiesTest : BaseTest() {
         val ex4 = assertThrows<NumberFormatException> { properties.getDoubleProperty(prop, null) }
         assertEquals("For input string: \"foo\"", ex4.message)
     }
-
-    private fun createProperties(): NodeProperties {
-        val manager = nodeManagerFromFile(file)
-        val root = manager.getRootNode()
-        val properties = root.getProperties()
-        return properties
-    }
 }

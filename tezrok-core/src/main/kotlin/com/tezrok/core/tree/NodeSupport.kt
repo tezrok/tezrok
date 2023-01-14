@@ -39,6 +39,7 @@ internal class NodeSupport(
     init {
         log.info("NodeSupport initialized")
         featureManager.setInternalFeatureSupport(this)
+        propertyValueManager.nodeSupport = this
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.tezrok.core.tree
 
 import com.tezrok.api.error.TezrokException
+import com.tezrok.api.tree.NodeRef
 import com.tezrok.api.tree.PropertyValue
 import com.tezrok.api.tree.PropertyValueService
 import com.tezrok.core.plugin.PluginManager
@@ -11,11 +12,14 @@ import java.util.List
 /**
  * Encapsulates all property value related logic
  */
-internal class PropertyValueManager(pluginManager: PluginManager) {
-    private val allPropertyValues: Map<Class<Any>, PropertyValue> = loadPropertyValues(pluginManager)
+internal class PropertyValueManager(
+    pluginManager: PluginManager
+) {
+    lateinit var nodeSupport: NodeSupport
+    private val allPropertyValues: Map<Class<Any>, PropertyValue> = loadPropertyValues(pluginManager) { nodeSupport }
 
     fun <T> fromString(rawString: String, clazz: Class<T>): T? {
-        val finalClass = if (List::class.java.isAssignableFrom(clazz)) List::class.java else clazz
+        val finalClass = getFinalClass(clazz)
         val propValue = allPropertyValues[finalClass]
             ?: throw TezrokException("No property value converter for class $clazz")
 
@@ -27,17 +31,28 @@ internal class PropertyValueManager(pluginManager: PluginManager) {
             return null
         }
 
-        val finalClass = getFinalClass<T>(obj)
+        val finalClass = getObjFinalClass(obj)
         val propValue = allPropertyValues[finalClass]
             ?: throw TezrokException("No property value converter for class ${obj!!::class.java}")
 
         return propValue.asString(obj)
     }
 
-    private fun <T> getFinalClass(obj: T & Any) = if (obj is List<*>) List::class.java else obj.javaClass
+    private fun getObjFinalClass(obj: Any): Class<*> = getFinalClass(obj::class.java)
+
+    private fun <T> getFinalClass(clazz: Class<T>) =
+        if (List::class.java.isAssignableFrom(clazz))
+            List::class.java
+        else if (NodeRef::class.java.isAssignableFrom(clazz))
+            NodeRef::class.java
+        else
+            clazz
 
     private companion object {
-        private fun loadPropertyValues(pluginManager: PluginManager): Map<Class<Any>, PropertyValue> {
+        private fun loadPropertyValues(
+            pluginManager: PluginManager,
+            nodeSupport: () -> NodeSupport
+        ): Map<Class<Any>, PropertyValue> {
             val map = pluginManager.getPlugins()
                 .mapNotNull { it.getService(PropertyValueService::class.java) }
                 .flatMap { service -> service.getSupportedTypes().map { it to service.getPropertyType(it) } }
@@ -46,6 +61,7 @@ internal class PropertyValueManager(pluginManager: PluginManager) {
 
             map[List::class.java as Class<Any>] = ListPropertyValue()
             map[OffsetDateTime::class.java as Class<Any>] = OffsetDateTimePropertyValue()
+            map[NodeRef::class.java as Class<Any>] = NodeRefPropertyValue { nodeSupport().findNodeByPath(it) }
 
             return map
         }

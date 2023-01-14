@@ -15,6 +15,13 @@ interface NodeRef {
     fun getNode(): Node?
 
     /**
+     * Return reference to the child node
+     *
+     * Child node can be not exists
+     */
+    fun getChild(name: String): NodeRef
+
+    /**
      * Returns true if node accessible
      */
     fun exists(): Boolean = getNode() != null

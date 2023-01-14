@@ -14,6 +14,8 @@ internal class NodeRefImpl(
 
     override fun getNode(): Node? = handler(path)
 
+    override fun getChild(name: String): NodeRef = NodeRefImpl("$path/$name", handler)
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is NodeRef) return false

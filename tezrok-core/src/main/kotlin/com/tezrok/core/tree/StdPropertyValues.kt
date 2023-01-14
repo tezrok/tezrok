@@ -1,12 +1,14 @@
 package com.tezrok.core.tree
 
+import com.tezrok.api.tree.Node
+import com.tezrok.api.tree.NodeRef
 import com.tezrok.api.tree.PropertyValue
 import com.tezrok.core.util.JsonUtil
 import java.time.OffsetDateTime
 import java.util.*
 
 /**
- * Implementation of [PropertyValue] for List
+ * Implementation of [PropertyValue] for [List]
  */
 internal class ListPropertyValue : PropertyValue {
     private val mapper = JsonUtil.createMapper()
@@ -20,12 +22,21 @@ internal class ListPropertyValue : PropertyValue {
 }
 
 /**
- * Implementation of [PropertyValue] for OffsetDateTime
+ * Implementation of [PropertyValue] for [OffsetDateTime]
  *
  * TODO: add tests when locales are different
  */
 internal class OffsetDateTimePropertyValue : PropertyValue {
     override fun fromString(value: String): Any? = OffsetDateTime.parse(value)
 
-    override fun asString(value: Any): String = (value as OffsetDateTime).let { it.toString() }
+    override fun asString(value: Any): String = (value as OffsetDateTime).toString()
+}
+
+/**
+ * Implementation of [PropertyValue] for [NodeRef]
+ */
+internal class NodeRefPropertyValue(private val handler: (String) -> Node?) : PropertyValue {
+    override fun fromString(value: String): Any = NodeRefImpl(value, handler)
+
+    override fun asString(value: Any): String = (value as NodeRef).getPath()
 }

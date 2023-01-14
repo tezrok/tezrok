@@ -261,6 +261,21 @@ internal class NodeManagerTest : BaseTest() {
     }
 
     @Test
+    fun testNodeRef() {
+        val root = manager!!.getRootNode()
+        val child = root.add("child3", NodeType.Directory)
+
+        val ref = child.getRef()
+        assertEquals("/child3", ref.getPath())
+        assertTrue(ref.exists(), "Ref should exist")
+
+        val unkRef = ref.getChild("unknown")
+        assertEquals("/child3/unknown", unkRef.getPath())
+        assertFalse(unkRef.exists(), "Ref should not exist")
+        assertNull(unkRef.getNode(), "Ref should not exist")
+    }
+
+    @Test
     fun testAddNodeWithDuplicateNameMustFail() {
         val root = manager!!.getRootNode()
         val item = root.add("Item", NodeType.Item)

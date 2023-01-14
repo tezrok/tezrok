@@ -1,11 +1,13 @@
 package com.tezrok.core
 
 import com.tezrok.api.tree.Node
+import com.tezrok.api.tree.NodeProperties
 import com.tezrok.core.feature.FeatureManager
 import com.tezrok.core.plugin.PluginManager
 import com.tezrok.core.tree.NodeManagerImpl
 import com.tezrok.core.tree.PropertyValueManager
 import com.tezrok.core.tree.repo.file.FileNodeRepository
+import com.tezrok.core.util.AuthorType
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -58,5 +60,12 @@ internal abstract class BaseTest {
         val now = OffsetDateTime.now()
         assertTrue(time!!.isAfter(now.minusSeconds(5)))
         assertTrue(time.isBefore(now.plusSeconds(5)))
+    }
+
+    protected fun createProperties(): NodeProperties {
+        val manager = nodeManagerFromFile(file)
+        val root = manager.getRootNode()
+        manager.startOperation(AuthorType.System, "system")
+        return root.getProperties()
     }
 }
