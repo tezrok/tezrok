@@ -2,11 +2,15 @@ package com.tezrok.core.tree
 
 import com.tezrok.api.error.TezrokException
 import com.tezrok.api.tree.NodeProperties
+import com.tezrok.api.tree.NodeType
 import com.tezrok.api.tree.PropertyName
 import com.tezrok.core.BaseTest
+import com.tezrok.core.util.AuthorType
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.util.*
+
 
 /**
  * Tests of default state of [NodeProperties]
@@ -170,5 +174,40 @@ internal class NodePropertiesTest : BaseTest() {
 
         val ex4 = assertThrows<NumberFormatException> { properties.getDoubleProperty(prop, null) }
         assertEquals("For input string: \"foo\"", ex4.message)
+    }
+
+    @Test
+    fun testSetAndGetPropertiesWithLocales() {
+        val prevLocale = Locale.getDefault()
+        Locale.setDefault(Locale("pl", "PL"))
+
+        val manager = nodeManagerFromFile(file)
+        val root = manager.getRootNode()
+        manager.startOperation(AuthorType.User, "user1")
+        val child = root.add("child", NodeType.Directory)
+        val properties = child.getProperties()
+
+        properties.setProperty(PropertyName.of("str"), "foo")
+        properties.setBooleanProperty(PropertyName.of("bool"), true)
+        properties.setIntProperty(PropertyName.of("int"), 55)
+        properties.setLongProperty(PropertyName.of("long"), 42L)
+        properties.setDoubleProperty(PropertyName.of("double"), 42.3)
+        properties.setListProperty(PropertyName.of("list"), listOf("foo", "bar"))
+
+        manager.save()
+        Locale.setDefault(Locale.ENGLISH)
+
+        val manager2 = nodeManagerFromFile(file)
+        val child2 = manager2.findNodeByPath("/child")!!
+        val properties2 = child2.getProperties()
+
+        assertEquals("foo", properties2.getStringProperty(PropertyName.of("str"), null))
+        assertEquals(true, properties2.getBooleanProperty(PropertyName.of("bool"), null))
+        assertEquals(55, properties2.getIntProperty(PropertyName.of("int"), null))
+        assertEquals(42L, properties2.getLongProperty(PropertyName.of("long"), null))
+        assertEquals(42.3, properties2.getDoubleProperty(PropertyName.of("double"), null))
+        assertEquals(listOf("foo", "bar"), properties2.getListProperty(PropertyName.of("list")))
+
+        Locale.setDefault(prevLocale)
     }
 }
