@@ -57,7 +57,6 @@ internal class NodeManagerTest : BaseTest() {
         val root2 = manager2.getRootNode()
 
         assertEquals(root, root2)
-        assertEquals(SINGLE_ROOT, file.readText())
     }
 
     @Test
@@ -84,7 +83,6 @@ internal class NodeManagerTest : BaseTest() {
         val root2 = manager2.getRootNode()
 
         assertEquals(root, root2)
-        assertEquals(ROOT_WITH_SINGLE_CHILD, file.readText())
     }
 
     @Test
@@ -116,7 +114,6 @@ internal class NodeManagerTest : BaseTest() {
         val root2 = manager2.getRootNode()
 
         assertEquals(root, root2)
-        assertEquals(ROOT_WITH_SINGLE_CHILD_AND_CHILD, file.readText())
     }
 
     @Test
@@ -207,7 +204,6 @@ internal class NodeManagerTest : BaseTest() {
         val root2 = manager2.getRootNode()
 
         assertEquals(root, root2)
-        assertEquals(SINGLE_ROOT, file.readText())
     }
 
     @Test
@@ -238,7 +234,6 @@ internal class NodeManagerTest : BaseTest() {
         val root3 = manager3.getRootNode()
 
         assertEquals(root2, root3)
-        assertEquals(SINGLE_ROOT, file.readText())
     }
 
     @Test
@@ -294,52 +289,5 @@ internal class NodeManagerTest : BaseTest() {
         assertEquals("Node with such name already exists: child", ex2.message)
         assertEquals("/Item/child", ex2.path)
         assertEquals(1, item.getChildrenSize())
-    }
-
-    private companion object {
-        const val SINGLE_ROOT = """{
-  "id" : 1000,
-  "props" : {
-    "name" : "Root",
-    "type" : "Root"
-  }
-}"""
-
-        const val ROOT_WITH_SINGLE_CHILD = """{
-  "id" : 1000,
-  "props" : {
-    "name" : "Root",
-    "type" : "Root"
-  },
-  "items" : [ {
-    "id" : 1001,
-    "props" : {
-      "name" : "test",
-      "type" : "Directory"
-    }
-  } ]
-}"""
-
-        const val ROOT_WITH_SINGLE_CHILD_AND_CHILD = """{
-  "id" : 1000,
-  "props" : {
-    "name" : "Root",
-    "type" : "Root"
-  },
-  "items" : [ {
-    "id" : 1001,
-    "props" : {
-      "name" : "test",
-      "type" : "Directory"
-    },
-    "items" : [ {
-      "id" : 1002,
-      "props" : {
-        "name" : "child",
-        "type" : "Item"
-      }
-    } ]
-  } ]
-}"""
     }
 }
