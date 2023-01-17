@@ -38,6 +38,21 @@ internal class NodePropertiesTest : BaseTest() {
     }
 
     @Test
+    fun testRemoveProperty() {
+        val properties = createProperties()
+        val prop = PropertyName.of("test")
+        val prop2 = PropertyName.of("test2")
+
+        assertNull(properties.removeProperty(prop))
+
+        properties.setProperty(prop, "foo")
+        properties.setProperty(prop2, "bar")
+        assertEquals("foo", properties.removeProperty(prop))
+        assertNull(properties.removeProperty(prop))
+        assertEquals("bar", properties.getProperty(prop2))
+    }
+
+    @Test
     fun testSetAndGetBooleanProperty() {
         val properties = createProperties()
         val prop = PropertyName.of("testBool")

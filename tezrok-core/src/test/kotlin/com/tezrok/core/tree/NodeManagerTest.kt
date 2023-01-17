@@ -43,6 +43,7 @@ internal class NodeManagerTest : BaseTest() {
 
         val properties = root.getProperties()
         assertEquals(7, properties.getPropertiesNames().size)
+        assertEquals(STD_PROPERTIES, properties.getPropertiesNames().map { it.name }.toSet())
         assertFalse(file.exists()) { "File must not exist: $file" }
     }
 
@@ -57,6 +58,7 @@ internal class NodeManagerTest : BaseTest() {
         val root2 = manager2.getRootNode()
 
         assertEquals(root, root2)
+        assertEquals(STD_PROPERTIES, root2.getProperties().getPropertiesNames().map { it.name }.toSet())
     }
 
     @Test
@@ -83,6 +85,7 @@ internal class NodeManagerTest : BaseTest() {
         val root2 = manager2.getRootNode()
 
         assertEquals(root, root2)
+        assertEquals(STD_PROPERTIES, root2.getProperties().getPropertiesNames().map { it.name }.toSet())
     }
 
     @Test
@@ -114,6 +117,7 @@ internal class NodeManagerTest : BaseTest() {
         val root2 = manager2.getRootNode()
 
         assertEquals(root, root2)
+        assertEquals(STD_PROPERTIES, root2.getProperties().getPropertiesNames().map { it.name }.toSet())
     }
 
     @Test

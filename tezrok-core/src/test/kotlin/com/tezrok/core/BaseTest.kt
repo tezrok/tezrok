@@ -68,4 +68,8 @@ internal abstract class BaseTest {
         manager.startOperation(AuthorType.System, "system")
         return root.getProperties()
     }
+
+    protected companion object {
+        val STD_PROPERTIES = setOf("id", "name", "type", "_authorType", "_author", "_createdAt", "_updatedAt")
+    }
 }
