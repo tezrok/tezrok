@@ -19,6 +19,10 @@ internal class PropertyValueManager(
     private val allPropertyValues: Map<Class<Any>, PropertyValue> = loadPropertyValues(pluginManager) { nodeSupport }
 
     fun <T> fromString(rawString: String, clazz: Class<T>): T? {
+        if (clazz.isEnum) {
+            return clazz.enumConstants.firstOrNull { it.toString() == rawString }
+        }
+
         val finalClass = getFinalClass(clazz)
         val propValue = allPropertyValues[finalClass]
             ?: throw TezrokException("No property value converter for class $clazz")
@@ -29,6 +33,9 @@ internal class PropertyValueManager(
     fun <T> toString(obj: T): String? {
         if (obj == null) {
             return null
+        }
+        if (obj is Enum<*>) {
+            return obj.name
         }
 
         val finalClass = getObjFinalClass(obj)

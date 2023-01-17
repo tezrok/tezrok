@@ -210,4 +210,19 @@ internal class NodePropertiesTest : BaseTest() {
 
         Locale.setDefault(prevLocale)
     }
+
+    @Test
+    fun testSetAndGetEnumProperty() {
+        val properties = createProperties()
+        val prop = PropertyName.of("prop")
+
+        assertNull(properties.setProperty(prop, TestEnum.FOO))
+        assertEquals(TestEnum.FOO, properties.getProperty(prop, TestEnum::class.java))
+        assertEquals(TestEnum.FOO, properties.setProperty(prop, TestEnum.BAR))
+        assertEquals("BAR", properties.getProperty(prop))
+    }
+
+    internal enum class TestEnum {
+        FOO, BAR
+    }
 }
