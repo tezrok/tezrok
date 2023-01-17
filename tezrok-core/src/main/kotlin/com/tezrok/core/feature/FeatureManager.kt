@@ -11,7 +11,11 @@ import com.tezrok.api.tree.NodeType
 import com.tezrok.core.plugin.PluginManager
 import com.tezrok.core.tree.NodeManagerImpl
 import com.tezrok.core.util.AuthorType
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.Collections
+import java.util.concurrent.ConcurrentHashMap
+import java.util.function.Function
 
 /**
  * The feature manager is responsible for managing the [Feature]s
@@ -19,6 +23,8 @@ import org.slf4j.LoggerFactory
 internal class FeatureManager(pluginManager: PluginManager) {
     private val allFeatures: Map<NodeType, List<Pair<Feature, TezrokPlugin>>> = loadFeatures(pluginManager)
     private lateinit var manager: NodeManagerImpl
+    private val allSubscribers: MutableMap<NodeType, MutableList<Function<NodeEvent, EventResult>>> = ConcurrentHashMap()
+    // TODO: call subscribers on event
 
     init {
         log.info("FeatureManager initialized")
@@ -32,6 +38,9 @@ internal class FeatureManager(pluginManager: PluginManager) {
     }
 
     fun setInternalFeatureSupport(internalFeatureSupport: InternalFeatureSupport) {
+        allFeatures.values.flatten().map { it.second }.toSet().forEach { plugin ->
+            plugin.setInternalFeatureSupport(internalFeatureSupport)
+        }
         allFeatures.values.flatten().forEach { (feature, _) ->
             feature.setInternalFeatureSupport(internalFeatureSupport)
         }
@@ -70,6 +79,18 @@ internal class FeatureManager(pluginManager: PluginManager) {
         this.manager = manager
     }
 
+    fun subscribeOnEvent(type: NodeType, handler: Function<NodeEvent, EventResult>) {
+        allSubscribers.computeIfAbsent(type) { Collections.synchronizedList(mutableListOf()) }
+            .add(handler)
+    }
+
+    fun unsubscribeOnEvent(handler: Function<NodeEvent, EventResult>): Boolean {
+        return allSubscribers.keys
+            .mapNotNull { allSubscribers[it]?.remove(handler) }
+            .toList()
+            .any { it }
+    }
+
     private companion object {
         /**
          * Loads all features from plugins
@@ -90,6 +111,6 @@ internal class FeatureManager(pluginManager: PluginManager) {
             return features
         }
 
-        val log = LoggerFactory.getLogger(FeatureManager::class.java)
+        val log: Logger = LoggerFactory.getLogger(FeatureManager::class.java)
     }
 }

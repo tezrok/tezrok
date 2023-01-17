@@ -2,6 +2,7 @@ package com.tezrok.core.tree
 
 import com.tezrok.api.error.NodeAlreadyExistsException
 import com.tezrok.api.error.TezrokException
+import com.tezrok.api.event.EventResult
 import com.tezrok.api.event.EventType
 import com.tezrok.api.event.NodeEvent
 import com.tezrok.api.event.ResultType
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory
 import java.time.OffsetDateTime
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantReadWriteLock
+import java.util.function.Function
 import java.util.stream.Collectors
 import java.util.stream.Stream
 
@@ -179,6 +181,12 @@ internal class NodeSupport(
     override fun applyNode(node: Node): Boolean {
         TODO("Not yet implemented")
     }
+
+    override fun subscribeOnEvent(type: NodeType, handler: Function<NodeEvent, EventResult>) =
+        featureManager.subscribeOnEvent(type, handler)
+
+    override fun unsubscribeOnEvent(handler: Function<NodeEvent, EventResult>): Boolean =
+        featureManager.unsubscribeOnEvent(handler)
 
     fun startOperation(type: String, author: String): NodeOperation {
         val authorType = author to type

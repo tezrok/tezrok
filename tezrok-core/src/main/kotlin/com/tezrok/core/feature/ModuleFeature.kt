@@ -7,6 +7,7 @@ import com.tezrok.api.feature.Feature
 import com.tezrok.api.feature.InternalFeatureSupport
 import com.tezrok.api.tree.Node
 import com.tezrok.api.tree.NodeType
+import org.apache.commons.lang3.Validate
 
 /**
  * Implementation of [Feature] for [NodeType.Module]
@@ -36,6 +37,8 @@ internal class ModuleFeature : Feature {
     }
 
     private fun addModuleFoldersIfNecessary(node: Node) {
+        Validate.isTrue(node.getType() == NodeType.Module, "Node must be of type Module")
+
         if (node.getChild("Types") == null) {
             node.add("Types", NodeType.Types)
         }
