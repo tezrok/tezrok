@@ -29,5 +29,5 @@ interface TezrokPlugin {
     /**
      * Sets [InternalPluginSupport] for the plugin
      */
-    fun setInternalFeatureSupport(internalPluginSupport: InternalPluginSupport)
+    fun setInternalPluginSupport(internalPluginSupport: InternalPluginSupport)
 }

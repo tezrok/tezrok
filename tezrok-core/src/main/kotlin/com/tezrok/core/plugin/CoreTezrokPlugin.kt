@@ -41,7 +41,7 @@ internal class CoreTezrokPlugin : TezrokPlugin {
             else -> null
         }
 
-    override fun setInternalFeatureSupport(internalPluginSupport: InternalPluginSupport) {
+    override fun setInternalPluginSupport(internalPluginSupport: InternalPluginSupport) {
         this.internalPluginSupport = internalPluginSupport
 
         this.internalPluginSupport.subscribeOnEvent(NodeType.Any) { event ->

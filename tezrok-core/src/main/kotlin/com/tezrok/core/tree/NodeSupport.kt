@@ -194,7 +194,7 @@ internal class NodeSupport(
             operations.add(authorType)
         }
 
-        log.info("Started operation by {}: {}", authorType, author)
+        log.info("Started operation by {}: {}", type, author)
 
         return object : NodeOperation {
             override val author: String

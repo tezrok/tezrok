@@ -7,7 +7,7 @@ import com.tezrok.api.tree.NodeType
 import java.util.function.Function
 
 /**
- * Used by a Plugin's [Feature] to access internal [Node] functionality
+ * Used by a plugin to access internal functionality
  */
 interface InternalPluginSupport {
     /**

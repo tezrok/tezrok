@@ -45,7 +45,7 @@ internal class FeatureManager(pluginManager: PluginManager) {
     @Synchronized
     fun setNodeSupport(nodeSupport: NodeSupport) {
         allFeatures.values.flatten().map { it.second }.toSet().forEach { plugin ->
-            plugin.setInternalFeatureSupport(PluginInternalPluginSupport(plugin, nodeSupport))
+            plugin.setInternalPluginSupport(PluginInternalPluginSupport(plugin, nodeSupport))
         }
     }
 
@@ -136,7 +136,7 @@ internal class FeatureManager(pluginManager: PluginManager) {
                     features.getOrPut(type) { mutableListOf() }.addAll(featuresList.map { it to plugin })
                 }
 
-            return Collections.synchronizedMap(features)
+            return features
         }
 
         val log: Logger = LoggerFactory.getLogger(FeatureManager::class.java)
