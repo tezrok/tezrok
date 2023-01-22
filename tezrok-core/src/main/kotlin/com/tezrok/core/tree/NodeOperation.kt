@@ -12,7 +12,7 @@ internal interface NodeOperation {
     /**
      * Author type of the operation
      */
-    val type: String
+    val type: AuthorType
 
     /**
      * Stop the operation

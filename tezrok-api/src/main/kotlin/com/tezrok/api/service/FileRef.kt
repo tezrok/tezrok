@@ -1,4 +1,4 @@
-package com.tezrok.api
+package com.tezrok.api.service
 
 import java.io.InputStream
 import java.io.OutputStream

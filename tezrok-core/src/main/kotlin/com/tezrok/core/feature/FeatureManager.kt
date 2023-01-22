@@ -1,20 +1,20 @@
 package com.tezrok.core.feature
 
-import com.tezrok.api.TezrokPlugin
+import com.tezrok.api.plugin.TezrokPlugin
 import com.tezrok.api.event.EventResult
 import com.tezrok.api.event.NodeEvent
 import com.tezrok.api.event.ResultType
 import com.tezrok.api.feature.Feature
 import com.tezrok.api.feature.FeatureService
-import com.tezrok.api.feature.InternalFeatureSupport
 import com.tezrok.api.tree.NodeType
+import com.tezrok.core.plugin.PluginInternalPluginSupport
 import com.tezrok.core.plugin.PluginManager
+import com.tezrok.core.tree.AuthorType
 import com.tezrok.core.tree.NodeManagerImpl
-import com.tezrok.core.util.AuthorType
+import com.tezrok.core.tree.NodeSupport
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.util.Collections
-import java.util.concurrent.ConcurrentHashMap
+import java.util.*
 import java.util.function.Function
 
 /**
@@ -22,9 +22,8 @@ import java.util.function.Function
  */
 internal class FeatureManager(pluginManager: PluginManager) {
     private val allFeatures: Map<NodeType, List<Pair<Feature, TezrokPlugin>>> = loadFeatures(pluginManager)
+    private val allSubscribers: MutableMap<NodeType, MutableList<Subscriber>> = HashMap()
     private lateinit var manager: NodeManagerImpl
-    private val allSubscribers: MutableMap<NodeType, MutableList<Function<NodeEvent, EventResult>>> = ConcurrentHashMap()
-    // TODO: call subscribers on event
 
     init {
         log.info("FeatureManager initialized")
@@ -33,16 +32,20 @@ internal class FeatureManager(pluginManager: PluginManager) {
     /**
      * Returns all [Feature]s by [NodeType]
      */
+    @Synchronized
     private fun getFeatures(nodeType: NodeType): List<Pair<Feature, TezrokPlugin>> {
         return allFeatures[nodeType] ?: emptyList()
     }
 
-    fun setInternalFeatureSupport(internalFeatureSupport: InternalFeatureSupport) {
+    @Synchronized
+    private fun getSubscribers(nodeType: NodeType): List<Subscriber> {
+        return allSubscribers[nodeType]?.toList() ?: emptyList()
+    }
+
+    @Synchronized
+    fun setNodeSupport(nodeSupport: NodeSupport) {
         allFeatures.values.flatten().map { it.second }.toSet().forEach { plugin ->
-            plugin.setInternalFeatureSupport(internalFeatureSupport)
-        }
-        allFeatures.values.flatten().forEach { (feature, _) ->
-            feature.setInternalFeatureSupport(internalFeatureSupport)
+            plugin.setInternalFeatureSupport(PluginInternalPluginSupport(plugin, nodeSupport))
         }
     }
 
@@ -72,6 +75,28 @@ internal class FeatureManager(pluginManager: PluginManager) {
             }
         }
 
+        val subscribers = getSubscribers(event.type) + getSubscribers(NodeType.Any)
+
+        subscribers.forEach { subscriber ->
+            val operation = manager.startOperation(AuthorType.Plugin, subscriber.plugin.getName())
+
+            try {
+                val result = subscriber.handler.apply(event)
+                if (result.type != ResultType.CONTINUE) {
+                    log.warn(
+                        "{}:{} - Subscriber {} returned {} for event {}",
+                        operation.type, operation.author, subscriber.handler, result.type, event
+                    )
+                    return result
+                }
+            } catch (e: Exception) {
+                // TODO: Handle exceptions
+                throw e
+            } finally {
+                operation.stop()
+            }
+        }
+
         return EventResult.Continue
     }
 
@@ -79,14 +104,16 @@ internal class FeatureManager(pluginManager: PluginManager) {
         this.manager = manager
     }
 
-    fun subscribeOnEvent(type: NodeType, handler: Function<NodeEvent, EventResult>) {
-        allSubscribers.computeIfAbsent(type) { Collections.synchronizedList(mutableListOf()) }
-            .add(handler)
+    @Synchronized
+    fun subscribeOnEvent(plugin: TezrokPlugin, type: NodeType, handler: Function<NodeEvent, EventResult>) {
+        allSubscribers.computeIfAbsent(type) { mutableListOf() }
+            .add(Subscriber(plugin, handler))
     }
 
+    @Synchronized
     fun unsubscribeOnEvent(handler: Function<NodeEvent, EventResult>): Boolean {
         return allSubscribers.keys
-            .mapNotNull { allSubscribers[it]?.remove(handler) }
+            .mapNotNull { allSubscribers[it]?.removeIf { subscriber -> subscriber.handler == handler } }
             .toList()
             .any { it }
     }
@@ -102,15 +129,18 @@ internal class FeatureManager(pluginManager: PluginManager) {
                 .map { it to it.getService(FeatureService::class.java) }
                 .filter { it.second != null }
                 .flatMap { (plugin, service) ->
-                    service!!.getSupportedNodeTypes().map { type -> Triple(plugin, type, service.getFeatures(type)) }
+                    service!!.getSupportedNodeTypes()
+                        .map { type -> Triple(plugin, type, service.getFeatures(type)) }
                 }
                 .forEach { (plugin, type, featuresList) ->
                     features.getOrPut(type) { mutableListOf() }.addAll(featuresList.map { it to plugin })
                 }
 
-            return features
+            return Collections.synchronizedMap(features)
         }
 
         val log: Logger = LoggerFactory.getLogger(FeatureManager::class.java)
     }
+
+    data class Subscriber(val plugin: TezrokPlugin, val handler: Function<NodeEvent, EventResult>)
 }

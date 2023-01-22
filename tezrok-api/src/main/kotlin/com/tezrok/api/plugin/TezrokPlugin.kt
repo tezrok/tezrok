@@ -1,6 +1,6 @@
-package com.tezrok.api
+package com.tezrok.api.plugin
 
-import com.tezrok.api.feature.InternalFeatureSupport
+import com.tezrok.api.service.TezrokService
 
 /**
  * Basic interface for all plugins
@@ -27,7 +27,7 @@ interface TezrokPlugin {
     fun <T : TezrokService> getService(clazz: Class<T>): T?
 
     /**
-     * Sets [InternalFeatureSupport] for the plugin
+     * Sets [InternalPluginSupport] for the plugin
      */
-    fun setInternalFeatureSupport(internalFeatureSupport: InternalFeatureSupport)
+    fun setInternalFeatureSupport(internalPluginSupport: InternalPluginSupport)
 }

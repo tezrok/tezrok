@@ -5,7 +5,6 @@ import com.tezrok.api.tree.NodeProperties
 import com.tezrok.api.tree.NodeType
 import com.tezrok.api.tree.PropertyName
 import com.tezrok.core.BaseTest
-import com.tezrok.core.util.AuthorType
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

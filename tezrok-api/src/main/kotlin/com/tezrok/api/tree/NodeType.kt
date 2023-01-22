@@ -1,6 +1,6 @@
 package com.tezrok.api.tree
 
-import com.tezrok.api.TezrokService
+import com.tezrok.api.service.TezrokService
 
 /**
  * Node type definition and known types

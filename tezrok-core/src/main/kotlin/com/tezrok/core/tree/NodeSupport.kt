@@ -1,12 +1,12 @@
 package com.tezrok.core.tree
 
+import com.tezrok.api.plugin.TezrokPlugin
 import com.tezrok.api.error.NodeAlreadyExistsException
 import com.tezrok.api.error.TezrokException
 import com.tezrok.api.event.EventResult
 import com.tezrok.api.event.EventType
 import com.tezrok.api.event.NodeEvent
 import com.tezrok.api.event.ResultType
-import com.tezrok.api.feature.InternalFeatureSupport
 import com.tezrok.api.tree.*
 import com.tezrok.core.feature.FeatureManager
 import com.tezrok.core.util.*
@@ -29,18 +29,18 @@ internal class NodeSupport(
     private val nodeRepo: NodeRepository,
     private val featureManager: FeatureManager,
     private val propertyValueManager: PropertyValueManager
-) : InternalFeatureSupport {
+) {
     private val lastIdCounter = AtomicLong(nodeRepo.getLastId())
     private val nodes: MutableMap<Node, MutableList<Node>> = HashMap()
     private val lock = ReentrantReadWriteLock()
     private val writeLock = lock.writeLock()
     private val readLock = lock.readLock()
     private val root = lazy { createRoot() }
-    private val operations = ArrayDeque<Pair<String, String>>()
+    private val operations = ArrayDeque<Pair<String, AuthorType>>()
 
     init {
         log.info("NodeSupport initialized")
-        featureManager.setInternalFeatureSupport(this)
+        featureManager.setNodeSupport(this)
         propertyValueManager.nodeSupport = this
     }
 
@@ -149,7 +149,7 @@ internal class NodeSupport(
             val nodeProps = NodePropertiesImpl(rootElem.properties, propertyValueManager)
             val node = NodeIml(rootElem.id, NodeType.Root, null, nodeProps, this)
             nodeProps.setNode(node)
-            node.author(AuthorType.System)
+            node.author(AuthorTypeName.System)
             node.authorType(AuthorType.System)
             val now = OffsetDateTime.now()
             node.createdAt(now)
@@ -176,19 +176,19 @@ internal class NodeSupport(
 
     private fun getListByParent(parent: Node): List<Node> = (nodes[parent] as List<Node>? ?: emptyList())
 
-    override fun getNextNodeId(): Long = lastIdCounter.incrementAndGet()
+    fun getNextNodeId(): Long = lastIdCounter.incrementAndGet()
 
-    override fun applyNode(node: Node): Boolean {
+    fun applyNode(node: Node): Boolean {
         TODO("Not yet implemented")
     }
 
-    override fun subscribeOnEvent(type: NodeType, handler: Function<NodeEvent, EventResult>) =
-        featureManager.subscribeOnEvent(type, handler)
+    fun subscribeOnEvent(plugin: TezrokPlugin, type: NodeType, handler: Function<NodeEvent, EventResult>) =
+        featureManager.subscribeOnEvent(plugin, type, handler)
 
-    override fun unsubscribeOnEvent(handler: Function<NodeEvent, EventResult>): Boolean =
+    fun unsubscribeOnEvent(handler: Function<NodeEvent, EventResult>): Boolean =
         featureManager.unsubscribeOnEvent(handler)
 
-    fun startOperation(type: String, author: String): NodeOperation {
+    fun startOperation(type: AuthorType, author: String): NodeOperation {
         val authorType = author to type
         writeLock.runIn {
             operations.add(authorType)
@@ -199,7 +199,7 @@ internal class NodeSupport(
         return object : NodeOperation {
             override val author: String
                 get() = author
-            override val type: String
+            override val type: AuthorType
                 get() = type
 
             override fun stop() {
@@ -216,7 +216,7 @@ internal class NodeSupport(
         }
     }
 
-    private fun getOperation(): Pair<String, String> =
+    private fun getOperation(): Pair<String, AuthorType> =
         operations.lastOrNull() ?: throw TezrokException("Node operation not started")
 
     private fun createNode(parent: Node, nodeElem: NodeElem): Node {
@@ -235,3 +235,12 @@ internal class NodeSupport(
 
 private fun Node.canAddDuplicateNode(): Boolean =
     getProperties().getBooleanProperty(PropertyName.DuplicateNode, false)
+
+/**
+ * Author's type of node operation
+ */
+internal enum class AuthorType {
+    System,
+    User,
+    Plugin
+}

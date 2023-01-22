@@ -1,7 +1,5 @@
 package com.tezrok.core.util
 
-internal object AuthorType {
+internal object AuthorTypeName {
     const val System = "System"
-    const val Plugin = "Plugin"
-    const val User = "User"
 }

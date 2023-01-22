@@ -1,4 +1,4 @@
-package com.tezrok.api.feature
+package com.tezrok.api.plugin
 
 import com.tezrok.api.event.EventResult
 import com.tezrok.api.event.NodeEvent
@@ -7,9 +7,9 @@ import com.tezrok.api.tree.NodeType
 import java.util.function.Function
 
 /**
- * Used by a [Feature] to access internal [Node] functionality
+ * Used by a Plugin's [Feature] to access internal [Node] functionality
  */
-interface InternalFeatureSupport {
+interface InternalPluginSupport {
     /**
      * Returns next unique id for the node
      */

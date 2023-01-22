@@ -4,10 +4,10 @@ import com.tezrok.api.tree.Node
 import com.tezrok.api.tree.NodeProperties
 import com.tezrok.core.feature.FeatureManager
 import com.tezrok.core.plugin.PluginManager
+import com.tezrok.core.tree.AuthorType
 import com.tezrok.core.tree.NodeManagerImpl
 import com.tezrok.core.tree.PropertyValueManager
 import com.tezrok.core.tree.repo.file.FileNodeRepository
-import com.tezrok.core.util.AuthorType
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertNotNull

@@ -1,7 +1,7 @@
 package com.tezrok.api.tree
 
-import com.tezrok.api.FileRef
-import com.tezrok.api.TezrokService
+import com.tezrok.api.service.FileRef
+import com.tezrok.api.service.TezrokService
 import com.tezrok.api.error.TezrokException
 
 /**

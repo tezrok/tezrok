@@ -27,9 +27,4 @@ interface Feature {
      * Called when node event occurs
      */
     fun onNodeEvent(event: NodeEvent): EventResult
-
-    /**
-     * Sets [InternalFeatureSupport] for the feature
-     */
-    fun setInternalFeatureSupport(internalFeatureSupport: InternalFeatureSupport)
 }

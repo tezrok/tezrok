@@ -1,10 +1,10 @@
 package com.tezrok.core.plugin
 
-import com.tezrok.api.TezrokPlugin
-import com.tezrok.api.TezrokService
+import com.tezrok.api.plugin.TezrokPlugin
+import com.tezrok.api.service.TezrokService
 import com.tezrok.api.event.EventResult
 import com.tezrok.api.feature.FeatureService
-import com.tezrok.api.feature.InternalFeatureSupport
+import com.tezrok.api.plugin.InternalPluginSupport
 import com.tezrok.api.tree.Node
 import com.tezrok.api.tree.NodeType
 import com.tezrok.core.service.CoreFeatureService
@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory
  * @since 1.0
  */
 internal class CoreTezrokPlugin : TezrokPlugin {
-    private lateinit var internalFeatureSupport: InternalFeatureSupport
+    private lateinit var internalPluginSupport: InternalPluginSupport
     private val featureService = lazy { CoreFeatureService() }
 
     init {
@@ -41,10 +41,10 @@ internal class CoreTezrokPlugin : TezrokPlugin {
             else -> null
         }
 
-    override fun setInternalFeatureSupport(internalFeatureSupport: InternalFeatureSupport) {
-        this.internalFeatureSupport = internalFeatureSupport
+    override fun setInternalFeatureSupport(internalPluginSupport: InternalPluginSupport) {
+        this.internalPluginSupport = internalPluginSupport
 
-        this.internalFeatureSupport.subscribeOnEvent(NodeType.Any) { event ->
+        this.internalPluginSupport.subscribeOnEvent(NodeType.Any) { event ->
             log.info("Event {} received", event)
             EventResult.Continue
         }

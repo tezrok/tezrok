@@ -1,4 +1,4 @@
-package com.tezrok.api
+package com.tezrok.api.service
 
 /**
  * Basic interface for all services

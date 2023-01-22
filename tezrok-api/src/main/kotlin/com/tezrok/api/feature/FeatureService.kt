@@ -1,6 +1,6 @@
 package com.tezrok.api.feature
 
-import com.tezrok.api.TezrokService
+import com.tezrok.api.service.TezrokService
 import com.tezrok.api.tree.NodeType
 
 /**

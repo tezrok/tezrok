@@ -1,6 +1,6 @@
 package com.tezrok.core.tree
 
-import com.tezrok.api.TezrokService
+import com.tezrok.api.service.TezrokService
 import com.tezrok.api.error.TezrokException
 import com.tezrok.api.tree.*
 import java.util.concurrent.ConcurrentHashMap

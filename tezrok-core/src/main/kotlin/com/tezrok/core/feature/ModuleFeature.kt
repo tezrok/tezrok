@@ -4,7 +4,6 @@ import com.tezrok.api.event.EventResult
 import com.tezrok.api.event.EventType
 import com.tezrok.api.event.NodeEvent
 import com.tezrok.api.feature.Feature
-import com.tezrok.api.feature.InternalFeatureSupport
 import com.tezrok.api.tree.Node
 import com.tezrok.api.tree.NodeType
 import org.apache.commons.lang3.Validate
@@ -16,8 +15,6 @@ import org.apache.commons.lang3.Validate
  * @since 1.0
  */
 internal class ModuleFeature : Feature {
-    private lateinit var internalFeatureSupport: InternalFeatureSupport
-
     override fun getName(): String = "CoreModuleFeature"
 
     override fun getDescription(): String = "Implementation of Feature for Module"
@@ -45,9 +42,5 @@ internal class ModuleFeature : Feature {
         if (node.getChild("Features") == null) {
             node.add("Services", NodeType.Services)
         }
-    }
-
-    override fun setInternalFeatureSupport(internalFeatureSupport: InternalFeatureSupport) {
-        this.internalFeatureSupport = internalFeatureSupport
     }
 }

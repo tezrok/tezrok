@@ -3,6 +3,7 @@ package com.tezrok.core.util
 import com.tezrok.api.tree.Node
 import com.tezrok.api.tree.NodeElem
 import com.tezrok.api.tree.PropertyName
+import com.tezrok.core.tree.AuthorType
 import java.time.OffsetDateTime
 import java.util.*
 
@@ -56,8 +57,8 @@ internal fun Node.author(): String? =
 internal fun Node.author(value: String) =
     getProperties().setProperty(PropertyName.Author, value)
 
-internal fun Node.authorType(): String? =
-    getProperties().getProperty(PropertyName.AuthorType)
+internal fun Node.authorType(): AuthorType? =
+    getProperties().getProperty(PropertyName.AuthorType, AuthorType::class.java)
 
-internal fun Node.authorType(value: String) =
+internal fun Node.authorType(value: AuthorType) =
     getProperties().setProperty(PropertyName.AuthorType, value)

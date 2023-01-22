@@ -3,7 +3,7 @@ package com.tezrok.api.event
 /**
  * Handler result type of [NodeEvent]
  */
-data class EventResult(val type: ResultType, val message: String? = null) {
+open class EventResult(val type: ResultType, val message: String? = null) {
     companion object {
         @JvmField
         val Continue = of(ResultType.CONTINUE)

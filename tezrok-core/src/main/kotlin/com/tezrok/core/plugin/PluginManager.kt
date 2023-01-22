@@ -1,6 +1,6 @@
 package com.tezrok.core.plugin
 
-import com.tezrok.api.TezrokPlugin
+import com.tezrok.api.plugin.TezrokPlugin
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*

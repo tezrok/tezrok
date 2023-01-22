@@ -1,6 +1,6 @@
 package com.tezrok.api.tree
 
-import com.tezrok.api.TezrokService
+import com.tezrok.api.service.TezrokService
 
 /**
  * Service provider for [PropertyValue]

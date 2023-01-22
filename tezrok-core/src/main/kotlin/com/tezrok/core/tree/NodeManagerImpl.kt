@@ -44,7 +44,7 @@ internal class NodeManagerImpl(
         node.getChildren().forEach { prepareNodesToRepo(node.getId(), it) }
     }
 
-    fun startOperation(type: String, author: String): NodeOperation =
+    fun startOperation(type: AuthorType, author: String): NodeOperation =
         nodeSupport.startOperation(type, author)
 
     override fun findNodeByPath(path: String): Node? = nodeSupport.findNodeByPath(path)
