@@ -1,9 +1,11 @@
-package com.tezrok.core.type
+package com.tezrok.api.type
+
+import com.tezrok.api.service.TezrokService
 
 /**
  * All type definitions
  */
-interface TypeFolder {
+interface TypeFolder : TezrokService {
     /**
      * Returns all [TypeDef]s
      */

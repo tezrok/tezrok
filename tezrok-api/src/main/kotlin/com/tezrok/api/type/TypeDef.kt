@@ -1,4 +1,4 @@
-package com.tezrok.core.type
+package com.tezrok.api.type
 
 /**
  * Type definition - standard structure of type
