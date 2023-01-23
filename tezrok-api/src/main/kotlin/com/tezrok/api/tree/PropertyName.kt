@@ -5,28 +5,11 @@ package com.tezrok.api.tree
  *
  * If property starts with underscore, it is considered as hidden and not shown in UI
  */
-data class PropertyName(val name: String, val description: String) {
+class PropertyName private constructor(val name: String, val description: String) {
     /**
      * Returns true if property is system (known) property
      */
     fun isSystem(): Boolean = cache.containsKey(name)
-
-    override fun toString(): String = "PropertyName(name='$name', description='$description')"
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as PropertyName
-
-        if (name != other.name) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return name.hashCode()
-    }
 
     // TODO: add validation of name
     companion object {
@@ -129,4 +112,16 @@ data class PropertyName(val name: String, val description: String) {
 
         private val cache: Map<String, PropertyName> = All.associateBy { it.name }
     }
+
+    override fun toString(): String = "PropertyName(name='$name', description='$description')"
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is PropertyName) return false
+        if (name != other.name) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int = name.hashCode()
 }

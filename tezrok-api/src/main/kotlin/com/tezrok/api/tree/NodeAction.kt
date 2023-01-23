@@ -1,6 +1,6 @@
 package com.tezrok.api.tree
 
-data class NodeAction(val name: String) {
+class NodeAction private constructor(val name: String) {
     companion object {
         /**
          * Action of adding or creating
@@ -27,4 +27,14 @@ data class NodeAction(val name: String) {
 
         private val cache: Map<String, NodeAction> = All.associateBy { it.name }
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is NodeAction) return false
+        if (name != other.name) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int = name.hashCode()
 }

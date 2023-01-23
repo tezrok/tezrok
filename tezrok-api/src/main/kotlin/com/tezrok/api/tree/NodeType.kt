@@ -7,22 +7,7 @@ import com.tezrok.api.service.TezrokService
  *
  * Plugin can define own types and public [TezrokService]
  */
-data class NodeType(val name: String, val description: String) {
-    override fun toString(): String = "NodeType(name='$name', description='$description')"
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is NodeType) return false
-
-        if (name != other.name) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return name.hashCode()
-    }
-
+class NodeType private constructor(val name: String, val description: String) {
     companion object {
         @JvmField
         val Any = of("Any", "Any node")
@@ -82,8 +67,10 @@ data class NodeType(val name: String, val description: String) {
          * All known types
          */
         @JvmField
-        val All: Set<NodeType> = hashSetOf(Any, Root, Module, Services, Types, CodeRoot,
-            Item, Directory, File, Type)
+        val All: Set<NodeType> = hashSetOf(
+            Any, Root, Module, Services, Types, CodeRoot,
+            Item, Directory, File, Type
+        )
 
         /**
          * Creates new [NodeType]
@@ -102,4 +89,16 @@ data class NodeType(val name: String, val description: String) {
 
         private val cache: Map<String, NodeType> = All.associateBy { it.name }
     }
+
+    override fun toString(): String = "NodeType(name='$name', description='$description')"
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is NodeType) return false
+        if (name != other.name) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int = name.hashCode()
 }
