@@ -6,7 +6,7 @@ import com.tezrok.api.event.NodeEvent
 import com.tezrok.api.event.ResultType
 import com.tezrok.api.feature.Feature
 import com.tezrok.api.feature.FeatureService
-import com.tezrok.api.tree.NodeType
+import com.tezrok.api.node.NodeType
 import com.tezrok.core.plugin.PluginInternalPluginSupport
 import com.tezrok.core.plugin.PluginManager
 import com.tezrok.core.tree.AuthorType

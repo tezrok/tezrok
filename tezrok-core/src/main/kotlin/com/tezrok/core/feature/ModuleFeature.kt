@@ -4,8 +4,8 @@ import com.tezrok.api.event.EventResult
 import com.tezrok.api.event.EventType
 import com.tezrok.api.event.NodeEvent
 import com.tezrok.api.feature.Feature
-import com.tezrok.api.tree.Node
-import com.tezrok.api.tree.NodeType
+import com.tezrok.api.node.Node
+import com.tezrok.api.node.NodeType
 import org.apache.commons.lang3.Validate
 
 /**

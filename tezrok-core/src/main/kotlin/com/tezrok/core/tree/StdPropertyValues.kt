@@ -1,8 +1,8 @@
 package com.tezrok.core.tree
 
-import com.tezrok.api.tree.Node
-import com.tezrok.api.tree.NodeRef
-import com.tezrok.api.tree.PropertyValue
+import com.tezrok.api.node.Node
+import com.tezrok.api.node.NodeRef
+import com.tezrok.api.node.PropertyValue
 import com.tezrok.core.util.JsonUtil
 import java.time.OffsetDateTime
 import java.util.*

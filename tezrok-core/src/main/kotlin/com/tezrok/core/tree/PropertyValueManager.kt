@@ -1,9 +1,9 @@
 package com.tezrok.core.tree
 
 import com.tezrok.api.error.TezrokException
-import com.tezrok.api.tree.NodeRef
-import com.tezrok.api.tree.PropertyValue
-import com.tezrok.api.tree.PropertyValueService
+import com.tezrok.api.node.NodeRef
+import com.tezrok.api.node.PropertyValue
+import com.tezrok.api.node.PropertyValueService
 import com.tezrok.core.plugin.PluginManager
 import java.time.OffsetDateTime
 import java.util.List

@@ -1,7 +1,7 @@
 package com.tezrok.core.tree.repo.file
 
-import com.tezrok.api.tree.NodeElem
-import com.tezrok.api.tree.NodeRepository
+import com.tezrok.api.node.NodeElem
+import com.tezrok.api.node.NodeRepository
 import com.tezrok.core.util.JsonUtil
 import org.apache.commons.lang3.Validate
 import java.io.File

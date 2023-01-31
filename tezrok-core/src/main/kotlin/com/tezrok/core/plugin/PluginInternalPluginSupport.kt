@@ -4,8 +4,8 @@ import com.tezrok.api.plugin.TezrokPlugin
 import com.tezrok.api.event.EventResult
 import com.tezrok.api.event.NodeEvent
 import com.tezrok.api.plugin.InternalPluginSupport
-import com.tezrok.api.tree.Node
-import com.tezrok.api.tree.NodeType
+import com.tezrok.api.node.Node
+import com.tezrok.api.node.NodeType
 import com.tezrok.core.tree.NodeSupport
 import java.util.function.Function
 

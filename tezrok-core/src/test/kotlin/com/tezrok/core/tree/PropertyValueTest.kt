@@ -1,8 +1,8 @@
 package com.tezrok.core.tree
 
-import com.tezrok.api.tree.NodeRef
-import com.tezrok.api.tree.NodeType
-import com.tezrok.api.tree.PropertyName
+import com.tezrok.api.node.NodeRef
+import com.tezrok.api.node.NodeType
+import com.tezrok.api.node.PropertyName
 import com.tezrok.core.BaseTest
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertEquals

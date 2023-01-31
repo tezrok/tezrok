@@ -1,7 +1,7 @@
 package com.tezrok.api.event
 
 import org.apache.commons.lang3.Validate
-import com.tezrok.api.tree.Node
+import com.tezrok.api.node.Node
 
 /**
  * Event type of [Node]

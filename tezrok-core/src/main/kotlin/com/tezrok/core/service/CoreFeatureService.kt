@@ -2,8 +2,8 @@ package com.tezrok.core.service
 
 import com.tezrok.api.feature.Feature
 import com.tezrok.api.feature.FeatureService
-import com.tezrok.api.tree.Node
-import com.tezrok.api.tree.NodeType
+import com.tezrok.api.node.Node
+import com.tezrok.api.node.NodeType
 import com.tezrok.core.feature.ModuleFeature
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

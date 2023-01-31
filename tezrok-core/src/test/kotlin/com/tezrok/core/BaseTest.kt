@@ -1,7 +1,7 @@
 package com.tezrok.core
 
-import com.tezrok.api.tree.Node
-import com.tezrok.api.tree.NodeProperties
+import com.tezrok.api.node.Node
+import com.tezrok.api.node.NodeProperties
 import com.tezrok.core.feature.FeatureManager
 import com.tezrok.core.plugin.PluginManager
 import com.tezrok.core.tree.AuthorType

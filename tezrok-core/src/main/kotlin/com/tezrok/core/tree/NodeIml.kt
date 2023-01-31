@@ -1,6 +1,6 @@
 package com.tezrok.core.tree
 
-import com.tezrok.api.tree.*
+import com.tezrok.api.node.*
 import com.tezrok.core.util.calcPath
 import java.util.stream.Stream
 

@@ -1,4 +1,4 @@
-package com.tezrok.api.tree
+package com.tezrok.api.node
 
 /**
  * Name of the property

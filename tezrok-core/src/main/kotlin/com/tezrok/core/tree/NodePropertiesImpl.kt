@@ -2,7 +2,7 @@ package com.tezrok.core.tree
 
 import com.tezrok.api.service.TezrokService
 import com.tezrok.api.error.TezrokException
-import com.tezrok.api.tree.*
+import com.tezrok.api.node.*
 import java.util.concurrent.ConcurrentHashMap
 
 /**

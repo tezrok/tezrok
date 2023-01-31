@@ -1,4 +1,4 @@
-package com.tezrok.api.tree
+package com.tezrok.api.node
 
 import com.tezrok.api.service.FileRef
 import com.tezrok.api.service.TezrokService

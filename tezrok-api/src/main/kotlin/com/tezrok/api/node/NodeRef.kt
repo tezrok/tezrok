@@ -1,4 +1,4 @@
-package com.tezrok.api.tree
+package com.tezrok.api.node
 
 /**
  * Reference to the node

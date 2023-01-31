@@ -1,7 +1,7 @@
 package com.tezrok.api.feature
 
 import com.tezrok.api.service.TezrokService
-import com.tezrok.api.tree.NodeType
+import com.tezrok.api.node.NodeType
 
 /**
  * Entry point for all features

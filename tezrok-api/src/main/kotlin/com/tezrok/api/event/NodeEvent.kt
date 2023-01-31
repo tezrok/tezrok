@@ -1,7 +1,7 @@
 package com.tezrok.api.event
 
-import com.tezrok.api.tree.Node
-import com.tezrok.api.tree.NodeType
+import com.tezrok.api.node.Node
+import com.tezrok.api.node.NodeType
 
 /**
  * Base event class of [Node]

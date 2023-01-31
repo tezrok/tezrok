@@ -1,8 +1,8 @@
 package com.tezrok.core.tree.repo.file
 
-import com.tezrok.api.tree.NodeElem
-import com.tezrok.api.tree.NodeType
-import com.tezrok.api.tree.PropertyName
+import com.tezrok.api.node.NodeElem
+import com.tezrok.api.node.NodeType
+import com.tezrok.api.node.PropertyName
 
 /**
  * Dto for file repository purposes

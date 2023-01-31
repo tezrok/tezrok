@@ -5,8 +5,8 @@ import com.tezrok.api.service.TezrokService
 import com.tezrok.api.event.EventResult
 import com.tezrok.api.feature.FeatureService
 import com.tezrok.api.plugin.InternalPluginSupport
-import com.tezrok.api.tree.Node
-import com.tezrok.api.tree.NodeType
+import com.tezrok.api.node.Node
+import com.tezrok.api.node.NodeType
 import com.tezrok.core.service.CoreFeatureService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

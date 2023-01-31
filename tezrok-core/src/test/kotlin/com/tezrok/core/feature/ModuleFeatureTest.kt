@@ -1,6 +1,6 @@
 package com.tezrok.core.feature
 
-import com.tezrok.api.tree.NodeType
+import com.tezrok.api.node.NodeType
 import com.tezrok.core.BaseTest
 import com.tezrok.core.plugin.CoreTezrokPlugin
 import com.tezrok.core.tree.AuthorType

@@ -1,8 +1,8 @@
 package com.tezrok.core.tree
 
-import com.tezrok.api.tree.Node
-import com.tezrok.api.tree.NodeManager
-import com.tezrok.api.tree.NodeRepository
+import com.tezrok.api.node.Node
+import com.tezrok.api.node.NodeManager
+import com.tezrok.api.node.NodeRepository
 import com.tezrok.core.feature.FeatureManager
 import com.tezrok.core.tree.repo.file.FileNodeRepository
 import com.tezrok.core.util.toElem

@@ -1,6 +1,6 @@
 package com.tezrok.core.tree
 
-import com.tezrok.api.tree.PropertyName
+import com.tezrok.api.node.PropertyName
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import kotlin.reflect.KProperty

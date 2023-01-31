@@ -1,7 +1,7 @@
 package com.tezrok.core.tree
 
-import com.tezrok.api.tree.Node
-import com.tezrok.api.tree.NodeRef
+import com.tezrok.api.node.Node
+import com.tezrok.api.node.NodeRef
 
 /**
  * Reference to the node

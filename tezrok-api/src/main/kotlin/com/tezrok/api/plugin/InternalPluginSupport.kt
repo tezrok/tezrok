@@ -2,8 +2,8 @@ package com.tezrok.api.plugin
 
 import com.tezrok.api.event.EventResult
 import com.tezrok.api.event.NodeEvent
-import com.tezrok.api.tree.Node
-import com.tezrok.api.tree.NodeType
+import com.tezrok.api.node.Node
+import com.tezrok.api.node.NodeType
 import java.util.function.Function
 
 /**
