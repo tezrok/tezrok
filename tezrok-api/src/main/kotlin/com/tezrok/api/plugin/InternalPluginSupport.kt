@@ -4,6 +4,7 @@ import com.tezrok.api.event.EventResult
 import com.tezrok.api.event.NodeEvent
 import com.tezrok.api.node.Node
 import com.tezrok.api.node.NodeType
+import com.tezrok.api.service.TezrokService
 import java.util.function.Function
 
 /**
@@ -16,13 +17,6 @@ interface InternalPluginSupport {
     fun getNextNodeId(): Long
 
     /**
-     * Apply some internal changes to the [Node]
-     *
-     * TODO: Add more information
-     */
-    fun applyNode(node: Node): Boolean
-
-    /**
      * Add subscriber to the event
      */
     fun subscribeOnEvent(type: NodeType, handler: Function<NodeEvent, EventResult>)
@@ -31,4 +25,9 @@ interface InternalPluginSupport {
      * Remove subscriber
      */
     fun unsubscribeOnEvent(handler: Function<NodeEvent, EventResult>): Boolean
+
+    /**
+     * Set service for the node
+     */
+    fun setService(node: Node, service: TezrokService): Boolean
 }

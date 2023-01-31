@@ -8,6 +8,7 @@ import com.tezrok.api.event.EventType
 import com.tezrok.api.event.NodeEvent
 import com.tezrok.api.event.ResultType
 import com.tezrok.api.node.*
+import com.tezrok.api.service.TezrokService
 import com.tezrok.core.feature.FeatureManager
 import com.tezrok.core.util.*
 import com.tezrok.core.util.author
@@ -178,10 +179,6 @@ internal class NodeSupport(
 
     fun getNextNodeId(): Long = lastIdCounter.incrementAndGet()
 
-    fun applyNode(node: Node): Boolean {
-        TODO("Not yet implemented")
-    }
-
     fun subscribeOnEvent(plugin: TezrokPlugin, type: NodeType, handler: Function<NodeEvent, EventResult>) =
         featureManager.subscribeOnEvent(plugin, type, handler)
 
@@ -226,6 +223,10 @@ internal class NodeSupport(
         val newNode = NodeIml(id, nodeType, parent, nodeProps, this@NodeSupport)
         nodeProps.setNode(newNode)
         return newNode
+    }
+
+    fun setService(node: Node, service: TezrokService): Boolean {
+        TODO("Not yet implemented")
     }
 
     private companion object {

@@ -6,6 +6,7 @@ import com.tezrok.api.event.NodeEvent
 import com.tezrok.api.plugin.InternalPluginSupport
 import com.tezrok.api.node.Node
 import com.tezrok.api.node.NodeType
+import com.tezrok.api.service.TezrokService
 import com.tezrok.core.tree.NodeSupport
 import java.util.function.Function
 
@@ -15,11 +16,12 @@ internal class PluginInternalPluginSupport(
 ) : InternalPluginSupport {
     override fun getNextNodeId(): Long = support.getNextNodeId()
 
-    override fun applyNode(node: Node): Boolean = support.applyNode(node)
-
     override fun subscribeOnEvent(type: NodeType, handler: Function<NodeEvent, EventResult>) =
         support.subscribeOnEvent(plugin, type, handler)
 
     override fun unsubscribeOnEvent(handler: Function<NodeEvent, EventResult>): Boolean =
         support.unsubscribeOnEvent(handler)
+
+    override fun setService(node: Node, service: TezrokService): Boolean =
+        support.setService(node, service)
 }

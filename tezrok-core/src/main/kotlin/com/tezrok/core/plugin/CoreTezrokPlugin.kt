@@ -44,6 +44,8 @@ internal class CoreTezrokPlugin : TezrokPlugin {
     override fun setInternalPluginSupport(internalPluginSupport: InternalPluginSupport) {
         this.internalPluginSupport = internalPluginSupport
 
+        featureService.value.setInternalPluginSupport(internalPluginSupport)
+
         this.internalPluginSupport.subscribeOnEvent(NodeType.Any) { event ->
             log.info("Event {} received", event)
             EventResult.Continue
