@@ -6,7 +6,7 @@ import com.tezrok.api.event.NodeEvent
 import com.tezrok.api.feature.Feature
 import com.tezrok.api.node.NodeType
 import com.tezrok.api.plugin.InternalPluginSupport
-import com.tezrok.api.service.TezrokService
+import com.tezrok.core.type.CoreTypeFolder
 
 internal class TypeFeature : Feature {
     internal lateinit var pluginSupport: InternalPluginSupport
@@ -22,8 +22,7 @@ internal class TypeFeature : Feature {
             val node = event.node!!
 
             if (node.getType() == NodeType.Types) {
-                // TODO: set implementation of TypeFolder
-                pluginSupport.setService(node, TezrokService.Empty)
+                pluginSupport.setService(node, CoreTypeFolder())
             }
         }
 
