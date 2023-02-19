@@ -1,4 +1,4 @@
-package com.tezrok.core.tree
+package com.tezrok.core.node
 
 import com.tezrok.api.service.TezrokService
 import com.tezrok.api.error.TezrokException

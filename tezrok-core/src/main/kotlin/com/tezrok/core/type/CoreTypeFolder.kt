@@ -1,13 +1,15 @@
 package com.tezrok.core.type
 
 import com.tezrok.api.error.TezrokException
+import com.tezrok.api.node.Node
+import com.tezrok.api.node.Nodeable
 import com.tezrok.api.type.TypeDef
 import com.tezrok.api.type.TypeFolder
 
 /**
  * Implementation of [TypeFolder]
  */
-internal class CoreTypeFolder : TypeFolder {
+internal class CoreTypeFolder : TypeFolder, Nodeable {
     private val types: MutableList<TypeDef> = mutableListOf()
 
     @Synchronized
@@ -26,5 +28,9 @@ internal class CoreTypeFolder : TypeFolder {
     @Synchronized
     override fun removeType(type: TypeDef): Boolean {
         return types.remove(type)
+    }
+
+    override fun asNode(): Node {
+        TODO("Not yet implemented")
     }
 }

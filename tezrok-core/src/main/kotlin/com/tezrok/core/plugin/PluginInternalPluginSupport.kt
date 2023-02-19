@@ -7,7 +7,7 @@ import com.tezrok.api.plugin.InternalPluginSupport
 import com.tezrok.api.node.Node
 import com.tezrok.api.node.NodeType
 import com.tezrok.api.service.TezrokService
-import com.tezrok.core.tree.NodeSupport
+import com.tezrok.core.node.NodeSupport
 import java.util.function.Function
 
 internal class PluginInternalPluginSupport(

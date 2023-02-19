@@ -1,10 +1,10 @@
-package com.tezrok.core.tree
+package com.tezrok.core.node
 
 import com.tezrok.api.node.Node
 import com.tezrok.api.node.NodeManager
 import com.tezrok.api.node.NodeRepository
 import com.tezrok.core.feature.FeatureManager
-import com.tezrok.core.tree.repo.file.FileNodeRepository
+import com.tezrok.core.node.repo.file.FileNodeRepository
 import com.tezrok.core.util.toElem
 import org.slf4j.LoggerFactory
 import java.util.stream.Stream

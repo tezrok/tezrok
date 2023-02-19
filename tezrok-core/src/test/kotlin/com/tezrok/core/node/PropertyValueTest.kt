@@ -1,4 +1,4 @@
-package com.tezrok.core.tree
+package com.tezrok.core.node
 
 import com.tezrok.api.node.NodeRef
 import com.tezrok.api.node.NodeType

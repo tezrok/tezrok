@@ -9,9 +9,9 @@ import com.tezrok.api.feature.FeatureService
 import com.tezrok.api.node.NodeType
 import com.tezrok.core.plugin.PluginInternalPluginSupport
 import com.tezrok.core.plugin.PluginManager
-import com.tezrok.core.tree.AuthorType
-import com.tezrok.core.tree.NodeManagerImpl
-import com.tezrok.core.tree.NodeSupport
+import com.tezrok.core.node.AuthorType
+import com.tezrok.core.node.NodeManagerImpl
+import com.tezrok.core.node.NodeSupport
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*

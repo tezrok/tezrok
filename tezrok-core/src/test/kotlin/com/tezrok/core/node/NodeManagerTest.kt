@@ -1,9 +1,9 @@
-package com.tezrok.core.tree
+package com.tezrok.core.node
 
 import com.tezrok.api.error.NodeAlreadyExistsException
 import com.tezrok.api.node.NodeType
 import com.tezrok.core.BaseTest
-import com.tezrok.core.tree.repo.file.FileNodeElem
+import com.tezrok.core.node.repo.file.FileNodeElem
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach

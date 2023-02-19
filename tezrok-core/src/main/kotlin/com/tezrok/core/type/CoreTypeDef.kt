@@ -11,7 +11,7 @@ internal class CoreTypeDef(private val name: String) : TypeDef {
     private val fields: MutableList<TypeField> = mutableListOf()
 
     @Synchronized
-    override fun getFields(): List<TypeField>  = fields.toList()
+    override fun getFields(): List<TypeField> = fields.toList()
 
     @Synchronized
     override fun addField(name: String): TypeField {

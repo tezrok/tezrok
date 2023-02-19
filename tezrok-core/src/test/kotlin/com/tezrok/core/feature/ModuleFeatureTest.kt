@@ -3,7 +3,7 @@ package com.tezrok.core.feature
 import com.tezrok.api.node.NodeType
 import com.tezrok.core.BaseTest
 import com.tezrok.core.plugin.CoreTezrokPlugin
-import com.tezrok.core.tree.AuthorType
+import com.tezrok.core.node.AuthorType
 import com.tezrok.core.util.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

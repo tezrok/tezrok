@@ -3,7 +3,7 @@ package com.tezrok.core.util
 import com.tezrok.api.node.Node
 import com.tezrok.api.node.NodeElem
 import com.tezrok.api.node.PropertyName
-import com.tezrok.core.tree.AuthorType
+import com.tezrok.core.node.AuthorType
 import java.time.OffsetDateTime
 import java.util.*
 

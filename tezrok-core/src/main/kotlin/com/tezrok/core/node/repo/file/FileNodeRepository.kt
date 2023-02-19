@@ -1,4 +1,4 @@
-package com.tezrok.core.tree.repo.file
+package com.tezrok.core.node.repo.file
 
 import com.tezrok.api.node.NodeElem
 import com.tezrok.api.node.NodeRepository

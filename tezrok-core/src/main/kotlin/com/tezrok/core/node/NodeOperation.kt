@@ -1,4 +1,4 @@
-package com.tezrok.core.tree
+package com.tezrok.core.node
 
 /**
  * Represents a current operation
