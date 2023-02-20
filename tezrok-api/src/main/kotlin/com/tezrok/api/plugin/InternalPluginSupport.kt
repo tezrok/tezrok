@@ -4,6 +4,7 @@ import com.tezrok.api.event.EventResult
 import com.tezrok.api.event.NodeEvent
 import com.tezrok.api.node.Node
 import com.tezrok.api.node.NodeType
+import com.tezrok.api.service.NodeService
 import com.tezrok.api.service.TezrokService
 import java.util.function.Function
 
@@ -28,6 +29,8 @@ interface InternalPluginSupport {
 
     /**
      * Set service for the node
+     *
+     * @see NodeService
      */
     fun setService(node: Node, service: TezrokService): Boolean
 }

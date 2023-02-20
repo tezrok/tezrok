@@ -13,4 +13,4 @@ interface TezrokService {
     }
 }
 
-internal fun TezrokService.isEmpty(): Boolean = this == TezrokService.Empty
+fun TezrokService.isEmpty(): Boolean = this == TezrokService.Empty

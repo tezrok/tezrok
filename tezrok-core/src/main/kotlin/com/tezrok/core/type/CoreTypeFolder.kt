@@ -2,14 +2,13 @@ package com.tezrok.core.type
 
 import com.tezrok.api.error.TezrokException
 import com.tezrok.api.node.Node
-import com.tezrok.api.node.Nodeable
 import com.tezrok.api.type.TypeDef
 import com.tezrok.api.type.TypeFolder
 
 /**
  * Implementation of [TypeFolder]
  */
-internal class CoreTypeFolder : TypeFolder, Nodeable {
+internal class CoreTypeFolder : TypeFolder {
     private val types: MutableList<TypeDef> = mutableListOf()
 
     @Synchronized

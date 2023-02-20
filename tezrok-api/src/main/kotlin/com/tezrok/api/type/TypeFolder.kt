@@ -1,11 +1,11 @@
 package com.tezrok.api.type
 
-import com.tezrok.api.service.TezrokService
+import com.tezrok.api.service.NodeService
 
 /**
  * All type definitions
  */
-interface TypeFolder : TezrokService {
+interface TypeFolder : NodeService {
     /**
      * Returns all [TypeDef]s
      */

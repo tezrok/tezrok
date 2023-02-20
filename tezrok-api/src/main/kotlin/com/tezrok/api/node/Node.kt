@@ -1,8 +1,8 @@
 package com.tezrok.api.node
 
-import java.util.stream.Stream
-
 import com.tezrok.api.error.NodeAlreadyExistsException
+import com.tezrok.api.service.NodeService
+import java.util.stream.Stream
 
 /**
  * Basic node interface
@@ -104,6 +104,11 @@ interface Node : Cloneable {
      * Returns true if node is root
      */
     fun isRoot(): Boolean = getType() == NodeType.Root
+
+    /**
+     * Returns attached service
+     */
+    fun <T : NodeService> asService(): T?
 
     /**
      * Return clone of the node

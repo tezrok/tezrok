@@ -1,6 +1,7 @@
 package com.tezrok.core.node
 
 import com.tezrok.api.node.*
+import com.tezrok.api.service.NodeService
 import com.tezrok.core.util.calcPath
 import java.util.stream.Stream
 
@@ -37,6 +38,10 @@ internal class NodeIml(
     override fun findNodeByPath(path: String): Node? = nodeSupport.findNodeByPath(this, path)
 
     override fun getProperties(): NodeProperties = properties
+
+    override fun <T : NodeService> asService(): T? {
+        TODO("Not yet implemented")
+    }
 
     override fun clone(): Node = nodeSupport.clone(this)
 
