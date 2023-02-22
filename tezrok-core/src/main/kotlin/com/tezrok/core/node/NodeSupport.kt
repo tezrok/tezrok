@@ -1,6 +1,5 @@
 package com.tezrok.core.node
 
-import com.tezrok.api.plugin.TezrokPlugin
 import com.tezrok.api.error.NodeAlreadyExistsException
 import com.tezrok.api.error.TezrokException
 import com.tezrok.api.event.EventResult
@@ -8,12 +7,11 @@ import com.tezrok.api.event.EventType
 import com.tezrok.api.event.NodeEvent
 import com.tezrok.api.event.ResultType
 import com.tezrok.api.node.*
+import com.tezrok.api.plugin.TezrokPlugin
+import com.tezrok.api.service.NodeService
 import com.tezrok.api.service.TezrokService
 import com.tezrok.core.feature.FeatureManager
 import com.tezrok.core.util.*
-import com.tezrok.core.util.author
-import com.tezrok.core.util.authorType
-import com.tezrok.core.util.calcPath
 import org.apache.commons.lang3.Validate
 import org.slf4j.LoggerFactory
 import java.time.OffsetDateTime
@@ -226,7 +224,12 @@ internal class NodeSupport(
     }
 
     fun setService(node: Node, service: TezrokService): Boolean {
-        TODO("Not yet implemented")
+        if (node is NodeIml && service is NodeService) {
+            node.service = service
+            return true
+        }
+        log.warn("Service {} cannot be set to node {}", service.javaClass.name, node)
+        return false
     }
 
     private companion object {

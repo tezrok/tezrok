@@ -15,6 +15,9 @@ internal class NodeIml(
     private val properties: NodeProperties,
     private val nodeSupport: NodeSupport
 ) : Node {
+    // TODO: think about serialization
+    internal var service: NodeService? = null
+
     override fun getId(): Long = id
 
     override fun getName(): String = properties.getStringProperty(PropertyName.Name, null)
