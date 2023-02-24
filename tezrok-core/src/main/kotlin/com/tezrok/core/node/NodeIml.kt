@@ -1,8 +1,15 @@
 package com.tezrok.core.node
 
+import com.tezrok.api.error.NodeAlreadyExistsException
+import com.tezrok.api.error.TezrokException
+import com.tezrok.api.event.EventType
+import com.tezrok.api.event.NodeEvent
+import com.tezrok.api.event.ResultType
 import com.tezrok.api.node.*
 import com.tezrok.api.service.NodeService
-import com.tezrok.core.util.calcPath
+import com.tezrok.core.util.*
+import org.slf4j.LoggerFactory
+import java.time.OffsetDateTime
 import java.util.stream.Stream
 
 /**
@@ -17,6 +24,7 @@ internal class NodeIml(
 ) : Node {
     // TODO: think about serialization
     internal var service: NodeService? = null
+    private val children: Lazy<MutableList<Node>> = lazy { nodeSupport.loadChildren(this) }
 
     override fun getId(): Long = id
 
@@ -28,15 +36,53 @@ internal class NodeIml(
 
     override fun getParent(): Node? = parentNode
 
-    override fun getRef(): NodeRef = nodeSupport.getNodeRef(this)
+    override fun getRef(): NodeRef = NodeRefImpl(getPath()) { path -> nodeSupport.findNodeByPath(path) }
 
-    override fun add(name: String, type: NodeType): Node = nodeSupport.add(this, name, type)
+    override fun add(name: String, type: NodeType): Node =
+        nodeSupport.writeLock {
+            if (!canAddDuplicateNode()) {
+                getChild(name)?.let { node ->
+                    throw NodeAlreadyExistsException(name, node.getPath())
+                }
+            }
+            val (author, authorType) = nodeSupport.getOperation()
+            val eventResult = nodeSupport.onNodeEvent(NodeEvent(EventType.PreAdd, type, this, null))
 
-    override fun remove(nodes: List<Node>): Boolean = nodeSupport.remove(this, nodes)
+            if (eventResult.type == ResultType.CANCEL) {
+                val message = if (eventResult.message.isNullOrBlank()) "Node cannot be added" else eventResult.message
+                throw TezrokException(message)
+            }
+            val newNode = nodeSupport.createNode(this, NodeElem.of(name, type))
+            newNode.author(author)
+            newNode.authorType(authorType)
+            val now = OffsetDateTime.now()
+            newNode.createdAt(now)
+            newNode.updatedAt(now)
+            // TODO: validate new node
+            children.value.add(newNode)
+            nodeSupport.onNodeEvent(NodeEvent(EventType.PostAdd, type, this, newNode))
 
-    override fun getChildren(): Stream<Node> = nodeSupport.getChildren(this)
+            newNode
+        }
 
-    override fun getChildrenSize(): Int = nodeSupport.getChildrenSize(this)
+    override fun remove(nodes: List<Node>): Boolean =
+        nodeSupport.writeLock {
+            val (author, authorType) = nodeSupport.getOperation()
+            log.debug("{}:{} - Removing nodes: {}", authorType, author, nodes.map { it.getName() })
+            children.value.removeAll(nodes)
+        }
+
+    override fun getChildren(): Stream<Node> {
+        if (!children.isInitialized()) {
+            children.value
+        }
+
+        return nodeSupport.readLock {
+            children.value.toList().stream()
+        }
+    }
+
+    override fun getChildrenSize(): Int = children.value.size
 
     override fun findNodeByPath(path: String): Node? = nodeSupport.findNodeByPath(this, path)
 
@@ -46,7 +92,7 @@ internal class NodeIml(
         TODO("Not yet implemented")
     }
 
-    override fun clone(): Node = nodeSupport.clone(this)
+    override fun clone(): Node = TODO("Not yet implemented")
 
     override fun toString(): String = "Node-${getType().name}: ${getName()}"
 
@@ -62,5 +108,9 @@ internal class NodeIml(
         if (parentNode != other.getParent()) return false
 
         return true
+    }
+
+    private companion object {
+        private val log = LoggerFactory.getLogger(NodeIml::class.java)
     }
 }

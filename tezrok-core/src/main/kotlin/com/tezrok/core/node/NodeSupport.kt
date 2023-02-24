@@ -1,11 +1,8 @@
 package com.tezrok.core.node
 
-import com.tezrok.api.error.NodeAlreadyExistsException
 import com.tezrok.api.error.TezrokException
 import com.tezrok.api.event.EventResult
-import com.tezrok.api.event.EventType
 import com.tezrok.api.event.NodeEvent
-import com.tezrok.api.event.ResultType
 import com.tezrok.api.node.*
 import com.tezrok.api.plugin.TezrokPlugin
 import com.tezrok.api.service.NodeService
@@ -19,7 +16,6 @@ import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.function.Function
 import java.util.stream.Collectors
-import java.util.stream.Stream
 
 /**
  * Main implementation of the [Node]
@@ -30,7 +26,6 @@ internal class NodeSupport(
     private val propertyValueManager: PropertyValueManager
 ) {
     private val lastIdCounter = AtomicLong(nodeRepo.getLastId())
-    private val nodes: MutableMap<Node, MutableList<Node>> = HashMap()
     private val lock = ReentrantReadWriteLock()
     private val writeLock = lock.writeLock()
     private val readLock = lock.readLock()
@@ -72,74 +67,11 @@ internal class NodeSupport(
 
     fun getRoot(): Node = root.value
 
-    fun add(parent: Node, name: String, type: NodeType): Node {
-        writeLock.runIn {
-            if (!parent.canAddDuplicateNode()) {
-                parent.getChild(name)?.let { node ->
-                    throw NodeAlreadyExistsException(name, node.getPath())
-                }
-            }
-            val (author, authorType) = getOperation()
-            val eventResult = featureManager.onNodeEvent(NodeEvent(EventType.PreAdd, type, parent, null))
+    fun onNodeEvent(event: NodeEvent): EventResult = featureManager.onNodeEvent(event)
 
-            if (eventResult.type == ResultType.CANCEL) {
-                val message = if (eventResult.message.isNullOrBlank()) "Node cannot be added" else eventResult.message
-                throw TezrokException(message)
-            }
-            val newNode = createNode(parent, NodeElem.of(name, type))
-            newNode.author(author)
-            newNode.authorType(authorType)
-            val now = OffsetDateTime.now()
-            newNode.createdAt(now)
-            newNode.updatedAt(now)
-            // TODO: validate new node
-            nodes.computeIfAbsent(parent) { ArrayList() }.add(newNode)
-            featureManager.onNodeEvent(NodeEvent(EventType.PostAdd, type, parent, newNode))
+    fun <R> writeLock(block: () -> R): R = writeLock.runIn(block)
 
-            return newNode
-        }
-    }
-
-    fun remove(parent: Node, nodes: List<Node>): Boolean {
-        writeLock.runIn {
-            val (author, authorType) = getOperation()
-            log.debug("{}:{} - Removing nodes: {}", authorType, author, nodes.map { it.getName() })
-            return loadChildren(parent).removeAll(nodes)
-        }
-    }
-
-    fun getChildren(parent: Node): Stream<Node> {
-        readLock.runIn {
-            if (nodes.containsKey(parent)) {
-                return getListByParent(parent).toList().stream()
-            }
-        }
-
-        // node not found in cache, try to load from repository
-        writeLock.runIn {
-            return loadChildren(parent).toList().stream()
-        }
-    }
-
-    fun getChildrenSize(parent: Node): Int {
-        readLock.runIn {
-            if (nodes.containsKey(parent)) {
-                return getListByParent(parent).size
-            }
-        }
-
-        // node not found in cache, try to load from repository
-        writeLock.runIn {
-            return loadChildren(parent).size
-        }
-    }
-
-    fun clone(node: Node): Node {
-        TODO("Not yet implemented")
-    }
-
-    // TODO: add NodeRef cache
-    fun getNodeRef(node: NodeIml): NodeRef = NodeRefImpl(node.calcPath()) { path -> findNodeByPath(path) }
+    fun <R> readLock(block: () -> R): R = readLock.runIn(block)
 
     private fun createRoot(): Node {
         val rootElem = nodeRepo.getRoot()
@@ -160,20 +92,12 @@ internal class NodeSupport(
     /**
      * Load children from repository and add to cache
      */
-    private fun loadChildren(parent: Node): MutableList<Node> {
-        nodes[parent]?.let {
-            return it
+    internal fun loadChildren(parent: Node): MutableList<Node> =
+        writeLock.runIn {
+            nodeRepo.getChildren(parent.getId())
+                .map { elem -> createNode(parent, elem) }
+                .collect(Collectors.toList()) // don't use Stream.toList() because it's immutable
         }
-
-        val children = nodeRepo.getChildren(parent.getId())
-            .map { elem -> createNode(parent, elem) }
-            .collect(Collectors.toList()) // don't use Stream.toList() because it's immutable
-        nodes[parent] = children
-
-        return children
-    }
-
-    private fun getListByParent(parent: Node): List<Node> = (nodes[parent] as List<Node>? ?: emptyList())
 
     fun getNextNodeId(): Long = lastIdCounter.incrementAndGet()
 
@@ -211,10 +135,10 @@ internal class NodeSupport(
         }
     }
 
-    private fun getOperation(): Pair<String, AuthorType> =
+    fun getOperation(): Pair<String, AuthorType> =
         operations.lastOrNull() ?: throw TezrokException("Node operation not started")
 
-    private fun createNode(parent: Node, nodeElem: NodeElem): Node {
+    fun createNode(parent: Node, nodeElem: NodeElem): Node {
         val nodeProps = NodePropertiesImpl(nodeElem.properties, propertyValueManager)
         val nodeType = nodeProps.getNodeType()
         val id = if (nodeElem.id > 0) nodeElem.id else getNextNodeId()
@@ -232,12 +156,13 @@ internal class NodeSupport(
         return false
     }
 
+
     private companion object {
         private val log = LoggerFactory.getLogger(NodeSupport::class.java)
     }
 }
 
-private fun Node.canAddDuplicateNode(): Boolean =
+internal fun Node.canAddDuplicateNode(): Boolean =
     getProperties().getBooleanProperty(PropertyName.DuplicateNode, false)
 
 /**
