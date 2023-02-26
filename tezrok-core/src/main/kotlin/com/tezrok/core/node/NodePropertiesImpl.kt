@@ -3,6 +3,7 @@ package com.tezrok.core.node
 import com.tezrok.api.service.TezrokService
 import com.tezrok.api.error.TezrokException
 import com.tezrok.api.node.*
+import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -13,6 +14,7 @@ internal class NodePropertiesImpl(
     private val propertyValueManager: PropertyValueManager
 ) : NodeProperties {
     private val properties: MutableMap<PropertyName, String?> = ConcurrentHashMap(props)
+    private val issues: MutableList<NodeIssue> = Collections.synchronizedList(mutableListOf())
     private var _node: Node? = null
 
     fun setNode(node: Node) {
@@ -34,12 +36,12 @@ internal class NodePropertiesImpl(
 
     override fun isTransient(): Boolean = getBooleanProperty(PropertyName.Transient, false)
 
-    override fun hasErrors(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun hasIssues(): Boolean = issues.isNotEmpty()
 
-    override fun getErrors(): List<NodeError> {
-        TODO("Not yet implemented")
+    override fun getIssues(): List<NodeIssue> = issues.toList()
+
+    override fun addIssue(issue: NodeIssue) {
+        issues.add(issue)
     }
 
     override fun setProperty(name: PropertyName, value: String?): String? {

@@ -51,7 +51,7 @@ interface Node : Cloneable {
     /**
      * Adds new node or throws exception
      *
-     * @throws NodeAlreadyExistsException if node with such name already exists
+     * @throws NodeAlreadyExistsException if node with such name already exists and duplicates not allowed
      */
     fun add(name: String, type: NodeType): Node
 

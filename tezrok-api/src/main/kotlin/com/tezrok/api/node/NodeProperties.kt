@@ -1,8 +1,8 @@
 package com.tezrok.api.node
 
+import com.tezrok.api.error.TezrokException
 import com.tezrok.api.service.FileRef
 import com.tezrok.api.service.TezrokService
-import com.tezrok.api.error.TezrokException
 
 /**
  * Node properties
@@ -53,14 +53,19 @@ interface NodeProperties {
     fun isReadonly(): Boolean
 
     /**
-     * This node contains errors. Error nodes are ignored
+     * This node contains issues. Error nodes are ignored
      */
-    fun hasErrors(): Boolean
+    fun hasIssues(): Boolean
 
     /**
      * Returns errors
      */
-    fun getErrors(): List<NodeError>
+    fun getIssues(): List<NodeIssue>
+
+    /**
+     * Adds new issue
+     */
+    fun addIssue(issue: NodeIssue)
 
     /**
      * Updates property
