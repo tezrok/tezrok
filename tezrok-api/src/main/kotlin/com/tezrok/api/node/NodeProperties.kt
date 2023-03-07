@@ -197,4 +197,11 @@ interface NodeProperties {
      * Ability of custom action
      */
     fun can(action: NodeAction, name: PropertyName): Boolean
+
+    /**
+     * Sets all properties. Overwrites existing properties
+     *
+     * Can throw exception if node is not support some properties
+     */
+    fun setProperties(properties: Map<PropertyName, String?>)
 }

@@ -1,5 +1,6 @@
 package com.tezrok.api.node
 
+import com.tezrok.api.common.Named
 import com.tezrok.api.error.NodeAlreadyExistsException
 import com.tezrok.api.service.NodeService
 import java.util.stream.Stream
@@ -7,7 +8,7 @@ import java.util.stream.Stream
 /**
  * Basic node interface
  */
-interface Node : Cloneable {
+interface Node : Named, Cloneable {
     /**
      * Returns unique identifier
      */
@@ -16,7 +17,7 @@ interface Node : Cloneable {
     /**
      * Returns name of the node
      */
-    fun getName(): String
+    override fun getName(): String
 
     /**
      * Returns type of the node
@@ -49,11 +50,18 @@ interface Node : Cloneable {
     fun getRef(): NodeRef
 
     /**
-     * Adds new node or throws exception
+     * Adds new node
      *
      * @throws NodeAlreadyExistsException if node with such name already exists and duplicates not allowed
      */
     fun add(name: String, type: NodeType): Node
+
+    /**
+     * Adds new node
+     *
+     * @throws NodeAlreadyExistsException if node with such name already exists and duplicates not allowed
+     */
+    fun add(name: String): Node = add(name, NodeType.Any)
 
     /**
      * Remove specified child nodes
@@ -63,11 +71,16 @@ interface Node : Cloneable {
     fun remove(nodes: List<Node>): Boolean
 
     /**
-     * Return children nodes
+     * Return all children nodes including of unknown types
      *
      * Note: children can be of infinite size. Call `getChildrenSize` before.
      */
     fun getChildren(): Stream<Node>
+
+    /**
+     * Returns children nodes except known types
+     */
+    fun getOtherChildren(): Stream<Node>
 
     /**
      * Returns count of children
@@ -109,6 +122,13 @@ interface Node : Cloneable {
      * Returns attached service
      */
     fun <T : NodeService> asService(): T?
+
+    /**
+     * Returns extended child node. Known child nodes can be got by this method as well
+     *
+     * Returns null if node is not supported
+     */
+    fun <T : Node> asChild(clazz: Class<T>): T?
 
     /**
      * Return clone of the node

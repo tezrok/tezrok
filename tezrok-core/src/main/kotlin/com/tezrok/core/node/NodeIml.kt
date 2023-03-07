@@ -92,6 +92,10 @@ internal class NodeIml(
         TODO("Not yet implemented")
     }
 
+    override fun <T : Node> asChild(): T? {
+        TODO("Not yet implemented")
+    }
+
     override fun clone(): Node = TODO("Not yet implemented")
 
     override fun toString(): String = "Node-${getType().name}: ${getName()}"
