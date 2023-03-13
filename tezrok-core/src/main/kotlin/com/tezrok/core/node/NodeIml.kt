@@ -82,6 +82,10 @@ internal class NodeIml(
         }
     }
 
+    override fun getOtherChildren(): Stream<Node> {
+        TODO("Not yet implemented")
+    }
+
     override fun getChildrenSize(): Int = children.value.size
 
     override fun findNodeByPath(path: String): Node? = nodeSupport.findNodeByPath(this, path)
@@ -92,7 +96,7 @@ internal class NodeIml(
         TODO("Not yet implemented")
     }
 
-    override fun <T : Node> asChild(): T? {
+    override fun <T : Node> asChild(clazz: Class<T>): T? {
         TODO("Not yet implemented")
     }
 
