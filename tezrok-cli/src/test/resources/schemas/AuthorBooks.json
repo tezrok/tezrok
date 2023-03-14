@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Author": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "books": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Book"
+          }
+        }
+      },
+      "required": ["id", "name", "email"]
+    },
+    "Book": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "title": {
+          "type": "string"
+        },
+        "isbn": {
+          "type": "string",
+          "pattern": "^(97(8|9))?\d{9}(\d|X)$"
+        },
+        "publicationDate": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "required": ["id", "title", "isbn", "publicationDate"]
+    }
+  },
+  "type": "object",
+  "properties": {
+    "authors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Author"
+      }
+    }
+  },
+  "required": ["authors"]
+}
