@@ -2,6 +2,9 @@ package io.tezrok.schema
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
+/**
+ * Represents a JSON schema
+ */
 data class Schema(
     val id: String?,
     @JsonProperty("\$schema")
@@ -14,6 +17,9 @@ data class Schema(
     val required: List<String>? = null
 )
 
+/**
+ * Represents a JSON schema definition
+ */
 data class Definition(
     val type: String,
     val title: String?,
