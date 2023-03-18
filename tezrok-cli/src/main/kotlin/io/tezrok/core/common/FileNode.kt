@@ -20,6 +20,7 @@ open class FileNode(name: String, parent: BaseNode?) : BaseNode(name, parent), F
 
     @Synchronized
     override fun addFile(name: String): FileNode {
+        //TODO: check if file already exists
         val file = FileNode(name, this)
         files.add(file)
         return file
@@ -27,6 +28,7 @@ open class FileNode(name: String, parent: BaseNode?) : BaseNode(name, parent), F
 
     @Synchronized
     override fun addDirectory(name: String): DirectoryNode {
+        //TODO: check if file already exists
         val directory = DirectoryNode(name, this)
         files.add(directory)
         return directory
@@ -58,15 +60,5 @@ open class FileNode(name: String, parent: BaseNode?) : BaseNode(name, parent), F
 
     private companion object {
         val EMPTY_ARRAY = ByteArray(0)
-    }
-}
-
-open class DirectoryNode(name: String, parent: BaseNode?) : FileNode(name, parent), DirectorySupport {
-    override fun getOutputStream(): OutputStream {
-        throw UnsupportedOperationException("Output stream not supported for this node")
-    }
-
-    override fun getInputStream(): InputStream {
-        throw UnsupportedOperationException("Input stream not supported for this node")
     }
 }

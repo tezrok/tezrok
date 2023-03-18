@@ -5,7 +5,7 @@ import io.tezrok.core.common.BaseNode
 /**
  * Represents a result of the generation
  */
-class ProjectNode(name: String) : BaseNode(name) {
+class ProjectNode(name: String) : BaseNode(name, null) {
     private val modules: MutableList<ModuleNode> = mutableListOf()
 
     fun getModules(): List<ModuleNode> = modules
@@ -13,7 +13,7 @@ class ProjectNode(name: String) : BaseNode(name) {
     fun addModule(name: String): ModuleNode {
         // TODO: check if module already exists
         // TODO: validate module name
-        val module = ModuleNode(name)
+        val module = ModuleNode(name, this)
         modules.add(module)
         return module
     }

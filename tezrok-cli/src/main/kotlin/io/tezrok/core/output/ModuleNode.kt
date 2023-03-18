@@ -7,15 +7,18 @@ import io.tezrok.core.common.BaseNode
  * which can be a library or a web application
  */
 class ModuleNode(name: String, parent: BaseNode?) : BaseNode(name, parent) {
-    private val resource: ResourceNode = ResourceNode()
+    private val resources: ResourcesNode = ResourcesNode(this)
     private val entities: MutableList<EntityNode> = mutableListOf()
 
     fun getEntities(): List<EntityNode> = entities
 
-    fun getResource(): ResourceNode = resource
+    /**
+     * Returns the "resources" node
+     */
+    fun getResources(): ResourcesNode = resources
 
     fun addEntity(name: String) {
         // TODO: check if entity already exists
-        entities.add(EntityNode(name))
+        entities.add(EntityNode(name, this))
     }
 }
