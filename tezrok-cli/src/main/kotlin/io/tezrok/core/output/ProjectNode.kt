@@ -1,25 +1,29 @@
 package io.tezrok.core.output
 
-/**
- * Represents a target file project
- */
-class ProjectNode : BaseNode {
-    private val modules: MutableList<ModuleNode> = mutableListOf()
+import io.tezrok.core.common.BaseNode
 
-    // TODO: edit project name
-    override fun getName(): String = "Project"
+/**
+ * Represents a result of the generation
+ */
+class ProjectNode(name: String) : BaseNode(name) {
+    private val modules: MutableList<ModuleNode> = mutableListOf()
 
     fun getModules(): List<ModuleNode> = modules
 
-    fun addModule(name: String) {
+    fun addModule(name: String): ModuleNode {
         // TODO: check if module already exists
-        modules.add(ModuleNode(name))
+        // TODO: validate module name
+        val module = ModuleNode(name)
+        modules.add(module)
+        return module
     }
 
     /**
      * Removes modules from the project
      */
-    fun removeModule(list: List<String>): Boolean {
-        TODO("Not yet implemented")
+    fun removeModules(list: List<String>): Boolean {
+        val success = modules.removeAll { list.contains(it.getName()) }
+        log.debug("From project {} removed {} modules: {}, success: {}", getName(), list.size, list, success)
+        return success
     }
 }

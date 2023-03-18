@@ -1,8 +1,9 @@
 package io.tezrok.core.output
 
+import io.tezrok.core.common.BaseNode
+
 /**
  * Represents an entity. Which represents a separate type
  */
-class EntityNode(private val name: String) : BaseNode {
-    override fun getName(): String = name
+class EntityNode(name: String) : BaseNode(name) {
 }

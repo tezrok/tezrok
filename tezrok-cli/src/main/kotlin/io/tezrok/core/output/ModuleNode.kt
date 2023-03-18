@@ -1,14 +1,14 @@
 package io.tezrok.core.output
 
+import io.tezrok.core.common.BaseNode
+
 /**
  * Represents a module. Which represents a separate maven module
  * which can be a library or a web application
  */
-class ModuleNode(private val name: String) : BaseNode {
+class ModuleNode(name: String, parent: BaseNode?) : BaseNode(name, parent) {
     private val resource: ResourceNode = ResourceNode()
     private val entities: MutableList<EntityNode> = mutableListOf()
-
-    fun getName(): String = name
 
     fun getEntities(): List<EntityNode> = entities
 
