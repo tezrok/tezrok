@@ -9,15 +9,19 @@ interface FileSupport : OutStream, InStream {
 
     fun removeFiles(names: List<String>): Boolean
 
+    fun getFile(name: String): FileSupport?
+
     fun isEmpty(): Boolean
 
-    fun isDirectory(): Boolean = false
+    fun isDirectory(): Boolean
 
-    fun isFile(): Boolean = true
+    fun isFile(): Boolean
+
+    fun getFilesSize(): Int
 }
 
 interface DirectorySupport : FileSupport {
-    override fun isDirectory(): Boolean = true
+    override fun isDirectory(): Boolean
 
-    override fun isFile(): Boolean = false
+    override fun isFile(): Boolean
 }

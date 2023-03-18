@@ -16,4 +16,8 @@ open class DirectoryNode(name: String, parent: BaseNode?) : FileNode(name, paren
     override fun getInputStream(): InputStream {
         throw UnsupportedOperationException("Input stream not supported for this node")
     }
+
+    override fun isDirectory(): Boolean = true
+
+    override fun isFile(): Boolean = false
 }

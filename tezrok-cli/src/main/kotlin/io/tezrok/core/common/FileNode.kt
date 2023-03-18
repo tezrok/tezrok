@@ -14,9 +14,9 @@ open class FileNode(name: String, parent: BaseNode?) : BaseNode(name, parent), F
     private val files: MutableList<FileNode> = mutableListOf()
     private var content: ByteArray = EMPTY_ARRAY
 
-    override fun getParent(): BaseNode? = super.getParent()
-
     override fun getFiles(): List<FileNode> = Collections.unmodifiableList(files)
+
+    override fun getFilesSize(): Int = files.size
 
     @Synchronized
     override fun addFile(name: String): FileNode {
@@ -38,7 +38,13 @@ open class FileNode(name: String, parent: BaseNode?) : BaseNode(name, parent), F
     override fun removeFiles(names: List<String>): Boolean =
         files.removeAll { it.getName() in names }
 
+    override fun getFile(name: String): FileSupport? = files.find { it.getName() == name }
+
     override fun isEmpty(): Boolean = content.isEmpty()
+
+    override fun isDirectory(): Boolean = false
+
+    override fun isFile(): Boolean = true
 
     override fun getOutputStream(): OutputStream {
         return object : ByteArrayOutputStream() {
@@ -57,6 +63,12 @@ open class FileNode(name: String, parent: BaseNode?) : BaseNode(name, parent), F
 
     @Synchronized
     override fun getInputStream(): InputStream = content.clone().inputStream()
+
+    @Synchronized
+    fun getOrAddFile(name: String): FileNode = getFile(name) as? FileNode ?: addFile(name)
+
+    @Synchronized
+    fun getOrAddDirectory(name: String): DirectoryNode = getFile(name) as? DirectoryNode ?: addDirectory(name)
 
     private companion object {
         val EMPTY_ARRAY = ByteArray(0)
