@@ -1,9 +1,9 @@
 package io.tezrok.sql
 
 import io.tezrok.schema.SchemaLoader
-import io.tezrok.util.ResourceUtil
 import io.tezrok.util.resourceAsPath
-import org.junit.jupiter.api.Assertions.*
+import io.tezrok.util.resourceAsString
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class SqlGeneratorTest {
@@ -12,18 +12,19 @@ class SqlGeneratorTest {
 
     @Test
     fun testGenerateAsString() {
-        val schema = schemaLoader.load("/schemas/AddressInfo.json".resourceAsPath())
-        val sql = sqlGenerator.generateAsString(schema)
+        val schema = schemaLoader.load("/schemas/Address.json".resourceAsPath())
+        val actualSql = sqlGenerator.generateAsString(schema)
+        val expectedSql = "/expected/sql/Address.sql".resourceAsString()
 
-        assertEquals("""CREATE TABLE Address (
-  id SERIAL PRIMARY KEY,
-  street VARCHAR(255) NOT NULL,
-  city VARCHAR(50) NOT NULL,
-  state VARCHAR(255) NOT NULL,
-  zip VARCHAR(255),
-  country VARCHAR(255) NOT NULL,
-  stateId INT NOT NULL
-);
-""", sql)
+        assertEquals(expectedSql, actualSql)
+    }
+
+    @Test
+    fun testGenerateAsStringWithTwoEntities() {
+        val schema = schemaLoader.load("/schemas/AuthorBooks.json".resourceAsPath())
+        val actualSql = sqlGenerator.generateAsString(schema)
+        val expectedSql = "/expected/sql/AuthorBooks.sql".resourceAsString()
+
+        assertEquals(expectedSql, actualSql)
     }
 }

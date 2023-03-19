@@ -17,6 +17,7 @@
         "books": {
           "type": "array",
           "items": {
+            "relation": "hasMany",
             "$ref": "#/definitions/Book"
           }
         }
@@ -34,7 +35,7 @@
         },
         "isbn": {
           "type": "string",
-          "pattern": "^(97(8|9))?\d{9}(\d|X)$"
+          "pattern": "^(97(8|9))?\\d{9}(\\d|X)$"
         },
         "publicationDate": {
           "type": "string",

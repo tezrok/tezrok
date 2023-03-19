@@ -10,7 +10,7 @@ class SchemaLoaderTest : BaseTest() {
     @Test
     fun testLoadSimpleSchema() {
         val loader = SchemaLoader()
-        val jsonSchema = ResourceUtil.getResourceAsString("/schemas/AddressInfo.json")
+        val jsonSchema = ResourceUtil.getResourceAsString("/schemas/Address.json")
         val actualSchema = loader.load(jsonSchema)
 
         assertJsonEquals(jsonSchema, actualSchema.toPrettyJson())

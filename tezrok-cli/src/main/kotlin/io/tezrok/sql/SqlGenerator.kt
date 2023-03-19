@@ -13,16 +13,34 @@ class SqlGenerator(private val intent: String = "  ") {
      */
     fun generateAsString(schema: Schema): String {
         val sb = StringBuilder()
-        generateTable(schema, sb)
+        val definitions = schema.definitions ?: emptyMap()
+
+        if (schema.title != null) {
+            generateTable(schema.title, schema, sb)
+            if (definitions.isNotEmpty()) {
+                addNewline(sb)
+            }
+        }
+
+        definitions.keys.toList().forEachIndexed { index, name ->
+            val definition = definitions[name]!!
+            generateTable(name, definition, sb)
+            if (index < definitions.size - 1) {
+                addNewline(sb)
+            }
+        }
+
         return sb.toString()
     }
 
-    private fun generateTable(schema: Schema, sb: StringBuilder) {
-        val tableName = Validate.notBlank(schema.title, "Schema title is blank")
+    /**
+     * Generates a table from root schema definition
+     */
+    private fun generateTable(tableName: String, schema: Definition, sb: StringBuilder) {
+        Validate.notBlank(tableName, "Schema table is blank")
         val properties = schema.properties ?: emptyMap()
         // TODO: Validate table name
         // TODO: Validate properties
-        // TODO: generates for schema.definitions
 
         sb.append("CREATE TABLE ")
         sb.append(tableName)
@@ -40,11 +58,15 @@ class SqlGenerator(private val intent: String = "  ") {
 
         properties.keys.toList().forEachIndexed { index, key ->
             val isRequired = schema.required?.contains(key) ?: false
-            generateColumn(key, properties[key]!!, isRequired, sb)
-            if (index < properties.size - 1) {
-                sb.append(",")
+            val definition = properties[key]!!
+            // TODO: implement "array" in another place depending on the relation type
+            if (!definition.isArray()) {
+                generateColumn(key, definition, isRequired, sb)
+                if (index < properties.size - 1) {
+                    sb.append(",")
+                }
+                addNewline(sb)
             }
-            addNewline(sb)
         }
         sb.append(");")
         addNewline(sb)
@@ -52,6 +74,8 @@ class SqlGenerator(private val intent: String = "  ") {
 
     private fun generateColumn(name: String, definition: Definition, isRequired: Boolean, sb: StringBuilder) {
         sb.append(intent)
+        // TODO: Validate column name
+        // TODO: Convert to underscore case
         sb.append(name)
         sb.append(" ")
         sb.append(getSqlType(definition))
@@ -62,16 +86,22 @@ class SqlGenerator(private val intent: String = "  ") {
 
     private fun getSqlType(definition: Definition): String {
         return when (definition.type) {
-            "string" -> getSqlVarcharType(definition)
+            "string" -> getStringBasedType(definition)
             "integer" -> "INT"
             "number" -> "FLOAT"
             "boolean" -> "BOOLEAN"
+            // TODO: Create new ref column on target table, or new table with ref columns to both tables
+            "array" -> throw IllegalArgumentException("Array type is implemented in another way")
             else -> throw IllegalArgumentException("Unsupported type: ${definition.type}")
         }
     }
 
-    private fun getSqlVarcharType(definition: Definition) =
-        if (definition.maxLength != null) {
+    private fun getStringBasedType(definition: Definition) =
+        if (definition.format == "date") {
+            "DATE"
+        } else if (definition.format == "date-time") {
+            "DATETIME"
+        } else if (definition.maxLength != null) {
             "VARCHAR(${definition.maxLength})"
         } else {
             "VARCHAR($DEFAULT_VARCHAR_LENGTH)"

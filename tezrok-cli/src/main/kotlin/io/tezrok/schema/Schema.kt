@@ -1,33 +1,34 @@
 package io.tezrok.schema
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
  * Represents a JSON schema
  */
-data class Schema(
+class Schema(
     val id: String?,
     @JsonProperty("\$schema")
     val schema: String?,
-    val title: String?,
-    val description: String?,
-    val type: String,
-    val properties: Map<String, Definition>?,
     val definitions: Map<String, Definition>?,
-    val required: List<String>? = null
-)
+) : Definition()
 
 /**
  * Represents a JSON schema definition
  */
-data class Definition(
-    val type: String,
-    val title: String?,
-    val description: String?,
-    val pattern: String?,
-    val additionalProperties: Boolean?,
+open class Definition(
+    val type: String? = null,
+    val format: String? = null,
+    val title: String? = null,
+    val description: String? = null,
+    val pattern: String? = null,
+    val additionalProperties: Boolean? = null,
     val properties: Map<String, Definition>? = null,
     val required: List<String>? = null,
-    val minLength: Int?,
-    val maxLength: Int?,
-)
+    val minLength: Int? = null,
+    val maxLength: Int? = null,
+    val items: Definition? = null,
+) {
+    @JsonIgnore
+    fun isArray(): Boolean = type == "array"
+}
