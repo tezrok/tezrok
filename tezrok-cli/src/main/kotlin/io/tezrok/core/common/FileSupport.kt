@@ -1,5 +1,8 @@
 package io.tezrok.core.common
 
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
+
 interface FileSupport : OutStream, InStream {
     fun getFiles(): List<FileSupport>
 
@@ -18,10 +21,9 @@ interface FileSupport : OutStream, InStream {
     fun isFile(): Boolean
 
     fun getFilesSize(): Int
+
+    fun asText(charset: Charset = StandardCharsets.UTF_8): String =
+        String(getInputStream().use { it.readBytes() }, charset)
 }
 
-interface DirectorySupport : FileSupport {
-    override fun isDirectory(): Boolean
-
-    override fun isFile(): Boolean
-}
+interface DirectorySupport : FileSupport {}

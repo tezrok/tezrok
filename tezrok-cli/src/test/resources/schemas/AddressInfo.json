@@ -18,7 +18,10 @@
     },
     "country": {
       "type": "string"
+    },
+    "stateId": {
+      "type": "integer"
     }
   },
-  "required": ["street", "city", "state", "zip", "country"]
+  "required": ["street", "city", "state", "country", "stateId"]
 }

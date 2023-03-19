@@ -56,13 +56,15 @@ interface Node {
      * Logical path based only on the name of the node
      * Parent name not included in path
      */
-    fun getPath(): String {
-        val parent = getParent() ?: return "/"
+    fun getPath(): String = getPathTo(null)
 
-        return if (parent.isRoot()) {
-            "/${getName()}"
-        } else {
-            "${parent.getPath()}/${getName()}"
-        }
+    /**
+     * Returns path up to the target node
+     */
+    fun getPathTo(target: Node?): String {
+        // Parent name not included in path
+        val parent = getParent() ?: return "/"
+        val parentPath = if (parent.isRoot() || this == target) "" else parent.getPathTo(target)
+        return parentPath + "/" + getName()
     }
 }
