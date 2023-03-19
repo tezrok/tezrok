@@ -81,7 +81,7 @@ class LiquibaseGeneratorTest {
 CREATE TABLE Address (
   id SERIAL PRIMARY KEY,
   street VARCHAR(255) NOT NULL,
-  city VARCHAR(255) NOT NULL,
+  city VARCHAR(50) NOT NULL,
   state VARCHAR(255) NOT NULL,
   zip VARCHAR(255),
   country VARCHAR(255) NOT NULL,

@@ -4,7 +4,7 @@ import io.tezrok.schema.Definition
 import io.tezrok.schema.Schema
 import org.apache.commons.lang3.Validate
 
-class SqlGenerator(private val intent : String = "  ") {
+class SqlGenerator(private val intent: String = "  ") {
     /**
      * Generates SQL from a JSON schema
      *
@@ -22,6 +22,7 @@ class SqlGenerator(private val intent : String = "  ") {
         val properties = schema.properties ?: emptyMap()
         // TODO: Validate table name
         // TODO: Validate properties
+        // TODO: generates for schema.definitions
 
         sb.append("CREATE TABLE ")
         sb.append(tableName)
@@ -49,7 +50,7 @@ class SqlGenerator(private val intent : String = "  ") {
         addNewline(sb)
     }
 
-    private fun generateColumn(name: String, definition: Definition, isRequired : Boolean, sb: StringBuilder) {
+    private fun generateColumn(name: String, definition: Definition, isRequired: Boolean, sb: StringBuilder) {
         sb.append(intent)
         sb.append(name)
         sb.append(" ")
@@ -61,7 +62,7 @@ class SqlGenerator(private val intent : String = "  ") {
 
     private fun getSqlType(definition: Definition): String {
         return when (definition.type) {
-            "string" -> "VARCHAR(255)"
+            "string" -> getSqlVarcharType(definition)
             "integer" -> "INT"
             "number" -> "FLOAT"
             "boolean" -> "BOOLEAN"
@@ -69,9 +70,20 @@ class SqlGenerator(private val intent : String = "  ") {
         }
     }
 
+    private fun getSqlVarcharType(definition: Definition) =
+        if (definition.maxLength != null) {
+            "VARCHAR(${definition.maxLength})"
+        } else {
+            "VARCHAR($DEFAULT_VARCHAR_LENGTH)"
+        }
+
     private fun addNewline(sb: StringBuilder, count: Int = 1) {
         for (i in 1..count) {
             sb.append(System.lineSeparator())
         }
+    }
+
+    private companion object {
+        const val DEFAULT_VARCHAR_LENGTH = 255
     }
 }

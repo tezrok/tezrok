@@ -27,5 +27,7 @@ data class Definition(
     val pattern: String?,
     val additionalProperties: Boolean?,
     val properties: Map<String, Definition>? = null,
-    val required: List<String>? = null
+    val required: List<String>? = null,
+    val minLength: Int?,
+    val maxLength: Int?,
 )
