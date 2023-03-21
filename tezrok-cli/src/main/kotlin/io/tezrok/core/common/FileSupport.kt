@@ -22,7 +22,7 @@ interface FileSupport : OutStream, InStream {
 
     fun getFilesSize(): Int
 
-    fun asText(charset: Charset = StandardCharsets.UTF_8): String =
+    fun asString(charset: Charset = StandardCharsets.UTF_8): String =
         String(getInputStream().use { it.readBytes() }, charset)
 }
 
