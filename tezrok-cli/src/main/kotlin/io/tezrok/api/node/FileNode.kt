@@ -1,4 +1,4 @@
-package io.tezrok.core.common
+package io.tezrok.api.node
 
 import java.io.ByteArrayOutputStream
 import java.io.InputStream

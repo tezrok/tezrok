@@ -1,15 +1,19 @@
 package io.tezrok
 
-import io.tezrok.core.common.DirectoryNode
-import io.tezrok.core.common.FileNode
+import io.tezrok.api.node.DirectoryNode
+import io.tezrok.api.node.FileNode
 import io.tezrok.util.JsonUtil
 import io.tezrok.util.resourceAsString
 import org.junit.jupiter.api.Assertions
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneId
 
 /**
  * Base class for all tests
  */
 internal abstract class BaseTest {
+    protected fun getFixedClock(timeStr: String): Clock = Clock.fixed(Instant.parse(timeStr), ZoneId.systemDefault())
 
     /**
      * Asserts that two JSONs are equal (semantically, keys order is ignored)

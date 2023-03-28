@@ -1,6 +1,6 @@
-package io.tezrok.core.output
+package io.tezrok.api.node
 
-import io.tezrok.core.common.BaseNode
+import io.tezrok.api.Schema
 
 /**
  * Represents a module. Which represents a separate maven module
@@ -9,6 +9,9 @@ import io.tezrok.core.common.BaseNode
 class ModuleNode(name: String, parent: BaseNode?) : BaseNode(name, parent) {
     private val resources: ResourcesNode = ResourcesNode(this)
     private val entities: MutableList<EntityNode> = mutableListOf()
+
+    // TODO: find appropriate place for schema
+    var schema: Schema? = null
 
     fun getEntities(): List<EntityNode> = entities
 

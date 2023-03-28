@@ -1,10 +1,10 @@
 package io.tezrok.core
 
-import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets
+import io.tezrok.api.GeneratorContext
+import java.time.Clock
 
-class GeneratorContext {
-    fun isGenerateTime(): Boolean = true
-    fun getCharset(): Charset = StandardCharsets.UTF_8
-    fun getAuthor(): String = "TezrokUser"
+internal class CoreGeneratorContext(private val clock: Clock = Clock.systemDefaultZone()) : GeneratorContext {
+    override fun getAuthor(): String = "TezrokUser"
+
+    override fun getClock(): Clock = clock
 }

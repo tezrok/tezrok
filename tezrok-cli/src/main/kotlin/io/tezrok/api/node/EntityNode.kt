@@ -1,6 +1,4 @@
-package io.tezrok.core.output
-
-import io.tezrok.core.common.BaseNode
+package io.tezrok.api.node
 
 /**
  * Represents an entity. Which represents a separate type

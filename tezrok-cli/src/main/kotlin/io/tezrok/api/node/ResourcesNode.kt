@@ -1,7 +1,4 @@
-package io.tezrok.core.output
-
-import io.tezrok.core.common.BaseNode
-import io.tezrok.core.common.DirectoryNode
+package io.tezrok.api.node
 
 /**
  * Represents a resource directory

@@ -1,17 +1,20 @@
 package io.tezrok.sql
 
-import io.tezrok.schema.Definition
-import io.tezrok.schema.Schema
+import io.tezrok.api.Definition
+import io.tezrok.api.GeneratorContext
+import io.tezrok.api.Schema
+import io.tezrok.api.model.SqlScript
+import io.tezrok.api.sql.SqlGenerator
 import org.apache.commons.lang3.Validate
 
-class SqlGenerator(private val intent: String = "  ") {
+class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
     /**
      * Generates SQL from a JSON schema
      *
      * TODO: Postgres support
      * TODO: Sqlite support
      */
-    fun generateAsString(schema: Schema): String {
+    override fun generate(schema: Schema, context: GeneratorContext): SqlScript {
         val sb = StringBuilder()
         val definitions = schema.definitions ?: emptyMap()
 
@@ -30,7 +33,7 @@ class SqlGenerator(private val intent: String = "  ") {
             }
         }
 
-        return sb.toString()
+        return SqlScript(schema.title ?: "schema", sb.toString())
     }
 
     /**
