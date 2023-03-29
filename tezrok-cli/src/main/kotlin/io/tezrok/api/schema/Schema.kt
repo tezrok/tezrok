@@ -1,4 +1,4 @@
-package io.tezrok.api
+package io.tezrok.api.schema
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty

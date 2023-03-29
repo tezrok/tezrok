@@ -1,7 +1,7 @@
 package io.tezrok.schema
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.tezrok.api.Schema
+import io.tezrok.api.schema.Schema
 import io.tezrok.util.JsonUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

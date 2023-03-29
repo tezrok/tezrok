@@ -1,7 +1,7 @@
 package io.tezrok.core.input
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.tezrok.api.Schema
+import io.tezrok.api.schema.Schema
 
 /**
  * Represents a model of a project loaded from a tezrok.json file

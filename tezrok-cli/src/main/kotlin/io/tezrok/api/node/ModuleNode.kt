@@ -1,6 +1,6 @@
 package io.tezrok.api.node
 
-import io.tezrok.api.Schema
+import io.tezrok.api.schema.Schema
 
 /**
  * Represents a module. Which represents a separate maven module

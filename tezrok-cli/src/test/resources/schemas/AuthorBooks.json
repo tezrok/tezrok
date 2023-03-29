@@ -17,7 +17,7 @@
         "books": {
           "type": "array",
           "items": {
-            "relation": "hasMany",
+            "relation": "ManyToMany",
             "$ref": "#/definitions/Book"
           }
         }
