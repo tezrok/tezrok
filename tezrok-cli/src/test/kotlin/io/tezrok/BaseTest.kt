@@ -19,8 +19,8 @@ internal abstract class BaseTest {
      * Asserts that two JSONs are equal (semantically, keys order is ignored)
      */
     protected fun assertJsonEquals(expected: String, actual: String) {
-        Assertions.assertTrue(JsonUtil.compareJsons(expected, actual)) {
-            "JSONs are not equal. \nexpected: $expected, \nactual: $actual}"
+        if (!JsonUtil.compareJsons(expected, actual)) {
+            Assertions.assertEquals(expected, actual)
         }
     }
 

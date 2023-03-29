@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Order": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "long"
+        },
+        "name": {
+          "type": "string"
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "relation": "OneToMany",
+            "$ref": "#/definitions/Item"
+          }
+        }
+      },
+      "required": ["id", "name", "email"]
+    },
+    "Item": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "long"
+        },
+        "title": {
+          "type": "string"
+        },
+        "price": {
+          "type": "number"
+        }
+      },
+      "required": ["id", "price"]
+    }
+  },
+  "type": "object",
+  "properties": {
+    "orders": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Order"
+      }
+    }
+  },
+  "required": ["orders"]
+}

@@ -28,7 +28,22 @@ open class Definition(
     val minLength: Int? = null,
     val maxLength: Int? = null,
     val items: Definition? = null,
+    val enum: List<String>? = null,
+    @JsonProperty("\$ref")
+    val ref: String? = null,
+    val relation: EntityRelation? = null,
 ) {
     @JsonIgnore
     fun isArray(): Boolean = type == "array"
 }
+
+enum class EntityRelation {
+    OneToOne,
+
+    OneToMany,
+
+    ManyToOne,
+
+    ManyToMany,
+}
+

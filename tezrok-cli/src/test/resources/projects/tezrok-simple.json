@@ -1,0 +1,12 @@
+{
+  "name": "simple-app",
+  "version": "0.0.1",
+  "package": "com.tezrok.simple",
+  "modules": [
+    {
+      "name": "simpleModule",
+      "type": "tezrok",
+      "importSchema": "./schemas/Orders.json"
+    }
+  ]
+}
