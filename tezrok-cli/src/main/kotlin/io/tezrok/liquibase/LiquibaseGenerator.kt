@@ -27,7 +27,8 @@ class LiquibaseGenerator(
         check(node.getModules().size == 1) { "Liquibase feature only supports one module" }
         // TODO: support multiple modules
         val module = node.getModules()[0]
-        val schema = module.schema ?: return
+        val schema = context.getProject().modules.find { it.name == module.getName() }?.schema
+            ?: throw IllegalArgumentException("No schema found for module ${module.getName()}")
         val resource = module.getResources()
         val dbDir = resource.getOrAddDirectory("db")
         val updatesDir = dbDir.getOrAddDirectory("updates")

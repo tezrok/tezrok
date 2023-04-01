@@ -1,7 +1,5 @@
 package io.tezrok.api.node
 
-import io.tezrok.api.schema.Schema
-
 /**
  * Represents a module. Which represents a separate maven module
  * which can be a library or a web application
@@ -9,9 +7,6 @@ import io.tezrok.api.schema.Schema
 class ModuleNode(name: String, parent: BaseNode?) : BaseNode(name, parent) {
     private val resources: ResourcesNode = ResourcesNode(this)
     private val entities: MutableList<EntityNode> = mutableListOf()
-
-    // TODO: find appropriate place for schema
-    var schema: Schema? = null
 
     fun getEntities(): List<EntityNode> = entities
 

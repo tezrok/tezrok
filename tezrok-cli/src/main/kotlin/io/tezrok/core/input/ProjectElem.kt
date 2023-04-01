@@ -6,7 +6,7 @@ import io.tezrok.api.schema.Schema
 /**
  * Represents a model of a project loaded from a tezrok.json file
  */
-class ProjectElem {
+open class ProjectElem {
     var name: String = ""
     var version: String = ""
     var description: String = ""
@@ -21,13 +21,13 @@ class ProjectElem {
     }
 }
 
-class ModuleElem {
+open class ModuleElem {
     var name: String = ""
     var description: String = ""
     var type: String = "" // TODO: enum
     var importSchema: String = ""
     // TODO: remove schema property and use entities instead
-    var schema: Schema? = null
+    open var schema: Schema? = null
     // TODO: convert schema to entities
     var entities: List<EntityElem> = emptyList()
 
@@ -36,7 +36,7 @@ class ModuleElem {
     }
 }
 
-class EntityElem {
+open class EntityElem {
     init {
         TODO()
     }

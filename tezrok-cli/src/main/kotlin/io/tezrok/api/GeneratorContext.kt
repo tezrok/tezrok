@@ -1,5 +1,6 @@
 package io.tezrok.api
 
+import io.tezrok.core.input.ProjectElem
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.time.Clock
@@ -15,4 +16,6 @@ interface GeneratorContext {
     fun getAuthor(): String
 
     fun getClock(): Clock = Clock.systemDefaultZone()
+
+    fun getProject(): ProjectElem
 }
