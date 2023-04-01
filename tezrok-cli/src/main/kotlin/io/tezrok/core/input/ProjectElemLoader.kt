@@ -3,10 +3,13 @@ package io.tezrok.core.input
 import io.tezrok.schema.SchemaLoader
 import io.tezrok.util.JsonUtil
 import io.tezrok.util.toURL
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.nio.file.Path
 
 class ProjectElemLoader {
     fun load(projectPath: Path): ProjectElem {
+        log.debug("Loading project from {}", projectPath)
         val project = JsonUtil.mapper.readValue(projectPath.toURL(), ProjectElem::class.java)
 
         for (module in project.modules) {
@@ -19,5 +22,9 @@ class ProjectElemLoader {
         }
 
         return project
+    }
+
+    companion object {
+        val log: Logger = LoggerFactory.getLogger(ProjectElemLoader::class.java)
     }
 }

@@ -30,6 +30,7 @@ class SchemaLoader {
      */
     fun load(path: Path): Schema {
         try {
+            log.debug("Loading schema from {}", path)
             return mapper.readValue(path.toUri().toURL(), Schema::class.java)
         } catch (e: Exception) {
             log.error("Error loading schema from path: {}", path)
