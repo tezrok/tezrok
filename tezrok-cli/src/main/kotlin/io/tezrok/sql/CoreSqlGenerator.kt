@@ -1,9 +1,9 @@
 package io.tezrok.sql
 
-import io.tezrok.api.schema.Definition
 import io.tezrok.api.GeneratorContext
-import io.tezrok.api.schema.Schema
 import io.tezrok.api.model.SqlScript
+import io.tezrok.api.schema.Definition
+import io.tezrok.api.schema.Schema
 import io.tezrok.api.sql.SqlGenerator
 import org.apache.commons.lang3.Validate
 

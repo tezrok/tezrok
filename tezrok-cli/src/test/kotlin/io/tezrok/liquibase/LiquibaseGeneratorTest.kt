@@ -4,6 +4,7 @@ import io.tezrok.BaseTest
 import io.tezrok.api.node.ProjectNode
 import io.tezrok.api.schema.Schema
 import io.tezrok.core.CoreGeneratorContext
+import io.tezrok.core.CoreGeneratorProvider
 import io.tezrok.core.input.ModuleElem
 import io.tezrok.core.input.ProjectElem
 import io.tezrok.schema.SchemaLoader
@@ -23,7 +24,9 @@ internal class LiquibaseGeneratorTest : BaseTest() {
     fun testGenerate() {
         val schema = schemaLoader.load("/schemas/Address.json".resourceAsPath())
         val projectInput = mockProjectInput("core", schema)
-        val generatorContext = CoreGeneratorContext(projectInput, fixedClock)
+        val generatorProvider = CoreGeneratorProvider()
+        generatorProvider.addGenerator(sqlGenerator)
+        val generatorContext = CoreGeneratorContext(projectInput, generatorProvider, fixedClock)
         val project = ProjectNode("TestProject")
         val module = project.addModule("core")
         liquibaseFeature.apply(project, generatorContext)
