@@ -6,21 +6,27 @@ import io.tezrok.api.node.ProjectNode
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.io.path.ExperimentalPathApi
-import kotlin.io.path.createDirectories
-import kotlin.io.path.deleteRecursively
-import kotlin.io.path.outputStream
+import kotlin.io.path.*
 
 /**
  * Generates project files from [ProjectNode]
  */
 class ProjectOutputGenerator {
+    private var deleteOutputDir = false
+        set(value) {
+            field = value
+        }
+
     @OptIn(ExperimentalPathApi::class)
     fun generate(project: ProjectNode, outputDir: Path) {
         val startTime = System.currentTimeMillis()
-        log.debug("Deleting output directory: {}", outputDir)
-        outputDir.deleteRecursively()
-        outputDir.createDirectories()
+        if (deleteOutputDir) {
+            log.debug("Deleting output directory: {}", outputDir)
+            outputDir.deleteRecursively()
+        }
+        if (outputDir.notExists()) {
+            outputDir.createDirectories()
+        }
 
         for (module in project.getModules()) {
             generateModule(outputDir, module)
@@ -65,6 +71,6 @@ class ProjectOutputGenerator {
     }
 
     private companion object {
-        val log = LoggerFactory.getLogger(ProjectOutputGenerator::class.java)
+        val log = LoggerFactory.getLogger(ProjectOutputGenerator::class.java)!!
     }
 }
