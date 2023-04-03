@@ -3,10 +3,16 @@ package io.tezrok.core
 import io.tezrok.api.GeneratorProvider
 import io.tezrok.api.TezrokGenerator
 import io.tezrok.api.annotations.KnownGenerator
+import io.tezrok.sql.CoreSqlGenerator
 
 internal class CoreGeneratorProvider : GeneratorProvider {
     private val generators = mutableMapOf<Class<*>, TezrokGenerator<*, *>>()
     private val generatorsFromTo = mutableMapOf<Pair<Class<*>, Class<*>>, TezrokGenerator<*, *>>()
+
+    init {
+        // TODO: load generators from configuration
+        addGenerator(CoreSqlGenerator())
+    }
 
     fun <T, R> addGenerator(generator: TezrokGenerator<T, R>) {
         addGenerator(generator.getFrom(), generator.getTo(), generator)

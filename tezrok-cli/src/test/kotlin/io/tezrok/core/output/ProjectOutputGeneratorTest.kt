@@ -1,8 +1,10 @@
 package io.tezrok.core.output
 
 import io.tezrok.core.CoreGeneratorContext
+import io.tezrok.core.CoreGeneratorProvider
 import io.tezrok.core.feature.FeatureManager
 import io.tezrok.core.input.ProjectElemRepository
+import io.tezrok.sql.CoreSqlGenerator
 import io.tezrok.util.PathUtil
 import io.tezrok.util.ResourceUtil
 import org.junit.jupiter.api.Disabled
@@ -23,7 +25,8 @@ internal class ProjectOutputGeneratorTest {
         val projectElem = projectElemRepository.load(projectPath)
         val project = projectNodeFactory.fromProject(projectElem)
         val featureManager = FeatureManager()
-        val context = CoreGeneratorContext(projectElem)
+        val generatorProvider = CoreGeneratorProvider()
+        val context = CoreGeneratorContext(projectElem, generatorProvider)
 
         featureManager.applyAll(project, context)
 

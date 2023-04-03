@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test
 
 internal class LiquibaseGeneratorTest : BaseTest() {
     private val fixedClock = getFixedClock("2023-03-19T14:32:54.00Z")
-    private val sqlGenerator = CoreSqlGenerator()
     private val liquibaseFeature = LiquibaseGenerator()
     private val schemaLoader = SchemaLoader()
 
@@ -25,7 +24,6 @@ internal class LiquibaseGeneratorTest : BaseTest() {
         val schema = schemaLoader.load("/schemas/Address.json".resourceAsPath())
         val projectInput = mockProjectInput("core", schema)
         val generatorProvider = CoreGeneratorProvider()
-        generatorProvider.addGenerator(sqlGenerator)
         val generatorContext = CoreGeneratorContext(projectInput, generatorProvider, fixedClock)
         val project = ProjectNode("TestProject")
         val module = project.addModule("core")

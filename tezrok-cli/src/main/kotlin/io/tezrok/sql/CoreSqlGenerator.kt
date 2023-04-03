@@ -93,6 +93,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
             "integer" -> "INT"
             "number" -> "FLOAT"
             "boolean" -> "BOOLEAN"
+            "long" -> "BIGINT"
             // TODO: Create new ref column on target table, or new table with ref columns to both tables
             "array" -> throw IllegalArgumentException("Array type is implemented in another way")
             else -> throw IllegalArgumentException("Unsupported type: ${definition.type}")
