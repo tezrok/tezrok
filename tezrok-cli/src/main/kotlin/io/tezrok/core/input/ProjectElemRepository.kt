@@ -7,7 +7,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 
-class ProjectElemLoader {
+class ProjectElemRepository {
     fun load(projectPath: Path): ProjectElem {
         log.debug("Loading project from {}", projectPath)
         val project = JsonUtil.mapper.readValue(projectPath.toURL(), ProjectElem::class.java)
@@ -25,6 +25,6 @@ class ProjectElemLoader {
     }
 
     companion object {
-        val log: Logger = LoggerFactory.getLogger(ProjectElemLoader::class.java)
+        val log: Logger = LoggerFactory.getLogger(ProjectElemRepository::class.java)
     }
 }

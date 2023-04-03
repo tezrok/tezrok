@@ -6,8 +6,8 @@ import io.tezrok.util.resourceAsString
 import io.tezrok.util.toPrettyJson
 import org.junit.jupiter.api.Test
 
-internal class ProjectElemLoaderTest : BaseTest() {
-    private val loader = ProjectElemLoader()
+internal class ProjectElemRepositoryTest : BaseTest() {
+    private val loader = ProjectElemRepository()
 
     @Test
     fun testLoad() {

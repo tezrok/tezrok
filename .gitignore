@@ -2,3 +2,4 @@
 .idea
 target
 tezrok-core/output
+/tezrok-cli/output/

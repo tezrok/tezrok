@@ -3,7 +3,7 @@ package io.tezrok.api.node
 /**
  * Represents a model of project generation
  */
-class ProjectNode(name: String) : BaseNode(name, null) {
+open class ProjectNode(name: String) : BaseNode(name, null) {
     private val modules: MutableList<ModuleNode> = mutableListOf()
 
     fun getModules(): List<ModuleNode> = modules

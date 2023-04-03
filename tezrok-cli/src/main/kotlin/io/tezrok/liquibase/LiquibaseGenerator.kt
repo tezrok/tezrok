@@ -3,9 +3,8 @@ package io.tezrok.liquibase
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.node.FileNode
-import io.tezrok.api.node.Node
 import io.tezrok.api.node.ProjectNode
-import io.tezrok.sql.CoreSqlGenerator
+import io.tezrok.api.sql.SqlGenerator
 import io.tezrok.util.VelocityUtil
 import org.apache.velocity.VelocityContext
 import org.apache.velocity.shaded.commons.io.FilenameUtils
@@ -18,15 +17,14 @@ import java.util.function.Consumer
 /**
  * Generates Liquibase changelogs from a JSON schema
  */
-class LiquibaseGenerator(
-    private val sqlGenerator: CoreSqlGenerator
-) : TezrokFeature {
-    override fun apply(node: Node, context: GeneratorContext) {
+class LiquibaseGenerator : TezrokFeature {
+    override fun apply(project: ProjectNode, context: GeneratorContext) {
+        val sqlGenerator = context.getGenerator(SqlGenerator::class.java)
+            ?: throw IllegalArgumentException("SqlGenerator not found")
         // TODO: add maven dependency
-        node as ProjectNode
-        check(node.getModules().size == 1) { "Liquibase feature only supports one module" }
+        check(project.getModules().size == 1) { "Liquibase feature only supports one module" }
         // TODO: support multiple modules
-        val module = node.getModules()[0]
+        val module = project.getModules()[0]
         val schema = context.getProject().modules.find { it.name == module.getName() }?.schema
             ?: throw IllegalArgumentException("No schema found for module ${module.getName()}")
         val resource = module.getResources()

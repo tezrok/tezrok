@@ -1,7 +1,7 @@
 package io.tezrok.api
 
 /**
- * Generate one object from another
+ * Generate or get one object [R] from another [T]
  */
 interface TezrokGenerator<T, R> {
     fun generate(from: T, context: GeneratorContext): R

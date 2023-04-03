@@ -56,7 +56,7 @@ class ProjectOutputGenerator {
                 }
             } else if (file.isDirectory()) {
                 val subDir = outputDir.resolve(file.getName())
-                Files.createDirectories(subDir)
+                subDir.createDirectories()
                 generateFiles(file, subDir)
             } else {
                 log.warn("Unknown (not file or dir) file type: {}", file)
@@ -65,6 +65,6 @@ class ProjectOutputGenerator {
     }
 
     private companion object {
-        private val log = LoggerFactory.getLogger(ProjectOutputGenerator::class.java)
+        val log = LoggerFactory.getLogger(ProjectOutputGenerator::class.java)
     }
 }

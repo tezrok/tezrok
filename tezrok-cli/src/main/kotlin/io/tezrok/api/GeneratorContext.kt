@@ -8,7 +8,7 @@ import java.time.Clock
 /**
  * Used to provide context for any [TezrokGenerator] or [TezrokFeature]
  */
-interface GeneratorContext {
+interface GeneratorContext : GeneratorProvider {
     fun isGenerateTime(): Boolean = true
 
     fun getCharset(): Charset = StandardCharsets.UTF_8
