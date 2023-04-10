@@ -14,6 +14,8 @@ open class FileNode(name: String, parent: BaseNode?) : BaseFileNode(name, parent
 
     override fun isEmpty(): Boolean = content.isEmpty()
 
+    override fun getSize(): Long = content.size.toLong()
+
     override fun isFile(): Boolean = true
 
     override fun getOutputStream(): OutputStream {

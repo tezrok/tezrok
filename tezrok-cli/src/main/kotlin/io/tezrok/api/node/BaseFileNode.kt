@@ -23,6 +23,8 @@ abstract class BaseFileNode(name: String, parent: BaseNode?) : BaseNode(name, pa
 
     override fun isEmpty(): Boolean = NOT_SUPPORTED()
 
+    override fun getSize(): Long = NOT_SUPPORTED()
+
     override fun getFilesSize(): Int = NOT_SUPPORTED()
 
     override fun getOutputStream(): OutputStream = NOT_SUPPORTED()

@@ -4,7 +4,7 @@ import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 
 interface FileSupport : OutStream, InStream {
-    fun isEmpty(): Boolean
+    fun getSize(): Long
 
     fun isDirectory(): Boolean
 
@@ -12,6 +12,10 @@ interface FileSupport : OutStream, InStream {
 
     fun asString(charset: Charset = StandardCharsets.UTF_8): String =
         String(getInputStream().use { it.readBytes() }, charset)
+
+    fun isEmpty(): Boolean
+
+    fun isNotEmpty(): Boolean = !isEmpty()
 }
 
 interface DirectorySupport : FileSupport {
