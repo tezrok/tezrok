@@ -1,5 +1,6 @@
 package io.tezrok
 
+import io.tezrok.api.node.BaseFileNode
 import io.tezrok.api.node.DirectoryNode
 import io.tezrok.api.node.FileNode
 import io.tezrok.util.JsonUtil
@@ -31,14 +32,14 @@ internal abstract class BaseTest {
         Assertions.assertEquals(expectedResourcePath.resourceAsString(), actual)
     }
 
-    protected fun assertFile(node: FileNode, name: String): FileNode {
+    protected fun assertFile(node: BaseFileNode, name: String): FileNode {
         Assertions.assertEquals(name, node.getName())
         Assertions.assertTrue(node.isFile()) { "Node should be file: " + node.getName() }
         Assertions.assertTrue(node.getFilesSize() == 0) { "Node should not have children: " + node.getName() }
-        return node
+        return node as FileNode
     }
 
-    protected fun assertDirectory(node: FileNode, name: String, childrenSize: Int): DirectoryNode {
+    protected fun assertDirectory(node: BaseFileNode, name: String, childrenSize: Int): DirectoryNode {
         Assertions.assertEquals(name, node.getName())
         Assertions.assertTrue(node.isDirectory()) { "Node should be directory: " + node.getName() }
         Assertions.assertEquals(

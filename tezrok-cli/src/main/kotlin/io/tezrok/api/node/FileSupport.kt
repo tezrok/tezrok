@@ -4,26 +4,26 @@ import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 
 interface FileSupport : OutStream, InStream {
-    fun getFiles(): List<FileSupport>
-
-    fun addFile(name: String): FileSupport
-
-    fun addDirectory(name: String): FileSupport
-
-    fun removeFiles(names: List<String>): Boolean
-
-    fun getFile(name: String): FileSupport?
-
     fun isEmpty(): Boolean
 
     fun isDirectory(): Boolean
 
     fun isFile(): Boolean
 
-    fun getFilesSize(): Int
-
     fun asString(charset: Charset = StandardCharsets.UTF_8): String =
         String(getInputStream().use { it.readBytes() }, charset)
 }
 
-interface DirectorySupport : FileSupport {}
+interface DirectorySupport : FileSupport {
+    fun getFilesSize(): Int
+
+    fun getFiles(): List<FileSupport>
+
+    fun addFile(name: String): FileSupport
+
+    fun addDirectory(name: String): DirectorySupport
+
+    fun removeFiles(names: List<String>): Boolean
+
+    fun getFile(name: String): FileSupport?
+}

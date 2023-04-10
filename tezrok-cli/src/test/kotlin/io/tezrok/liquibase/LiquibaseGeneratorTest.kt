@@ -8,7 +8,6 @@ import io.tezrok.core.CoreGeneratorProvider
 import io.tezrok.core.input.ModuleElem
 import io.tezrok.core.input.ProjectElem
 import io.tezrok.schema.SchemaLoader
-import io.tezrok.sql.CoreSqlGenerator
 import io.tezrok.util.resourceAsPath
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -30,8 +29,7 @@ internal class LiquibaseGeneratorTest : BaseTest() {
         liquibaseFeature.apply(project, generatorContext)
         val files = module.getResources().getFiles()
         assertEquals(1, files.size)
-        val dbDir = files[0]
-        assertDirectory(dbDir, "db", 2)
+        val dbDir = assertDirectory(files[0], "db", 2)
         val dbFiles = dbDir.getFiles()
         val updatesDir = assertDirectory(dbFiles[0], "updates", 1)
         val masterFile = assertFile(dbFiles[1], "master.xml")

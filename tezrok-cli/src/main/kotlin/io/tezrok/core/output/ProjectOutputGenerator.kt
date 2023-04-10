@@ -1,6 +1,6 @@
 package io.tezrok.core.output
 
-import io.tezrok.api.node.FileNode
+import io.tezrok.api.node.BaseFileNode
 import io.tezrok.api.node.ModuleNode
 import io.tezrok.api.node.ProjectNode
 import org.slf4j.LoggerFactory
@@ -51,7 +51,7 @@ class ProjectOutputGenerator {
         generateFiles(resources, moduleOutputDir)
     }
 
-    private fun generateFiles(dirNode: FileNode, outputDir: Path) {
+    private fun generateFiles(dirNode: BaseFileNode, outputDir: Path) {
         dirNode.getFiles().forEach { file ->
             if (file.isFile()) {
                 val outputFile = outputDir.resolve(file.getName())
