@@ -2,13 +2,12 @@ package io.tezrok.core.output
 
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.api.node.BaseFileNode
-import io.tezrok.api.node.DirectoryNode
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import kotlin.io.path.*
 
 /**
- * Generates project files from [DirectoryNode]
+ * Generates project files from [ProjectNode]
  */
 class ProjectOutputGenerator {
     private var deleteOutputDir = false

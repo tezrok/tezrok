@@ -1,5 +1,6 @@
 package io.tezrok.api.xml
 
+import io.tezrok.util.ByteArrayUtil
 import org.apache.commons.lang3.Validate
 import org.w3c.dom.Element
 import java.io.OutputStream
@@ -12,8 +13,20 @@ import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
 
-open class XmlNode(private val name: String) {
+open class XmlNode(private var name: String, private var value: String? = null) {
     fun getName(): String = name
+
+    fun getValue(): String? = value
+
+    fun setName(name: String): XmlNode {
+        this.name = name
+        return this
+    }
+
+    fun setValue(value: String?): XmlNode {
+        this.value = value
+        return this
+    }
 
     private val attrs: MutableList<XmlAttr> = ArrayList()
     private val items: MutableList<XmlNode> = ArrayList()
@@ -22,19 +35,33 @@ open class XmlNode(private val name: String) {
         Validate.notBlank(name, "Xml node name cannot be blank")
     }
 
-    fun node(name: String): XmlNode {
+    /**
+     * Creates a new node or returns existing first
+     */
+    @Synchronized
+    fun getOrCreateNode(name: String): XmlNode {
+        return items.stream()
+            .filter { p: XmlNode -> p.getName() == name }
+            .findFirst()
+            .orElseGet { addNode(name) }
+    }
+
+    @Synchronized
+    fun addNode(name: String): XmlNode {
         val child = XmlNode(name)
         items.add(child)
         return child
     }
+
+    @Synchronized
+    fun get(name: String): List<XmlNode> = items.filter { it.getName() == name }
 
     fun attr(name: String, value: String): XmlNode {
         attrs.add(XmlAttr(name, value))
         return this
     }
 
-    val isEmpty: Boolean
-        get() = items.isEmpty()
+    val isEmpty: Boolean = items.isEmpty()
 
     fun getAttrs(): Iterator<XmlAttr> {
         return attrs.iterator()
@@ -79,4 +106,6 @@ open class XmlNode(private val name: String) {
             node.visit(childElement)
         }
     }
+
+    override fun toString(): String = ByteArrayUtil.outputAsArray(this::writeAsString).toString(Charsets.UTF_8)
 }
