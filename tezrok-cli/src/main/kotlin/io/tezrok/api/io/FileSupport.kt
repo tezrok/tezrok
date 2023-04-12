@@ -1,4 +1,4 @@
-package io.tezrok.api.node
+package io.tezrok.api.io
 
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
@@ -18,16 +18,3 @@ interface FileSupport : OutStream, InStream {
     fun isNotEmpty(): Boolean = !isEmpty()
 }
 
-interface DirectorySupport : FileSupport {
-    fun getFilesSize(): Int
-
-    fun getFiles(): List<FileSupport>
-
-    fun addFile(name: String): FileSupport
-
-    fun addDirectory(name: String): DirectorySupport
-
-    fun removeFiles(names: List<String>): Boolean
-
-    fun getFile(name: String): FileSupport?
-}

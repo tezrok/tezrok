@@ -1,7 +1,9 @@
-package io.tezrok.api.node
+package io.tezrok.api.maven
+
+import io.tezrok.api.node.BaseNode
 
 /**
- * Represents a model of project generation
+ * Represents a model of maven project generation
  */
 open class ProjectNode(name: String) : BaseNode(name, null) {
     private val modules: MutableList<ModuleNode> = mutableListOf()

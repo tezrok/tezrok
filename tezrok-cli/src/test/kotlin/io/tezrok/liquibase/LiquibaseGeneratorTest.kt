@@ -1,7 +1,7 @@
 package io.tezrok.liquibase
 
 import io.tezrok.BaseTest
-import io.tezrok.api.node.ProjectNode
+import io.tezrok.api.maven.ProjectNode
 import io.tezrok.api.schema.Schema
 import io.tezrok.core.CoreGeneratorContext
 import io.tezrok.core.CoreGeneratorProvider

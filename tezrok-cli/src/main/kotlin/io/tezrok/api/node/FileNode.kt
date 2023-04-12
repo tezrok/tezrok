@@ -1,5 +1,6 @@
 package io.tezrok.api.node
 
+import io.tezrok.api.io.FileSupport
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream

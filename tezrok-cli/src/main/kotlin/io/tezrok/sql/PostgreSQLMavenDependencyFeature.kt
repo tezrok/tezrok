@@ -2,7 +2,7 @@ package io.tezrok.sql
 
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
-import io.tezrok.api.node.ProjectNode
+import io.tezrok.api.maven.ProjectNode
 
 /**
  * Adds PostgreSQL Maven dependency to the project

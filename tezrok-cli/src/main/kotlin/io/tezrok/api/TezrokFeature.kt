@@ -1,6 +1,6 @@
 package io.tezrok.api
 
-import io.tezrok.api.node.ProjectNode
+import io.tezrok.api.maven.ProjectNode
 
 /**
  * Represents a feature which can be applied to a project

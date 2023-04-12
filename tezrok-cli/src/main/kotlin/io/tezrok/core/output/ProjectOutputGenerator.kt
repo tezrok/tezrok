@@ -1,8 +1,8 @@
 package io.tezrok.core.output
 
 import io.tezrok.api.node.BaseFileNode
-import io.tezrok.api.node.ModuleNode
-import io.tezrok.api.node.ProjectNode
+import io.tezrok.api.maven.ModuleNode
+import io.tezrok.api.maven.ProjectNode
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
@@ -40,10 +40,6 @@ class ProjectOutputGenerator {
         log.debug("Generating module: {}", module.getName())
         val moduleOutputDir = outputDir.resolve(module.getName())
         Files.createDirectories(moduleOutputDir)
-
-        for (entity in module.getEntities()) {
-            // TODO: generate entity
-        }
 
         val resources = module.getResources()
         moduleOutputDir.resolve(resources.getName())

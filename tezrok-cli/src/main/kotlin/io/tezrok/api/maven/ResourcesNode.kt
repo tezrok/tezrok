@@ -1,4 +1,7 @@
-package io.tezrok.api.node
+package io.tezrok.api.maven
+
+import io.tezrok.api.node.BaseNode
+import io.tezrok.api.node.DirectoryNode
 
 /**
  * Represents a resource directory

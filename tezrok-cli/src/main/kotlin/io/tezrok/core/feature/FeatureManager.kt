@@ -2,7 +2,7 @@ package io.tezrok.core.feature
 
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
-import io.tezrok.api.node.ProjectNode
+import io.tezrok.api.maven.ProjectNode
 import io.tezrok.liquibase.LiquibaseGenerator
 
 internal class FeatureManager {

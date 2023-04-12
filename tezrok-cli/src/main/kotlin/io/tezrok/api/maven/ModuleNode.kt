@@ -1,4 +1,6 @@
-package io.tezrok.api.node
+package io.tezrok.api.maven
+
+import io.tezrok.api.node.BaseNode
 
 /**
  * Represents a module. Which represents a separate maven module
@@ -6,17 +8,9 @@ package io.tezrok.api.node
  */
 class ModuleNode(name: String, parent: BaseNode?) : BaseNode(name, parent) {
     private val resources: ResourcesNode = ResourcesNode(this)
-    private val entities: MutableList<EntityNode> = mutableListOf()
-
-    fun getEntities(): List<EntityNode> = entities
 
     /**
      * Returns the "resources" node
      */
     fun getResources(): ResourcesNode = resources
-
-    fun addEntity(name: String) {
-        // TODO: check if entity already exists
-        entities.add(EntityNode(name, this))
-    }
 }

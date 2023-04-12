@@ -1,5 +1,6 @@
 package io.tezrok.api.node
 
+import io.tezrok.api.io.DirectorySupport
 import java.io.InputStream
 import java.io.OutputStream
 

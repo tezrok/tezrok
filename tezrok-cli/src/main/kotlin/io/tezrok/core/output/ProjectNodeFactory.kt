@@ -1,11 +1,10 @@
 package io.tezrok.core.output
 
-import io.tezrok.api.node.ModuleNode
-import io.tezrok.api.node.ProjectNode
+import io.tezrok.api.maven.ModuleNode
+import io.tezrok.api.maven.ProjectNode
 import io.tezrok.core.input.ModuleElem
 import io.tezrok.core.input.ProjectElem
 import io.tezrok.core.input.ProjectElemRepository
-import org.apache.commons.lang3.Validate
 import java.nio.file.Path
 
 /**
@@ -26,8 +25,6 @@ class ProjectNodeFactory(private val projectElemRepository: ProjectElemRepositor
 
     private fun mapModule(moduleElem: ModuleElem, project: ProjectNode): ModuleNode {
         val module = project.addModule(moduleElem.name)
-
-        Validate.isTrue(module.getEntities().isEmpty(), "TODO")
 
         return module
     }

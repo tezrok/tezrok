@@ -3,7 +3,7 @@ package io.tezrok.liquibase
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.node.FileNode
-import io.tezrok.api.node.ProjectNode
+import io.tezrok.api.maven.ProjectNode
 import io.tezrok.api.sql.SqlGenerator
 import io.tezrok.util.VelocityUtil
 import org.apache.velocity.VelocityContext
