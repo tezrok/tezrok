@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory
 /**
  * Common implementation for all nodes
  */
-abstract class BaseNode(private var name: String, private val parent: BaseNode?) : Node {
+abstract class BaseNode(private var name: String, private val parent: Node?) : Node {
     protected val log = LoggerFactory.getLogger(this.javaClass)!!
 
     /**
@@ -21,6 +21,6 @@ abstract class BaseNode(private var name: String, private val parent: BaseNode?)
         this.name = name
     }
 
-    override fun getParent(): BaseNode? = parent
+    override fun getParent(): Node? = parent
 }
 

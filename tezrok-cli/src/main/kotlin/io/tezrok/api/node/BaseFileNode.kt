@@ -7,7 +7,7 @@ import java.io.OutputStream
 /**
  * Base implementation for [FileNode] and [DirectoryNode]
  */
-abstract class BaseFileNode(name: String, parent: BaseNode?) : BaseNode(name, parent), DirectorySupport {
+abstract class BaseFileNode(name: String, parent: Node?) : BaseNode(name, parent), DirectorySupport {
     override fun isDirectory(): Boolean = false
 
     override fun isFile(): Boolean = false

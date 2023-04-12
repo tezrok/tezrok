@@ -10,7 +10,7 @@ import java.io.OutputStream
  *
  * Implements [FileSupport] for nodes
  */
-open class FileNode(name: String, parent: BaseNode?) : BaseFileNode(name, parent), FileSupport {
+open class FileNode(name: String, parent: Node?) : BaseFileNode(name, parent), FileSupport {
     private var content: ByteArray = EMPTY_ARRAY
 
     override fun isEmpty(): Boolean = content.isEmpty()

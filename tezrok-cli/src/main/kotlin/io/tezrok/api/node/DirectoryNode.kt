@@ -8,7 +8,7 @@ import java.util.*
  *
  * Implements the [DirectorySupport] interface
  */
-open class DirectoryNode(name: String, parent: BaseNode? = null) : BaseFileNode(name, parent), DirectorySupport {
+open class DirectoryNode(name: String, parent: Node? = null) : BaseFileNode(name, parent), DirectorySupport {
     private val files: MutableList<BaseFileNode> = mutableListOf()
 
     @Synchronized
