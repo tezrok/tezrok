@@ -11,6 +11,15 @@ abstract class BaseFileNode(name: String, parent: BaseNode?) : BaseNode(name, pa
 
     override fun isFile(): Boolean = false
 
+    override fun getSize(): Long = 0
+
+    override fun getFilesSize(): Int = 0
+
+    /**
+     * Returns true if file node is empty
+     */
+    override fun isEmpty(): Boolean = true
+
     override fun getFiles(): List<BaseFileNode> = NOT_SUPPORTED()
 
     override fun addFile(name: String): BaseFileNode = NOT_SUPPORTED()
@@ -20,12 +29,6 @@ abstract class BaseFileNode(name: String, parent: BaseNode?) : BaseNode(name, pa
     override fun removeFiles(names: List<String>): Boolean = NOT_SUPPORTED()
 
     override fun getFile(name: String): BaseFileNode? = NOT_SUPPORTED()
-
-    override fun isEmpty(): Boolean = NOT_SUPPORTED()
-
-    override fun getSize(): Long = NOT_SUPPORTED()
-
-    override fun getFilesSize(): Int = NOT_SUPPORTED()
 
     override fun getOutputStream(): OutputStream = NOT_SUPPORTED()
 
