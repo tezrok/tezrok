@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test
 
 
 internal class LiquibaseGeneratorTest : BaseTest() {
-    private val fixedClock = getFixedClock("2023-03-19T14:32:54.00Z")
+    private val fixedClock = getFixedClock()
     private val liquibaseFeature = LiquibaseGenerator()
     private val schemaLoader = SchemaLoader()
 
