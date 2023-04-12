@@ -1,5 +1,6 @@
 package io.tezrok.api.maven
 
+import io.tezrok.api.node.BaseFileNode
 import io.tezrok.api.node.DirectoryNode
 
 /**
@@ -9,6 +10,8 @@ open class ProjectNode(name: String) : DirectoryNode(name, null) {
     private val modules: MutableList<ModuleNode> = mutableListOf()
 
     fun getModules(): List<ModuleNode> = modules
+
+    override fun getFiles(): List<BaseFileNode> = modules
 
     fun addModule(name: String): ModuleNode {
         // TODO: check if module already exists

@@ -21,6 +21,8 @@ interface Node {
      */
     fun getParent(): Node?
 
+    fun getChildren(): List<Node>
+
     /**
      * Returns true if this is the root node
      */

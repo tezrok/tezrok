@@ -21,6 +21,8 @@ abstract class BaseFileNode(name: String, parent: Node?) : BaseNode(name, parent
      */
     override fun isEmpty(): Boolean = true
 
+    override fun getChildren(): List<BaseFileNode> = getFiles()
+
     override fun getFiles(): List<BaseFileNode> = NOT_SUPPORTED()
 
     override fun addFile(name: String): BaseFileNode = NOT_SUPPORTED()

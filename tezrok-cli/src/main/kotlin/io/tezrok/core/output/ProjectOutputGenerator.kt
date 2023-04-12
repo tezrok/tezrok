@@ -1,15 +1,14 @@
 package io.tezrok.core.output
 
-import io.tezrok.api.node.BaseFileNode
-import io.tezrok.api.maven.ModuleNode
 import io.tezrok.api.maven.ProjectNode
+import io.tezrok.api.node.BaseFileNode
+import io.tezrok.api.node.DirectoryNode
 import org.slf4j.LoggerFactory
-import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.*
 
 /**
- * Generates project files from [ProjectNode]
+ * Generates project files from [DirectoryNode]
  */
 class ProjectOutputGenerator {
     private var deleteOutputDir = false
@@ -28,23 +27,10 @@ class ProjectOutputGenerator {
             outputDir.createDirectories()
         }
 
-        for (module in project.getModules()) {
-            generateModule(outputDir, module)
-        }
+        generateFiles(project, outputDir)
 
         val seconds = (System.currentTimeMillis() - startTime) / 1000
         log.debug("Project generated in {} sec", seconds)
-    }
-
-    private fun generateModule(outputDir: Path, module: ModuleNode) {
-        log.debug("Generating module: {}", module.getName())
-        val moduleOutputDir = outputDir.resolve(module.getName())
-        Files.createDirectories(moduleOutputDir)
-
-        val resources = module.getResources()
-        moduleOutputDir.resolve(resources.getName())
-        Files.createDirectories(moduleOutputDir)
-        generateFiles(resources, moduleOutputDir)
     }
 
     private fun generateFiles(dirNode: BaseFileNode, outputDir: Path) {
