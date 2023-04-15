@@ -13,7 +13,14 @@ import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
 
-open class XmlNode(private var name: String, private var value: String? = null) {
+open class XmlNode(private var name: String, private var value: String? = null, private val parent: XmlNode? = null) {
+    private val attrs: MutableMap<String, String> = HashMap()
+    private val items: MutableList<XmlNode> = ArrayList()
+
+    init {
+        Validate.notBlank(name, "Xml node name cannot be blank")
+    }
+
     fun getName(): String = name
 
     fun getValue(): String? = value
@@ -28,27 +35,21 @@ open class XmlNode(private var name: String, private var value: String? = null) 
         return this
     }
 
-    private val attrs: MutableList<XmlAttr> = ArrayList()
-    private val items: MutableList<XmlNode> = ArrayList()
+    fun getParent(): XmlNode? = parent
 
-    init {
-        Validate.notBlank(name, "Xml node name cannot be blank")
-    }
+    fun isRoot(): Boolean = parent == null
+
+    fun and(): XmlNode = getParent() ?: throw IllegalStateException("No parent node")
 
     /**
-     * Creates a new node or returns existing first
+     * Creates a new node or returns first existing one
      */
     @Synchronized
-    fun getOrCreateNode(name: String): XmlNode {
-        return items.stream()
-            .filter { p: XmlNode -> p.getName() == name }
-            .findFirst()
-            .orElseGet { addNode(name) }
-    }
+    fun getOrCreate(name: String): XmlNode = items.find { p: XmlNode -> p.getName() == name } ?: add(name)
 
     @Synchronized
-    fun addNode(name: String): XmlNode {
-        val child = XmlNode(name)
+    fun add(name: String): XmlNode {
+        val child = XmlNode(name, parent = this)
         items.add(child)
         return child
     }
@@ -56,34 +57,37 @@ open class XmlNode(private var name: String, private var value: String? = null) 
     @Synchronized
     fun get(name: String): List<XmlNode> = items.filter { it.getName() == name }
 
-    fun attr(name: String, value: String): XmlNode {
-        attrs.add(XmlAttr(name, value))
+    @Synchronized
+    fun addAttr(name: String, value: String): XmlNode {
+        attrs[name] = value
         return this
     }
 
+    @Synchronized
+    fun getAttr(name: String): Optional<XmlAttr> {
+        return Optional.ofNullable(attrs[name]).map { XmlAttr(name, it) }
+    }
+
+    @Synchronized
+    fun hasAttr(name: String): Boolean = attrs.containsKey(name)
+
+    @Synchronized
+    fun removeAttr(name: String): Boolean = attrs.remove(name) != null
+
     val isEmpty: Boolean = items.isEmpty()
 
-    fun getAttrs(): Iterator<XmlAttr> {
-        return attrs.iterator()
+    @Synchronized
+    fun getAttrs(): List<XmlAttr> {
+        return attrs.map { XmlAttr(it.key, it.value) }
     }
 
-    fun getItems(): Iterator<XmlNode> {
-        return items.iterator()
+    @Synchronized
+    fun getItems(): List<XmlNode> {
+        return items.toList()
     }
 
-    fun hasAttr(name: String): Boolean {
-        return getAttr(name).isPresent
-    }
-
-    fun getAttr(name: String): Optional<XmlAttr> {
-        return attrs.stream()
-            .filter { p: XmlAttr -> p.getName() == name }
-            .findFirst()
-    }
-
-    fun remove(node: XmlNode) {
-        items.remove(node)
-    }
+    @Synchronized
+    fun remove(node: XmlNode): Boolean = items.remove(node)
 
     fun writeAsString(stream: OutputStream) {
         val docBuilder: DocumentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
@@ -99,7 +103,7 @@ open class XmlNode(private var name: String, private var value: String? = null) 
 
     private fun visit(element: Element) {
         val ownerDocument = element.ownerDocument
-        attrs.forEach { attr: XmlAttr -> element.setAttribute(attr.getName(), attr.getValue()) }
+        attrs.forEach { (key, value) -> element.setAttribute(key, value) }
         items.forEach { node: XmlNode ->
             val childElement = ownerDocument.createElement(node.getName())
             element.appendChild(childElement)

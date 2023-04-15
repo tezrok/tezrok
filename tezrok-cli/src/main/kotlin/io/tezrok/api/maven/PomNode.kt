@@ -11,11 +11,11 @@ open class PomNode(name: String = "pom.xml", parent: BaseNode? = null) : XmlFile
     fun addDependency(dependency: MavenDependency) {
         // TODO: check if dependency already exists
 
-        getXml().getOrCreateNode("dependencies")
-            .addNode("dependency")
-            .addNode("groupId").setValue(dependency.groupId)
-            .addNode("artifactId").setValue(dependency.artifactId)
-            .addNode("version").setValue(dependency.version)
+        getXml().getOrCreate("dependencies")
+            .add("dependency")
+            .add("groupId").setValue(dependency.groupId).and()
+            .add("artifactId").setValue(dependency.artifactId).and()
+            .add("version").setValue(dependency.version)
     }
 
     @Synchronized
