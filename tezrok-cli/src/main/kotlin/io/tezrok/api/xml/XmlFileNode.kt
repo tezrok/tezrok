@@ -7,7 +7,7 @@ import java.io.InputStream
 import java.io.OutputStream
 
 open class XmlFileNode(name: String, rootName: String, parent: Node? = null) : FileNode(name, parent) {
-    private val xml: XmlNode = XmlNode(rootName)
+    private val xml: XmlNode = XmlNode.newNode(rootName)
 
     open fun getXml(): XmlNode = xml
 

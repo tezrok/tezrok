@@ -8,6 +8,7 @@ import java.io.OutputStream
 import java.util.*
 import java.util.stream.Stream
 import java.util.stream.StreamSupport
+import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.transform.OutputKeys
 import javax.xml.transform.Transformer
 import javax.xml.transform.TransformerFactory
@@ -19,12 +20,6 @@ import javax.xml.transform.stream.StreamResult
  */
 @NotThreadSafe
 open class XmlNode private constructor(private val element: Element, private val parent: XmlNode? = null) {
-    private val attrs: MutableMap<String, String> = HashMap()
-
-    init {
-        Validate.notBlank(name, "Xml node name cannot be blank")
-    }
-
     fun getName(): String = element.tagName
 
     fun getValue(): String? = element.nodeValue
@@ -61,17 +56,18 @@ open class XmlNode private constructor(private val element: Element, private val
     fun get(name: String): List<XmlNode> = itemStream().filter { p: XmlNode -> p.getName() == name }.toList()
 
     fun addAttr(name: String, value: String): XmlNode {
-        attrs[name] = value
+        element.setAttribute(name, value)
         return this
     }
 
-    fun getAttr(name: String): Optional<XmlAttr> {
-        return Optional.ofNullable(attrs[name]).map { XmlAttr(name, it) }
-    }
+    fun getAttr(name: String): Optional<XmlAttr> = Optional.of(name)
+        .filter(element::hasAttribute)
+        .map(element::getAttribute)
+        .map { XmlAttr(name, it) }
 
-    fun hasAttr(name: String): Boolean = attrs.containsKey(name)
+    fun hasAttr(name: String): Boolean = element.hasAttribute(name)
 
-    fun removeAttr(name: String): Boolean = attrs.remove(name) != null
+    fun removeAttr(name: String): Boolean = element.removeAttribute(name)
 
     val isEmpty: Boolean = element.childNodes.length == 0
 
@@ -96,7 +92,10 @@ open class XmlNode private constructor(private val element: Element, private val
         return StreamSupport.stream(Iterable { iterator }.spliterator(), false)
     }
 
-    fun remove(node: XmlNode): Boolean = items.remove(node)
+    fun remove(nodes: List<XmlNode>): Boolean = nodes.map { it.element }
+        .filter { it.parentNode == this }
+        .map(element::removeChild)
+        .isNotEmpty()
 
     fun writeAsString(stream: OutputStream) {
         val transformer: Transformer = TransformerFactory.newInstance().newTransformer()
@@ -107,4 +106,14 @@ open class XmlNode private constructor(private val element: Element, private val
     }
 
     override fun toString(): String = ByteArrayUtil.outputAsArray(this::writeAsString).toString(Charsets.UTF_8)
+
+    companion object {
+        fun newNode(name: String): XmlNode {
+            Validate.notBlank(name, "Xml name cannot be blank")
+            val docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+            val doc = docBuilder.newDocument()
+            val element = doc.createElement(name)
+            return XmlNode(element)
+        }
+    }
 }
