@@ -67,6 +67,8 @@ open class XmlNode private constructor(private val element: Element) {
 
     fun getAll(name: String): List<XmlNode> = itemsStream().filter { it.getName() == name }.toList()
 
+    fun getNodeValue(name: String, defValue: String = ""): String = get(name)?.getValue() ?: defValue
+
     fun addAttr(name: String, value: String): XmlNode {
         element.setAttribute(name, value)
         return this
@@ -87,7 +89,7 @@ open class XmlNode private constructor(private val element: Element) {
         .map { XmlAttr(it.nodeName, it.nodeValue) }
         .toList()
 
-    fun getItems(): List<XmlNode> = itemsStream().toList()
+    fun getItems(): Stream<XmlNode> = itemsStream()
 
     fun remove(nodes: List<XmlNode>): Boolean = nodes.map { it.element }
         .filter { it.parentNode == this }
@@ -95,10 +97,10 @@ open class XmlNode private constructor(private val element: Element) {
         .map(element::removeChild)
         .isNotEmpty()
 
-    fun nodesByPath(expression: String): List<XmlNode> {
+    fun nodesByPath(expression: String): Stream<XmlNode> {
         val nodeList = xPath.value.compile(expression).evaluate(element, XPathConstants.NODESET) as NodeList
 
-        return XmlUtil.nodeStream(nodeList).map { XmlNode(it as Element) }.toList()
+        return XmlUtil.nodeStream(nodeList).map { XmlNode(it as Element) }
     }
 
     fun writeAsString(stream: OutputStream) {

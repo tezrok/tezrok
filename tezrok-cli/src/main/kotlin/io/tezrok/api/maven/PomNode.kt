@@ -3,6 +3,8 @@ package io.tezrok.api.maven
 import io.tezrok.api.node.BaseNode
 import io.tezrok.api.xml.XmlFileNode
 import io.tezrok.api.xml.XmlNode
+import io.tezrok.util.find
+import java.util.stream.Stream
 
 
 /**
@@ -10,22 +12,28 @@ import io.tezrok.api.xml.XmlNode
  */
 open class PomNode(name: String = "pom.xml", parent: BaseNode? = null) : XmlFileNode(name, "project", parent) {
     @Synchronized
-    fun getDependencies(): List<MavenDependency> = getXml()
-        .nodesByPath(DEPENDENCY_PATH)
-        .map { it.toDependency() }
+    fun getDependencies(): Stream<MavenDependency> = dependencyNodes().map { it.toDependency() }
+
+    /**
+     * Get maven dependency by groupId and artifactId
+     */
+    @Synchronized
+    fun getDependency(groupId: String, artifactId: String): MavenDependency? = getDependencies()
+        .find { it.groupId == groupId && it.artifactId == artifactId }
 
     /**
      * Add maven dependency or update existing one if version is newer
+     *
+     * @return true if dependency was added or updated
      */
     @Synchronized
     fun addDependency(dependency: MavenDependency): Boolean {
         val groupId = dependency.groupId
         val artifactId = dependency.artifactId
         val version = dependency.version
+        val shortId = dependency.shortId()
 
-        var dependencyNode = getXml()
-            .nodesByPath("/project/dependencies/dependency[groupId='$groupId' and artifactId='$artifactId']")
-            .firstOrNull()
+        var dependencyNode = dependencyNodes().find { node -> node.shortId() == shortId }
 
         if (dependencyNode != null) {
             // if dependency already exists, check if version is newer
@@ -56,20 +64,22 @@ open class PomNode(name: String = "pom.xml", parent: BaseNode? = null) : XmlFile
      */
     @Synchronized
     fun removeDependencies(dependencies: List<MavenDependency>): Boolean {
-        val dependenciesToRemove = dependencies.map { it.groupId + ":" + it.artifactId }.toHashSet()
-        val dependencyNodes = getXml().nodesByPath(DEPENDENCY_PATH)
-            .filter { node -> dependenciesToRemove.contains(node.shortId()) }
+        val shortIdsToRemove = dependencies.map { it.shortId() }.toHashSet()
+        val dependencyNodes = dependencyNodes()
+            .filter { node -> shortIdsToRemove.contains(node.shortId()) }
+            .toList()
 
         return getXml().remove(dependencyNodes)
     }
 
-    private fun XmlNode.shortId(): String =
-        (get("groupId")?.getValue() ?: "") + ":" + (get("artifactId")?.getValue() ?: "")
+    private fun dependencyNodes() = getXml().nodesByPath(DEPENDENCY_PATH)
+
+    private fun XmlNode.shortId(): String = getNodeValue("groupId") + ":" + getNodeValue("artifactId")
 
     private fun XmlNode.toDependency() = MavenDependency(
-        groupId = this.get("groupId")?.getValue() ?: "",
-        artifactId = this.get("artifactId")?.getValue() ?: "",
-        version = this.get("version")?.getValue() ?: ""
+        groupId = getNodeValue("groupId"),
+        artifactId = getNodeValue("artifactId"),
+        version = getNodeValue("version")
     )
 
     private companion object {
@@ -77,4 +87,8 @@ open class PomNode(name: String = "pom.xml", parent: BaseNode? = null) : XmlFile
     }
 }
 
-data class MavenDependency(val groupId: String, val artifactId: String, val version: String)
+data class MavenDependency(val groupId: String, val artifactId: String, val version: String) {
+    fun shortId(): String = "$groupId:$artifactId"
+
+    fun fullId(): String = "$groupId:$artifactId:$version"
+}
