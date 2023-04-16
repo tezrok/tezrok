@@ -20,7 +20,7 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
             .addAttr("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
             .addAttr("xsi:schemaLocation", SCHEMA_LOCATION)
             .getOrCreate("modelVersion").setValue("4.0.0").and()
-            .getOrCreate("artifactId").setValue(artifactId)
+            .getOrCreate(ARTIFACT_ID).setValue(artifactId)
     }
 
     @Synchronized
@@ -57,7 +57,7 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
         if (dependencyNode != null) {
             // if dependency already exists, check if version is newer
             if (version.isNotBlank()) {
-                val versionNode = dependencyNode.getOrCreate("version")
+                val versionNode = dependencyNode.getOrCreate(VERSION)
                 if (versionNode.getValue()?.isBlank() == true || version > versionNode.getValue()!!) {
                     versionNode.setValue(version)
                     return true
@@ -68,11 +68,11 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
 
         dependencyNode = getXml().getOrCreate("dependencies")
             .add("dependency")
-            .add("groupId").setValue(groupId).and()
-            .add("artifactId").setValue(artifactId).and()
+            .add(GROUP_ID).setValue(groupId).and()
+            .add(ARTIFACT_ID).setValue(artifactId).and()
 
         if (version.isNotBlank()) {
-            dependencyNode.add("version").setValue(version)
+            dependencyNode.add(VERSION).setValue(version)
         }
 
         return true
@@ -93,38 +93,41 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
 
     private fun dependencyNodes() = getXml().nodesByPath(DEPENDENCY_PATH)
 
-    private fun XmlNode.shortId(): String = getNodeValue("groupId") + ":" + getNodeValue("artifactId")
+    private fun XmlNode.shortId(): String = getNodeValue(GROUP_ID) + ":" + getNodeValue(ARTIFACT_ID)
 
     private fun XmlNode.toDependency() = MavenDependency(
-        groupId = getNodeValue("groupId"),
-        artifactId = getNodeValue("artifactId"),
-        version = getNodeValue("version")
+        groupId = getNodeValue(GROUP_ID),
+        artifactId = getNodeValue(ARTIFACT_ID),
+        version = getNodeValue(VERSION)
     )
 
     private fun setDependencyIdInternal(value: MavenDependency) {
         val xml = getXml()
         if (value.groupId.isBlank())
-            xml.removeAll("groupId")
+            xml.removeAll(GROUP_ID)
         else
-            xml.getOrCreate("groupId").setValue(value.groupId)
+            xml.getOrCreate(GROUP_ID).setValue(value.groupId)
         // artifactId is required
         if (value.artifactId.isNotBlank())
-            xml.getOrCreate("artifactId").setValue(value.artifactId)
+            xml.getOrCreate(ARTIFACT_ID).setValue(value.artifactId)
         if (value.version.isBlank())
-            xml.removeAll("version")
+            xml.removeAll(VERSION)
         else
-            xml.getOrCreate("version").setValue(value.version)
+            xml.getOrCreate(VERSION).setValue(value.version)
     }
 
     private fun getDependencyIdInternal(): MavenDependency = getXml().let { xml ->
         MavenDependency(
-            xml.getNodeValue("groupId"),
-            xml.getNodeValue("artifactId"),
-            xml.getNodeValue("version")
+            xml.getNodeValue(GROUP_ID),
+            xml.getNodeValue(ARTIFACT_ID),
+            xml.getNodeValue(VERSION)
         )
     }
 
     private companion object {
+        const val GROUP_ID = "groupId"
+        const val ARTIFACT_ID = "artifactId"
+        const val VERSION = "version"
         const val DEPENDENCY_PATH = "/project/dependencies/dependency"
         const val SCHEMA_LOCATION = "http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
     }
@@ -135,7 +138,18 @@ data class MavenDependency(val groupId: String, val artifactId: String, val vers
 
     fun fullId(): String = "$groupId:$artifactId:$version"
 
+    fun withGroupId(groupId: String): MavenDependency = MavenDependency(groupId, artifactId, version)
+
+    fun withArtifactId(artifactId: String): MavenDependency = MavenDependency(groupId, artifactId, version)
+
+    fun withVersion(version: String): MavenDependency = MavenDependency(groupId, artifactId, version)
+
     companion object {
+        /**
+         * Parse maven dependency from string
+         *
+         * @param dependency dependency in format "groupId:artifactId:version"
+         */
         @JvmStatic
         fun of(dependency: String): MavenDependency {
             val parts = dependency.split(":")
