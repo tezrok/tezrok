@@ -1,25 +1,31 @@
 package io.tezrok.api.xml
 
 import io.tezrok.util.ByteArrayUtil
+import io.tezrok.util.XmlUtil
 import net.jcip.annotations.NotThreadSafe
 import org.apache.commons.lang3.Validate
 import org.w3c.dom.Element
+import org.w3c.dom.Node
+import org.w3c.dom.NodeList
 import java.io.OutputStream
 import java.util.*
 import java.util.stream.Stream
-import java.util.stream.StreamSupport
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.transform.OutputKeys
 import javax.xml.transform.Transformer
 import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
+import javax.xml.xpath.XPath
+import javax.xml.xpath.XPathConstants
+import javax.xml.xpath.XPathFactory
+
 
 /**
  * Class works with xml
  */
 @NotThreadSafe
-open class XmlNode private constructor(private val element: Element, private val parent: XmlNode? = null) {
+open class XmlNode private constructor(private val element: Element) {
     fun getName(): String = element.tagName
 
     fun getValue(): String? = element.nodeValue
@@ -34,26 +40,32 @@ open class XmlNode private constructor(private val element: Element, private val
         return this
     }
 
-    fun getParent(): XmlNode? = parent
+    fun getParent(): XmlNode? = element.parentNode?.let { XmlNode(it as Element) }
 
-    fun isRoot(): Boolean = parent == null
+    fun isRoot(): Boolean = element.parentNode == null
 
     fun and(): XmlNode = getParent() ?: throw IllegalStateException("No parent node")
+
+
+    fun add(name: String): XmlNode {
+        val childElem = element.ownerDocument.createElement(name)
+        return XmlNode(childElem)
+    }
+
+    fun get(name: String): XmlNode? = itemsStream()
+        .filter { it.getName() == name }
+        .findFirst()
+        .orElse(null)
 
     /**
      * Creates a new node or returns first existing one
      */
-    fun getOrCreate(name: String): XmlNode =
-        itemStream().filter { p: XmlNode -> p.getName() == name }
-            .findFirst()
-            .orElseGet { add(name) }
+    fun getOrCreate(name: String): XmlNode = itemsStream()
+        .filter { it.getName() == name }
+        .findFirst()
+        .orElseGet { add(name) }
 
-    fun add(name: String): XmlNode {
-        val childElem = element.ownerDocument.createElement(name)
-        return XmlNode(childElem, parent = this)
-    }
-
-    fun get(name: String): List<XmlNode> = itemStream().filter { p: XmlNode -> p.getName() == name }.toList()
+    fun getAll(name: String): List<XmlNode> = itemsStream().filter { it.getName() == name }.toList()
 
     fun addAttr(name: String, value: String): XmlNode {
         element.setAttribute(name, value)
@@ -67,35 +79,27 @@ open class XmlNode private constructor(private val element: Element, private val
 
     fun hasAttr(name: String): Boolean = element.hasAttribute(name)
 
-    fun removeAttr(name: String): Boolean = element.removeAttribute(name)
+    fun removeAttr(name: String) = element.removeAttribute(name)
 
     val isEmpty: Boolean = element.childNodes.length == 0
 
-    fun getAttrs(): List<XmlAttr> {
-        return attrs.map { XmlAttr(it.key, it.value) }
-    }
+    fun getAttrs(): List<XmlAttr> = XmlUtil.nodeStream(element.attributes)
+        .map { XmlAttr(it.nodeName, it.nodeValue) }
+        .toList()
 
-    fun getItems(): List<XmlNode> = itemStream().toList()
-
-    protected fun itemStream(): Stream<XmlNode> {
-        val nodes = element.childNodes
-        val iterator = object : Iterator<XmlNode> {
-            private var index = 0
-            override fun hasNext(): Boolean = index < nodes.length
-            override fun next(): XmlNode {
-                val node = nodes.item(index)
-                index++
-                return XmlNode(node as Element, parent = this@XmlNode)
-            }
-        }
-
-        return StreamSupport.stream(Iterable { iterator }.spliterator(), false)
-    }
+    fun getItems(): List<XmlNode> = itemsStream().toList()
 
     fun remove(nodes: List<XmlNode>): Boolean = nodes.map { it.element }
         .filter { it.parentNode == this }
+        .toList()
         .map(element::removeChild)
         .isNotEmpty()
+
+    fun nodesByPath(expression: String): List<XmlNode> {
+        val nodeList = xPath.value.compile(expression).evaluate(element, XPathConstants.NODESET) as NodeList
+
+        return XmlUtil.nodeStream(nodeList).map { XmlNode(it as Element) }.toList()
+    }
 
     fun writeAsString(stream: OutputStream) {
         val transformer: Transformer = TransformerFactory.newInstance().newTransformer()
@@ -107,7 +111,26 @@ open class XmlNode private constructor(private val element: Element, private val
 
     override fun toString(): String = ByteArrayUtil.outputAsArray(this::writeAsString).toString(Charsets.UTF_8)
 
+    private fun itemsStream(): Stream<XmlNode> = XmlUtil.nodeStream(element.childNodes)
+        .filter { it.nodeType == Node.ELEMENT_NODE }
+        .map { XmlNode(it as Element) }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as XmlNode
+
+        return element == other.element
+    }
+
+    override fun hashCode(): Int {
+        return element.hashCode()
+    }
+
     companion object {
+        private val xPath: Lazy<XPath> = lazy { XPathFactory.newInstance().newXPath() }
+
         fun newNode(name: String): XmlNode {
             Validate.notBlank(name, "Xml name cannot be blank")
             val docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
