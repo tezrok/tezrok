@@ -21,13 +21,13 @@ class LiquibaseGenerator : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext) {
         val sqlGenerator = context.getGenerator(SqlGenerator::class.java)
             ?: throw IllegalArgumentException("SqlGenerator not found")
-        // TODO: add maven dependency
         check(project.getModules().size == 1) { "Liquibase feature only supports one module" }
         // TODO: support multiple modules
         val module = project.getModules()[0]
         val schema = context.getProject().modules.find { it.name == module.getName() }?.schema
             ?: throw IllegalArgumentException("No schema found for module ${module.getName()}")
-        val resource = module.getResources()
+        val resource = module.resources
+        module.pom.addDependency("org.postgresql:postgresql:42.6.0")
         val dbDir = resource.getOrAddDirectory("db")
         val updatesDir = dbDir.getOrAddDirectory("updates")
         val changelogFile = updatesDir.getOrAddFile(datePrefix(context) + "-Initial.sql")

@@ -9,12 +9,9 @@ import io.tezrok.api.node.DirectoryNode
  * which can be a library or a web application
  */
 open class ModuleNode(name: String, parent: BaseNode?) : DirectoryNode(name, parent) {
-    private val resources: ResourcesNode = ResourcesNode(this)
+    val resources: ResourcesNode = ResourcesNode(this)
 
-    /**
-     * Returns the "resources" node
-     */
-    fun getResources(): ResourcesNode = resources
+    val pom: PomNode = PomNode(artifactId = name, parent = this)
 
-    override fun getFiles(): List<BaseFileNode> = listOf(resources)
+    override fun getFiles(): List<BaseFileNode> = listOf(pom, resources)
 }

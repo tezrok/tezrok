@@ -27,7 +27,7 @@ internal class LiquibaseGeneratorTest : BaseTest() {
         val project = ProjectNode("TestProject")
         val module = project.addModule("core")
         liquibaseFeature.apply(project, generatorContext)
-        val files = module.getResources().getFiles()
+        val files = module.resources.getFiles()
         assertEquals(1, files.size)
         val dbDir = assertDirectory(files[0], "db", 2)
         val dbFiles = dbDir.getFiles()

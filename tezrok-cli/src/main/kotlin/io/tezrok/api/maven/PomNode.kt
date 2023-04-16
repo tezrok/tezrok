@@ -6,11 +6,23 @@ import io.tezrok.api.xml.XmlNode
 import io.tezrok.util.find
 import java.util.stream.Stream
 
-
 /**
  * Class works with maven pom.xml
  */
-open class PomNode(name: String = "pom.xml", parent: BaseNode? = null) : XmlFileNode(name, "project", parent) {
+open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNode? = null) :
+    XmlFileNode(name, "project", parent) {
+    var dependencyId: MavenDependency
+        get() = getDependencyIdInternal()
+        set(value) = setDependencyIdInternal(value)
+
+    init {
+        getXml().addAttr("xmlns", "http://maven.apache.org/POM/4.0.0")
+            .addAttr("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
+            .addAttr("xsi:schemaLocation", SCHEMA_LOCATION)
+            .getOrCreate("modelVersion").setValue("4.0.0").and()
+            .getOrCreate("artifactId").setValue(artifactId)
+    }
+
     @Synchronized
     fun getDependencies(): Stream<MavenDependency> = dependencyNodes().map { it.toDependency() }
 
@@ -20,6 +32,13 @@ open class PomNode(name: String = "pom.xml", parent: BaseNode? = null) : XmlFile
     @Synchronized
     fun getDependency(groupId: String, artifactId: String): MavenDependency? = getDependencies()
         .find { it.groupId == groupId && it.artifactId == artifactId }
+
+    /**
+     * Add maven dependency or update existing one if version is newer
+     *
+     * @return true if dependency was added or updated
+     */
+    fun addDependency(dependency: String): Boolean = addDependency(MavenDependency.of(dependency))
 
     /**
      * Add maven dependency or update existing one if version is newer
@@ -82,8 +101,32 @@ open class PomNode(name: String = "pom.xml", parent: BaseNode? = null) : XmlFile
         version = getNodeValue("version")
     )
 
+    private fun setDependencyIdInternal(value: MavenDependency) {
+        val xml = getXml()
+        if (value.groupId.isBlank())
+            xml.removeAll("groupId")
+        else
+            xml.getOrCreate("groupId").setValue(value.groupId)
+        // artifactId is required
+        if (value.artifactId.isNotBlank())
+            xml.getOrCreate("artifactId").setValue(value.artifactId)
+        if (value.version.isBlank())
+            xml.removeAll("version")
+        else
+            xml.getOrCreate("version").setValue(value.version)
+    }
+
+    private fun getDependencyIdInternal(): MavenDependency = getXml().let { xml ->
+        MavenDependency(
+            xml.getNodeValue("groupId"),
+            xml.getNodeValue("artifactId"),
+            xml.getNodeValue("version")
+        )
+    }
+
     private companion object {
         const val DEPENDENCY_PATH = "/project/dependencies/dependency"
+        const val SCHEMA_LOCATION = "http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
     }
 }
 
@@ -91,4 +134,16 @@ data class MavenDependency(val groupId: String, val artifactId: String, val vers
     fun shortId(): String = "$groupId:$artifactId"
 
     fun fullId(): String = "$groupId:$artifactId:$version"
+
+    companion object {
+        @JvmStatic
+        fun of(dependency: String): MavenDependency {
+            val parts = dependency.split(":")
+            return MavenDependency(
+                groupId = parts[0],
+                artifactId = parts[1],
+                version = if (parts.size > 2) parts[2] else ""
+            )
+        }
+    }
 }
