@@ -26,7 +26,12 @@ internal class FeatureManager {
 
     private fun applyFeature(feature: TezrokFeature, project: ProjectNode, context: GeneratorContext) {
         val success = feature.apply(project, context)
-        log.debug("Feature '{}' applied to project '{}' with result {}", feature, project.getName(), success)
+
+        if (success) {
+            log.info("Feature '{}' applied to project '{}'", feature, project.getName())
+        } else {
+            log.warn("Feature '{}' failed to apply to project '{}'", feature, project.getName())
+        }
 
         if (success && feature.javaClass.isAnnotationPresent(UseMavenDependency::class.java)) {
             // TODO: support multiple modules
