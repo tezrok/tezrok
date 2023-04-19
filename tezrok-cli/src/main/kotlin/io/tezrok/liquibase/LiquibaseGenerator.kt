@@ -4,6 +4,7 @@ import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.node.FileNode
 import io.tezrok.api.maven.ProjectNode
+import io.tezrok.api.maven.UseMavenDependency
 import io.tezrok.api.sql.SqlGenerator
 import io.tezrok.util.VelocityUtil
 import org.apache.velocity.VelocityContext
@@ -17,8 +18,9 @@ import java.util.function.Consumer
 /**
  * Generates Liquibase changelogs from a JSON schema
  */
+@UseMavenDependency("org.liquibase:liquibase-core:3.8.9")
 class LiquibaseGenerator : TezrokFeature {
-    override fun apply(project: ProjectNode, context: GeneratorContext) {
+    override fun apply(project: ProjectNode, context: GeneratorContext) : Boolean {
         val sqlGenerator = context.getGenerator(SqlGenerator::class.java)
             ?: throw IllegalArgumentException("SqlGenerator not found")
         check(project.getModules().size == 1) { "Liquibase feature only supports one module" }
@@ -42,6 +44,8 @@ class LiquibaseGenerator : TezrokFeature {
         writeFile(masterFile, context, "/templates/liquibase/master.xml.vm") { velContext ->
             velContext.put("path", changelogFile.getPathTo(dbDir))
         }
+
+        return true
     }
 
     private fun datePrefix(context: GeneratorContext): String =
@@ -67,5 +71,9 @@ class LiquibaseGenerator : TezrokFeature {
         OutputStreamWriter(file.getOutputStream(), context.getCharset()).use { writer ->
             masterTemplate.merge(velocityContext, writer)
         }
+    }
+
+    override fun toString(): String {
+        return "Feature[LiquibaseGenerator]"
     }
 }
