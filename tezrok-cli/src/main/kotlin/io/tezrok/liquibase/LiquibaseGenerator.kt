@@ -2,9 +2,9 @@ package io.tezrok.liquibase
 
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
-import io.tezrok.api.node.FileNode
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.api.maven.UseMavenDependency
+import io.tezrok.api.node.FileNode
 import io.tezrok.api.sql.SqlGenerator
 import io.tezrok.util.VelocityUtil
 import org.apache.velocity.VelocityContext
@@ -20,7 +20,7 @@ import java.util.function.Consumer
  */
 @UseMavenDependency("org.liquibase:liquibase-core:3.8.9")
 class LiquibaseGenerator : TezrokFeature {
-    override fun apply(project: ProjectNode, context: GeneratorContext) : Boolean {
+    override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
         val sqlGenerator = context.getGenerator(SqlGenerator::class.java)
             ?: throw IllegalArgumentException("SqlGenerator not found")
         check(project.getModules().size == 1) { "Liquibase feature only supports one module" }
@@ -29,7 +29,13 @@ class LiquibaseGenerator : TezrokFeature {
         val schema = context.getProject().modules.find { it.name == module.getName() }?.schema
             ?: throw IllegalArgumentException("No schema found for module ${module.getName()}")
         val resource = module.resources
-        module.pom.addDependency("org.postgresql:postgresql:42.6.0")
+        // update pom
+        val pomFile = module.pom
+        pomFile.addDependency("org.postgresql:postgresql:42.6.0")
+        pomFile.addPlugin("org.codehaus.gmaven:groovy-maven-plugin:2.1.1")
+        pomFile.addPlugin("liquibase:liquibase-maven-plugin:3.8.9")
+        pomFile.addPlugin("org.jooq:jooq-codegen-maven:3.13.4")
+
         val dbDir = resource.getOrAddDirectory("db")
         val updatesDir = dbDir.getOrAddDirectory("updates")
         val changelogFile = updatesDir.getOrAddFile(datePrefix(context) + "-Initial.sql")

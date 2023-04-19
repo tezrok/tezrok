@@ -52,31 +52,20 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
         val version = dependency.version
         val shortId = dependency.shortId()
 
-        var dependencyNode = dependencyNodes().find { node -> node.shortId() == shortId }
+        val dependencyNode = dependencyNodes().find { node -> node.shortId() == shortId }
 
         if (dependencyNode != null) {
             // if dependency already exists, check if version is newer
-            if (version.isNotBlank()) {
-                val versionNode = dependencyNode.getOrCreate(VERSION)
-                if (versionNode.getValue()?.isBlank() == true || version > versionNode.getValue()!!) {
-                    versionNode.setValue(version)
-                    return true
-                }
-            }
-            return false
+            return dependencyNode.updateVersion(version)
         }
 
-        dependencyNode = getXml().getOrCreate("dependencies")
+        getXml().getOrCreate("dependencies")
             .add("dependency")
-            .add(GROUP_ID).setValue(groupId).and()
-            .add(ARTIFACT_ID).setValue(artifactId).and()
-
-        if (version.isNotBlank()) {
-            dependencyNode.add(VERSION).setValue(version)
-        }
+            .addDependency(groupId, artifactId, version)
 
         return true
     }
+
 
     /**
      * Remove maven dependencies
@@ -91,15 +80,60 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
         return getXml().remove(dependencyNodes)
     }
 
+    fun addPlugin(dependency: String): MavenPluginNode = addPlugin(MavenDependency.of(dependency))
+
+    @Synchronized
+    fun addPlugin(dependency: MavenDependency): MavenPluginNode {
+        val pluginNode = pluginNodes().find { node -> node.dependency.shortId() == dependency.shortId() }
+
+        // if plugin already exists
+        if (pluginNode != null) {
+            // update version if it is newer
+            pluginNode.node.updateVersion(dependency.version)
+            return pluginNode
+        }
+
+        val node: XmlNode = getXml()
+            .getOrCreate("build")
+            .getOrCreate("plugins")
+            .add("plugin")
+
+        node.addDependency(dependency.groupId, dependency.artifactId, dependency.version)
+
+        return MavenPluginNode(node)
+    }
+
+    private fun pluginNodes(): Stream<MavenPluginNode> = getXml()
+        .nodesByPath(PLUGIN_PATH).map { MavenPluginNode(it) }
+
+
     private fun dependencyNodes() = getXml().nodesByPath(DEPENDENCY_PATH)
 
     private fun XmlNode.shortId(): String = getNodeValue(GROUP_ID) + ":" + getNodeValue(ARTIFACT_ID)
 
-    private fun XmlNode.toDependency() = MavenDependency(
-        groupId = getNodeValue(GROUP_ID),
-        artifactId = getNodeValue(ARTIFACT_ID),
-        version = getNodeValue(VERSION)
-    )
+    private fun XmlNode.addDependency(groupId: String, artifactId: String, version: String) {
+        add(GROUP_ID).setValue(groupId).and()
+            .add(ARTIFACT_ID).setValue(artifactId)
+
+        if (version.isNotBlank()) {
+            add(VERSION).setValue(version)
+        }
+    }
+
+    /**
+     * Update dependency version if it is newer
+     */
+    private fun XmlNode.updateVersion(version: String): Boolean {
+        if (version.isNotBlank()) {
+            val versionNode = getOrCreate(VERSION)
+
+            if (versionNode.getValue()?.isBlank() == true || version > versionNode.getValue()!!) {
+                versionNode.setValue(version)
+                return true
+            }
+        }
+        return false
+    }
 
     private fun setDependencyIdInternal(value: MavenDependency) {
         val xml = getXml()
@@ -124,12 +158,18 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
         )
     }
 
-    private companion object {
+    companion object {
         const val GROUP_ID = "groupId"
         const val ARTIFACT_ID = "artifactId"
         const val VERSION = "version"
         const val DEPENDENCY_PATH = "/project/dependencies/dependency"
+        const val PLUGIN_PATH = "/project/build/plugins/plugin"
         const val SCHEMA_LOCATION = "http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
     }
 }
 
+internal fun XmlNode.toDependency() = MavenDependency(
+    groupId = getNodeValue(PomNode.GROUP_ID),
+    artifactId = getNodeValue(PomNode.ARTIFACT_ID),
+    version = getNodeValue(PomNode.VERSION)
+)
