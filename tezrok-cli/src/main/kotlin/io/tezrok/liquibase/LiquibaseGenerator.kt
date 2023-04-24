@@ -32,9 +32,9 @@ class LiquibaseGenerator : TezrokFeature {
         // update pom
         val pomFile = module.pom
         pomFile.addDependency("org.postgresql:postgresql:42.6.0")
-        pomFile.addPlugin("org.codehaus.gmaven:groovy-maven-plugin:2.1.1")
-        pomFile.addPlugin("liquibase:liquibase-maven-plugin:3.8.9")
-        pomFile.addPlugin("org.jooq:jooq-codegen-maven:3.13.4")
+        pomFile.addPluginDependency("org.codehaus.gmaven:groovy-maven-plugin:2.1.1")
+        pomFile.addPluginDependency("liquibase:liquibase-maven-plugin:3.8.9")
+        pomFile.addPluginDependency("org.jooq:jooq-codegen-maven:3.13.4")
 
         val dbDir = resource.getOrAddDirectory("db")
         val updatesDir = dbDir.getOrAddDirectory("updates")
