@@ -3,7 +3,7 @@ package io.tezrok.api.maven
 import io.tezrok.api.xml.XmlNode
 import java.util.stream.Stream
 
-class PluginNode(private val lockObject: Any, val node: XmlNode) {
+class PluginNode(private val lockObject: Any, val node: XmlNode) : MavenDependencies {
     val dependency: MavenDependency = node.toDependency()
 
     val executions: Stream<ExecutionNode> = synchronized(lockObject) {
@@ -24,7 +24,16 @@ class PluginNode(private val lockObject: Any, val node: XmlNode) {
         ConfigurationNode(lockObject, node.getOrCreate("configuration"))
     }
 
-    private fun dependenciesAccess() = MavenDependenciesAccess(this, node)
+    override fun getDependencies(): Stream<MavenDependency> = dependenciesAccess().getDependencies()
+
+    override fun getDependency(groupId: String, artifactId: String): MavenDependency? =
+        dependenciesAccess().getDependency(groupId, artifactId)
+
+    override fun addDependency(dependency: MavenDependency): Boolean =
+        dependenciesAccess().addDependency(dependency)
+
+    override fun removeDependencies(dependencies: List<MavenDependency>): Boolean =
+        dependenciesAccess().removeDependencies(dependencies)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -38,6 +47,8 @@ class PluginNode(private val lockObject: Any, val node: XmlNode) {
     override fun hashCode(): Int = synchronized(lockObject) {
         node.hashCode()
     }
+
+    private fun dependenciesAccess() = MavenDependenciesAccess(this, node)
 }
 
 class ExecutionNode(private val lockObject: Any, val node: XmlNode) {

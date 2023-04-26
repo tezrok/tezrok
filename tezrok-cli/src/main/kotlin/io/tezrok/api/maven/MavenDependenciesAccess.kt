@@ -5,10 +5,10 @@ import io.tezrok.util.find
 import java.util.stream.Stream
 
 /**
- * Helper class to manage maven dependencies node
+ * Implementation of [MavenDependencies] interface
  */
-internal class MavenDependenciesAccess(private val lockObject: Any, val parent: XmlNode) {
-    fun getDependencies(): Stream<MavenDependency> = synchronized(lockObject) {
+internal class MavenDependenciesAccess(private val lockObject: Any, val parent: XmlNode) : MavenDependencies {
+    override fun getDependencies(): Stream<MavenDependency> = synchronized(lockObject) {
         // should call toList() due to Stream laziness
         getDependenciesInternal().toList().stream()
     }
@@ -16,13 +16,11 @@ internal class MavenDependenciesAccess(private val lockObject: Any, val parent: 
     /**
      * Get maven dependency by groupId and artifactId
      */
-    fun getDependency(groupId: String, artifactId: String): MavenDependency? = synchronized(lockObject) {
+    override fun getDependency(groupId: String, artifactId: String): MavenDependency? = synchronized(lockObject) {
         getDependenciesInternal().find { it.groupId == groupId && it.artifactId == artifactId }
     }
 
-    fun addDependency(dependency: String): Boolean = addDependency(MavenDependency.of(dependency))
-
-    fun addDependency(dependency: MavenDependency): Boolean = synchronized(lockObject) {
+    override fun addDependency(dependency: MavenDependency): Boolean = synchronized(lockObject) {
         val groupId = dependency.groupId
         val artifactId = dependency.artifactId
         val version = dependency.version
@@ -45,7 +43,7 @@ internal class MavenDependenciesAccess(private val lockObject: Any, val parent: 
     /**
      * Remove maven dependencies
      */
-    fun removeDependencies(dependencies: List<MavenDependency>): Boolean = synchronized(lockObject) {
+    override fun removeDependencies(dependencies: List<MavenDependency>): Boolean = synchronized(lockObject) {
         val shortIdsToRemove = dependencies.map { it.shortId() }.toHashSet()
         val dependencyNodes = dependencyNodes()
             .filter { node -> shortIdsToRemove.contains(node.shortId()) }

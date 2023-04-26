@@ -10,7 +10,7 @@ import java.util.stream.Stream
  * Class works with maven pom.xml
  */
 open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNode? = null) :
-    XmlFileNode(name, "project", parent) {
+    XmlFileNode(name, "project", parent), MavenDependencies {
     var dependencyId: MavenDependency
         get() = getDependencyIdInternal()
         set(value) = setDependencyIdInternal(value)
@@ -23,12 +23,12 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
             .getOrCreate(ARTIFACT_ID).setValue(artifactId)
     }
 
-    fun getDependencies(): Stream<MavenDependency> = dependenciesAccess().getDependencies()
+    override fun getDependencies(): Stream<MavenDependency> = dependenciesAccess().getDependencies()
 
     /**
      * Get maven dependency by groupId and artifactId
      */
-    fun getDependency(groupId: String, artifactId: String): MavenDependency? =
+    override fun getDependency(groupId: String, artifactId: String): MavenDependency? =
         dependenciesAccess().getDependency(groupId, artifactId)
 
     /**
@@ -36,19 +36,19 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
      *
      * @return true if dependency was added or updated
      */
-    fun addDependency(dependency: String): Boolean = dependenciesAccess().addDependency(dependency)
+    override fun addDependency(dependency: String): Boolean = dependenciesAccess().addDependency(dependency)
 
     /**
      * Add maven dependency or update existing one if version is newer
      *
      * @return true if dependency was added or updated
      */
-    fun addDependency(dependency: MavenDependency): Boolean = dependenciesAccess().addDependency(dependency)
+    override fun addDependency(dependency: MavenDependency): Boolean = dependenciesAccess().addDependency(dependency)
 
     /**
      * Remove maven dependencies
      */
-    fun removeDependencies(dependencies: List<MavenDependency>): Boolean =
+    override fun removeDependencies(dependencies: List<MavenDependency>): Boolean =
         dependenciesAccess().removeDependencies(dependencies)
 
     fun addPluginDependency(dependency: String): PluginNode = addPluginDependency(MavenDependency.of(dependency))
