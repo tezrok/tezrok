@@ -53,7 +53,6 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
 
     fun addPluginDependency(dependency: String): PluginNode = addPluginDependency(MavenDependency.of(dependency))
 
-    @Synchronized
     fun addPluginDependency(dependency: MavenDependency): PluginNode {
         val pluginNode = pluginNodes().find { node -> node.dependency.shortId() == dependency.shortId() }
 
@@ -71,12 +70,12 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
 
         node.addDependency(dependency.groupId, dependency.artifactId, dependency.version)
 
-        return PluginNode(this, node)
+        return PluginNode(node)
     }
 
-    private fun dependenciesAccess() = MavenDependenciesAccess(this, getXml())
+    private fun dependenciesAccess() = MavenDependenciesAccess(getXml())
 
-    private fun pluginNodes(): Stream<PluginNode> = getXml().nodesByPath(PLUGIN_PATH).map { PluginNode(this, it) }
+    private fun pluginNodes(): Stream<PluginNode> = getXml().nodesByPath(PLUGIN_PATH).map { PluginNode(it) }
 
     private fun setDependencyIdInternal(value: MavenDependency) {
         val xml = getXml()

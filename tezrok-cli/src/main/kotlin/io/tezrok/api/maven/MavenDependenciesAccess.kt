@@ -7,20 +7,16 @@ import java.util.stream.Stream
 /**
  * Implementation of [MavenDependencies] interface
  */
-internal class MavenDependenciesAccess(private val lockObject: Any, val parent: XmlNode) : MavenDependencies {
-    override fun getDependencies(): Stream<MavenDependency> = synchronized(lockObject) {
-        // should call toList() due to Stream laziness
-        getDependenciesInternal().toList().stream()
-    }
+internal class MavenDependenciesAccess(val parent: XmlNode) : MavenDependencies {
+    override fun getDependencies(): Stream<MavenDependency> = dependencyNodes().map { it.toDependency() }
 
     /**
      * Get maven dependency by groupId and artifactId
      */
-    override fun getDependency(groupId: String, artifactId: String): MavenDependency? = synchronized(lockObject) {
-        getDependenciesInternal().find { it.groupId == groupId && it.artifactId == artifactId }
-    }
+    override fun getDependency(groupId: String, artifactId: String): MavenDependency? =
+        getDependencies().find { it.groupId == groupId && it.artifactId == artifactId }
 
-    override fun addDependency(dependency: MavenDependency): Boolean = synchronized(lockObject) {
+    override fun addDependency(dependency: MavenDependency): Boolean {
         val groupId = dependency.groupId
         val artifactId = dependency.artifactId
         val version = dependency.version
@@ -43,7 +39,7 @@ internal class MavenDependenciesAccess(private val lockObject: Any, val parent: 
     /**
      * Remove maven dependencies
      */
-    override fun removeDependencies(dependencies: List<MavenDependency>): Boolean = synchronized(lockObject) {
+    override fun removeDependencies(dependencies: List<MavenDependency>): Boolean  {
         val shortIdsToRemove = dependencies.map { it.shortId() }.toHashSet()
         val dependencyNodes = dependencyNodes()
             .filter { node -> shortIdsToRemove.contains(node.shortId()) }
@@ -51,8 +47,6 @@ internal class MavenDependenciesAccess(private val lockObject: Any, val parent: 
 
         return parent.get("dependencies")?.remove(dependencyNodes) ?: false
     }
-
-    private fun getDependenciesInternal(): Stream<MavenDependency> = dependencyNodes().map { it.toDependency() }
 
     private fun dependencyNodes(): Stream<XmlNode> = parent.nodesByPath("dependencies/dependency")
 }
