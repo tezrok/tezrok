@@ -3,7 +3,7 @@ package io.tezrok.api.maven
 import io.tezrok.api.xml.XmlNode
 import java.util.stream.Stream
 
-class PluginNode(val node: XmlNode) : MavenDependencies {
+class PluginNode(val node: XmlNode) : MavenDependencies by MavenDependenciesAccess(node) {
     val dependency: MavenDependency = node.toDependency()
 
     val executions: Stream<ExecutionNode> = node.nodesByPath("executions/execution")
@@ -21,17 +21,6 @@ class PluginNode(val node: XmlNode) : MavenDependencies {
     fun getConfiguration(): ConfigurationNode =
         ConfigurationNode(node.getOrCreate("configuration"))
 
-    override fun getDependencies(): Stream<MavenDependency> = dependenciesAccess().getDependencies()
-
-    override fun getDependency(groupId: String, artifactId: String): MavenDependency? =
-        dependenciesAccess().getDependency(groupId, artifactId)
-
-    override fun addDependency(dependency: MavenDependency): Boolean =
-        dependenciesAccess().addDependency(dependency)
-
-    override fun removeDependencies(dependencies: List<MavenDependency>): Boolean =
-        dependenciesAccess().removeDependencies(dependencies)
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -42,8 +31,6 @@ class PluginNode(val node: XmlNode) : MavenDependencies {
     }
 
     override fun hashCode(): Int = node.hashCode()
-
-    private fun dependenciesAccess() = MavenDependenciesAccess(node)
 }
 
 class ExecutionNode(val node: XmlNode) {
