@@ -53,12 +53,16 @@ open class XmlNode private constructor(private val element: Element) {
         return XmlNode(childElem)
     }
 
+    fun add(name: String, value: String): XmlNode = add(name).setValue(value)
+
     fun get(name: String): XmlNode? = itemsStream().find { it.getName() == name }
 
     /**
      * Creates a new node or returns first existing one
      */
     fun getOrCreate(name: String): XmlNode = itemsStream().find { it.getName() == name } ?: add(name)
+
+    fun getOrCreate(name: String, value: String): XmlNode = getOrCreate(name).setValue(value)
 
     fun getAll(name: String): List<XmlNode> = itemsStream().filter { it.getName() == name }.toList()
 

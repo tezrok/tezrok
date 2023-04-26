@@ -21,7 +21,22 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
             .addAttr("xsi:schemaLocation", SCHEMA_LOCATION)
             .getOrCreate("modelVersion").setValue("4.0.0").and()
             .getOrCreate(ARTIFACT_ID).setValue(artifactId)
+        addProperty("java.version", "17")
+        addProperty("project.build.sourceEncoding", "UTF-8")
+        addProperty("project.reporting.outputEncoding", "UTF-8")
     }
+
+    fun addProperty(property: MavenProperty): PomNode = addProperty(property.name, property.value)
+
+    fun addProperty(name: String, value: String): PomNode {
+        getXml().getOrCreate("properties").getOrCreate(name).setValue(value)
+        return this
+    }
+
+    fun getProperty(name: String): String? = getXml().get("properties")?.getNodeValue(name)
+
+    fun getProperties(): Stream<MavenProperty> = getXml().nodesByPath("properties/*")
+        .map { MavenProperty(it.getName(), it.getValue() ?: "") }
 
     override fun getDependencies(): Stream<MavenDependency> = dependenciesAccess().getDependencies()
 
@@ -114,3 +129,5 @@ internal fun XmlNode.toDependency() = MavenDependency(
     artifactId = getNodeValue(PomNode.ARTIFACT_ID),
     version = getNodeValue(PomNode.VERSION)
 )
+
+data class MavenProperty(val name: String, val value: String)

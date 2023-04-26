@@ -12,14 +12,13 @@ class PluginNode(val node: XmlNode) : MavenDependencies by MavenDependenciesAcce
     fun addExecution(id: String, phase: BuildPhase, goal: String): ExecutionNode =
         ExecutionNode(
             node.getOrCreate("executions")
-                .getOrCreate("execution")
-                .getOrCreate("id").setValue(id).and()
-                .getOrCreate("goals").getOrCreate("goal").setValue(goal).and().and()
-                .getOrCreate("phase").setValue(phase.id).and()
+                .add("execution")
+                .add("id").setValue(id).and()
+                .add("goals").add("goal").setValue(goal).and().and()
+                .add("phase").setValue(phase.id).and()
         )
 
-    fun getConfiguration(): ConfigurationNode =
-        ConfigurationNode(node.getOrCreate("configuration"))
+    fun getConfiguration(): ConfigurationNode = ConfigurationNode(node.getOrCreate("configuration"))
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -53,10 +52,6 @@ class ExecutionNode(val node: XmlNode) {
 }
 
 class ConfigurationNode(val node: XmlNode) {
-    val id: String = node.getNodeValue("id")
-    val phase: BuildPhase = BuildPhase.fromId(node.getNodeValue("phase"))
-    val goal: String = node.getNodeValue("goal")
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
