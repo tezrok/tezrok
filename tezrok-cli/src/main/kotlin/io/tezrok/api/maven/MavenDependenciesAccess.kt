@@ -7,7 +7,7 @@ import java.util.stream.Stream
 /**
  * Helper class to manage maven dependencies node
  */
-class MavenDependencies(private val lockObject: Any, val parent: XmlNode) {
+internal class MavenDependenciesAccess(private val lockObject: Any, val parent: XmlNode) {
     fun getDependencies(): Stream<MavenDependency> = synchronized(lockObject) {
         // should call toList() due to Stream laziness
         getDependenciesInternal().toList().stream()
@@ -57,9 +57,9 @@ class MavenDependencies(private val lockObject: Any, val parent: XmlNode) {
     private fun getDependenciesInternal(): Stream<MavenDependency> = dependencyNodes().map { it.toDependency() }
 
     private fun dependencyNodes(): Stream<XmlNode> = parent.nodesByPath("dependencies/dependency")
-
-    private fun XmlNode.shortId(): String = getNodeValue(PomNode.GROUP_ID) + ":" + getNodeValue(PomNode.ARTIFACT_ID)
 }
+
+internal fun XmlNode.shortId(): String = getNodeValue(PomNode.GROUP_ID) + ":" + getNodeValue(PomNode.ARTIFACT_ID)
 
 internal fun XmlNode.addDependency(groupId: String, artifactId: String, version: String) {
     add(PomNode.GROUP_ID).setValue(groupId).and()

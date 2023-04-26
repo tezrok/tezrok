@@ -3,40 +3,49 @@ package io.tezrok.api.maven
 import io.tezrok.api.xml.XmlNode
 import java.util.stream.Stream
 
-class PluginNode(val node: XmlNode) {
+class PluginNode(private val lockObject: Any, val node: XmlNode) {
     val dependency: MavenDependency = node.toDependency()
 
-    val executions: Stream<ExecutionNode> = node.nodesByPath("executions/execution").map { ExecutionNode(it) }
+    val executions: Stream<ExecutionNode> = synchronized(lockObject) {
+        node.nodesByPath("executions/execution").map { ExecutionNode(lockObject, it) }.toList().stream()
+    }
 
-    fun addExecution(id: String, phase: BuildPhase, goal: String): ExecutionNode  = ExecutionNode(
-        node.getOrCreate("executions")
-            .getOrCreate("execution")
-            .getOrCreate("id").setValue(id).and()
-            .getOrCreate("goals").getOrCreate("goal").setValue(goal).and().and()
-            .getOrCreate("phase").setValue(phase.id).and()
-    )
+    fun addExecution(id: String, phase: BuildPhase, goal: String): ExecutionNode = synchronized(lockObject) {
+        ExecutionNode(
+            lockObject, node.getOrCreate("executions")
+                .getOrCreate("execution")
+                .getOrCreate("id").setValue(id).and()
+                .getOrCreate("goals").getOrCreate("goal").setValue(goal).and().and()
+                .getOrCreate("phase").setValue(phase.id).and()
+        )
+    }
 
-    fun getConfiguration(): ConfigurationNode = ConfigurationNode(node.getOrCreate("configuration"))
+    fun getConfiguration(): ConfigurationNode = synchronized(lockObject) {
+        ConfigurationNode(lockObject, node.getOrCreate("configuration"))
+    }
+
+    private fun dependenciesAccess() = MavenDependenciesAccess(this, node)
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
         other as PluginNode
 
-        return node == other.node
+        return synchronized(lockObject) { node == other.node }
     }
 
-    override fun hashCode(): Int {
-        return node.hashCode()
+    override fun hashCode(): Int = synchronized(lockObject) {
+        node.hashCode()
     }
 }
 
-class ExecutionNode(val node: XmlNode) {
+class ExecutionNode(private val lockObject: Any, val node: XmlNode) {
     val id: String = node.getNodeValue("id")
     val phase: BuildPhase = BuildPhase.fromId(node.getNodeValue("phase"))
     val goal: String = node.getNodeValue("goal")
 
-    fun getConfiguration(): ConfigurationNode = ConfigurationNode(node.getOrCreate("configuration"))
+    fun getConfiguration(): ConfigurationNode = ConfigurationNode(lockObject, node.getOrCreate("configuration"))
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -44,18 +53,18 @@ class ExecutionNode(val node: XmlNode) {
 
         other as ExecutionNode
 
-        return node == other.node
+        return synchronized(lockObject) { node == other.node }
     }
 
-    override fun hashCode(): Int {
-        return node.hashCode()
+    override fun hashCode(): Int = synchronized(lockObject) {
+        node.hashCode()
     }
 }
 
-class ConfigurationNode(val node: XmlNode) {
-    val id: String = node.getNodeValue("id")
-    val phase: BuildPhase = BuildPhase.fromId(node.getNodeValue("phase"))
-    val goal: String = node.getNodeValue("goal")
+class ConfigurationNode(private val lockObject: Any, val node: XmlNode) {
+    val id: String = synchronized(lockObject) { node.getNodeValue("id") }
+    val phase: BuildPhase = synchronized(lockObject) { BuildPhase.fromId(node.getNodeValue("phase")) }
+    val goal: String = synchronized(lockObject) { node.getNodeValue("goal") }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -63,11 +72,11 @@ class ConfigurationNode(val node: XmlNode) {
 
         other as ConfigurationNode
 
-        return node == other.node
+        return synchronized(lockObject) { node == other.node }
     }
 
-    override fun hashCode(): Int {
-        return node.hashCode()
+    override fun hashCode(): Int = synchronized(lockObject) {
+        node.hashCode()
     }
 }
 
@@ -80,27 +89,63 @@ enum class BuildPhase(val id: String, val description: String) {
     GenerateSources("generate-sources", "generate any source code for inclusion in compilation."),
     ProcessSources("process-sources", "process the source code, for example to filter any values."),
     GenerateResources("generate-resources", "generate resources for inclusion in the package."),
-    ProcessResources("process-resources", "copy and process the resources into the destination directory, ready for packaging."),
+    ProcessResources(
+        "process-resources",
+        "copy and process the resources into the destination directory, ready for packaging."
+    ),
     Compile("compile", "compile the source code of the project."),
-    ProcessClasses("process-classes", "post-process the generated files from compilation, for example to do bytecode enhancement on Java classes."),
+    ProcessClasses(
+        "process-classes",
+        "post-process the generated files from compilation, for example to do bytecode enhancement on Java classes."
+    ),
     GenerateTestSources("generate-test-sources", "generate any test source code for inclusion in compilation."),
     ProcessTestSources("process-test-sources", "process the test source code, for example to filter any values."),
     GenerateTestResources("generate-test-resources", "create resources for testing."),
-    ProcessTestResources("process-test-resources", "copy and process the resources into the test destination directory."),
+    ProcessTestResources(
+        "process-test-resources",
+        "copy and process the resources into the test destination directory."
+    ),
     TestCompile("test-compile", "compile the test source code into the test destination directory"),
-    ProcessTestClasses("process-test-classes", "post-process the generated files from test compilation, for example to do bytecode enhancement on Java classes."),
-    Test("test", "run tests using a suitable unit testing framework. These tests should not require the code be packaged or deployed."),
-    PreparePackage("prepare-package", "perform any operations necessary to prepare a package before the actual packaging. This often results in an unpacked, processed version of the package."),
+    ProcessTestClasses(
+        "process-test-classes",
+        "post-process the generated files from test compilation, for example to do bytecode enhancement on Java classes."
+    ),
+    Test(
+        "test",
+        "run tests using a suitable unit testing framework. These tests should not require the code be packaged or deployed."
+    ),
+    PreparePackage(
+        "prepare-package",
+        "perform any operations necessary to prepare a package before the actual packaging. This often results in an unpacked, processed version of the package."
+    ),
     Package("package", "take the compiled code and package it in its distributable format, such as a JAR."),
-    PreIntegrationTest("pre-integration-test", "perform actions required before integration tests are executed. This may involve things such as setting up the required environment."),
-    IntegrationTest("integration-test", "process and deploy the package if necessary into an environment where integration tests can be run."),
-    PostIntegrationTest("post-integration-test", "perform actions required after integration tests have been executed. This may including cleaning up the environment."),
+    PreIntegrationTest(
+        "pre-integration-test",
+        "perform actions required before integration tests are executed. This may involve things such as setting up the required environment."
+    ),
+    IntegrationTest(
+        "integration-test",
+        "process and deploy the package if necessary into an environment where integration tests can be run."
+    ),
+    PostIntegrationTest(
+        "post-integration-test",
+        "perform actions required after integration tests have been executed. This may including cleaning up the environment."
+    ),
     Verify("verify", "run any checks to verify the package is valid and meets quality criteria."),
-    Install("install", "install the package into the local repository, for use as a dependency in other projects locally."),
-    Deploy("deploy", "done in an integration or release environment, copies the final package to the remote repository for sharing with other developers and projects."),
+    Install(
+        "install",
+        "install the package into the local repository, for use as a dependency in other projects locally."
+    ),
+    Deploy(
+        "deploy",
+        "done in an integration or release environment, copies the final package to the remote repository for sharing with other developers and projects."
+    ),
     PreSite("pre-site", "execute processes needed prior to the actual project site generation"),
     Site("site", "generate the project's site documentation"),
-    PostSite("post-site", "execute processes needed to finalize the site generation, and to prepare for site deployment"),
+    PostSite(
+        "post-site",
+        "execute processes needed to finalize the site generation, and to prepare for site deployment"
+    ),
     SiteDeploy("site-deploy", "deploy the generated site documentation to the specified web server");
 
     companion object {
