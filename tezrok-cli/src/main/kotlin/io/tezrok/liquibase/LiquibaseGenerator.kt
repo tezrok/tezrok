@@ -27,12 +27,16 @@ class LiquibaseGenerator : TezrokFeature {
             ?: throw IllegalArgumentException("SqlGenerator not found")
         check(project.getModules().size == 1) { "Liquibase feature only supports one module" }
         // TODO: support multiple modules
+        val projectElem = context.getProject()
         val module = project.getModules()[0]
         val schema = context.getProject().modules.find { it.name == module.getName() }?.schema
             ?: throw IllegalArgumentException("No schema found for module ${module.getName()}")
-        val resource = module.resources
+        val resource = module.source.main.resources
         // update pom
         val pomFile = module.pom
+        pomFile.dependencyId = pomFile.dependencyId
+            .withGroupId(projectElem.packagePath)
+            .withVersion(projectElem.version)
         pomFile.addDependency("org.postgresql:postgresql:42.6.0")
         pomFile.addProperty("testcontainers.version", "1.18.0")
         pomFile.addProperty("liquibase.version", "3.8.9")
@@ -55,7 +59,7 @@ class LiquibaseGenerator : TezrokFeature {
 
         val masterFile = dbDir.getOrAddFile("master.xml")
         writeFile(masterFile, context, "/templates/liquibase/master.xml.vm") { velContext ->
-            velContext.put("path", changelogFile.getPathTo(dbDir))
+            velContext.put("path", changelogFile.getPathTo(updatesDir))
         }
 
         return true
@@ -102,7 +106,7 @@ class LiquibaseGenerator : TezrokFeature {
         val pluginNode = pomFile.addPluginDependency("org.liquibase:liquibase-maven-plugin:${'$'}{liquibase.version}")
         val execution = pluginNode.addExecution("liquibase-update", BuildPhase.GenerateSources, "update")
         val configuration = execution.getConfiguration().node
-        configuration.add("changeLogFile", "db/master.xml")
+        configuration.add("changeLogFile", "src/main/resources/db/master.xml")
         configuration.add("driver", "org.postgresql.Driver")
         configuration.add("url", "${'$'}{db.url}")
         configuration.add("username", "${'$'}{db.username}")
