@@ -5,6 +5,7 @@ import io.tezrok.api.TezrokFeature
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.api.maven.UseMavenDependency
 import io.tezrok.liquibase.LiquibaseGenerator
+import io.tezrok.maven.MavenCoreFeature
 import org.apache.commons.lang3.Validate
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -17,6 +18,7 @@ internal class FeatureManager {
 
     init {
         // TODO: load features from configuration
+        features.add(MavenCoreFeature())
         features.add(LiquibaseGenerator())
     }
 

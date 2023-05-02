@@ -38,6 +38,7 @@ class LiquibaseGenerator : TezrokFeature {
             .withGroupId(projectElem.packagePath)
             .withVersion(projectElem.version)
         pomFile.addDependency("org.postgresql:postgresql:42.6.0")
+        pomFile.addDependency("org.jooq:jooq:${'$'}{jooq.version}")
         pomFile.addProperty("testcontainers.version", "1.18.0")
         pomFile.addProperty("liquibase.version", "3.8.9")
         pomFile.addProperty("jooq.version", "3.13.4")
@@ -45,7 +46,7 @@ class LiquibaseGenerator : TezrokFeature {
         pomFile.addProperty("db.password", "postgres")
         addGroovyPlugin(pomFile)
         addLiquibasePlugin(pomFile)
-        addJooqPlugin(pomFile)
+        addJooqPlugin(pomFile, projectElem.packagePath + ".jooq")
 
         val dbDir = resource.getOrAddDirectory("db")
         val updatesDir = dbDir.getOrAddDirectory("updates")
@@ -72,7 +73,7 @@ class LiquibaseGenerator : TezrokFeature {
         configurationStart.node.add(
             "source",
             """
-                db = new org.testcontainers.containers.PostgreSQLContainer("postgres:latest")
+                db = new org.testcontainers.containers.PostgreSQLContainer("postgres:$POSTGRESQL_VER")
                     .withUsername("${'$'}{db.username}")
                     .withDatabaseName("postgres")
                     .withPassword("${'$'}{db.password}");
@@ -113,7 +114,7 @@ class LiquibaseGenerator : TezrokFeature {
         configuration.add("password", "${'$'}{db.password}")
     }
 
-    private fun addJooqPlugin(pomFile: PomNode) {
+    private fun addJooqPlugin(pomFile: PomNode, classPath: String) {
         val pluginNode = pomFile.addPluginDependency("org.jooq:jooq-codegen-maven:${'$'}{jooq.version}")
         val execution = pluginNode.addExecution("jooq-codegen", BuildPhase.GenerateSources, "generate")
         val configuration = execution.getConfiguration().node
@@ -122,10 +123,12 @@ class LiquibaseGenerator : TezrokFeature {
         jdbcNode.add("user", "${'$'}{db.username}")
         jdbcNode.add("password", "${'$'}{db.password}")
         val generatorNode = configuration.add("generator")
-        generatorNode.add("database").add("inputSchema", "public")
+        val databaseNode = generatorNode.add("database")
+        databaseNode.add("inputSchema", "public")
+        databaseNode.add("excludes", "databasechangelog|databasechangeloglock")
         val targetNode = generatorNode.add("target")
-        targetNode.add("packageName", "com.example")
-        targetNode.add("directory", "src/main/java")
+        targetNode.add("packageName", classPath)
+        targetNode.add("directory", "target/generated-sources/jooq")
     }
 
     private fun datePrefix(context: GeneratorContext): String =
@@ -155,5 +158,10 @@ class LiquibaseGenerator : TezrokFeature {
 
     override fun toString(): String {
         return "Feature[LiquibaseGenerator]"
+    }
+
+    private companion object {
+        // TODO: get version from configuration
+        const val POSTGRESQL_VER = "15.2"
     }
 }
