@@ -16,7 +16,6 @@ open class XmlFileNode(name: String, rootName: String, parent: Node? = null) : F
     /**
      * Please, note that method calculate size of xml by converting it to string each time.
      */
-    @Synchronized
     override fun getSize(): Long = getBytes().size.toLong()
 
     override fun getOutputStream(): OutputStream {
@@ -24,7 +23,6 @@ open class XmlFileNode(name: String, rootName: String, parent: Node? = null) : F
         throw UnsupportedOperationException("Xml file can be edited only via object model")
     }
 
-    @Synchronized
     override fun getInputStream(): InputStream = ByteArrayUtil.outputAsInput(xml::writeAsString)
 
     override fun toString(): String = xml.toString()
