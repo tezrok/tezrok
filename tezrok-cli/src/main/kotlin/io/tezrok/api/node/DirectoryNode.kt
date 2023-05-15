@@ -11,10 +11,8 @@ import java.util.*
 open class DirectoryNode(name: String, parent: Node? = null) : BaseFileNode(name, parent), DirectorySupport {
     private val files: MutableList<BaseFileNode> = mutableListOf()
 
-    @Synchronized
     override fun getFiles(): List<BaseFileNode> = Collections.unmodifiableList(files.toList())
 
-    @Synchronized
     override fun addFile(name: String): FileNode {
         //TODO: check if file already exists
         val file = FileNode(name, this)
@@ -22,7 +20,6 @@ open class DirectoryNode(name: String, parent: Node? = null) : BaseFileNode(name
         return file
     }
 
-    @Synchronized
     override fun addDirectory(name: String): DirectoryNode {
         //TODO: check if file already exists
         val directory = DirectoryNode(name, this)
@@ -32,16 +29,12 @@ open class DirectoryNode(name: String, parent: Node? = null) : BaseFileNode(name
 
     override fun getFilesSize(): Int = files.size
 
-    @Synchronized
     override fun getFile(name: String): BaseFileNode? = files.find { it.getName() == name }
 
-    @Synchronized
     override fun removeFiles(names: List<String>): Boolean = files.removeAll { it.getName() in names }
 
-    @Synchronized
     fun getOrAddFile(name: String): FileNode = getFile(name) as? FileNode ?: addFile(name)
 
-    @Synchronized
     fun getOrAddDirectory(name: String): DirectoryNode = getFile(name) as? DirectoryNode ?: addDirectory(name)
 
     override fun isDirectory(): Boolean = true

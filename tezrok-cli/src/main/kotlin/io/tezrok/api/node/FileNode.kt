@@ -34,7 +34,6 @@ open class FileNode(name: String, parent: Node?) : BaseFileNode(name, parent), F
         }
     }
 
-    @Synchronized
     override fun getInputStream(): InputStream = content.clone().inputStream()
 
     private companion object {
