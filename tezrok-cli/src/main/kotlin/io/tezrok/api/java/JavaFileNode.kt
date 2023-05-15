@@ -18,7 +18,11 @@ open class JavaFileNode(name: String, parent: Node? = null) : FileNode("$name.ja
     init {
         // add default public class
         compilationUnit.addClass(name)
+        compilationUnit.setPackageDeclaration(getPackagePath().replace("/", "."))
     }
+
+    fun getParentDirectory(): JavaDirectoryNode = getParent() as? JavaDirectoryNode
+        ?: throw IllegalStateException("Java file must be a child of Java directory")
 
     /**
      * Returns root class/interface of the file
@@ -33,4 +37,25 @@ open class JavaFileNode(name: String, parent: Node? = null) : FileNode("$name.ja
     }
 
     override fun getInputStream(): InputStream = compilationUnit.toString().byteInputStream()
+
+    /**
+     * Returns the path of the file relative to the Java root
+     *
+     * Example: "src/main/java/com/example/Foo.java" -> "com/example"
+     */
+    fun getPackagePath(): String  {
+        // remove leading slash
+        return getParentDirectory().getPathTo(getJavaRoot()).substring(1)
+    }
+
+    fun getJavaRoot(): JavaRootNode {
+        var parent = getParent()
+        while (parent != null) {
+            if (parent is JavaRootNode) {
+                return parent
+            }
+            parent = parent.getParent()
+        }
+        throw IllegalStateException("Java file must be a child of Java root")
+    }
 }

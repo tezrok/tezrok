@@ -38,11 +38,21 @@ interface Node {
 
     /**
      * Returns path up to the target node
+     *
+     * Target name not included in path
      */
     fun getPathTo(target: Node?): String {
-        // Parent name not included in path
-        val parent = getParent() ?: return "/"
-        val parentPath = if (parent.isRoot() || this == target) "" else parent.getPathTo(target)
-        return parentPath + "/" + getName()
+        val parents = ArrayDeque<Node>()
+        var parent: Node? = this
+        while (parent != null && parent != target) {
+            parents.addFirst(parent)
+            parent = parent.getParent()
+        }
+
+        if (target != null && parent != target) {
+            throw IllegalArgumentException("Target node is not found: $target")
+        }
+
+        return parents.joinToString("/", prefix = "/") { it.getName() }
     }
 }

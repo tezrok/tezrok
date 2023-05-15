@@ -60,7 +60,7 @@ class LiquibaseGenerator : TezrokFeature {
 
         val masterFile = dbDir.getOrAddFile("master.xml")
         writeFile(masterFile, context, "/templates/liquibase/master.xml.vm") { velContext ->
-            velContext.put("path", changelogFile.getPathTo(updatesDir))
+            velContext.put("path", changelogFile.getPathTo(dbDir))
         }
 
         return true
