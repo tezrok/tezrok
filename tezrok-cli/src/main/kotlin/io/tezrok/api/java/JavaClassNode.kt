@@ -1,6 +1,16 @@
 package io.tezrok.api.java
 
+import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 
-class JavaClassNode(clazz: ClassOrInterfaceDeclaration) {
+/**
+ * Node that represents a Java class or interface
+ */
+open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration) {
+
+    fun getMethod(name: String): JavaMethodNode = JavaMethodNode(clazz.methods.first { it.nameAsString == name })
+
+    fun addMethod(name: String, vararg modifiers: Modifier.Keyword): JavaMethodNode = JavaMethodNode(clazz.addMethod(name, *modifiers))
+
+    fun hasMethod(name: String): Boolean = clazz.methods.any { it.nameAsString == name }
 }

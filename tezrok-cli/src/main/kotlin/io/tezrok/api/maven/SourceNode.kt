@@ -5,7 +5,7 @@ import io.tezrok.api.node.BaseNode
 import io.tezrok.api.node.DirectoryNode
 
 /**
- * Represents the src directory
+ * Represents directory: src
  */
 open class SourceNode(parent: BaseNode?) : DirectoryNode("src", parent) {
     val main: MainNode = MainNode(this)

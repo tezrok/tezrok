@@ -4,6 +4,7 @@ import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.api.maven.UseMavenDependency
+import io.tezrok.java.HelloWorldFeature
 import io.tezrok.liquibase.LiquibaseGenerator
 import io.tezrok.maven.MavenCoreFeature
 import org.apache.commons.lang3.Validate
@@ -20,6 +21,7 @@ internal class FeatureManager {
         // TODO: load features from configuration
         features.add(MavenCoreFeature())
         features.add(LiquibaseGenerator())
+        features.add(HelloWorldFeature())
     }
 
     fun applyAll(project: ProjectNode, context: GeneratorContext) {
