@@ -12,6 +12,7 @@ import io.tezrok.util.VelocityUtil
 import org.apache.velocity.VelocityContext
 import org.apache.velocity.shaded.commons.io.FilenameUtils
 import java.io.OutputStreamWriter
+import java.nio.charset.StandardCharsets
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.function.Consumer
@@ -151,7 +152,7 @@ class LiquibaseGenerator : TezrokFeature {
         }
         contextInitializer.accept(velocityContext)
 
-        OutputStreamWriter(file.getOutputStream(), context.getCharset()).use { writer ->
+        OutputStreamWriter(file.getOutputStream(), StandardCharsets.UTF_8).use { writer ->
             masterTemplate.merge(velocityContext, writer)
         }
     }
