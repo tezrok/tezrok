@@ -11,6 +11,12 @@ interface JavaDirectory {
 
     fun getOrCreateJavaFile(name: String): JavaFileNode = getJavaFile(name) ?: addJavaFile(name)
 
+    fun getClass(name: String): JavaClassNode? = getJavaFile(name)?.getRootClass()
+
+    fun addClass(name: String): JavaClassNode = addJavaFile(name).getRootClass()
+
+    fun getOrCreateClass(name: String): JavaClassNode = getClass(name) ?: addClass(name)
+
     fun getJavaDirectories(): List<JavaDirectoryNode>
 
     fun getJavaDirectory(name: String): JavaDirectoryNode?
@@ -20,7 +26,7 @@ interface JavaDirectory {
     fun getOrCreateJavaDirectory(name: String): JavaDirectoryNode = getJavaDirectory(name) ?: addJavaDirectory(name)
 
     /**
-     * Creates all directories in the path and returns the last directory
+     * Creates all directories (if not exist) in the path and returns the last directory
      */
     fun makeDirectories(path: String): JavaDirectoryNode
 }

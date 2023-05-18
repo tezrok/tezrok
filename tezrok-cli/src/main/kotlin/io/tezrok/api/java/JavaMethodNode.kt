@@ -1,5 +1,6 @@
 package io.tezrok.api.java
 
+import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.MethodCallExpr
 import com.github.javaparser.ast.stmt.BlockStmt
@@ -24,6 +25,11 @@ open class JavaMethodNode(private val method: MethodDeclaration) {
         val methodCallExpr = MethodCallExpr(name)
         validateBody().addStatement(methodCallExpr)
         return JavaCallExpressionNode(methodCallExpr)
+    }
+
+    fun withModifiers(vararg modifiers: Modifier.Keyword): JavaMethodNode {
+        method.setModifiers(*modifiers)
+        return this
     }
 
     private fun validateBody(): BlockStmt {

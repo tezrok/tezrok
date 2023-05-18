@@ -10,7 +10,12 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration) {
 
     fun getMethod(name: String): JavaMethodNode = JavaMethodNode(clazz.methods.first { it.nameAsString == name })
 
-    fun addMethod(name: String, vararg modifiers: Modifier.Keyword): JavaMethodNode = JavaMethodNode(clazz.addMethod(name, *modifiers))
+    fun addMethod(name: String): JavaMethodNode = JavaMethodNode(clazz.addMethod(name))
 
     fun hasMethod(name: String): Boolean = clazz.methods.any { it.nameAsString == name }
+
+    fun withModifiers(vararg modifiers: Modifier.Keyword): JavaClassNode {
+        clazz.setModifiers(*modifiers)
+        return this
+    }
 }

@@ -35,7 +35,7 @@ open class JavaDirectoryNode(name: String, parent: BaseNode?) : DirectoryNode(na
     }
 
     override fun makeDirectories(path: String): JavaDirectoryNode {
-        val parts = path.split("/")
+        val parts = path.split("/").filter { it.isNotBlank() }
         var current = this
 
         parts.forEach { name ->
