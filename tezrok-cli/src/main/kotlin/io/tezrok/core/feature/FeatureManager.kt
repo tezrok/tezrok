@@ -8,6 +8,7 @@ import io.tezrok.java.HelloWorldFeature
 import io.tezrok.jooq.JooqGenerator
 import io.tezrok.liquibase.LiquibaseGenerator
 import io.tezrok.maven.MavenCoreFeature
+import io.tezrok.spring.SpringGenerator
 import org.apache.commons.lang3.Validate
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -24,6 +25,7 @@ internal class FeatureManager {
         features.add(LiquibaseGenerator())
         features.add(HelloWorldFeature())
         features.add(JooqGenerator())
+        features.add(SpringGenerator())
     }
 
     fun applyAll(project: ProjectNode, context: GeneratorContext) {

@@ -13,7 +13,7 @@ internal class TezrokBuilderTest {
     @Test
     fun testGenerateProject() {
         val projectPath = ResourceUtil.getResourceAsPath("/projects/tezrok-simple.json")
-        val projectOutput = PathUtil.resolve("output/tezrok-simple")
+        val projectOutput = PathUtil.resolve("../../output/tezrok-simple")
 
         TezrokBuilder.from(projectPath)
             .setOutput(projectOutput)

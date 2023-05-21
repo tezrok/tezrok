@@ -88,6 +88,8 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
         return PluginNode(node)
     }
 
+    fun getParentNode(): ParentNode = ParentNode(getXml().getOrCreate("parent"))
+
     private fun dependenciesAccess() = MavenDependenciesAccess(getXml())
 
     private fun pluginNodes(): Stream<PluginNode> = getXml().nodesByPath(PLUGIN_PATH).map { PluginNode(it) }
@@ -97,14 +99,14 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
         if (value.groupId.isBlank())
             xml.removeAll(GROUP_ID)
         else
-            xml.getOrCreate(GROUP_ID).setValue(value.groupId)
+            xml.getOrCreate(GROUP_ID, value.groupId)
         // artifactId is required
         if (value.artifactId.isNotBlank())
-            xml.getOrCreate(ARTIFACT_ID).setValue(value.artifactId)
+            xml.getOrCreate(ARTIFACT_ID, value.artifactId)
         if (value.version.isBlank())
             xml.removeAll(VERSION)
         else
-            xml.getOrCreate(VERSION).setValue(value.version)
+            xml.getOrCreate(VERSION, value.version)
     }
 
     private fun getDependencyIdInternal(): MavenDependency = getXml().let { xml ->
