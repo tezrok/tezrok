@@ -5,6 +5,7 @@ import io.tezrok.api.TezrokFeature
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.api.maven.UseMavenDependency
 import io.tezrok.java.HelloWorldFeature
+import io.tezrok.jooq.JooqGenerator
 import io.tezrok.liquibase.LiquibaseGenerator
 import io.tezrok.maven.MavenCoreFeature
 import org.apache.commons.lang3.Validate
@@ -22,6 +23,7 @@ internal class FeatureManager {
         features.add(MavenCoreFeature())
         features.add(LiquibaseGenerator())
         features.add(HelloWorldFeature())
+        features.add(JooqGenerator())
     }
 
     fun applyAll(project: ProjectNode, context: GeneratorContext) {
