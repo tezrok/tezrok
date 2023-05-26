@@ -4,6 +4,7 @@ import com.github.javaparser.ast.Modifier.Keyword
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.maven.ProjectNode
+import org.slf4j.LoggerFactory
 
 /**
  * Creates a class MainApp with a main method.
@@ -15,15 +16,28 @@ class HelloWorldFeature : TezrokFeature {
         check(project.getModules().size == 1) { "TODO: Support multiple modules" }
         val module = project.getModules().first()
         val packagePath = context.getProject().packagePath
-        val classPackageRoot = module.source.main.java.makeDirectories(packagePath.replace('.', '/'))
-        val mainClass = classPackageRoot.getOrCreateClass("MainApp")
-        // create main method if not exists
-        if (!mainClass.hasMethod("main")) {
-            val mainMethod = mainClass.addMethod("main").withModifiers(Keyword.PUBLIC, Keyword.STATIC)
-            mainMethod.addParameter("String[]", "args")
-            mainMethod.addCallExpression("System.out.println").addArgument("Hello, World!")
+        val javaRoot = module.source.main.java
+        val classPackageRoot = javaRoot.makeDirectories(packagePath.replace('.', '/'))
+
+        if (javaRoot.applicationClass == null) {
+            val mainClass = classPackageRoot.getOrCreateClass("MainApp")
+            // create main method if not exists
+            if (!mainClass.hasMethod("main")) {
+                val mainMethod = mainClass.addMethod("main").withModifiers(Keyword.PUBLIC, Keyword.STATIC)
+                mainMethod.addParameter("String[]", "args")
+                mainMethod.addCallExpression("System.out.println").addStringArgument("Hello, World!")
+            } else {
+                log.debug("Main method already exists")
+            }
+            javaRoot.applicationClass = mainClass
+        } else {
+            log.debug("Application class already exists")
         }
 
         return true
+    }
+
+    private companion object {
+        val log = LoggerFactory.getLogger(HelloWorldFeature::class.java)!!
     }
 }

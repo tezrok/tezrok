@@ -2,6 +2,7 @@ package io.tezrok.api.java
 
 import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.body.MethodDeclaration
+import com.github.javaparser.ast.comments.JavadocComment
 import com.github.javaparser.ast.expr.MethodCallExpr
 import com.github.javaparser.ast.stmt.BlockStmt
 
@@ -37,5 +38,13 @@ open class JavaMethodNode(private val method: MethodDeclaration) {
             method.setBody(BlockStmt())
         }
         return method.body.get()
+    }
+
+    fun clearBody() {
+        method.body.ifPresent { it.statements.clear() }
+    }
+
+    fun setJavadocComment(comment: String) {
+        method.setComment(JavadocComment(comment))
     }
 }
