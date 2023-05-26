@@ -22,8 +22,8 @@ internal class MavenCoreFeature : TezrokFeature {
         val pluginNode = module.pom.addPluginDependency("org.apache.maven.plugins:maven-compiler-plugin:3.11.0")
         val configuration = pluginNode.getConfiguration().node
         // TODO: get java version from context
-        configuration.getOrCreate("source", "1.8")
-        configuration.getOrCreate("target", "1.8")
+        configuration.getOrCreate("source", "8")
+        configuration.getOrCreate("target", "8")
 
         return true
     }

@@ -21,9 +21,10 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
             .addAttr("xsi:schemaLocation", SCHEMA_LOCATION)
             .getOrCreate("modelVersion").setValue("4.0.0").and()
             .getOrCreate(ARTIFACT_ID).setValue(artifactId)
-        addProperty("java.version", "1.8")
+        addProperty("java.version", "8")
         addProperty("project.build.sourceEncoding", "UTF-8")
         addProperty("project.reporting.outputEncoding", "UTF-8")
+        // TODO: set name and description
     }
 
     fun addProperty(property: MavenProperty): PomNode = addProperty(property.name, property.value)
