@@ -36,7 +36,10 @@ internal class SpringGenerator : TezrokFeature {
 
     private fun addApplicationProperties(module: ModuleNode) {
         val appProps = module.source.main.resources.getOrAddFile("application.properties")
-        appProps.setString("spring.main.banner-mode=off\n")
+        if (appProps.isEmpty()) {
+            // TODO: update only specified properties
+            appProps.setString("spring.main.banner-mode=console\n")
+        }
     }
 
     private fun handleMainMethod(mainClass: JavaClassNode) {
