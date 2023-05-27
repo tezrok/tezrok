@@ -6,6 +6,7 @@ import io.tezrok.core.output.ProjectNodeFactory
 import io.tezrok.core.output.ProjectOutputGenerator
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.time.Clock
 
 /**
  * Entry point for tezrok
@@ -13,6 +14,7 @@ import java.nio.file.Paths
 class TezrokBuilder private constructor() {
     private var path: Path? = null
     private var output: Path? = null
+    private var clock: Clock = Clock.systemDefaultZone()
     private val projectElemRepo = ProjectElemRepository()
     private val projectNodeFactory = ProjectNodeFactory(projectElemRepo)
     private val featureManager = FeatureManager()
@@ -25,7 +27,7 @@ class TezrokBuilder private constructor() {
 
         val projectElem = projectElemRepo.load(inputPath)
         val project = projectNodeFactory.fromProject(projectElem)
-        val context = CoreGeneratorContext(projectElem, generatorProvider)
+        val context = CoreGeneratorContext(projectElem, generatorProvider, clock)
 
         featureManager.applyAll(project, context)
         generator.generate(project, projectOutput)
@@ -48,6 +50,11 @@ class TezrokBuilder private constructor() {
 
     private fun setPath(path: Path): TezrokBuilder {
         this.path = path
+        return this
+    }
+
+    fun setClock(clock: Clock): TezrokBuilder {
+        this.clock = clock
         return this
     }
 
