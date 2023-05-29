@@ -14,7 +14,7 @@ internal class MavenDependenciesAccess(val parent: XmlNode) : MavenDependencies 
      * Get maven dependency by groupId and artifactId
      */
     override fun getDependency(groupId: String, artifactId: String): MavenDependency? =
-        getDependencies().find { it.groupId == groupId && it.artifactId == artifactId }
+            getDependencies().find { it.groupId == groupId && it.artifactId == artifactId }
 
     override fun addDependency(dependency: MavenDependency): Boolean {
         val groupId = dependency.groupId
@@ -30,8 +30,8 @@ internal class MavenDependenciesAccess(val parent: XmlNode) : MavenDependencies 
         }
 
         parent.getOrAdd("dependencies")
-            .add("dependency")
-            .addDependency(groupId, artifactId, version)
+                .add("dependency")
+                .addDependency(groupId, artifactId, version)
 
         return true
     }
@@ -39,11 +39,11 @@ internal class MavenDependenciesAccess(val parent: XmlNode) : MavenDependencies 
     /**
      * Remove maven dependencies
      */
-    override fun removeDependencies(dependencies: List<MavenDependency>): Boolean  {
+    override fun removeDependencies(dependencies: List<MavenDependency>): Boolean {
         val shortIdsToRemove = dependencies.map { it.shortId() }.toHashSet()
         val dependencyNodes = dependencyNodes()
-            .filter { node -> shortIdsToRemove.contains(node.shortId()) }
-            .toList()
+                .filter { node -> shortIdsToRemove.contains(node.shortId()) }
+                .toList()
 
         return parent.get("dependencies")?.remove(dependencyNodes) ?: false
     }
@@ -54,11 +54,11 @@ internal class MavenDependenciesAccess(val parent: XmlNode) : MavenDependencies 
 internal fun XmlNode.shortId(): String = getNodeValue(PomNode.GROUP_ID) + ":" + getNodeValue(PomNode.ARTIFACT_ID)
 
 internal fun XmlNode.addDependency(groupId: String, artifactId: String, version: String) {
-    add(PomNode.GROUP_ID).setValue(groupId).and()
-        .add(PomNode.ARTIFACT_ID).setValue(artifactId)
+    add(PomNode.GROUP_ID, groupId).and()
+            .add(PomNode.ARTIFACT_ID, artifactId)
 
     if (version.isNotBlank()) {
-        add(PomNode.VERSION).setValue(version)
+        add(PomNode.VERSION, version)
     }
 }
 

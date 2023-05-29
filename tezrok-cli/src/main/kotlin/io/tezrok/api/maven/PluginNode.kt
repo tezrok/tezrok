@@ -13,9 +13,9 @@ class PluginNode(val node: XmlNode) : MavenDependencies by MavenDependenciesAcce
         ExecutionNode(
             node.getOrAdd("executions")
                 .add("execution")
-                .add("id").setValue(id).and()
-                .add("goals").add("goal").setValue(goal).and().and()
-                .add("phase").setValue(phase.id).and()
+                .add("id", id).and()
+                .add("goals").add("goal", goal).and().and()
+                .add("phase", phase.id).and()
         )
 
     fun getConfiguration(): ConfigurationNode = ConfigurationNode(node.getOrAdd("configuration"))
