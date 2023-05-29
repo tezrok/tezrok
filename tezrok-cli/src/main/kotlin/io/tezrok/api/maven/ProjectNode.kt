@@ -29,4 +29,12 @@ open class ProjectNode(name: String) : DirectoryNode(name, null) {
         log.debug("From project {} removed {} modules: {}, success: {}", getName(), list.size, list, success)
         return success
     }
+
+    /**
+     * TODO: remove this temporal method when multiple modules are supported
+     */
+    fun getSingleModule(): ModuleNode {
+        check(modules.size == 1) { "TODO: Support multiple modules" }
+        return modules.first()
+    }
 }

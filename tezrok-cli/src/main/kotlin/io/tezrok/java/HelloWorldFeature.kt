@@ -13,8 +13,7 @@ import org.slf4j.LoggerFactory
  */
 class HelloWorldFeature : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
-        check(project.getModules().size == 1) { "TODO: Support multiple modules" }
-        val module = project.getModules().first()
+        val module = project.getSingleModule()
         val packagePath = context.getProject().packagePath
         val javaRoot = module.source.main.java
         val classPackageRoot = javaRoot.makeDirectories(packagePath.replace('.', '/'))

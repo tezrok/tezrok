@@ -24,9 +24,7 @@ internal class LiquibaseGenerator : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
         val sqlGenerator = context.getGenerator(SqlGenerator::class.java)
             ?: throw IllegalArgumentException("SqlGenerator not found")
-        check(project.getModules().size == 1) { "Liquibase feature only supports one module" }
-        // TODO: support multiple modules
-        val module = project.getModules()[0]
+        val module = project.getSingleModule()
         val schema = context.getProject().modules.find { it.name == module.getName() }?.schema
             ?: throw IllegalArgumentException("No schema found for module ${module.getName()}")
         val resource = module.source.main.resources

@@ -11,10 +11,8 @@ import io.tezrok.api.maven.ProjectNode
  */
 internal class JooqGenerator : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
-        // TODO: support multiple modules
-        check(project.getModules().size == 1) { "Liquibase feature only supports one module" }
         val projectElem = context.getProject()
-        val module = project.getModules().first()
+        val module = project.getSingleModule()
         // update pom
         val pomFile = module.pom
         pomFile.addDependency("org.postgresql:postgresql:42.6.0")

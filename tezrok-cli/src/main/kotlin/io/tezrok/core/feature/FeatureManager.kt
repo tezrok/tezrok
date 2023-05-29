@@ -9,7 +9,6 @@ import io.tezrok.jooq.JooqGenerator
 import io.tezrok.liquibase.LiquibaseGenerator
 import io.tezrok.maven.MavenCoreFeature
 import io.tezrok.spring.SpringGenerator
-import org.apache.commons.lang3.Validate
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -42,9 +41,7 @@ internal class FeatureManager {
         }
 
         if (success && feature.javaClass.isAnnotationPresent(UseMavenDependency::class.java)) {
-            // TODO: support multiple modules
-            Validate.isTrue(project.getModules().size == 1, "Feature only supports one module")
-            val module = project.getModules().first()
+            val module = project.getSingleModule()
 
             feature.javaClass.annotations
                 .filterIsInstance<UseMavenDependency>()
