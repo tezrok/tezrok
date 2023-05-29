@@ -1,5 +1,6 @@
 package io.tezrok.api.java
 
+import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
@@ -10,6 +11,9 @@ import com.github.javaparser.ast.type.TypeParameter
  */
 open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration) {
     fun getName(): String = clazz.nameAsString
+
+    fun getParent(): CompilationUnit = clazz.findAncestor(CompilationUnit::class.java)
+            .orElseThrow { IllegalStateException("Compilation unit not found for class: " + getName()) }
 
     fun getMethod(name: String): JavaMethodNode? = clazz.methods.filter { it.nameAsString == name }
             .map { JavaMethodNode(it) }
@@ -32,7 +36,12 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration) {
     }
 
     fun addImport(importClass: Class<*>): JavaClassNode {
-        clazz.tryAddImportToParentCompilationUnit(importClass)
+        getParent().addImport(importClass)
+        return this
+    }
+
+    fun addImport(importClass: String): JavaClassNode {
+        getParent().addImport(importClass)
         return this
     }
 
@@ -40,4 +49,11 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration) {
         clazz.setTypeParameters(NodeList(params.map { TypeParameter(it) }))
         return this
     }
+
+    fun extendClass(className: String): JavaClassNode {
+        clazz.addExtendedType(className)
+        return this
+    }
+
+    fun addConstructor(): JavaConstructorNode = JavaConstructorNode(clazz.addConstructor())
 }

@@ -1,6 +1,8 @@
 package io.tezrok.api.io
 
 interface FileSupport : OutStream, InStream {
+    fun getName(): String
+
     fun getSize(): Long
 
     fun isDirectory(): Boolean

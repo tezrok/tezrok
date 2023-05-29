@@ -10,12 +10,18 @@ import com.github.javaparser.ast.stmt.BlockStmt
  * Node that represents a Java method
  */
 open class JavaMethodNode(private val method: MethodDeclaration) {
-    fun setBody(body: BlockStmt) {
+    fun setBody(body: BlockStmt): JavaMethodNode {
         method.setBody(body)
+        return this
     }
 
     fun addParameter(typeName: String, name: String): JavaMethodNode {
         method.addParameter(typeName, name)
+        return this
+    }
+
+    fun addParameter(paramClass: Class<*>, name: String): JavaMethodNode {
+        method.addParameter(paramClass, name)
         return this
     }
 
@@ -33,11 +39,9 @@ open class JavaMethodNode(private val method: MethodDeclaration) {
         return this
     }
 
-    private fun validateBody(): BlockStmt {
-        if (method.body.isEmpty) {
-            method.setBody(BlockStmt())
-        }
-        return method.body.get()
+    fun addAnnotation(annotationClass: Class<out Annotation>): JavaMethodNode {
+        method.addAnnotation(annotationClass)
+        return this
     }
 
     fun clearBody() {
@@ -46,5 +50,12 @@ open class JavaMethodNode(private val method: MethodDeclaration) {
 
     fun setJavadocComment(comment: String) {
         method.setComment(JavadocComment(comment))
+    }
+
+    private fun validateBody(): BlockStmt {
+        if (method.body.isEmpty) {
+            method.setBody(BlockStmt())
+        }
+        return method.body.get()
     }
 }
