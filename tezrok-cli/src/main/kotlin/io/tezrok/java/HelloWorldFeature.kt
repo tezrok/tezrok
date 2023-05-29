@@ -14,23 +14,26 @@ import org.slf4j.LoggerFactory
 class HelloWorldFeature : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
         val module = project.getSingleModule()
-        val packagePath = context.getProject().packagePath
         val javaRoot = module.source.main.java
-        val classPackageRoot = javaRoot.makeDirectories(packagePath.replace('.', '/'))
+        val applicationPackageRoot = javaRoot.applicationPackageRoot
 
-        if (javaRoot.applicationClass == null) {
-            val mainClass = classPackageRoot.getOrAddClass("MainApp")
-            // create main method if not exists
-            if (!mainClass.hasMethod("main")) {
-                val mainMethod = mainClass.addMethod("main").withModifiers(Keyword.PUBLIC, Keyword.STATIC)
-                mainMethod.addParameter("String[]", "args")
-                mainMethod.addCallExpression("System.out.println").addStringArgument("Hello, World!")
+        if (applicationPackageRoot != null) {
+            if (javaRoot.applicationClass == null) {
+                val mainClass = applicationPackageRoot.getOrAddClass("MainApp")
+                // create main method if not exists
+                if (!mainClass.hasMethod("main")) {
+                    val mainMethod = mainClass.addMethod("main").withModifiers(Keyword.PUBLIC, Keyword.STATIC)
+                    mainMethod.addParameter("String[]", "args")
+                    mainMethod.addCallExpression("System.out.println").addStringArgument("Hello, World!")
+                } else {
+                    log.debug("Main method already exists")
+                }
+                javaRoot.applicationClass = mainClass
             } else {
-                log.debug("Main method already exists")
+                log.debug("Application class already exists")
             }
-            javaRoot.applicationClass = mainClass
         } else {
-            log.debug("Application class already exists")
+            log.debug("Application package root is not set")
         }
 
         return true

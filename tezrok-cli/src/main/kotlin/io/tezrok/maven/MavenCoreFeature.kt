@@ -25,6 +25,12 @@ internal class MavenCoreFeature : TezrokFeature {
         configuration.getOrAdd("source", "8")
         configuration.getOrAdd("target", "8")
 
+        val javaRoot = module.source.main.java
+        if (javaRoot.applicationPackageRoot == null) {
+            val classPackageRoot = javaRoot.makeDirectories(projectElem.packagePath.replace('.', '/'))
+            javaRoot.applicationPackageRoot = classPackageRoot
+        }
+
         return true
     }
 }
