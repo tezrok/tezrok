@@ -12,7 +12,7 @@ open class JavaDirectoryNode(name: String, parent: BaseNode?) : DirectoryNode(na
     private val javaFiles = mutableListOf<JavaFileNode>()
     private val javaDirs = mutableListOf<JavaDirectoryNode>()
 
-    override fun getFiles(): List<BaseFileNode> = Collections.unmodifiableList(javaFiles + javaDirs)
+    override fun getFiles(): List<BaseFileNode> = Collections.unmodifiableList(javaFiles + javaDirs + super.getFiles())
 
     override fun getJavaFiles(): List<JavaFileNode> = Collections.unmodifiableList(javaFiles.toList())
 

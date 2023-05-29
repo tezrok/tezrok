@@ -1,0 +1,58 @@
+package $package;
+
+import org.jooq.DSLContext;
+import org.jooq.Field;
+import org.jooq.Table;
+import org.jooq.UpdatableRecord;
+
+/**
+ * Base class for all Jooq repositories.
+ *
+ * @param <R>  Jooq record type
+ * @param <ID> primary type
+ * @param <P>  Pojo type
+ */
+abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P> {
+    protected final DSLContext dsl;
+    private final Table<R> table;
+    private final Field<ID> idField;
+    private final Class<P> pojoClass;
+
+    JooqRepository(DSLContext dsl, Table<R> table, Field<ID> idField, Class<P> pojoClass) {
+        this.dsl = dsl;
+        this.table = table;
+        this.idField = idField;
+        this.pojoClass = pojoClass;
+    }
+
+    public P getById(ID id) {
+        return getRecordById(id).into(pojoClass);
+    }
+
+    public P update(ID id, P pojo) {
+        R record = getRecordById(id);
+        record.from(pojo);
+        record.store();
+        return record.into(pojoClass);
+    }
+
+    public P create(P pojo) {
+        R record = newRecord(pojo);
+        record.store();
+        return record.into(pojoClass);
+    }
+
+    public int delete(ID id) {
+        return dsl.delete(table).where(idField.eq(id)).execute();
+    }
+
+    public R getRecordById(ID id) {
+        return dsl.selectFrom(table)
+                .where(idField.eq(id))
+                .fetchOne();
+    }
+
+    protected R newRecord(Object obj) {
+        return dsl.newRecord(table, obj);
+    }
+}

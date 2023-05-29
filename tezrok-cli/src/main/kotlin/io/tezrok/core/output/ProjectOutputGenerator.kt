@@ -33,7 +33,12 @@ class ProjectOutputGenerator {
     }
 
     private fun generateFiles(dirNode: BaseFileNode, outputDir: Path) {
+        val walkedFiles = mutableSetOf<String>()
+
         dirNode.getFiles().forEach { file ->
+            check(!walkedFiles.contains(file.getName())) { "Duplicate file name found: ${file.getName()} in ${dirNode.getName()}" }
+            walkedFiles.add(file.getName())
+
             if (file.isFile()) {
                 val outputFile = outputDir.resolve(file.getName())
                 outputFile.outputStream().use { writer ->

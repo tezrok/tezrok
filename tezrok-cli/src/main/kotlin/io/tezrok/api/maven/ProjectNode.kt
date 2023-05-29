@@ -2,6 +2,7 @@ package io.tezrok.api.maven
 
 import io.tezrok.api.node.BaseFileNode
 import io.tezrok.api.node.DirectoryNode
+import java.util.Collections
 
 /**
  * Represents a model of maven project generation
@@ -9,9 +10,9 @@ import io.tezrok.api.node.DirectoryNode
 open class ProjectNode(name: String) : DirectoryNode(name, null) {
     private val modules: MutableList<ModuleNode> = mutableListOf()
 
-    fun getModules(): List<ModuleNode> = modules
+    fun getModules(): List<ModuleNode> = Collections.unmodifiableList(modules.toList())
 
-    override fun getFiles(): List<BaseFileNode> = modules + super.getFiles()
+    override fun getFiles(): List<BaseFileNode> = Collections.unmodifiableList(modules + super.getFiles())
 
     fun addModule(name: String): ModuleNode {
         // TODO: check if module already exists

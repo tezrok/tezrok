@@ -1,7 +1,9 @@
 package io.tezrok.api.java
 
 import com.github.javaparser.ast.Modifier
+import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
+import com.github.javaparser.ast.type.TypeParameter
 
 /**
  * Node that represents a Java class or interface
@@ -24,11 +26,18 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration) {
         return this
     }
 
-    fun addAnnotation(annotationClass: Class<out Annotation>) {
+    fun addAnnotation(annotationClass: Class<out Annotation>): JavaClassNode {
         clazz.addAnnotation(annotationClass)
+        return this
     }
 
-    fun addImport(importClass: Class<*>) {
+    fun addImport(importClass: Class<*>): JavaClassNode {
         clazz.tryAddImportToParentCompilationUnit(importClass)
+        return this
+    }
+
+    fun setTypeParameters(vararg params: String): JavaClassNode {
+        clazz.setTypeParameters(NodeList(params.map { TypeParameter(it) }))
+        return this
     }
 }
