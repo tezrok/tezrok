@@ -18,6 +18,7 @@ class Schema(
  */
 open class Definition(
     val type: String? = null,
+    val primary: Boolean? = null,
     val format: String? = null,
     val title: String? = null,
     val description: String? = null,

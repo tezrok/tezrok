@@ -16,7 +16,8 @@
           "type" : "object",
           "properties" : {
             "id" : {
-              "type" : "long"
+              "type" : "long",
+              "primary": true
             },
             "name" : {
               "type" : "string"
@@ -39,7 +40,8 @@
           "type" : "object",
           "properties" : {
             "id" : {
-              "type" : "long"
+              "type" : "long",
+              "primary": true
             },
             "title" : {
               "type" : "string"

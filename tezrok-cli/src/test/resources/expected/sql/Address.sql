@@ -1,4 +1,4 @@
-CREATE TABLE Address (
+CREATE TABLE public.address (
   id SERIAL PRIMARY KEY,
   street VARCHAR(255) NOT NULL,
   city VARCHAR(50) NOT NULL,

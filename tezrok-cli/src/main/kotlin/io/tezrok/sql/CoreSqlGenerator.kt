@@ -102,6 +102,9 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         if (isRequired) {
             sb.append(" NOT NULL")
         }
+        if (definition.primary == true) {
+            sb.append(" PRIMARY KEY")
+        }
     }
 
     private fun getSqlType(definition: Definition): String {

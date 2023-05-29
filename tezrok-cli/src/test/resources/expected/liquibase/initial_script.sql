@@ -4,7 +4,7 @@
 --changeset TezrokUser:2023-03-19_153254-Initial
 --comment Initial script for creating the structure
 
-CREATE TABLE Address (
+CREATE TABLE public.address (
   id SERIAL PRIMARY KEY,
   street VARCHAR(255) NOT NULL,
   city VARCHAR(50) NOT NULL,
