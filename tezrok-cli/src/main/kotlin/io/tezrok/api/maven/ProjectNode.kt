@@ -11,7 +11,7 @@ open class ProjectNode(name: String) : DirectoryNode(name, null) {
 
     fun getModules(): List<ModuleNode> = modules
 
-    override fun getFiles(): List<BaseFileNode> = modules
+    override fun getFiles(): List<BaseFileNode> = modules + super.getFiles()
 
     fun addModule(name: String): ModuleNode {
         // TODO: check if module already exists

@@ -4,6 +4,7 @@ import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.api.maven.UseMavenDependency
+import io.tezrok.java.GitIgnoreFeature
 import io.tezrok.java.HelloWorldFeature
 import io.tezrok.jooq.JooqGenerator
 import io.tezrok.liquibase.LiquibaseGenerator
@@ -21,6 +22,7 @@ internal class FeatureManager {
     init {
         // TODO: load features from configuration
         features.add(MavenCoreFeature())
+        features.add(GitIgnoreFeature())
         features.add(LiquibaseGenerator())
         features.add(HelloWorldFeature())
         features.add(JooqGenerator())
@@ -44,13 +46,13 @@ internal class FeatureManager {
             val module = project.getSingleModule()
 
             feature.javaClass.annotations
-                .filterIsInstance<UseMavenDependency>()
-                .map { it.value }
-                .forEach { dependency ->
-                    if (module.pom.addDependency(dependency)) {
-                        log.debug("Automatically added dependency '{}' to module '{}'", dependency, module.getName())
+                    .filterIsInstance<UseMavenDependency>()
+                    .map { it.value }
+                    .forEach { dependency ->
+                        if (module.pom.addDependency(dependency)) {
+                            log.debug("Automatically added dependency '{}' to module '{}'", dependency, module.getName())
+                        }
                     }
-                }
         }
     }
 

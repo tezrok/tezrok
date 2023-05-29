@@ -22,5 +22,7 @@ abstract class BaseNode(private var name: String, private val parent: Node?) : N
     }
 
     override fun getParent(): Node? = parent
+
+    override fun toString(): String = javaClass.simpleName + ": " + getName()
 }
 
