@@ -12,11 +12,11 @@ open class ParentNode(val node: XmlNode) {
 
     private fun setDependencyIdInternal(value: MavenDependency) {
         if (value.groupId.isNotBlank())
-            node.getOrCreate(PomNode.GROUP_ID, value.groupId)
+            node.getOrAdd(PomNode.GROUP_ID, value.groupId)
         if (value.artifactId.isNotBlank())
-            node.getOrCreate(PomNode.ARTIFACT_ID, value.artifactId)
+            node.getOrAdd(PomNode.ARTIFACT_ID, value.artifactId)
         if (value.version.isNotBlank())
-            node.getOrCreate(PomNode.VERSION, value.version)
+            node.getOrAdd(PomNode.VERSION, value.version)
     }
 
     private fun getDependencyIdInternal(): MavenDependency = node.let { xml ->

@@ -15,7 +15,7 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration) {
 
     fun addMethod(name: String): JavaMethodNode = JavaMethodNode(clazz.addMethod(name))
 
-    fun getOrCreateMethod(name: String): JavaMethodNode = getMethod(name) ?: addMethod(name)
+    fun getOrAddMethod(name: String): JavaMethodNode = getMethod(name) ?: addMethod(name)
 
     fun hasMethod(name: String): Boolean = clazz.methods.any { it.nameAsString == name }
 

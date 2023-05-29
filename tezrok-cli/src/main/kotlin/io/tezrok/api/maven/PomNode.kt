@@ -19,8 +19,8 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
         getXml().addAttr("xmlns", "http://maven.apache.org/POM/4.0.0")
             .addAttr("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
             .addAttr("xsi:schemaLocation", SCHEMA_LOCATION)
-            .getOrCreate("modelVersion").setValue("4.0.0").and()
-            .getOrCreate(ARTIFACT_ID).setValue(artifactId)
+            .getOrAdd("modelVersion").setValue("4.0.0").and()
+            .getOrAdd(ARTIFACT_ID).setValue(artifactId)
         addProperty("java.version", "8")
         addProperty("project.build.sourceEncoding", "UTF-8")
         addProperty("project.reporting.outputEncoding", "UTF-8")
@@ -30,7 +30,7 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
     fun addProperty(property: MavenProperty): PomNode = addProperty(property.name, property.value)
 
     fun addProperty(name: String, value: String): PomNode {
-        getXml().getOrCreate("properties").getOrCreate(name).setValue(value)
+        getXml().getOrAdd("properties").getOrAdd(name).setValue(value)
         return this
     }
 
@@ -80,8 +80,8 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
         }
 
         val node: XmlNode = getXml()
-            .getOrCreate("build")
-            .getOrCreate("plugins")
+            .getOrAdd("build")
+            .getOrAdd("plugins")
             .add("plugin")
 
         node.addDependency(dependency.groupId, dependency.artifactId, dependency.version)
@@ -89,7 +89,7 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
         return PluginNode(node)
     }
 
-    fun getParentNode(): ParentNode = ParentNode(getXml().getOrCreate("parent"))
+    fun getParentNode(): ParentNode = ParentNode(getXml().getOrAdd("parent"))
 
     private fun dependenciesAccess() = MavenDependenciesAccess(getXml())
 
@@ -100,14 +100,14 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
         if (value.groupId.isBlank())
             xml.removeAll(GROUP_ID)
         else
-            xml.getOrCreate(GROUP_ID, value.groupId)
+            xml.getOrAdd(GROUP_ID, value.groupId)
         // artifactId is required
         if (value.artifactId.isNotBlank())
-            xml.getOrCreate(ARTIFACT_ID, value.artifactId)
+            xml.getOrAdd(ARTIFACT_ID, value.artifactId)
         if (value.version.isBlank())
             xml.removeAll(VERSION)
         else
-            xml.getOrCreate(VERSION, value.version)
+            xml.getOrAdd(VERSION, value.version)
     }
 
     private fun getDependencyIdInternal(): MavenDependency = getXml().let { xml ->

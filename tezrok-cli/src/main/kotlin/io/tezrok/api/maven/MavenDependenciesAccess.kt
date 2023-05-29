@@ -29,7 +29,7 @@ internal class MavenDependenciesAccess(val parent: XmlNode) : MavenDependencies 
             return dependencyNode.updateVersion(version)
         }
 
-        parent.getOrCreate("dependencies")
+        parent.getOrAdd("dependencies")
             .add("dependency")
             .addDependency(groupId, artifactId, version)
 
@@ -67,7 +67,7 @@ internal fun XmlNode.addDependency(groupId: String, artifactId: String, version:
  */
 internal fun XmlNode.updateVersion(version: String): Boolean {
     if (version.isNotBlank()) {
-        val versionNode = getOrCreate(PomNode.VERSION)
+        val versionNode = getOrAdd(PomNode.VERSION)
 
         if (versionNode.getValue()?.isBlank() == true || version > versionNode.getValue()!!) {
             versionNode.setValue(version)

@@ -45,7 +45,7 @@ internal class SpringFeature : TezrokFeature {
     private fun handleMainMethod(mainClass: JavaClassNode) {
         mainClass.addAnnotation(SpringBootApplication::class.java)
         mainClass.addImport(SpringApplication::class.java)
-        val mainMethod = mainClass.getOrCreateMethod("main")
+        val mainMethod = mainClass.getOrAddMethod("main")
         mainMethod.setJavadocComment("Entry point of the application.")
         // TODO: add spring feature: not to clear body
         mainMethod.clearBody()

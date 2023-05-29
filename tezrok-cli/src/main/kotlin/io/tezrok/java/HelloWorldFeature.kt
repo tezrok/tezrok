@@ -19,7 +19,7 @@ class HelloWorldFeature : TezrokFeature {
         val classPackageRoot = javaRoot.makeDirectories(packagePath.replace('.', '/'))
 
         if (javaRoot.applicationClass == null) {
-            val mainClass = classPackageRoot.getOrCreateClass("MainApp")
+            val mainClass = classPackageRoot.getOrAddClass("MainApp")
             // create main method if not exists
             if (!mainClass.hasMethod("main")) {
                 val mainMethod = mainClass.addMethod("main").withModifiers(Keyword.PUBLIC, Keyword.STATIC)

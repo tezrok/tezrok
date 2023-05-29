@@ -39,7 +39,7 @@ open class JavaDirectoryNode(name: String, parent: BaseNode?) : DirectoryNode(na
         var current = this
 
         parts.forEach { name ->
-            current = current.getOrCreateJavaDirectory(name)
+            current = current.getOrAddJavaDirectory(name)
         }
 
         return current
