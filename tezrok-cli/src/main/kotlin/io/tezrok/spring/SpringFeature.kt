@@ -13,7 +13,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 /**
  * Adds Spring related dependencies and classes.
  */
-internal class SpringGenerator : TezrokFeature {
+internal class SpringFeature : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
         check(project.getModules().size == 1) { "SpringGenerator only supports single module" }
         val module = project.getModules().first()
@@ -55,6 +55,6 @@ internal class SpringGenerator : TezrokFeature {
     }
 
     private companion object {
-        val log = LoggerFactory.getLogger(SpringGenerator::class.java)!!
+        val log = LoggerFactory.getLogger(SpringFeature::class.java)!!
     }
 }

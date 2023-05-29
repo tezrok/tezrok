@@ -9,7 +9,7 @@ import io.tezrok.api.maven.ProjectNode
 /**
  * Add generating of jooq classes from liquibase changelog.
  */
-internal class JooqGenerator : TezrokFeature {
+internal class JooqFeature : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
         val projectElem = context.getProject()
         val module = project.getSingleModule()

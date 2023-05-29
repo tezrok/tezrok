@@ -6,10 +6,10 @@ import io.tezrok.api.maven.ProjectNode
 import io.tezrok.api.maven.UseMavenDependency
 import io.tezrok.java.GitIgnoreFeature
 import io.tezrok.java.HelloWorldFeature
-import io.tezrok.jooq.JooqGenerator
-import io.tezrok.liquibase.LiquibaseGenerator
+import io.tezrok.jooq.JooqFeature
+import io.tezrok.liquibase.LiquibaseFeature
 import io.tezrok.maven.MavenCoreFeature
-import io.tezrok.spring.SpringGenerator
+import io.tezrok.spring.SpringFeature
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -23,10 +23,10 @@ internal class FeatureManager {
         // TODO: load features from configuration
         features.add(MavenCoreFeature())
         features.add(GitIgnoreFeature())
-        features.add(LiquibaseGenerator())
+        features.add(LiquibaseFeature())
         features.add(HelloWorldFeature())
-        features.add(JooqGenerator())
-        features.add(SpringGenerator())
+        features.add(JooqFeature())
+        features.add(SpringFeature())
     }
 
     fun applyAll(project: ProjectNode, context: GeneratorContext) {

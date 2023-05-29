@@ -20,7 +20,7 @@ import java.util.function.Consumer
  * Generates Liquibase changelogs from a JSON schema
  */
 @UseMavenDependency("org.liquibase:liquibase-core:${'$'}{liquibase.version}")
-internal class LiquibaseGenerator : TezrokFeature {
+internal class LiquibaseFeature : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
         val sqlGenerator = context.getGenerator(SqlGenerator::class.java)
             ?: throw IllegalArgumentException("SqlGenerator not found")

@@ -13,9 +13,9 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 
-internal class LiquibaseGeneratorTest : BaseTest() {
+internal class LiquibaseFeatureTest : BaseTest() {
     private val fixedClock = getFixedClock()
-    private val liquibaseFeature = LiquibaseGenerator()
+    private val liquibaseFeature = LiquibaseFeature()
     private val schemaLoader = SchemaLoader()
 
     @Test
