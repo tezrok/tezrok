@@ -15,11 +15,11 @@ internal class JooqFeature : TezrokFeature {
         val module = project.getSingleModule()
         // update pom
         val pomFile = module.pom
+        pomFile.addDependency("org.springframework.boot:spring-boot-starter-jooq")
         pomFile.addDependency("org.postgresql:postgresql:42.6.0")
         pomFile.addDependency("org.jooq:jooq:${'$'}{jooq.version}")
-        pomFile.addProperty("liquibase.version", "3.8.9")
         pomFile.addProperty("testcontainers.version", "1.18.0")
-        pomFile.addProperty("jooq.version", "3.13.4")
+        pomFile.addProperty("jooq.version", "3.18.4")
         pomFile.addProperty("db.username", "postgres")
         pomFile.addProperty("db.password", "postgres")
 
@@ -68,6 +68,8 @@ internal class JooqFeature : TezrokFeature {
     }
 
     private fun addLiquibasePlugin(pomFile: PomNode) {
+        check(pomFile.getProperty("liquibase.version")?.isNotBlank() ?: false) { "Expected property in maven: liquibase.version" }
+
         val pluginNode = pomFile.addPluginDependency("org.liquibase:liquibase-maven-plugin:${'$'}{liquibase.version}")
         val execution = pluginNode.addExecution("liquibase-update", BuildPhase.GenerateSources, "update")
         val configuration = execution.getConfiguration().node
