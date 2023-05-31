@@ -24,7 +24,7 @@ internal class LiquibaseFeature : TezrokFeature {
         val resource = module.source.main.resources
         // update pom
         val pomFile = module.pom
-        pomFile.addProperty("liquibase.version", "3.8.9")
+        pomFile.addProperty("liquibase.version", "4.22.0")
 
         val dbDir = resource.getOrAddDirectory("db")
         val updatesDir = dbDir.getOrAddDirectory("updates")
