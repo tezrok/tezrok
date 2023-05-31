@@ -28,7 +28,7 @@ open class JavaMethodNode(private val method: MethodDeclaration) {
     /**
      * Adds a method call expression to the method body
      */
-    fun addCallExpression(name: String): JavaCallExpressionNode {
+    fun addCallExpression(name: String): JavaCallExpressionNode<MethodCallExpr> {
         val methodCallExpr = MethodCallExpr(name)
         validateBody().addStatement(methodCallExpr)
         return JavaCallExpressionNode(methodCallExpr)

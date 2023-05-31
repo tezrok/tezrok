@@ -32,11 +32,11 @@ open class JavaConstructorNode(private val constructor: ConstructorDeclaration) 
         return this
     }
 
-    fun addCallSuperExpression(): JavaCallConstructorExpressionNode {
+    fun addCallSuperExpression(): JavaCallExpressionNode<ExplicitConstructorInvocationStmt> {
         return getCallInternal(false)
     }
 
-    fun addCallThisExpression(): JavaCallConstructorExpressionNode {
+    fun addCallThisExpression(): JavaCallExpressionNode<ExplicitConstructorInvocationStmt> {
         return getCallInternal(true)
     }
 
@@ -48,10 +48,10 @@ open class JavaConstructorNode(private val constructor: ConstructorDeclaration) 
         constructor.setComment(JavadocComment(comment))
     }
 
-    private fun getCallInternal(isThis: Boolean): JavaCallConstructorExpressionNode {
+    private fun getCallInternal(isThis: Boolean): JavaCallExpressionNode<ExplicitConstructorInvocationStmt> {
         val invocationStmt = ExplicitConstructorInvocationStmt()
         invocationStmt.setThis(isThis)
         constructor.body.addStatement(invocationStmt)
-        return JavaCallConstructorExpressionNode(invocationStmt)
+        return JavaCallExpressionNode(invocationStmt)
     }
 }

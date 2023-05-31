@@ -1,16 +1,20 @@
 package io.tezrok.api.java
 
-import com.github.javaparser.ast.expr.MethodCallExpr
+import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.expr.NameExpr
 import com.github.javaparser.ast.expr.StringLiteralExpr
+import com.github.javaparser.ast.nodeTypes.NodeWithArguments
 
-class JavaCallExpressionNode(private val methodCallExpr: MethodCallExpr) {
-    fun addStringArgument(argument: String): JavaCallExpressionNode {
+/**
+ * Represents a call of a method or constructor.
+ */
+open class JavaCallExpressionNode<N>(private val methodCallExpr: NodeWithArguments<N>) where N : Node {
+    fun addStringArgument(argument: String): JavaCallExpressionNode<N> {
         methodCallExpr.addArgument(StringLiteralExpr(argument))
         return this
     }
 
-    fun addNameArgument(name: String): JavaCallExpressionNode {
+    fun addNameArgument(name: String): JavaCallExpressionNode<N> {
         methodCallExpr.addArgument(NameExpr(name))
         return this
     }
