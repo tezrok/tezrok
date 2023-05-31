@@ -6,6 +6,7 @@ import io.tezrok.api.java.JavaClassNode
 import io.tezrok.api.maven.MavenDependency
 import io.tezrok.api.maven.ModuleNode
 import io.tezrok.api.maven.ProjectNode
+import io.tezrok.util.PathUtil.NEW_LINE
 import org.slf4j.LoggerFactory
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -26,7 +27,7 @@ internal class SpringFeature : TezrokFeature {
         val mainClass = module.source.main.java.applicationClass
         if (mainClass != null) {
             handleMainMethod(mainClass)
-            addApplicationProperties(module)
+            updateApplicationProperties(module)
         } else {
             log.warn("Main application class not found")
         }
@@ -34,11 +35,18 @@ internal class SpringFeature : TezrokFeature {
         return true
     }
 
-    private fun addApplicationProperties(module: ModuleNode) {
+    private fun updateApplicationProperties(module: ModuleNode) {
         val appProps = module.source.main.resources.getOrAddFile("application.properties")
-        if (appProps.isEmpty()) {
+        val text = appProps.asString()
+        if (!text.contains("spring.datasource")) {
             // TODO: update only specified properties
-            appProps.setString("spring.main.banner-mode=console\n")
+            val newLines = """
+                spring.datasource.url=jdbc:postgresql://localhost:5432/tezrokdb
+                spring.datasource.username=tezrokAdmin
+                spring.datasource.password=tezrokPwd
+                spring.datasource.driver-class-name=org.postgresql.Driver${NEW_LINE}
+            """.trimIndent()
+            appProps.setString(text + newLines)
         }
     }
 

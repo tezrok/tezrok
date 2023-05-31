@@ -16,4 +16,6 @@ object PathUtil {
      * Resolves the given path against the current directory
      */
     fun resolve(path: String): Path = currentDir().resolve(path)
+
+    val NEW_LINE: String = System.lineSeparator()!!
 }

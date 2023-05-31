@@ -2,9 +2,11 @@ package io.tezrok.liquibase
 
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
+import io.tezrok.api.maven.ModuleNode
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.api.maven.UseMavenDependency
 import io.tezrok.api.sql.SqlGenerator
+import io.tezrok.util.PathUtil
 import org.apache.velocity.shaded.commons.io.FilenameUtils
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -21,11 +23,12 @@ internal class LiquibaseFeature : TezrokFeature {
         val module = project.getSingleModule()
         val schema = context.getProject().modules.find { it.name == module.getName() }?.schema
                 ?: throw IllegalArgumentException("No schema found for module ${module.getName()}")
-        val resource = module.source.main.resources
+        updateApplicationProperties(module)
         // update pom
         val pomFile = module.pom
         pomFile.addProperty("liquibase.version", "4.22.0")
-
+        // create changelog files
+        val resource = module.source.main.resources
         val dbDir = resource.getOrAddDirectory("db")
         val updatesDir = dbDir.getOrAddDirectory("updates")
         val changelogFile = updatesDir.getOrAddFile(datePrefix(context) + "-Initial.sql")
@@ -42,6 +45,19 @@ internal class LiquibaseFeature : TezrokFeature {
         }
 
         return true
+    }
+
+    private fun updateApplicationProperties(module: ModuleNode) {
+        val appProps = module.source.main.resources.getOrAddFile("application.properties")
+        val text = appProps.asString()
+        // TODO: check properly
+        if (!text.contains("spring.liquibase")) {
+            val newLines = """
+                spring.liquibase.enabled=true
+                spring.liquibase.change-log=classpath:db/master.xml${PathUtil.NEW_LINE}
+            """.trimIndent()
+            appProps.setString(text + newLines)
+        }
     }
 
     private fun datePrefix(context: GeneratorContext): String =

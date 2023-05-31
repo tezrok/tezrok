@@ -24,9 +24,9 @@ internal class FeatureManager {
         // TODO: load features from configuration
         features.add(MavenCoreFeature())
         features.add(GitIgnoreFeature())
-        features.add(LiquibaseFeature())
         features.add(HelloWorldFeature())
         features.add(SpringFeature())
+        features.add(LiquibaseFeature())
         features.add(JooqFeature())
         features.add(JooqRepositoryFeature())
     }
