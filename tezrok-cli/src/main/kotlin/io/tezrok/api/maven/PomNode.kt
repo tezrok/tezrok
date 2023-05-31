@@ -21,7 +21,7 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
                 .addAttr("xsi:schemaLocation", SCHEMA_LOCATION)
                 .getOrAdd("modelVersion", "4.0.0").and()
                 .getOrAdd(ARTIFACT_ID, artifactId)
-        addProperty("java.version", "8")
+        addProperty("java.version", "17")
         addProperty("project.build.sourceEncoding", "UTF-8")
         addProperty("project.reporting.outputEncoding", "UTF-8")
         // TODO: set name and description
