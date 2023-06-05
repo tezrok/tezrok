@@ -4,6 +4,7 @@ import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.api.maven.UseMavenDependency
+import io.tezrok.java.CoreDependenciesFeature
 import io.tezrok.java.GitIgnoreFeature
 import io.tezrok.java.HelloWorldFeature
 import io.tezrok.jooq.JooqFeature
@@ -23,6 +24,7 @@ internal class FeatureManager {
     init {
         // TODO: load features from configuration
         features.add(MavenCoreFeature())
+        features.add(CoreDependenciesFeature())
         features.add(GitIgnoreFeature())
         features.add(HelloWorldFeature())
         features.add(SpringFeature())

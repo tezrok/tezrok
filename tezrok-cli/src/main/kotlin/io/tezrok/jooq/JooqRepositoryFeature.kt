@@ -23,7 +23,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
             val jooqRepoFile = repositoryDir.getOrAddFile("JooqRepository.java")
 
             if (jooqRepoFile.isEmpty()) {
-                context.writeTemplate(jooqRepoFile, "/templates/liquibase/JooqRepository.java.vm") { velContext ->
+                context.writeTemplate(jooqRepoFile, "/templates/jooq/JooqRepository.java.vm") { velContext ->
                     velContext.put("package", context.getProject().packagePath + ".repository")
                 }
             } else {

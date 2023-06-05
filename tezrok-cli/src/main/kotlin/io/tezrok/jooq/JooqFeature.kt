@@ -3,8 +3,10 @@ package io.tezrok.jooq
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.maven.BuildPhase
+import io.tezrok.api.maven.ModuleNode
 import io.tezrok.api.maven.PomNode
 import io.tezrok.api.maven.ProjectNode
+import org.slf4j.LoggerFactory
 
 /**
  * Add generating of jooq classes from liquibase changelog.
@@ -27,6 +29,8 @@ internal class JooqFeature : TezrokFeature {
         addLiquibasePlugin(pomFile)
         addJooqPlugin(pomFile, projectElem.packagePath + ".jooq")
 
+        addJooqConfiguration(module, context)
+
         return true
     }
 
@@ -35,8 +39,8 @@ internal class JooqFeature : TezrokFeature {
         val executionStart = pluginNode.addExecution("testcontainer-start", BuildPhase.GenerateSources, "execute")
         val configurationStart = executionStart.getConfiguration()
         configurationStart.node.add(
-            "source",
-            """
+                "source",
+                """
                 db = new org.testcontainers.containers.PostgreSQLContainer("postgres:${POSTGRESQL_VER}")
                     .withUsername("${'$'}{db.username}")
                     .withDatabaseName("postgres")
@@ -52,8 +56,8 @@ internal class JooqFeature : TezrokFeature {
         val executionStop = pluginNode.addExecution("testcontainer-stop", BuildPhase.Test, "execute")
         val configurationStop = executionStop.getConfiguration()
         configurationStop.node.add(
-            "source",
-            """
+                "source",
+                """
                 containerId = "${'$'}{testcontainer.containerid}"
                 imageName = "${'$'}{testcontainer.imageName}"
                 println("Stopping testcontainer ${'$'}containerId - ${'$'}imageName")
@@ -68,7 +72,8 @@ internal class JooqFeature : TezrokFeature {
     }
 
     private fun addLiquibasePlugin(pomFile: PomNode) {
-        check(pomFile.getProperty("liquibase.version")?.isNotBlank() ?: false) { "Expected property in maven: liquibase.version" }
+        check(pomFile.getProperty("liquibase.version")?.isNotBlank()
+                ?: false) { "Expected property in maven: liquibase.version" }
 
         val pluginNode = pomFile.addPluginDependency("org.liquibase:liquibase-maven-plugin:${'$'}{liquibase.version}")
         val execution = pluginNode.addExecution("liquibase-update", BuildPhase.GenerateSources, "update")
@@ -103,8 +108,24 @@ internal class JooqFeature : TezrokFeature {
         targetNode.add("directory", "target/generated-sources/jooq")
     }
 
+    private fun addJooqConfiguration(module: ModuleNode, context: GeneratorContext) {
+        val applicationPackageRoot = module.source.main.java.applicationPackageRoot
+        if (applicationPackageRoot != null) {
+            val jooqConfig = applicationPackageRoot.getOrAddJavaDirectory("config").getOrAddFile("JooqConfiguration.java")
+
+            if (jooqConfig.isEmpty()) {
+                context.writeTemplate(jooqConfig, "/templates/jooq/JooqConfiguration.java.vm") { velContext ->
+                    velContext.put("package", context.getProject().packagePath + ".config")
+                }
+            } else {
+                log.warn("JooqConfiguration.java already exists, skipping")
+            }
+        }
+    }
+
     private companion object {
         // TODO: get version from configuration
         const val POSTGRESQL_VER = "15.2"
+        val log = LoggerFactory.getLogger(JooqFeature::class.java)!!
     }
 }
