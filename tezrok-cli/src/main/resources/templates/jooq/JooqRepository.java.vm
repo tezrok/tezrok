@@ -1,9 +1,14 @@
 package $package;
 
+import ${packageDto}.WithId;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Table;
 import org.jooq.UpdatableRecord;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.StreamSupport;
 
 /**
  * Base class for all Jooq repositories.
@@ -12,7 +17,7 @@ import org.jooq.UpdatableRecord;
  * @param <ID> primary type
  * @param <P>  Pojo type
  */
-abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P> {
+abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId<ID>> {
     protected final DSLContext dsl;
     private final Table<R> table;
     private final Field<ID> idField;
@@ -29,6 +34,18 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P> {
         return getRecordById(id).into(pojoClass);
     }
 
+    public List<P> findAll() {
+        return dsl.selectFrom(table).fetchInto(pojoClass);
+    }
+
+    public List<P> findAllById(Collection<ID> ids) {
+        return dsl.selectFrom(table).where(idField.in(ids)).fetchInto(pojoClass);
+    }
+
+    public long count() {
+        return dsl.fetchCount(table);
+    }
+
     public P update(ID id, P pojo) {
         R record = getRecordById(id);
         record.from(pojo);
@@ -36,20 +53,39 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P> {
         return record.into(pojoClass);
     }
 
+    // TODO: fix save with null id
     public P create(P pojo) {
         R record = newRecord(pojo);
         record.store();
         return record.into(pojoClass);
     }
 
-    public int delete(ID id) {
+    public P save(P pojo) {
+        return pojo.getId() == null ? create(pojo) : update(pojo.getId(), pojo);
+    }
+
+    public List<P> saveAll(Iterable<P> entities) {
+        return StreamSupport.stream(entities.spliterator(), false).map(this::save).toList();
+    }
+
+    public int deleteById(ID id) {
         return dsl.delete(table).where(idField.eq(id)).execute();
     }
 
+    public int deleteAllById(Collection<ID> ids) {
+        return dsl.delete(table).where(idField.in(ids)).execute();
+    }
+
+    public int deleteAll() {
+        return dsl.truncate(table).execute();
+    }
+
+    public boolean existsById(ID id) {
+        return dsl.fetchExists(table, idField.eq(id));
+    }
+
     public R getRecordById(ID id) {
-        return dsl.selectFrom(table)
-                .where(idField.eq(id))
-                .fetchOne();
+        return dsl.selectFrom(table).where(idField.eq(id)).fetchOne();
     }
 
     protected R newRecord(Object obj) {

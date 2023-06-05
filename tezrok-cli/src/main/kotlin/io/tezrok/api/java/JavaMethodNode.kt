@@ -25,6 +25,16 @@ open class JavaMethodNode(private val method: MethodDeclaration) {
         return this
     }
 
+    fun setReturnType(typeName: String): JavaMethodNode {
+        method.setType(typeName)
+        return this
+    }
+
+    fun setReturnType(clazz: Class<*>): JavaMethodNode {
+        method.setType(clazz)
+        return this
+    }
+
     /**
      * Adds a method call expression to the method body
      */
@@ -44,8 +54,14 @@ open class JavaMethodNode(private val method: MethodDeclaration) {
         return this
     }
 
-    fun clearBody() {
+    fun clearBody(): JavaMethodNode {
         method.body.ifPresent { it.statements.clear() }
+        return this
+    }
+
+    fun removeBody(): JavaMethodNode {
+        method.removeBody()
+        return this
     }
 
     fun setJavadocComment(comment: String) {

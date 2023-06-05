@@ -55,5 +55,22 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration) {
         return this
     }
 
+    fun implementInterface(name: String): JavaClassNode {
+        clazz.addImplementedType(name)
+        return this
+    }
+
+    fun implementInterface(interfaceClass: Class<*>): JavaClassNode {
+        clazz.addImplementedType(interfaceClass)
+        return this
+    }
+
     fun addConstructor(): JavaConstructorNode = JavaConstructorNode(clazz.addConstructor())
+
+    fun isInterface(): Boolean = clazz.isInterface
+
+    fun setInterface(isInterface: Boolean): JavaClassNode {
+        clazz.isInterface = isInterface
+        return this
+    }
 }
