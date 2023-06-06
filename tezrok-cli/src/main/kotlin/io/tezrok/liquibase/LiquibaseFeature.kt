@@ -37,6 +37,7 @@ internal class LiquibaseFeature : TezrokFeature {
             velContext.put("name", FilenameUtils.getBaseName(changelogFile.getName()))
             velContext.put("comment", "Initial script for creating the structure")
             velContext.put("sql_statement", sqlGenerator.generate(schema, context).content)
+            // TODO: generate rollback script
         }
 
         val masterFile = dbDir.getOrAddFile("master.xml")
