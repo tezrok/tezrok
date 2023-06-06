@@ -28,8 +28,9 @@ internal class LiquibaseFeatureTest : BaseTest() {
         val module = project.addModule("core")
         liquibaseFeature.apply(project, generatorContext)
         val files = module.source.main.resources.getFiles()
-        assertEquals(1, files.size)
-        val dbDir = assertDirectory(files[0], "db", 2)
+        assertEquals(2, files.size) { "Expected 1 file, but was: $files" }
+        assertFile(files[0], "application.properties")
+        val dbDir = assertDirectory(files[1], "db", 2)
         val dbFiles = dbDir.getFiles()
         val updatesDir = assertDirectory(dbFiles[0], "updates", 1)
         val masterFile = assertFile(dbFiles[1], "master.xml")
