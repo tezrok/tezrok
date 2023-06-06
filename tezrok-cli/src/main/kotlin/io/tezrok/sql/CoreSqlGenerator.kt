@@ -53,6 +53,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         addNewline(sb)
 
         if (!properties.containsKey("id")) {
+            // TODO: not add automatic id if it's not a root schema
             sb.append(intent)
             sb.append("id SERIAL PRIMARY KEY")
             if (properties.isNotEmpty()) {
@@ -99,7 +100,8 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         sb.append(name)
         sb.append(" ")
         sb.append(getSqlType(definition))
-        if (isRequired) {
+        // if field is serial, by default it's not null
+        if (isRequired && !definition.isSerialEffective()) {
             sb.append(" NOT NULL")
         }
         if (definition.primary == true) {
@@ -110,10 +112,10 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
     private fun getSqlType(definition: Definition): String {
         return when (definition.type) {
             "string" -> getStringBasedType(definition)
-            "integer" -> "INT"
+            "integer" -> if (definition.isSerialEffective()) "SERIAL" else "INT"
             "number" -> "FLOAT"
             "boolean" -> "BOOLEAN"
-            "long" -> "BIGINT"
+            "long" -> if (definition.isSerialEffective()) "BIGSERIAL" else "BIGINT"
             // TODO: Create new ref column on target table, or new table with ref columns to both tables
             "array" -> throw IllegalArgumentException("Array type is implemented in another way")
             else -> throw IllegalArgumentException("Unsupported type: ${definition.type}")
@@ -136,6 +138,14 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
             sb.append(System.lineSeparator())
         }
     }
+
+
+    /**
+     * Returns true if field is eventually serial
+     *
+     * If serial not defined and field is primary, then it's serial
+     */
+    private fun Definition.isSerialEffective() = this.serial ?: (this.primary ?: false)
 
     private companion object {
         const val DEFAULT_VARCHAR_LENGTH = 255
