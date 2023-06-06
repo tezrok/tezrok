@@ -15,11 +15,10 @@ import org.springframework.stereotype.Repository
 internal class JooqRepositoryFeature : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
         val module = project.getSingleModule()
-        val javaRoot = module.source.main.java
-        val applicationPackageRoot = javaRoot.applicationPackageRoot
-        val projectElem = context.getProject()
+        val applicationPackageRoot = module.source.main.java.applicationPackageRoot
 
         if (applicationPackageRoot != null) {
+            val projectElem = context.getProject()
             val repositoryDir = applicationPackageRoot.getOrAddJavaDirectory("repository")
             val dtoDir = applicationPackageRoot.getOrAddJavaDirectory("dto")
             val jooqRepoFile = repositoryDir.getOrAddFile("JooqRepository.java")
@@ -33,8 +32,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
 
             if (jooqRepoFile.isEmpty()) {
                 context.writeTemplate(jooqRepoFile, "/templates/jooq/JooqRepository.java.vm") { velContext ->
-                    velContext.put("package", context.getProject().packagePath + ".repository")
-                    velContext.put("packageDto", context.getProject().packagePath + ".dto")
+                    velContext.put("package", projectElem.packagePath)
                 }
             } else {
                 log.warn("File ${jooqRepoFile.getName()} already exists")

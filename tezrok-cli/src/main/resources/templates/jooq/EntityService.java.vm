@@ -1,0 +1,43 @@
+package ${package}.service;
+
+import ${package}.dto.${name}Dto;
+import ${package}.repository.${name}Repository;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Transactional
+@Service
+public class ${name}Service {
+    @NotNull
+    private final ${name}Repository itemRepository;
+
+    public ${name}Service(@NotNull ${name}Repository itemRepository) {
+        this.itemRepository = itemRepository;
+    }
+
+    @Transactional(readOnly = true)
+    public List<${name}Dto> findAll() {
+        return itemRepository.findAll();
+    }
+
+    @NotNull
+    public ${name}Dto save(@NotNull ${name}Dto dto) {
+        return itemRepository.save(dto);
+    }
+
+    public List<${name}Dto> saveAll(@NotNull Iterable<${name}Dto> dtos) {
+        return itemRepository.saveAll(dtos);
+    }
+
+    @NotNull
+    public ${name}Dto update(@NotNull ${name}Dto dto) {
+        return itemRepository.update(dto);
+    }
+
+    public int deleteById(@NotNull Long id) {
+        return itemRepository.deleteById(id);
+    }
+}

@@ -1,6 +1,6 @@
-package $package;
+package ${package}.repository;
 
-import ${packageDto}.WithId;
+import ${package}.dto.WithId;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Table;
@@ -8,6 +8,7 @@ import org.jooq.UpdatableRecord;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.StreamSupport;
 
 /**
@@ -46,22 +47,21 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
         return dsl.fetchCount(table);
     }
 
-    public P update(ID id, P pojo) {
-        R record = getRecordById(id);
-        record.from(pojo);
-        record.store();
-        return record.into(pojoClass);
+    public P update(P pojo) {
+        R rec = getRecordById(pojo.getId());
+        rec.from(pojo);
+        rec.store();
+        return rec.into(pojoClass);
     }
 
-    // TODO: fix save with null id
     public P create(P pojo) {
-        R record = newRecord(pojo);
-        record.store();
-        return record.into(pojoClass);
+        R rec = newRecord(pojo);
+        rec.store();
+        return rec.into(pojoClass);
     }
 
     public P save(P pojo) {
-        return pojo.getId() == null ? create(pojo) : update(pojo.getId(), pojo);
+        return pojo.getId() == null ? create(pojo) : update(pojo);
     }
 
     public List<P> saveAll(Iterable<P> entities) {
@@ -85,7 +85,7 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
     }
 
     public R getRecordById(ID id) {
-        return dsl.selectFrom(table).where(idField.eq(id)).fetchOne();
+        return Objects.requireNonNull(dsl.selectFrom(table).where(idField.eq(id)).fetchOne(), () -> table.getName()  + ": Record not found: " + id);
     }
 
     protected R newRecord(Object obj) {
