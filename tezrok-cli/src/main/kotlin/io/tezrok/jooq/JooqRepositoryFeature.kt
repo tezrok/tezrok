@@ -107,12 +107,14 @@ internal class JooqRepositoryFeature : TezrokFeature {
         }
     }
 
+    /**
+     * Adds custom methods from custom (not generated) repository class into generated repository class.
+     */
     private fun addCustomMethods(name: String, repoClass: JavaClassNode, repositoryDir: JavaDirectoryNode) {
         val repositoryPhysicalPath = repositoryDir.getPhysicalPath()
-        val customClassName = "${name}CustomRepository"
-        val customFileName = "${customClassName}.java"
 
         if (repositoryPhysicalPath != null && Files.exists(repositoryPhysicalPath)) {
+            val customFileName = "${name}CustomRepository.java"
             val customFilePath = repositoryPhysicalPath.resolve("custom/${customFileName}")
 
             if (Files.exists(customFilePath)) {
@@ -129,7 +131,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
                     val clazz = cu.getRootClass()
                     val addedMethods = mutableListOf<String>()
 
-                    clazz.findAll(MethodDeclaration::class.java).forEach { method ->
+                    clazz.findAll(MethodDeclaration::class.java).filter { it.isPublic }.forEach { method ->
                         val methodName = method.nameAsString
                         if (!stdMethods.contains(methodName)) {
                             addedMethods.add(methodName)
@@ -138,6 +140,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
                                     .removeBody()
                                     .setReturnType(method.typeAsString)
                             method.parameters.forEach { param ->
+                                // TODO: use type as fully qualified name
                                 newMethod.addParameter(param.typeAsString, param.nameAsString)
                             }
                         }
