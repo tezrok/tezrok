@@ -26,7 +26,8 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration) {
     fun hasMethod(name: String): Boolean = clazz.methods.any { it.nameAsString == name }
 
     fun withModifiers(vararg modifiers: Modifier.Keyword): JavaClassNode {
-        clazz.setModifiers(*modifiers)
+        val oldModifiers = clazz.modifiers.map { it.keyword } + modifiers
+        clazz.setModifiers(*oldModifiers.distinct().toTypedArray())
         return this
     }
 
