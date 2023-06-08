@@ -4,6 +4,7 @@ import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.maven.ProjectNode
+import io.tezrok.core.input.ProjectElem
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -21,22 +22,8 @@ internal class JooqRepositoryFeature : TezrokFeature {
             val projectElem = context.getProject()
             val repositoryDir = applicationPackageRoot.getOrAddJavaDirectory("repository")
             val dtoDir = applicationPackageRoot.getOrAddJavaDirectory("dto")
-            val jooqRepoFile = repositoryDir.getOrAddFile("JooqRepository.java")
-
-            dtoDir.getOrAddClass("WithId")
-                    .setInterface(true)
-                    .setTypeParameters("ID")
-                    .getOrAddMethod("getId")
-                    .removeBody()
-                    .setReturnType("ID")
-
-            if (jooqRepoFile.isEmpty()) {
-                context.writeTemplate(jooqRepoFile, "/templates/jooq/JooqRepository.java.vm") { velContext ->
-                    velContext.put("package", projectElem.packagePath)
-                }
-            } else {
-                log.warn("File ${jooqRepoFile.getName()} already exists")
-            }
+            addBaseRepositoryClass(repositoryDir, context, projectElem)
+            addWithIdInterface(dtoDir)
 
             val schemaModule = context.getProject().modules.find { it.name == module.getName() }
                     ?: throw IllegalStateException("Module ${module.getName()} not found")
@@ -46,10 +33,19 @@ internal class JooqRepositoryFeature : TezrokFeature {
                 addRepositoryClass(repositoryDir, name, projectElem.packagePath)
             }
         } else {
-            log.warn("Application package root is not set")
+            log.warn("Application package root is not set, module: {}", module.getName())
         }
 
         return true
+    }
+
+    private fun addWithIdInterface(dtoDir: JavaDirectoryNode) {
+        dtoDir.getOrAddClass("WithId")
+                .setInterface(true)
+                .setTypeParameters("ID")
+                .getOrAddMethod("getId")
+                .removeBody()
+                .setReturnType("ID")
     }
 
     private fun addDtoClass(dtoDir: JavaDirectoryNode, name: String, rootPackage: String) {
@@ -59,6 +55,17 @@ internal class JooqRepositoryFeature : TezrokFeature {
             val repoClass = dtoDir.addClass(className)
             repoClass.extendClass("$jooqPackageRoot.tables.pojos.$name")
             repoClass.implementInterface("WithId<Long>")
+        }
+    }
+
+    private fun addBaseRepositoryClass(repositoryDir: JavaDirectoryNode, context: GeneratorContext, projectElem: ProjectElem) {
+        val jooqRepoFile = repositoryDir.getOrAddFile("JooqRepository.java")
+        if (jooqRepoFile.isEmpty()) {
+            context.writeTemplate(jooqRepoFile, "/templates/jooq/JooqRepository.java.vm") { velContext ->
+                velContext.put("package", projectElem.packagePath)
+            }
+        } else {
+            log.warn("File already exists: {}", jooqRepoFile.getName())
         }
     }
 
