@@ -1,9 +1,9 @@
 package io.tezrok.api.java
 
 import com.github.javaparser.ast.CompilationUnit
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import io.tezrok.api.node.FileNode
 import io.tezrok.api.node.Node
+import io.tezrok.util.getRootClass
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -27,8 +27,7 @@ open class JavaFileNode(name: String, parent: Node? = null) : FileNode("$name.ja
     /**
      * Returns root class/interface of the file
      */
-    fun getRootClass(): JavaClassNode =
-        JavaClassNode(compilationUnit.types.first { it.isPublic } as ClassOrInterfaceDeclaration)
+    fun getRootClass(): JavaClassNode = JavaClassNode(compilationUnit.getRootClass())
 
     fun addClass(name: String): JavaClassNode = JavaClassNode(compilationUnit.addClass(name))
 
