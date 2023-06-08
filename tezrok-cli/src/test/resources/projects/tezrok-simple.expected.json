@@ -38,6 +38,7 @@
         },
         "Item" : {
           "type" : "object",
+          "customRepository" : true,
           "properties" : {
             "id" : {
               "type" : "long",

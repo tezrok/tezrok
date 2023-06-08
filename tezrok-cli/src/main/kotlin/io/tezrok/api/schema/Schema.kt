@@ -33,6 +33,7 @@ open class Definition(
     val enum: List<String>? = null,
     @JsonProperty("\$ref")
     val ref: String? = null,
+    val customRepository: Boolean? = null,
     val relation: EntityRelation? = null,
 ) {
     @JsonIgnore

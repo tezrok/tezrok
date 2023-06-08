@@ -10,6 +10,8 @@
         </layout>
     </appender>
 
+    <logger name="org.apache.velocity" level="INFO"/>
+
     <root level="DEBUG">
         <appender-ref ref="STDOUT"/>
     </root>

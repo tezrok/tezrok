@@ -20,7 +20,7 @@ class ProjectOutputGenerator {
         val startTime = System.currentTimeMillis()
         if (deleteOutputDir) {
             log.debug("Deleting output directory: {}", outputDir)
-            outputDir.deleteRecursively()
+            TODO("Delete only generated files")
         }
         if (outputDir.notExists()) {
             outputDir.createDirectories()
