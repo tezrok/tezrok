@@ -27,14 +27,16 @@ open class FileNode(name: String, parent: Node?) : BaseFileNode(name, parent), F
                 if (log.isTraceEnabled) {
                     log.trace("Write {} bytes to file {}", newContent.size, getPath())
                 }
-                synchronized(this@FileNode) {
-                    content = newContent
-                }
+                setContent(newContent)
             }
         }
     }
 
     override fun getInputStream(): InputStream = content.clone().inputStream()
+
+    protected open fun setContent(content: ByteArray) {
+        this.content = content
+    }
 
     private companion object {
         val EMPTY_ARRAY = ByteArray(0)

@@ -1,5 +1,6 @@
 package io.tezrok.api.java
 
+import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.CompilationUnit
 import io.tezrok.api.node.FileNode
 import io.tezrok.api.node.Node
@@ -11,7 +12,7 @@ import java.io.OutputStream
  * Node that represents a Java file
  */
 open class JavaFileNode(name: String, parent: Node? = null) : FileNode("$name.java", parent) {
-    val compilationUnit: CompilationUnit = CompilationUnit()
+    private var compilationUnit: CompilationUnit = CompilationUnit()
 
     // TODO: support package declaration
 
@@ -22,7 +23,7 @@ open class JavaFileNode(name: String, parent: Node? = null) : FileNode("$name.ja
     }
 
     fun getParentDirectory(): JavaDirectoryNode = getParent() as? JavaDirectoryNode
-        ?: throw IllegalStateException("Java file must be a child of Java directory")
+            ?: throw IllegalStateException("Java file must be a child of Java directory")
 
     /**
      * Returns root class/interface of the file
@@ -42,7 +43,7 @@ open class JavaFileNode(name: String, parent: Node? = null) : FileNode("$name.ja
      *
      * Example: "src/main/java/com/example/Foo.java" -> "com/example"
      */
-    fun getPackagePath(): String  {
+    fun getPackagePath(): String {
         // remove leading slash
         return getParentDirectory().getPathTo(getJavaRoot()).substring(1)
     }
@@ -56,5 +57,22 @@ open class JavaFileNode(name: String, parent: Node? = null) : FileNode("$name.ja
             parent = parent.getParent()
         }
         throw IllegalStateException("Java file must be a child of Java root")
+    }
+
+    override fun setContent(content: ByteArray) {
+        val parsed = JavaParser().parse(String(content, Charsets.UTF_8))
+
+        if (parsed.isSuccessful) {
+            compilationUnit = parsed.result.get()
+            compilationUnit.setPackageDeclaration(getPackagePath().replace("/", "."))
+
+            // TODO: remove old class, not JavaFileNode
+        } else {
+            log.error("Failed to parse Java content")
+            parsed.problems.forEach {
+                log.error("Problem: $it")
+            }
+            error("Failed to parse Java content: ${getPath()}")
+        }
     }
 }
