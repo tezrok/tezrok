@@ -26,7 +26,7 @@ class TezrokBuilder private constructor() {
         val projectOutput = output ?: throw IllegalStateException("Output not set")
 
         val projectElem = projectElemRepo.load(inputPath)
-        val project = projectNodeFactory.fromProject(projectElem)
+        val project = projectNodeFactory.fromProject(projectElem, projectOutput)
         val context = CoreGeneratorContext(projectElem, generatorProvider, clock)
 
         featureManager.applyAll(project, context)

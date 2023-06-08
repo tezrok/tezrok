@@ -1,5 +1,7 @@
 package io.tezrok.api.node
 
+import java.util.function.Predicate
+
 /**
  * Represents a node
  */
@@ -54,5 +56,16 @@ interface Node {
         }
 
         return parents.joinToString("/", prefix = "/") { it.getName() }
+    }
+
+    /**
+     * Returns the first parent node that matches the predicate or null if not found
+     */
+    fun getFirstAncestor(predicate: Predicate<Node>): Node? {
+        var parent: Node? = this.getParent()
+        while (parent != null && !predicate.test(parent)) {
+            parent = parent.getParent()
+        }
+        return parent
     }
 }
