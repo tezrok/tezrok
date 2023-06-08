@@ -8,7 +8,7 @@ import java.util.*
 /**
  * Represents any directory with java files
  */
-open class JavaDirectoryNode(name: String, parent: BaseNode?) : DirectoryNode(name, parent), JavaDirectory {
+open class JavaDirectoryNode(name: String, parent: BaseNode? = null) : DirectoryNode(name, parent), JavaDirectory {
     private val javaFiles = mutableListOf<JavaFileNode>()
     private val javaDirs = mutableListOf<JavaDirectoryNode>()
 

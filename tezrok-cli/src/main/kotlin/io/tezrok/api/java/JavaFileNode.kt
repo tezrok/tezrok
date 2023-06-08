@@ -2,11 +2,11 @@ package io.tezrok.api.java
 
 import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.CompilationUnit
+import com.github.javaparser.ast.PackageDeclaration
 import io.tezrok.api.node.FileNode
 import io.tezrok.api.node.Node
 import io.tezrok.util.getRootClass
 import java.io.InputStream
-import java.io.OutputStream
 
 /**
  * Node that represents a Java file
@@ -19,11 +19,10 @@ open class JavaFileNode(name: String, parent: Node? = null) : FileNode("$name.ja
     init {
         // add default public class
         compilationUnit.addClass(name)
-        compilationUnit.setPackageDeclaration(getPackagePath().replace("/", "."))
+        updatePackage()
     }
 
-    fun getParentDirectory(): JavaDirectoryNode = getParent() as? JavaDirectoryNode
-            ?: throw IllegalStateException("Java file must be a child of Java directory")
+    fun getParentDirectory(): JavaDirectoryNode? = getParent() as? JavaDirectoryNode
 
     /**
      * Returns root class/interface of the file
@@ -32,41 +31,23 @@ open class JavaFileNode(name: String, parent: Node? = null) : FileNode("$name.ja
 
     fun addClass(name: String): JavaClassNode = JavaClassNode(compilationUnit.addClass(name))
 
-    override fun getOutputStream(): OutputStream {
-        throw UnsupportedOperationException("Java file can be edited only via object model")
-    }
-
     override fun getInputStream(): InputStream = compilationUnit.toString().byteInputStream()
 
     /**
      * Returns the path of the file relative to the Java root
-     *
-     * Example: "src/main/java/com/example/Foo.java" -> "com/example"
      */
     fun getPackagePath(): String {
-        // remove leading slash
-        return getParentDirectory().getPathTo(getJavaRoot()).substring(1)
+        return getParentDirectory()?.getPathTo(getJavaRoot()) ?: "/"
     }
 
-    fun getJavaRoot(): JavaRootNode {
-        var parent = getParent()
-        while (parent != null) {
-            if (parent is JavaRootNode) {
-                return parent
-            }
-            parent = parent.getParent()
-        }
-        throw IllegalStateException("Java file must be a child of Java root")
-    }
+    fun getJavaRoot(): JavaRootNode? = getFirstAncestor { it is JavaRootNode } as? JavaRootNode
 
     override fun setContent(content: ByteArray) {
         val parsed = JavaParser().parse(String(content, Charsets.UTF_8))
 
         if (parsed.isSuccessful) {
             compilationUnit = parsed.result.get()
-            compilationUnit.setPackageDeclaration(getPackagePath().replace("/", "."))
-
-            // TODO: remove old class, not JavaFileNode
+            updatePackage()
         } else {
             log.error("Failed to parse Java content")
             parsed.problems.forEach {
@@ -74,5 +55,13 @@ open class JavaFileNode(name: String, parent: Node? = null) : FileNode("$name.ja
             }
             error("Failed to parse Java content: ${getPath()}")
         }
+    }
+
+    private fun updatePackage() {
+        val packagePath = getPackagePath().substring(1).replace("/", ".")
+        if (packagePath.isNotBlank())
+            compilationUnit.setPackageDeclaration(packagePath)
+        else
+            compilationUnit.setPackageDeclaration(null as PackageDeclaration?)
     }
 }

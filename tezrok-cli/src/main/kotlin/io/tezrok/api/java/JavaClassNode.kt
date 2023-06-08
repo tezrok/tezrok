@@ -5,6 +5,8 @@ import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import com.github.javaparser.ast.type.TypeParameter
+import java.util.stream.Stream
+import kotlin.streams.asStream
 
 /**
  * Node that represents a Java class or interface
@@ -24,6 +26,8 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration) {
     fun getOrAddMethod(name: String): JavaMethodNode = getMethod(name) ?: addMethod(name)
 
     fun hasMethod(name: String): Boolean = clazz.methods.any { it.nameAsString == name }
+
+    fun getMethods(): Stream<JavaMethodNode> = clazz.methods.asSequence().map { JavaMethodNode(it) }.asStream()
 
     fun withModifiers(vararg modifiers: Modifier.Keyword): JavaClassNode {
         val oldModifiers = clazz.modifiers.map { it.keyword } + modifiers

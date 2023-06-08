@@ -22,12 +22,12 @@ open class FileNode(name: String, parent: Node?) : BaseFileNode(name, parent), F
     override fun getOutputStream(): OutputStream {
         return object : ByteArrayOutputStream() {
             override fun close() {
-                super.close()
                 val newContent = toByteArray()
                 if (log.isTraceEnabled) {
                     log.trace("Write {} bytes to file {}", newContent.size, getPath())
                 }
                 setContent(newContent)
+                super.close()
             }
         }
     }
