@@ -111,14 +111,22 @@ internal class JooqFeature : TezrokFeature {
     private fun addJooqConfiguration(module: ModuleNode, context: GeneratorContext) {
         val applicationPackageRoot = module.source.main.java.applicationPackageRoot
         if (applicationPackageRoot != null) {
-            val jooqConfig = applicationPackageRoot.getOrAddJavaDirectory("config").getOrAddFile("JooqConfiguration.java")
+            val configDir = applicationPackageRoot.getOrAddJavaDirectory("config")
+            val configPackage = context.getProject().packagePath + ".config"
+            val values = mapOf("package" to configPackage)
 
+            val jooqConfig = configDir.getOrAddFile("JooqConfiguration.java")
             if (jooqConfig.isEmpty()) {
-                context.writeTemplate(jooqConfig, "/templates/jooq/JooqConfiguration.java.vm") { velContext ->
-                    velContext.put("package", context.getProject().packagePath + ".config")
-                }
+                context.writeTemplate(jooqConfig, "/templates/jooq/JooqConfiguration.java.vm", values)
             } else {
                 log.warn("JooqConfiguration.java already exists, skipping")
+            }
+
+            val exceptionTranslator = configDir.getOrAddFile("ExceptionTranslator.java")
+            if (exceptionTranslator.isEmpty()) {
+                context.writeTemplate(exceptionTranslator, "/templates/jooq/ExceptionTranslator.java.vm", values)
+            } else {
+                log.warn("ExceptionTranslator.java already exists, skipping")
             }
         }
     }
