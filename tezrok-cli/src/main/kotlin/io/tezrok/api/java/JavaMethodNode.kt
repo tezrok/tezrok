@@ -10,6 +10,8 @@ import com.github.javaparser.ast.stmt.BlockStmt
  * Node that represents a Java method
  */
 open class JavaMethodNode(private val method: MethodDeclaration) {
+    fun getName(): String = method.nameAsString
+
     fun setBody(body: BlockStmt): JavaMethodNode {
         method.setBody(body)
         return this
@@ -68,10 +70,34 @@ open class JavaMethodNode(private val method: MethodDeclaration) {
         method.setComment(JavadocComment(comment))
     }
 
+    fun isPublic(): Boolean = method.isPublic
+
+    fun isPrivate(): Boolean = method.isPrivate
+
+    fun isProtected(): Boolean = method.isProtected
+
+    fun isStatic(): Boolean = method.isStatic
+
+    fun isAbstract(): Boolean = method.isAbstract
+
+    fun isFinal(): Boolean = method.isFinal
+
+    fun isNative(): Boolean = method.isNative
+
+    fun isSynchronized(): Boolean = method.isSynchronized
+
+    fun isDefault(): Boolean = method.isDefault
+
+    fun isStrictfp(): Boolean = method.isStrictfp
+
     private fun validateBody(): BlockStmt {
         if (method.body.isEmpty) {
             method.setBody(BlockStmt())
         }
         return method.body.get()
+    }
+
+    override fun toString(): String {
+        return "JavaMethodNode: $method"
     }
 }

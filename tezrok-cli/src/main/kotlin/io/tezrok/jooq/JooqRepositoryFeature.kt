@@ -7,6 +7,7 @@ import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.java.JavaClassNode
 import io.tezrok.api.java.JavaDirectoryNode
+import io.tezrok.api.java.JavaFileNode
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.core.input.ProjectElem
 import io.tezrok.util.getRootClass
@@ -14,6 +15,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.nio.file.Files
+import java.util.stream.Collectors
 import kotlin.io.path.isDirectory
 
 /**
@@ -28,15 +30,22 @@ internal class JooqRepositoryFeature : TezrokFeature {
             val projectElem = context.getProject()
             val repositoryDir = applicationPackageRoot.getOrAddJavaDirectory("repository")
             val dtoDir = applicationPackageRoot.getOrAddJavaDirectory("dto")
-            addBaseRepositoryClass(repositoryDir, context, projectElem)
+            val javaBaseRepoFile = addBaseRepositoryClass(repositoryDir, context, projectElem)
             addWithIdInterface(dtoDir)
 
             val schemaModule = context.getProject().modules.find { it.name == module.getName() }
                     ?: throw IllegalStateException("Module ${module.getName()} not found")
 
-            schemaModule.schema?.definitions?.forEach { name, defition ->
+            // extract methods from base repository class
+            val baseMethods = javaBaseRepoFile.getRootClass()
+                    .getMethods()
+                    .filter { it.isPublic() || it.isProtected() }
+                    .map { it.getName() }
+                    .collect(Collectors.toSet())
+            log.debug("Base repository methods: {}", baseMethods)
+            schemaModule.schema?.definitions?.forEach { (name, definition) ->
                 addDtoClass(dtoDir, name, projectElem.packagePath)
-                addRepositoryClass(repositoryDir, name, projectElem.packagePath, defition.customRepository == true)
+                addRepositoryClass(repositoryDir, name, projectElem.packagePath, definition.customRepository == true, baseMethods)
             }
         } else {
             log.warn("Application package root is not set, module: {}", module.getName())
@@ -66,17 +75,21 @@ internal class JooqRepositoryFeature : TezrokFeature {
         }
     }
 
-    private fun addBaseRepositoryClass(repositoryDir: JavaDirectoryNode, context: GeneratorContext, projectElem: ProjectElem) {
+    private fun addBaseRepositoryClass(repositoryDir: JavaDirectoryNode, context: GeneratorContext, projectElem: ProjectElem): JavaFileNode {
         if (!repositoryDir.hasFile(JOOQ_BASE_REPO)) {
             val jooqRepoFile = repositoryDir.addJavaFile(JOOQ_BASE_REPO)
             context.writeTemplate(jooqRepoFile, "/templates/jooq/JooqRepository.java.vm",
                     mapOf("package" to projectElem.packagePath))
+            return jooqRepoFile
         } else {
             log.warn("File already exists: {}", repositoryDir)
         }
+
+        return repositoryDir.getJavaFile(JOOQ_BASE_REPO)
+                ?: throw IllegalStateException("File not found: $JOOQ_BASE_REPO")
     }
 
-    private fun addRepositoryClass(repositoryDir: JavaDirectoryNode, name: String, rootPackage: String, custom: Boolean) {
+    private fun addRepositoryClass(repositoryDir: JavaDirectoryNode, name: String, rootPackage: String, custom: Boolean, baseMethods: Set<String>) {
         val jooqPackageRoot = "${rootPackage}.jooq"
         val className = "${name}Repository"
 
@@ -100,18 +113,20 @@ internal class JooqRepositoryFeature : TezrokFeature {
             if (custom) {
                 constructor.withModifiers(Modifier.Keyword.PROTECTED)
                 repoClass.withModifiers(Modifier.Keyword.ABSTRACT)
-                addCustomMethods(name, repoClass, repositoryDir)
+                addCustomMethods(name, repoClass, repositoryDir, baseMethods)
             } else {
                 constructor.withModifiers(Modifier.Keyword.PUBLIC)
                 repoClass.addAnnotation(Repository::class.java)
             }
+        } else {
+            log.warn("File already exists: {}", "$className.java")
         }
     }
 
     /**
      * Adds custom methods from custom (not generated) repository class into generated repository class.
      */
-    private fun addCustomMethods(name: String, repoClass: JavaClassNode, repositoryDir: JavaDirectoryNode) {
+    private fun addCustomMethods(name: String, repoClass: JavaClassNode, repositoryDir: JavaDirectoryNode, baseMethods: Set<String>) {
         val repositoryPhysicalPath = repositoryDir.getPhysicalPath()
 
         if (repositoryPhysicalPath != null && Files.exists(repositoryPhysicalPath)) {
@@ -134,7 +149,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
 
                     clazz.findAll(MethodDeclaration::class.java).filter { it.isPublic }.forEach { method ->
                         val methodName = method.nameAsString
-                        if (!stdMethods.contains(methodName)) {
+                        if (!baseMethods.contains(methodName)) {
                             addedMethods.add(methodName)
                             val newMethod = repoClass.addMethod(methodName)
                                     .withModifiers(Modifier.Keyword.PUBLIC, Modifier.Keyword.ABSTRACT)
@@ -165,6 +180,5 @@ internal class JooqRepositoryFeature : TezrokFeature {
     private companion object {
         val log = LoggerFactory.getLogger(JooqRepositoryFeature::class.java)!!
         const val JOOQ_BASE_REPO = "JooqRepository.java"
-        val stdMethods = setOf("getById", "findAll", "findAllById", "count", "update", "create", "save", "saveAll", "deleteById", "deleteAllById", "deleteAll", "existsById", "getRecordById")
     }
 }
