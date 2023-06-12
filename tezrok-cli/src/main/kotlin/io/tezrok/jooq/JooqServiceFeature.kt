@@ -20,10 +20,13 @@ open class JooqServiceFeature : TezrokFeature {
                     ?: throw IllegalStateException("Module ${module.getName()} not found")
 
             schemaModule.schema?.definitions?.keys?.forEach { name ->
-                val jooqRepoFile = serviceDir.getOrAddFile("${name}Service.java")
-                context.writeTemplate(jooqRepoFile, "/templates/jooq/EntityService.java.vm") { velContext ->
-                    velContext.put("package", projectElem.packagePath)
-                    velContext.put("name", name)
+                val fileName = "${name}Service.java"
+                if (!serviceDir.hasFile(fileName)) {
+                    val jooqRepoFile = serviceDir.addJavaFile(fileName)
+                    val values = mapOf("package" to projectElem.packagePath, "name" to name)
+                    context.writeTemplate(jooqRepoFile, "/templates/jooq/EntityService.java.vm", values)
+                } else {
+                    log.warn("File already exists: {}", fileName)
                 }
             }
         } else {

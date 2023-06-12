@@ -11,14 +11,14 @@ import java.io.InputStream
 /**
  * Node that represents a Java file
  */
-open class JavaFileNode(name: String, parent: Node? = null) : FileNode("$name.java", parent) {
+open class JavaFileNode(name: String, parent: Node? = null) : FileNode(if (name.contains('.')) name else "$name.java", parent) {
     private var compilationUnit: CompilationUnit = CompilationUnit()
 
     // TODO: support package declaration
 
     init {
         // add default public class
-        compilationUnit.addClass(name)
+        compilationUnit.addClass(name.substringBeforeLast("."))
         updatePackage()
     }
 

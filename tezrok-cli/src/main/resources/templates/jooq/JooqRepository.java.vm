@@ -5,7 +5,6 @@ import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Table;
 import org.jooq.UpdatableRecord;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -85,7 +84,7 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
     }
 
     public R getRecordById(ID id) {
-        return Objects.requireNonNull(dsl.selectFrom(table).where(idField.eq(id)).fetchOne(), () -> table.getName()  + ": Record not found: " + id);
+        return Objects.requireNonNull(dsl.selectFrom(table).where(idField.eq(id)).fetchOne(), () -> table.getName() + ": Record not found: " + id);
     }
 
     protected R newRecord(Object obj) {

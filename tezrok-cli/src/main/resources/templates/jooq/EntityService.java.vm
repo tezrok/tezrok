@@ -5,9 +5,11 @@ import ${package}.repository.${name}Repository;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 
+/**
+ * Service for {@link ${name}Dto}.
+ */
 @Transactional
 @Service
 public class ${name}Service {

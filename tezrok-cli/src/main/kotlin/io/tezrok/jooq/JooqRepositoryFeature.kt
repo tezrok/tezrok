@@ -61,17 +61,18 @@ internal class JooqRepositoryFeature : TezrokFeature {
             val repoClass = dtoDir.addClass(className)
             repoClass.extendClass("$jooqPackageRoot.tables.pojos.$name")
             repoClass.implementInterface("WithId<Long>")
+        } else {
+            log.warn("File already exists: {}", "$className.java")
         }
     }
 
     private fun addBaseRepositoryClass(repositoryDir: JavaDirectoryNode, context: GeneratorContext, projectElem: ProjectElem) {
-        val jooqRepoFile = repositoryDir.getOrAddFile("JooqRepository.java")
-        if (jooqRepoFile.isEmpty()) {
-            context.writeTemplate(jooqRepoFile, "/templates/jooq/JooqRepository.java.vm") { velContext ->
-                velContext.put("package", projectElem.packagePath)
-            }
+        if (!repositoryDir.hasFile(JOOQ_BASE_REPO)) {
+            val jooqRepoFile = repositoryDir.addJavaFile(JOOQ_BASE_REPO)
+            context.writeTemplate(jooqRepoFile, "/templates/jooq/JooqRepository.java.vm",
+                    mapOf("package" to projectElem.packagePath))
         } else {
-            log.warn("File already exists: {}", jooqRepoFile.getName())
+            log.warn("File already exists: {}", repositoryDir)
         }
     }
 
@@ -163,6 +164,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
 
     private companion object {
         val log = LoggerFactory.getLogger(JooqRepositoryFeature::class.java)!!
+        const val JOOQ_BASE_REPO = "JooqRepository.java"
         val stdMethods = setOf("getById", "findAll", "findAllById", "count", "update", "create", "save", "saveAll", "deleteById", "deleteAllById", "deleteAll", "existsById", "getRecordById")
     }
 }
