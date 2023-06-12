@@ -14,7 +14,7 @@ import java.util.List;
 @Service
 public class ${name}Service {
     @NotNull
-    private final ${name}Repository itemRepository;
+    protected final ${name}Repository itemRepository;
 
     public ${name}Service(@NotNull ${name}Repository itemRepository) {
         this.itemRepository = itemRepository;

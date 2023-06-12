@@ -40,8 +40,23 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration) {
         return this
     }
 
+    fun removeAnnotation(annotationClass: Class<out Annotation>): JavaClassNode {
+        clazz.annotations.removeIf { it.nameAsString == annotationClass.simpleName }
+        return this
+    }
+
+    fun removeAnnotation(annotationName: String): JavaClassNode {
+        clazz.annotations.removeIf { it.nameAsString == annotationName }
+        return this
+    }
+
     fun addImport(importClass: Class<*>): JavaClassNode {
         getParent().addImport(importClass)
+        return this
+    }
+
+    fun removeImport(importClass: Class<*>): JavaClassNode {
+        getParent().imports.removeIf { it.nameAsString == importClass.name }
         return this
     }
 
