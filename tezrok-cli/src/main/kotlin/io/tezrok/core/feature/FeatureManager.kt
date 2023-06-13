@@ -12,6 +12,7 @@ import io.tezrok.jooq.JooqRepositoryFeature
 import io.tezrok.jooq.JooqServiceFeature
 import io.tezrok.liquibase.LiquibaseFeature
 import io.tezrok.maven.MavenCoreFeature
+import io.tezrok.spring.ControllerFeature
 import io.tezrok.spring.SpringFeature
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -33,6 +34,7 @@ internal class FeatureManager {
         features.add(JooqFeature())
         features.add(JooqRepositoryFeature())
         features.add(JooqServiceFeature())
+        features.add(ControllerFeature())
     }
 
     fun applyAll(project: ProjectNode, context: GeneratorContext) {

@@ -25,6 +25,8 @@ interface JavaDirectory {
 
     fun getOrAddJavaDirectory(name: String): JavaDirectoryNode = getJavaDirectory(name) ?: addJavaDirectory(name)
 
+    fun hasClass(name: String): Boolean = getClass(name) != null
+
     /**
      * Creates all directories (if not exist) in the path and returns the last directory
      */

@@ -40,6 +40,11 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration) {
         return this
     }
 
+    fun addAnnotation(annotationExp: String): JavaClassNode {
+        clazz.addAnnotation(annotationExp)
+        return this
+    }
+
     fun removeAnnotation(annotationClass: Class<out Annotation>): JavaClassNode {
         clazz.annotations.removeIf { it.nameAsString == annotationClass.simpleName }
         return this
@@ -93,4 +98,6 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration) {
         clazz.isInterface = isInterface
         return this
     }
+
+    fun addField(typeName: String, name: String): JavaFieldNode = JavaFieldNode(clazz.addField(typeName, name, Modifier.Keyword.PRIVATE))
 }

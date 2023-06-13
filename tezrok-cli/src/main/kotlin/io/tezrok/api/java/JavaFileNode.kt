@@ -43,7 +43,8 @@ open class JavaFileNode(name: String, parent: Node? = null) : FileNode(if (name.
     fun getJavaRoot(): JavaRootNode? = getFirstAncestor { it is JavaRootNode } as? JavaRootNode
 
     override fun setContent(content: ByteArray) {
-        val parsed = JavaParser().parse(String(content, Charsets.UTF_8))
+        val content = String(content, Charsets.UTF_8)
+        val parsed = JavaParser().parse(content)
 
         if (parsed.isSuccessful) {
             compilationUnit = parsed.result.get()
@@ -53,6 +54,7 @@ open class JavaFileNode(name: String, parent: Node? = null) : FileNode(if (name.
             parsed.problems.forEach {
                 log.error("Problem: $it")
             }
+            log.error("Failed content:\n{}", content)
             error("Failed to parse Java content: ${getPath()}")
         }
     }

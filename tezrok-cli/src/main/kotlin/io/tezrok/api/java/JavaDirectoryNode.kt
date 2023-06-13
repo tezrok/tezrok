@@ -16,7 +16,8 @@ open class JavaDirectoryNode(name: String, parent: BaseNode? = null) : Directory
 
     override fun getJavaFiles(): List<JavaFileNode> = Collections.unmodifiableList(javaFiles.toList())
 
-    override fun getJavaFile(name: String): JavaFileNode? = javaFiles.find { it.getName() == name }
+    override fun getJavaFile(name: String): JavaFileNode? =
+            javaFiles.find { it.getName() == name } ?: javaFiles.find { it.getName() == "$name.java" }
 
     override fun addJavaFile(name: String): JavaFileNode {
         val fileNode = JavaFileNode(name, this)
