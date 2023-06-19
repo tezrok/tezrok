@@ -6,6 +6,9 @@ import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.maven.ProjectNode
 import org.slf4j.LoggerFactory
 
+/**
+ * Creates controller class for each entity.
+ */
 internal class ControllerFeature : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
         val module = project.getSingleModule()
