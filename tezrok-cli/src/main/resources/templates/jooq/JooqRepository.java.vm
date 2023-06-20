@@ -20,7 +20,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -50,14 +50,16 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
         this.pojoClass = pojoClass;
     }
 
-    public P getById(ID id) {
-        return getRecordById(id).into(pojoClass);
+    public Optional<P> getById(ID id) {
+        return getRecordById(id).map(rec -> rec.into(pojoClass));
     }
 
+    @NotNull
     public List<P> findAll() {
         return dsl.selectFrom(table).fetchInto(pojoClass);
     }
 
+    @NotNull
     public List<P> findAllById(Collection<ID> ids) {
         return dsl.selectFrom(table).where(idField.in(ids)).fetchInto(pojoClass);
     }
@@ -66,23 +68,27 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
         return dsl.fetchCount(table);
     }
 
-    public P update(P pojo) {
-        R rec = getRecordById(pojo.getId());
+    @NotNull
+    public P update(@NotNull P pojo) {
+        R rec = getRecordById(pojo.getId()).orElseThrow(() -> new IllegalArgumentException("Record not found by id: " + pojo.getId()));
         rec.from(pojo);
         rec.store();
         return rec.into(pojoClass);
     }
 
+    @NotNull
     public P create(P pojo) {
-        R rec = newRecord(pojo);
+        final R rec = newRecord(pojo);
         rec.store();
         return rec.into(pojoClass);
     }
 
-    public P save(P pojo) {
+    @NotNull
+    public P save(@NotNull P pojo) {
         return pojo.getId() == null ? create(pojo) : update(pojo);
     }
 
+    @NotNull
     public List<P> saveAll(Iterable<P> entities) {
         return StreamSupport.stream(entities.spliterator(), false).map(this::save).toList();
     }
@@ -103,10 +109,11 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
         return dsl.fetchExists(table, idField.eq(id));
     }
 
-    public R getRecordById(ID id) {
-        return Objects.requireNonNull(dsl.selectFrom(table).where(idField.eq(id)).fetchOne(), () -> table.getName() + ": Record not found: " + id);
+    public Optional<R> getRecordById(ID id) {
+        return Optional.ofNullable(dsl.selectFrom(table).where(idField.eq(id)).fetchOne());
     }
 
+    @NotNull
     protected R newRecord(Object obj) {
         return dsl.newRecord(table, obj);
     }
@@ -127,7 +134,7 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
                 .orderBy(getSortFields(pageable.getSort()))
                 .limit(pageable.getPageSize()).offset(pageable.getOffset())
                 .fetchInto(pojoClass);
-        final long totalCount = findCountByLikeExpression(likeExpression);
+        final long totalCount = countByLikeExpression(likeExpression);
 
         return new PageImpl<>(result, pageable, totalCount);
     }
@@ -147,7 +154,7 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
                 .reduce(falseCondition(), Condition::or);
     }
 
-    private long findCountByLikeExpression(String likeExpression) {
+    protected long countByLikeExpression(String likeExpression) {
         return dsl.fetchCount(dsl.select()
                 .from(table)
                 .where(whereClause(likeExpression)));
