@@ -45,7 +45,9 @@ internal class SpringFeature : TezrokFeature {
                 spring.datasource.url=jdbc:postgresql://localhost:5432/tezrokdb
                 spring.datasource.username=tezrokAdmin
                 spring.datasource.password=tezrokPwd
-                spring.datasource.driver-class-name=org.postgresql.Driver${NEW_LINE}
+                spring.datasource.driver-class-name=org.postgresql.Driver
+                spring.data.web.pageable.default-page-size=10
+                spring.data.web.pageable.max-page-size=20${NEW_LINE}
             """.trimIndent()
             appProps.setString(text + newLines)
         }
