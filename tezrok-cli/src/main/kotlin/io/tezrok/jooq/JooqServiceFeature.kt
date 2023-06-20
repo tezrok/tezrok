@@ -42,7 +42,7 @@ open class JooqServiceFeature : TezrokFeature {
         val fileName = "${name}Service.java"
         if (!serviceDir.hasFile(fileName)) {
             val serviceFile = serviceDir.addJavaFile(fileName)
-            val values = mapOf("package" to packagePath, "name" to name)
+            val values = mapOf("package" to packagePath, "name" to name, "lname" to name.replaceFirstChar { it.lowercase() })
             context.writeTemplate(serviceFile, "/templates/jooq/EntityService.java.vm", values)
             addCustomMethods(serviceDir, name, serviceFile.getRootClass())
         } else {

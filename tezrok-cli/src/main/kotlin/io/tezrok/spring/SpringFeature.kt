@@ -22,6 +22,7 @@ internal class SpringFeature : TezrokFeature {
         // TODO: get spring version from context
         pom.getParentNode().dependencyId = MavenDependency.of("org.springframework.boot:spring-boot-starter-parent:3.1.0")
         pom.addDependency("org.springframework.boot:spring-boot-starter")
+        pom.addDependency("org.springframework.data:spring-data-commons:3.1.1")
         pom.addPluginDependency("org.springframework.boot:spring-boot-maven-plugin")
 
         val mainClass = module.source.main.java.applicationClass

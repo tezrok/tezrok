@@ -1,10 +1,12 @@
 package io.tezrok.api.java
 
 import com.github.javaparser.ast.Modifier
+import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.comments.JavadocComment
 import com.github.javaparser.ast.expr.MethodCallExpr
 import com.github.javaparser.ast.stmt.BlockStmt
+import com.github.javaparser.ast.stmt.Statement
 
 /**
  * Node that represents a Java method
@@ -15,6 +17,10 @@ open class JavaMethodNode(private val method: MethodDeclaration) {
     fun setBody(body: BlockStmt): JavaMethodNode {
         method.setBody(body)
         return this
+    }
+
+    fun setBody(body: Statement): JavaMethodNode {
+        return setBody(BlockStmt(NodeList(body)))
     }
 
     fun addParameter(typeName: String, name: String): JavaMethodNode {
