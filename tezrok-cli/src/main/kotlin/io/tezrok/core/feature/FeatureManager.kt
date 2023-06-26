@@ -9,7 +9,7 @@ import io.tezrok.java.GitIgnoreFeature
 import io.tezrok.java.HelloWorldFeature
 import io.tezrok.jooq.JooqFeature
 import io.tezrok.jooq.JooqRepositoryFeature
-import io.tezrok.jooq.JooqServiceFeature
+import io.tezrok.spring.ServiceFeature
 import io.tezrok.liquibase.LiquibaseFeature
 import io.tezrok.maven.MavenCoreFeature
 import io.tezrok.spring.ControllerFeature
@@ -33,7 +33,7 @@ internal class FeatureManager {
         features.add(LiquibaseFeature())
         features.add(JooqFeature())
         features.add(JooqRepositoryFeature())
-        features.add(JooqServiceFeature())
+        features.add(ServiceFeature())
         features.add(ControllerFeature())
     }
 

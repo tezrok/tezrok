@@ -1,4 +1,4 @@
-package io.tezrok.jooq
+package io.tezrok.spring
 
 import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.Modifier
@@ -17,7 +17,7 @@ import kotlin.io.path.isDirectory
 /**
  * Creates service class for each entity.
  */
-open class JooqServiceFeature : TezrokFeature {
+open class ServiceFeature : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
         val module = project.getSingleModule()
         val applicationPackageRoot = module.source.main.java.applicationPackageRoot
@@ -43,7 +43,7 @@ open class JooqServiceFeature : TezrokFeature {
         if (!serviceDir.hasFile(fileName)) {
             val serviceFile = serviceDir.addJavaFile(fileName)
             val values = mapOf("package" to packagePath, "name" to name, "lname" to name.replaceFirstChar { it.lowercase() })
-            context.writeTemplate(serviceFile, "/templates/jooq/EntityService.java.vm", values)
+            context.writeTemplate(serviceFile, "/templates/spring/EntityService.java.vm", values)
             addCustomMethods(serviceDir, name, serviceFile.getRootClass())
         } else {
             log.warn("File already exists: {}", fileName)
@@ -106,6 +106,6 @@ open class JooqServiceFeature : TezrokFeature {
     }
 
     private companion object {
-        val log = LoggerFactory.getLogger(JooqServiceFeature::class.java)!!
+        val log = LoggerFactory.getLogger(ServiceFeature::class.java)!!
     }
 }
