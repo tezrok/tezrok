@@ -3,6 +3,7 @@ package io.tezrok.spring
 import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.body.MethodDeclaration
+import com.github.javaparser.ast.expr.BooleanLiteralExpr
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.java.JavaClassNode
@@ -12,6 +13,7 @@ import io.tezrok.util.getRootClass
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.nio.file.Files
+import java.util.*
 import kotlin.io.path.isDirectory
 
 /**
@@ -44,12 +46,66 @@ open class ServiceFeature : TezrokFeature {
             val serviceFile = serviceDir.addJavaFile(fileName)
             val values = mapOf("package" to packagePath, "name" to name, "lname" to name.replaceFirstChar { it.lowercase() })
             context.writeTemplate(serviceFile, "/templates/spring/EntityService.java.vm", values)
-            addCustomMethods(serviceDir, name, serviceFile.getRootClass())
+            val serviceClass = serviceFile.getRootClass()
+            addRepositoryMethods(serviceDir, name, serviceClass)
+            addCustomMethods(serviceDir, name, serviceClass)
         } else {
             log.warn("File already exists: {}", fileName)
         }
     }
 
+    /**
+     * Adds service public methods from repository class.
+     */
+    private fun addRepositoryMethods(serviceDir: JavaDirectoryNode, name: String, serviceClass: JavaClassNode) {
+        val repoName = "${name}Repository"
+        val repoBaseName = "JooqRepository" // TODO: get from config
+        val fieldName = repoName.replaceFirstChar { it.lowercase() }
+        val repoDir = serviceDir.getParentDirectory()?.getJavaDirectory("repository")
+        repoDir?.getJavaFile(repoBaseName)?.getRootClass()?.let { repoBaseClass ->
+            addMethodsFromRepoClass(serviceClass, repoBaseClass, fieldName, name)
+        }
+        repoDir?.getJavaFile(repoName)?.getRootClass()?.let { repoClass ->
+            addMethodsFromRepoClass(serviceClass, repoClass, fieldName)
+        }
+    }
+
+    private fun addMethodsFromRepoClass(serviceClass: JavaClassNode, repoClass: JavaClassNode, fieldName: String, name: String = "") {
+        repoClass.getMethods().filter { method -> method.isPublic() }.forEach { method ->
+            val newMethod = serviceClass.addMethod(method.getName())
+                    .withModifiers(Modifier.Keyword.PUBLIC)
+                    .setReturnType(replaceType(method.getTypeAsString(), name))
+            val callExpr = newMethod.addCallExpression(fieldName + "." + method.getName())
+
+            method.getParameters().forEach { param ->
+                newMethod.addParameter(replaceType(param.getTypeAsString(), name), param.getName())
+                callExpr.addNameArgument(param.getName())
+            }
+            newMethod.addReturnToLastStatement()
+            if (isMethodReadOnly(method.getName())) {
+                newMethod.addAnnotation("Transactional", mapOf("readOnly" to BooleanLiteralExpr(true)))
+            }
+        }
+    }
+
+    private fun isMethodReadOnly(name: String) = name.let {
+        it.startsWith("get") || it.startsWith("find") || it.startsWith("count")
+                || it.startsWith("exists") || it.startsWith("search") || it.startsWith("list")
+    }
+
+    private fun replaceType(typeName: String, name: String): String {
+        val newType = if (name.isEmpty()) {
+            typeName
+        } else {
+            typeName.replace(pojoParamPattern, "${name}Dto").replace(recordParamPattern, "${name}Record")
+        }
+
+        return newType.replace(idParamPattern, "Long")
+    }
+
+    /**
+     * Adds custom methods to service class from physical custom file.
+     */
     private fun addCustomMethods(serviceDir: JavaDirectoryNode, name: String, serviceClass: JavaClassNode) {
         val servicePhysicalPath = serviceDir.getPhysicalPath()
         if (servicePhysicalPath != null && Files.exists(servicePhysicalPath)) {
@@ -107,5 +163,8 @@ open class ServiceFeature : TezrokFeature {
 
     private companion object {
         val log = LoggerFactory.getLogger(ServiceFeature::class.java)!!
+        val pojoParamPattern = Regex("\\bP\\b")
+        val recordParamPattern = Regex("\\bR\\b")
+        val idParamPattern = Regex("\\bID\\b")
     }
 }

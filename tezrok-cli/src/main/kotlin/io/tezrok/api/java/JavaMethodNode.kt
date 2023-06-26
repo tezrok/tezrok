@@ -4,8 +4,11 @@ import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.comments.JavadocComment
+import com.github.javaparser.ast.expr.Expression
+import com.github.javaparser.ast.expr.MemberValuePair
 import com.github.javaparser.ast.expr.MethodCallExpr
 import com.github.javaparser.ast.stmt.BlockStmt
+import com.github.javaparser.ast.stmt.ReturnStmt
 import com.github.javaparser.ast.stmt.Statement
 
 /**
@@ -13,6 +16,8 @@ import com.github.javaparser.ast.stmt.Statement
  */
 open class JavaMethodNode(private val method: MethodDeclaration) {
     fun getName(): String = method.nameAsString
+
+    fun getTypeAsString(): String = method.typeAsString
 
     fun setBody(body: BlockStmt): JavaMethodNode {
         method.setBody(body)
@@ -33,6 +38,8 @@ open class JavaMethodNode(private val method: MethodDeclaration) {
         return this
     }
 
+    fun getParameters(): List<JavaMethodParameter> = method.parameters.map { JavaMethodParameter(it) }
+
     fun setReturnType(typeName: String): JavaMethodNode {
         method.setType(typeName)
         return this
@@ -52,6 +59,18 @@ open class JavaMethodNode(private val method: MethodDeclaration) {
         return JavaCallExpressionNode(methodCallExpr)
     }
 
+    fun addReturnToLastStatement(): JavaMethodNode {
+        val body = validateBody().statements
+
+        if (body.isNotEmpty()) {
+            val lastStatement = body.last()
+            val returnStatement = ReturnStmt(lastStatement.asExpressionStmt().expression)
+            body.replace(lastStatement, returnStatement)
+        }
+
+        return this
+    }
+
     fun withModifiers(vararg modifiers: Modifier.Keyword): JavaMethodNode {
         method.setModifiers(*modifiers)
         return this
@@ -59,6 +78,12 @@ open class JavaMethodNode(private val method: MethodDeclaration) {
 
     fun addAnnotation(annotationClass: Class<out Annotation>): JavaMethodNode {
         method.addAnnotation(annotationClass)
+        return this
+    }
+
+    fun addAnnotation(annotationExpr: String, pairs: Map<String, Expression> = emptyMap()): JavaMethodNode {
+        val annotation = method.addAndGetAnnotation(annotationExpr)
+        annotation.setPairs(NodeList(pairs.map { MemberValuePair(it.key, it.value) }))
         return this
     }
 
