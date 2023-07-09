@@ -12,7 +12,7 @@ import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.getRootClass
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.nio.file.Files
+import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 
 /**
@@ -107,11 +107,11 @@ open class ServiceFeature : TezrokFeature {
      */
     private fun addCustomMethods(serviceDir: JavaDirectoryNode, name: String, serviceClass: JavaClassNode) {
         val servicePhysicalPath = serviceDir.getPhysicalPath()
-        if (servicePhysicalPath != null && Files.exists(servicePhysicalPath)) {
+        if (servicePhysicalPath != null && servicePhysicalPath.exists()) {
             val customFileName = "${name}CustomService.java"
             val customFilePath = servicePhysicalPath.resolve("custom/${customFileName}")
 
-            if (Files.exists(customFilePath)) {
+            if (customFilePath.exists()) {
                 if (customFilePath.isDirectory()) {
                     log.warn("Found directory instead of file: {}", customFilePath)
                     return

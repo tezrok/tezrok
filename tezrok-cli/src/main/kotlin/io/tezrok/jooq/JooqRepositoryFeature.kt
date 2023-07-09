@@ -14,8 +14,8 @@ import io.tezrok.util.getRootClass
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
-import java.nio.file.Files
 import java.util.stream.Collectors
+import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 
 /**
@@ -129,11 +129,11 @@ internal class JooqRepositoryFeature : TezrokFeature {
     private fun addCustomMethods(name: String, repoClass: JavaClassNode, repositoryDir: JavaDirectoryNode, baseMethods: Set<String>) {
         val repositoryPhysicalPath = repositoryDir.getPhysicalPath()
 
-        if (repositoryPhysicalPath != null && Files.exists(repositoryPhysicalPath)) {
+        if (repositoryPhysicalPath != null && repositoryPhysicalPath.exists()) {
             val customFileName = "${name}CustomRepository.java"
             val customFilePath = repositoryPhysicalPath.resolve("custom/${customFileName}")
 
-            if (Files.exists(customFilePath)) {
+            if (customFilePath.exists()) {
                 if (customFilePath.isDirectory()) {
                     log.warn("Found directory instead of file: {}", customFilePath)
                     return
