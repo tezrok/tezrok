@@ -59,13 +59,29 @@ open class JavaMethodNode(private val method: MethodDeclaration) {
         return JavaCallExpressionNode(methodCallExpr)
     }
 
-    fun addReturnToLastStatement(): JavaMethodNode {
-        val body = validateBody().statements
+    /**
+     *  Adds `return` statement of the last expression in the method body
+     *
+     *  Before:
+     *  ```
+     *  public int foo() {
+     *      bar();
+     *  }
+     *  ```
+     *
+     *  After:
+     *  ```
+     *  public int foo() {
+     *      return bar();
+     *  }
+     */
+    fun addReturnToLastExpression(): JavaMethodNode {
+        val statements = validateBody().statements
 
-        if (body.isNotEmpty()) {
-            val lastStatement = body.last()
+        if (statements.isNotEmpty()) {
+            val lastStatement = statements.last()
             val returnStatement = ReturnStmt(lastStatement.asExpressionStmt().expression)
-            body.replace(lastStatement, returnStatement)
+            statements.replace(lastStatement, returnStatement)
         }
 
         return this

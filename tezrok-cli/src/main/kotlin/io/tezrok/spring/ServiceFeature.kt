@@ -13,7 +13,6 @@ import io.tezrok.util.getRootClass
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.nio.file.Files
-import java.util.*
 import kotlin.io.path.isDirectory
 
 /**
@@ -81,7 +80,7 @@ open class ServiceFeature : TezrokFeature {
                 newMethod.addParameter(replaceType(param.getTypeAsString(), name), param.getName())
                 callExpr.addNameArgument(param.getName())
             }
-            newMethod.addReturnToLastStatement()
+            newMethod.addReturnToLastExpression()
             if (isMethodReadOnly(method.getName())) {
                 newMethod.addAnnotation("Transactional", mapOf("readOnly" to BooleanLiteralExpr(true)))
             }
