@@ -16,8 +16,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
  */
 internal class SpringFeature : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
-        check(project.getModules().size == 1) { "SpringGenerator only supports single module" }
-        val module = project.getModules().first()
+        val module = project.getSingleModule()
         val pom = module.pom
         // TODO: get spring version from context
         pom.getParentNode().dependencyId = MavenDependency.of("org.springframework.boot:spring-boot-starter-parent:3.1.0")
