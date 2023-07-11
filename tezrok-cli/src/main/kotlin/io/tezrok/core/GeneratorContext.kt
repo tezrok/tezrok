@@ -3,7 +3,7 @@ package io.tezrok.core
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.GeneratorProvider
 import io.tezrok.api.TezrokGenerator
-import io.tezrok.core.input.ProjectElem
+import io.tezrok.api.input.ProjectElem
 import io.tezrok.util.VelocityUtil
 import org.apache.velocity.VelocityContext
 import java.io.Writer

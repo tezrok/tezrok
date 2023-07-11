@@ -2,7 +2,7 @@ package io.tezrok.sql
 
 import io.tezrok.BaseTest
 import io.tezrok.core.CoreGeneratorContext
-import io.tezrok.core.input.ProjectElem
+import io.tezrok.api.input.ProjectElem
 import io.tezrok.schema.SchemaLoader
 import io.tezrok.util.resourceAsPath
 import org.junit.jupiter.api.Test

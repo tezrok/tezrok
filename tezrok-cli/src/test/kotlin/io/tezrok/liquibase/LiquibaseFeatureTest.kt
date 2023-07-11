@@ -2,11 +2,11 @@ package io.tezrok.liquibase
 
 import io.tezrok.BaseTest
 import io.tezrok.api.maven.ProjectNode
-import io.tezrok.api.schema.Schema
+import io.tezrok.schema.Schema
 import io.tezrok.core.CoreGeneratorContext
 import io.tezrok.core.CoreGeneratorProvider
-import io.tezrok.core.input.ModuleElem
-import io.tezrok.core.input.ProjectElem
+import io.tezrok.api.input.ModuleElem
+import io.tezrok.api.input.ProjectElem
 import io.tezrok.schema.SchemaLoader
 import io.tezrok.util.resourceAsPath
 import org.junit.jupiter.api.Assertions.assertEquals

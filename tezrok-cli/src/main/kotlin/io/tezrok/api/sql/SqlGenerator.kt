@@ -1,6 +1,6 @@
 package io.tezrok.api.sql
 
-import io.tezrok.api.schema.Schema
+import io.tezrok.schema.Schema
 import io.tezrok.api.TezrokGenerator
 import io.tezrok.api.annotations.KnownGenerator
 import io.tezrok.api.model.SqlScript

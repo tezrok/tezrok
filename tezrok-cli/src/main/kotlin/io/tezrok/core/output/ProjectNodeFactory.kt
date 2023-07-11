@@ -2,15 +2,15 @@ package io.tezrok.core.output
 
 import io.tezrok.api.maven.ModuleNode
 import io.tezrok.api.maven.ProjectNode
-import io.tezrok.core.input.ModuleElem
-import io.tezrok.core.input.ProjectElem
+import io.tezrok.api.input.ModuleElem
+import io.tezrok.api.input.ProjectElem
 import io.tezrok.core.input.ProjectElemRepository
 import java.nio.file.Path
 
 /**
  * Class for creating [ProjectNode]
  */
-class ProjectNodeFactory(private val projectElemRepository: ProjectElemRepository) {
+internal class ProjectNodeFactory(private val projectElemRepository: ProjectElemRepository) {
     fun fromProjectPath(projectPath: Path, projectOutput: Path): ProjectNode {
         return fromProject(projectElemRepository.load(projectPath), projectOutput)
     }

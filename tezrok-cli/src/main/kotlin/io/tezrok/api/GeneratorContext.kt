@@ -1,7 +1,7 @@
 package io.tezrok.api
 
 import io.tezrok.api.io.OutStream
-import io.tezrok.core.input.ProjectElem
+import io.tezrok.api.input.ProjectElem
 import org.apache.velocity.VelocityContext
 import java.io.Writer
 import java.time.Clock

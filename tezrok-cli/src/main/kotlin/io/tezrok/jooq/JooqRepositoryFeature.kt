@@ -9,7 +9,7 @@ import io.tezrok.api.java.JavaClassNode
 import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.java.JavaFileNode
 import io.tezrok.api.maven.ProjectNode
-import io.tezrok.core.input.ProjectElem
+import io.tezrok.api.input.ProjectElem
 import io.tezrok.util.getRootClass
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
