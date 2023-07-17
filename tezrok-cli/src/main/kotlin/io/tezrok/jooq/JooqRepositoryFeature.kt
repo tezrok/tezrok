@@ -43,9 +43,14 @@ internal class JooqRepositoryFeature : TezrokFeature {
                     .map { it.getName() }
                     .collect(Collectors.toSet())
             log.debug("Base repository methods: {}", baseMethods)
-            schemaModule.schema?.definitions?.forEach { (name, definition) ->
-                addDtoClass(dtoDir, name, projectElem.packagePath)
-                addRepositoryClass(repositoryDir, name, projectElem.packagePath, definition.customRepository == true, baseMethods)
+            val schema = schemaModule.schema
+
+            if (schema != null) {
+                schema.entities?.forEach { entity ->
+                    addDtoClass(dtoDir, entity.name, projectElem.packagePath)
+                    addRepositoryClass(repositoryDir, entity.name, projectElem.packagePath, entity.customRepository == true, baseMethods)
+                }
+                // TODO: handle enums
             }
         } else {
             log.warn("Application package root is not set, module: {}", module.getName())

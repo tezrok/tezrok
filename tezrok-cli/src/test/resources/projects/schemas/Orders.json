@@ -5,8 +5,7 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": "long",
-          "primary": true
+          "type": "integer"
         },
         "name": {
           "type": "string"
@@ -18,7 +17,6 @@
         "items": {
           "type": "array",
           "items": {
-            "relation": "OneToMany",
             "$ref": "#/definitions/Item"
           }
         }
@@ -27,11 +25,9 @@
     },
     "Item": {
       "type": "object",
-      "customRepository": "true",
       "properties": {
         "id": {
-          "type": "long",
-          "primary": true
+          "type": "integer"
         },
         "title": {
           "type": "string"

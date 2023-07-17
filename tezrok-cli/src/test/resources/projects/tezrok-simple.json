@@ -6,7 +6,32 @@
     {
       "name": "simpleModule",
       "type": "tezrok",
-      "importSchema": "./schemas/Orders.json"
+      "schema": {
+        "importSchema": "./schemas/Orders.json",
+        "entities": [
+          {
+            "name": "Order",
+            "fields": [
+              {
+                "name": "id",
+                "type": "long",
+                "primary": true
+              }
+            ]
+          },
+          {
+            "name": "Item",
+            "customRepository" : true,
+            "fields": [
+              {
+                "name": "id",
+                "type": "long",
+                "primary": true
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }

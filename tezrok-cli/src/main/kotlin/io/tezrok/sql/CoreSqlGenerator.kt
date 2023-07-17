@@ -1,12 +1,14 @@
 package io.tezrok.sql
 
 import io.tezrok.api.GeneratorContext
+import io.tezrok.api.input.EntityElem
+import io.tezrok.api.input.FieldElem
+import io.tezrok.api.input.SchemaElem
 import io.tezrok.api.model.SqlScript
-import io.tezrok.schema.Definition
-import io.tezrok.schema.Schema
 import io.tezrok.api.sql.SqlGenerator
 import io.tezrok.util.camelCaseToSnakeCase
 import org.apache.commons.lang3.Validate
+import org.slf4j.LoggerFactory
 
 class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
     /**
@@ -15,35 +17,27 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
      * TODO: Postgres support
      * TODO: Sqlite support
      */
-    override fun generate(schema: Schema, context: GeneratorContext): SqlScript {
+    override fun generate(schema: SchemaElem, context: GeneratorContext): SqlScript {
         val sb = StringBuilder()
-        val definitions = schema.definitions ?: emptyMap()
+        val entities = schema.entities ?: emptyList()
 
-        if (schema.title != null) {
-            generateTable(schema.title, schema, sb)
-            if (definitions.isNotEmpty()) {
+        entities.forEachIndexed { index, entity ->
+            generateTable(entity, sb)
+            if (index < entities.size - 1) {
                 addNewline(sb)
             }
         }
 
-        definitions.keys.toList().forEachIndexed { index, name ->
-            val definition = definitions[name]!!
-            generateTable(name, definition, sb)
-            if (index < definitions.size - 1) {
-                addNewline(sb)
-            }
-        }
-
-        return SqlScript(schema.title ?: "schema", sb.toString())
+        return SqlScript("schema", sb.toString())
     }
 
     /**
      * Generates a table from root schema definition
      */
-    private fun generateTable(tableName: String, schema: Definition, sb: StringBuilder) {
-        Validate.notBlank(tableName, "Schema table is blank")
-        val tableName = toTableName(tableName)
-        val properties = schema.properties ?: emptyMap()
+    private fun generateTable(entity: EntityElem, sb: StringBuilder) {
+        Validate.notBlank(entity.name, "Schema table is blank")
+        val tableName = toTableName(entity.name)
+        val fields = entity.fields
         // TODO: Validate table name
         // TODO: Validate properties
 
@@ -52,11 +46,11 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         sb.append(" (")
         addNewline(sb)
 
-        if (!properties.containsKey("id")) {
+        if (fields.find { it.name == "id" } == null) {
             // TODO: not add automatic id if it's not a root schema
             sb.append(intent)
             sb.append("id SERIAL PRIMARY KEY")
-            if (properties.isNotEmpty()) {
+            if (fields.isNotEmpty()) {
                 sb.append(",")
             }
             addNewline(sb)
@@ -64,17 +58,17 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
 
         var colCount = 0
 
-        properties.keys.toList().forEachIndexed { _, key ->
-            val isRequired = schema.required?.contains(key) ?: false
-            val definition = properties[key]!!
+        fields.forEach { field ->
             // TODO: implement "array" in another place depending on the relation type
-            if (!definition.isArray()) {
+            if (field.ref == null) {
                 if (colCount > 0) {
                     sb.append(",")
                     addNewline(sb)
                 }
-                generateColumn(key, definition, isRequired, sb)
+                generateColumn(field, sb)
                 colCount++
+            } else {
+                log.error("Not implemented")
             }
         }
         addNewline(sb)
@@ -93,45 +87,43 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         return "public." + tableNameFinal.camelCaseToSnakeCase()
     }
 
-    private fun generateColumn(name: String, definition: Definition, isRequired: Boolean, sb: StringBuilder) {
+    private fun generateColumn(field: FieldElem, sb: StringBuilder) {
         sb.append(intent)
         // TODO: Validate column name
         // TODO: Convert to underscore case
-        sb.append(name)
+        sb.append(field.name)
         sb.append(" ")
-        sb.append(getSqlType(definition))
+        sb.append(getSqlType(field))
         // if field is serial, by default it's not null
-        if (isRequired && !definition.isSerialEffective()) {
+        if (field.required == true && !field.isSerialEffective()) {
             sb.append(" NOT NULL")
         }
-        if (definition.primary == true) {
+        if (field.primary == true) {
             sb.append(" PRIMARY KEY")
         }
     }
 
-    private fun getSqlType(definition: Definition): String {
-        return when (definition.type) {
-            "string" -> getStringBasedType(definition)
-            "integer" -> if (definition.isSerialEffective()) "SERIAL" else "INT"
+    private fun getSqlType(field: FieldElem): String {
+        return when (field.type) {
+            "string" -> getStringBasedType(field)
+            "date" -> "DATE"
+            "dateTime" -> "TIMESTAMP"
+            "integer" -> if (field.isSerialEffective()) "SERIAL" else "INT"
+            "long" -> if (field.isSerialEffective()) "BIGSERIAL" else "BIGINT"
             "number" -> "FLOAT"
             "boolean" -> "BOOLEAN"
-            "long" -> if (definition.isSerialEffective()) "BIGSERIAL" else "BIGINT"
             // TODO: Create new ref column on target table, or new table with ref columns to both tables
             "array" -> throw IllegalArgumentException("Array type is implemented in another way")
-            else -> throw IllegalArgumentException("Unsupported type: ${definition.type}")
+            else -> throw IllegalArgumentException("Unsupported type: ${field.type}")
         }
     }
 
-    private fun getStringBasedType(definition: Definition) =
-        if (definition.format == "date") {
-            "DATE"
-        } else if (definition.format == "date-time") {
-            "TIMESTAMP"
-        } else if (definition.maxLength != null) {
-            "VARCHAR(${definition.maxLength})"
-        } else {
-            "VARCHAR($DEFAULT_VARCHAR_LENGTH)"
-        }
+    private fun getStringBasedType(definition: FieldElem) =
+            if (definition.maxLength != null) {
+                "VARCHAR(${definition.maxLength})"
+            } else {
+                "VARCHAR($DEFAULT_VARCHAR_LENGTH)"
+            }
 
     private fun addNewline(sb: StringBuilder, count: Int = 1) {
         for (i in 1..count) {
@@ -139,16 +131,9 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         }
     }
 
-
-    /**
-     * Returns true if field is eventually serial
-     *
-     * If serial not defined and field is primary, then it's serial
-     */
-    private fun Definition.isSerialEffective() = this.serial ?: (this.primary ?: false)
-
     private companion object {
         const val DEFAULT_VARCHAR_LENGTH = 255
         val postgresKeywords = setOf("order")
+        val log = LoggerFactory.getLogger(CoreSqlGenerator::class.java)!!
     }
 }

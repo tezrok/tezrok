@@ -19,8 +19,9 @@ internal class TezrokBuilderTest : BaseTest() {
         val projectOutput = PathUtil.resolve("../../output/tezrok-simple")
 
         TezrokBuilder.from(projectPath)
-            .setOutput(projectOutput)
-            .setClock(fixedClock)
-            .generate()
+                .setOutput(projectOutput)
+                .setOutputProject(true)
+                .setClock(fixedClock)
+                .generate()
     }
 }

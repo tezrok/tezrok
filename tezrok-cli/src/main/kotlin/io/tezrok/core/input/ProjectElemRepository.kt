@@ -1,9 +1,6 @@
 package io.tezrok.core.input
 
-import io.tezrok.api.input.EntityElem
-import io.tezrok.api.input.EnumElem
-import io.tezrok.api.input.FieldElem
-import io.tezrok.api.input.ProjectElem
+import io.tezrok.api.input.*
 import io.tezrok.schema.Definition
 import io.tezrok.schema.Schema
 import io.tezrok.schema.SchemaLoader
@@ -20,24 +17,52 @@ internal class ProjectElemRepository {
         val project = JsonUtil.mapper.readValue(projectPath.toURL(), ProjectElem::class.java)
 
         for (module in project.modules) {
-            if (module.importSchema.isNotBlank()) {
-                log.debug("Loading schema from {}", module.importSchema)
-                val schemaPath = projectPath.parent.resolve(module.importSchema)
-                val schemaLoader = SchemaLoader()
-                val schema = schemaLoader.load(schemaPath)
-                // TODO: remove schema property and use entities instead
-                module.schema = schema
-                module.entities = entitiesFromSchema(schema)
-                module.enums = enumsFromSchema(schema)
-                // TODO: validate entities
+            module.schema?.let { schema ->
+                if (schema.importSchema?.isNotBlank() == true) {
+                    log.debug("Loading schema from {}", schema.importSchema)
+                    val schemaPath = projectPath.parent.resolve(schema.importSchema!!)
+                    val schemaLoader = SchemaLoader()
+                    val jsonSchema = schemaLoader.load(schemaPath)
+                    module.schema = schemaFromJson(jsonSchema, module.schema)
+                }
             }
         }
 
         return project
     }
 
-    private fun entitiesFromSchema(schema: Schema): List<EntityElem> =
-            schema.definitions?.map { entityFromDefinition(it.key, it.value) } ?: emptyList()
+    fun schemaFromJson(jsonSchema: Schema, inheritSchema: SchemaElem? = null): SchemaElem {
+        val entities = entitiesFromSchema(jsonSchema)
+        val enums = enumsFromSchema(jsonSchema)
+        val entitiesMap = entities.associateBy { it.name }
+        val enumsMap = enums.associateBy { it.name }
+
+        return SchemaElem(
+                importSchema = inheritSchema?.importSchema,
+                entities = entities.map { entity -> processEntity(entity, entitiesMap, enumsMap, inheritSchema?.entities?.find { it.name == entity.name }) },
+                enums = enums
+        )
+    }
+
+    private fun processEntity(entity: EntityElem, entitiesMap: Map<String, EntityElem>, enumsMap: Map<String, EnumElem>, inheritEntity: EntityElem?): EntityElem {
+        return entity.copy(fields = entity.fields.map { field -> processField(field, entitiesMap, enumsMap, inheritEntity?.fields?.find { it.name == field.name }) })
+                .copy(customRepository = inheritEntity?.customRepository)
+    }
+
+    private fun processField(field: FieldElem, entitiesMap: Map<String, EntityElem>, enumsMap: Map<String, EnumElem>, inheritField: FieldElem?): FieldElem {
+        return field.copy(ref = entitiesMap[field.type] ?: enumsMap[field.type])
+                .copy(primary = inheritField?.primary ?: field.primary)
+                .copy(type = inheritField?.type ?: field.type)
+    }
+
+    private fun entitiesFromSchema(schema: Schema): List<EntityElem> {
+        if (schema.title?.isNotBlank() == true) {
+            // when schema is a single entity
+            return listOf(entityFromDefinition(schema.title, schema))
+        }
+
+        return schema.definitions?.map { entityFromDefinition(it.key, it.value) } ?: emptyList()
+    }
 
     private fun enumsFromSchema(schema: Schema): List<EnumElem> =
             schema.definitions?.map { enumFromDefinition(it.key, it.value) }?.filterNotNull() ?: emptyList()
@@ -89,6 +114,12 @@ internal class ProjectElemRepository {
             }
 
             throw IllegalArgumentException("Array type must have ref property")
+        }
+
+        if (definition.format == "date-time") {
+            return "dateTime"
+        } else if (definition.format == "date") {
+            return "date"
         }
 
         return definition.type ?: throw IllegalArgumentException("Type must be defined")

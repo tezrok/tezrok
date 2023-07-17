@@ -26,11 +26,10 @@ open class ServiceFeature : TezrokFeature {
         if (applicationPackageRoot != null) {
             val projectElem = context.getProject()
             val serviceDir = applicationPackageRoot.getOrAddJavaDirectory("service")
-            val schemaModule = context.getProject().modules.find { it.name == module.getName() }
-                    ?: throw IllegalStateException("Module ${module.getName()} not found")
+            val schema = context.getProject().modules.find { it.name == module.getName() }?.schema
 
-            schemaModule.schema?.definitions?.keys?.forEach { name ->
-                addServiceClass(name, serviceDir, projectElem.packagePath, context)
+            schema?.entities?.forEach { entity ->
+                addServiceClass(entity.name, serviceDir, projectElem.packagePath, context)
             }
         } else {
             log.warn("Application package root is not set")

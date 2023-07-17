@@ -4,9 +4,11 @@ import io.tezrok.core.feature.FeatureManager
 import io.tezrok.core.input.ProjectElemRepository
 import io.tezrok.core.output.ProjectNodeFactory
 import io.tezrok.core.output.ProjectOutputGenerator
+import io.tezrok.util.toPrettyJson
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Clock
+import kotlin.io.path.writeText
 
 /**
  * Entry point for tezrok
@@ -20,6 +22,7 @@ class TezrokBuilder private constructor() {
     private val featureManager = FeatureManager()
     private val generatorProvider = CoreGeneratorProvider()
     private val generator = ProjectOutputGenerator()
+    private var outputProject: Boolean = false
 
     fun generate() {
         val inputPath = path ?: throw IllegalStateException("Path not set")
@@ -28,6 +31,10 @@ class TezrokBuilder private constructor() {
         val projectElem = projectElemRepo.load(inputPath)
         val project = projectNodeFactory.fromProject(projectElem, projectOutput)
         val context = CoreGeneratorContext(projectElem, generatorProvider, clock)
+
+        if (outputProject) {
+            projectOutput.resolve(".tezrok.json") .writeText(projectElem.toPrettyJson())
+        }
 
         featureManager.applyAll(project, context)
         generator.generate(project, projectOutput)
@@ -55,6 +62,14 @@ class TezrokBuilder private constructor() {
 
     fun setClock(clock: Clock): TezrokBuilder {
         this.clock = clock
+        return this
+    }
+
+    /**
+     * Set to true to output effective project file as json-file
+     */
+    fun setOutputProject(outputProject: Boolean): TezrokBuilder {
+        this.outputProject = outputProject
         return this
     }
 

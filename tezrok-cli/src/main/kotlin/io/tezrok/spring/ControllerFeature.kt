@@ -19,11 +19,10 @@ internal class ControllerFeature : TezrokFeature {
         if (applicationPackageRoot != null) {
             val projectElem = context.getProject()
             val webDir = applicationPackageRoot.getOrAddJavaDirectory("web").getOrAddJavaDirectory("rest")
-            val schemaModule = context.getProject().modules.find { it.name == module.getName() }
-                    ?: throw IllegalStateException("Module ${module.getName()} not found")
+            val schema = context.getProject().modules.find { it.name == module.getName() }?.schema
 
-            schemaModule.schema?.definitions?.keys?.forEach { name ->
-                addControllerClass(name, webDir, projectElem.packagePath, context)
+            schema?.entities?.forEach { entity ->
+                addControllerClass(entity.name, webDir, projectElem.packagePath, context)
             }
         } else {
             log.warn("Application package root is not set, module: {}", module.getName())

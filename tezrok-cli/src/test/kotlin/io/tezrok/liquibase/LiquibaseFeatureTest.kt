@@ -7,6 +7,7 @@ import io.tezrok.core.CoreGeneratorContext
 import io.tezrok.core.CoreGeneratorProvider
 import io.tezrok.api.input.ModuleElem
 import io.tezrok.api.input.ProjectElem
+import io.tezrok.core.input.ProjectElemRepository
 import io.tezrok.schema.SchemaLoader
 import io.tezrok.util.resourceAsPath
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -17,6 +18,7 @@ internal class LiquibaseFeatureTest : BaseTest() {
     private val fixedClock = getFixedClock()
     private val liquibaseFeature = LiquibaseFeature()
     private val schemaLoader = SchemaLoader()
+    private val projectElemRepository = ProjectElemRepository()
 
     @Test
     fun testGenerate() {
@@ -44,7 +46,7 @@ internal class LiquibaseFeatureTest : BaseTest() {
     private fun mockProjectInput(moduleName: String, schema: Schema): ProjectElem {
         val projectInput = ProjectElem()
         val moduleInput = ModuleElem()
-        moduleInput.schema = schema
+        moduleInput.schema = projectElemRepository.schemaFromJson(schema)
         moduleInput.name = moduleName
         projectInput.modules = listOf(moduleInput)
 
