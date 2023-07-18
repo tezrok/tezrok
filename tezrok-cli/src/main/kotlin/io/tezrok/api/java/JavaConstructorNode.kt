@@ -22,9 +22,20 @@ open class JavaConstructorNode(private val constructor: ConstructorDeclaration) 
         return this
     }
 
+    /**
+     * Adds new modifiers to the constructor
+     */
     fun withModifiers(vararg modifiers: Modifier.Keyword): JavaConstructorNode {
         val oldModifiers = constructor.modifiers.map { it.keyword } + modifiers
         constructor.setModifiers(*oldModifiers.distinct().toTypedArray())
+        return this
+    }
+
+    /**
+     * Sets new modifiers to the constructor
+     */
+    fun setModifiers(vararg modifiers: Modifier.Keyword): JavaConstructorNode {
+        constructor.setModifiers(*modifiers)
         return this
     }
 

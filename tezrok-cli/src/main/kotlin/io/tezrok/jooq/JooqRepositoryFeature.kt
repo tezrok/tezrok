@@ -11,7 +11,6 @@ import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.java.JavaFileNode
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.getRootClass
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.util.stream.Collectors
@@ -20,6 +19,8 @@ import kotlin.io.path.isDirectory
 
 /**
  * Creates repository class for storable entity.
+ *
+ * Creates custom repository class if it doesn't exist.
  */
 internal class JooqRepositoryFeature : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
@@ -30,7 +31,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
             val projectElem = context.getProject()
             val repositoryDir = applicationPackageRoot.getOrAddJavaDirectory("repository")
             val dtoDir = applicationPackageRoot.getOrAddJavaDirectory("dto")
-            val javaBaseRepoFile = addBaseRepositoryClass(repositoryDir, context, projectElem)
+            val javaBaseRepoFile = addBaseRepositoryFile(repositoryDir, context, projectElem)
             addWithIdInterface(dtoDir)
 
             val schemaModule = context.getProject().modules.find { it.name == module.getName() }
@@ -48,7 +49,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
             if (schema != null) {
                 schema.entities?.forEach { entity ->
                     addDtoClass(dtoDir, entity.name, projectElem.packagePath)
-                    addRepositoryClass(repositoryDir, entity.name, projectElem.packagePath, entity.customRepository == true, baseMethods, context)
+                    addRepositoryClass(repositoryDir, entity.name, entity.customRepository == true, baseMethods, context)
                 }
                 // TODO: handle enums
             }
@@ -80,7 +81,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
         }
     }
 
-    private fun addBaseRepositoryClass(repositoryDir: JavaDirectoryNode, context: GeneratorContext, projectElem: ProjectElem): JavaFileNode {
+    private fun addBaseRepositoryFile(repositoryDir: JavaDirectoryNode, context: GeneratorContext, projectElem: ProjectElem): JavaFileNode {
         if (!repositoryDir.hasFile(JOOQ_BASE_REPO)) {
             val jooqRepoFile = repositoryDir.addJavaFile(JOOQ_BASE_REPO)
             context.writeTemplate(jooqRepoFile, "/templates/jooq/JooqRepository.java.vm",
@@ -100,41 +101,31 @@ internal class JooqRepositoryFeature : TezrokFeature {
      *
      * @param repositoryDir directory where repository class will be created
      * @param name entity name
-     * @param rootPackage root package of the project
      * @param custom true if custom repository class already exists or must be created
      * @param baseMethods set of base methods which must be ignored during custom methods generating
      */
-    private fun addRepositoryClass(repositoryDir: JavaDirectoryNode, name: String, rootPackage: String, custom: Boolean, baseMethods: Set<String>, context: GeneratorContext) {
-        val jooqPackageRoot = "${rootPackage}.jooq"
-        val className = "${name}Repository"
+    private fun addRepositoryClass(repositoryDir: JavaDirectoryNode, name: String, custom: Boolean, baseMethods: Set<String>, context: GeneratorContext) {
+        val rootPackage = context.getProject().packagePath
+        val repoClassFileName = "${name}Repository.java"
 
-        if (!repositoryDir.hasFile("$className.java")) {
-            val repoClass = repositoryDir.addClass(className)
-            repoClass.extendClass("JooqRepository<${name}Record, Long, ${name}Dto>")
-            repoClass.addImport("$jooqPackageRoot.Tables")
-            repoClass.addImport("$jooqPackageRoot.tables.records.${name}Record")
-            repoClass.addImport("$rootPackage.dto.${name}Dto")
-
-            repoClass.addImport(DSLContext::class.java)
-            val constructor = repoClass.addConstructor()
-                    .addParameter(DSLContext::class.java, "dsl")
-
-            constructor.addCallSuperExpression()
-                    .addNameArgument("dsl")
-                    .addNameArgument("Tables.${name.uppercase()}")
-                    .addNameArgument("Tables.${name.uppercase()}.ID")
-                    .addNameArgument("${name}Dto.class")
+        if (!repositoryDir.hasFile(repoClassFileName)) {
+            val repoClassFile = repositoryDir.addJavaFile(repoClassFileName)
+            context.writeTemplate(repoClassFile, "/templates/jooq/JooqTargetRepository.java.vm",
+                    mapOf("package" to rootPackage, "name" to name, "uname" to name.uppercase()))
+            val repoClass = repoClassFile.getRootClass()
+            val constructor = repoClass.getConstructors()
+                    .findFirst()
+                    .orElseThrow { IllegalStateException("Constructor not found") }
 
             if (custom) {
-                constructor.withModifiers(Modifier.Keyword.PROTECTED)
-                repoClass.withModifiers(Modifier.Keyword.ABSTRACT)
+                constructor.setModifiers(Modifier.Keyword.PROTECTED)
+                repoClass.setModifiers(Modifier.Keyword.PUBLIC, Modifier.Keyword.ABSTRACT)
                 addCustomMethods(name, repoClass, repositoryDir, baseMethods, context)
             } else {
-                constructor.withModifiers(Modifier.Keyword.PUBLIC)
                 repoClass.addAnnotation(Repository::class.java)
             }
         } else {
-            log.warn("File already exists: {}", "$className.java")
+            log.warn("File already exists: {}", repoClassFileName)
         }
     }
 

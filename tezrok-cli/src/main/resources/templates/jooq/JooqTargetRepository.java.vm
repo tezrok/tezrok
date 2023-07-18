@@ -1,0 +1,16 @@
+package ${package}.repository;
+
+import ${package}.jooq.Tables;
+import ${package}.jooq.tables.records.${name}Record;
+import ${package}.dto.${name}Dto;
+import org.jooq.DSLContext;
+
+/**
+ * Repository for {@link ${name}Dto} entity.
+ */
+public class ${name}Repository extends JooqRepository<${name}Record, Long, ${name}Dto> {
+
+    public ${name}Repository(DSLContext dsl) {
+        super(dsl, Tables.${uname}, Tables.${uname}.ID, ${name}Dto.class);
+    }
+}

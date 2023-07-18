@@ -29,9 +29,22 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration) {
 
     fun getMethods(): Stream<JavaMethodNode> = clazz.methods.asSequence().map { JavaMethodNode(it) }.asStream()
 
+    fun getConstructors(): Stream<JavaConstructorNode> = clazz.constructors.asSequence().map { JavaConstructorNode(it) }.asStream()
+
+    /**
+     * Adds new modifiers to the class
+     */
     fun withModifiers(vararg modifiers: Modifier.Keyword): JavaClassNode {
         val oldModifiers = clazz.modifiers.map { it.keyword } + modifiers
         clazz.setModifiers(*oldModifiers.distinct().toTypedArray())
+        return this
+    }
+
+    /**
+     * Sets new modifiers to the class
+     */
+    fun setModifiers(vararg modifiers: Modifier.Keyword): JavaClassNode {
+        clazz.setModifiers(*modifiers)
         return this
     }
 
