@@ -31,7 +31,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
             val projectElem = context.getProject()
             val repositoryDir = applicationPackageRoot.getOrAddJavaDirectory("repository")
             val dtoDir = applicationPackageRoot.getOrAddJavaDirectory("dto")
-            val javaBaseRepoFile = addBaseRepositoryFile(repositoryDir, context, projectElem)
+            val javaBaseRepoFile = addBaseRepositoryFile(repositoryDir, projectElem, context)
             addWithIdInterface(dtoDir)
 
             val schemaModule = context.getProject().modules.find { it.name == module.getName() }
@@ -77,18 +77,18 @@ internal class JooqRepositoryFeature : TezrokFeature {
             repoClass.extendClass("$jooqPackageRoot.tables.pojos.$name")
             repoClass.implementInterface("WithId<Long>")
         } else {
-            log.warn("File already exists: {}", "$className.java")
+            log.warn(FILE_ALREADY_EXISTS, "$className.java")
         }
     }
 
-    private fun addBaseRepositoryFile(repositoryDir: JavaDirectoryNode, context: GeneratorContext, projectElem: ProjectElem): JavaFileNode {
+    private fun addBaseRepositoryFile(repositoryDir: JavaDirectoryNode, projectElem: ProjectElem, context: GeneratorContext): JavaFileNode {
         if (!repositoryDir.hasFile(JOOQ_BASE_REPO)) {
             val jooqRepoFile = repositoryDir.addJavaFile(JOOQ_BASE_REPO)
             context.writeTemplate(jooqRepoFile, "/templates/jooq/JooqRepository.java.vm",
                     mapOf("package" to projectElem.packagePath))
             return jooqRepoFile
         } else {
-            log.warn("File already exists: {}", repositoryDir)
+            log.warn(FILE_ALREADY_EXISTS, repositoryDir)
         }
 
         return repositoryDir.getJavaFile(JOOQ_BASE_REPO)
@@ -125,7 +125,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
                 repoClass.addAnnotation(Repository::class.java)
             }
         } else {
-            log.warn("File already exists: {}", repoClassFileName)
+            log.warn(FILE_ALREADY_EXISTS, repoClassFileName)
         }
     }
 
@@ -195,5 +195,6 @@ internal class JooqRepositoryFeature : TezrokFeature {
     private companion object {
         val log = LoggerFactory.getLogger(JooqRepositoryFeature::class.java)!!
         const val JOOQ_BASE_REPO = "JooqRepository.java"
+        const val FILE_ALREADY_EXISTS = "File already exists: {}"
     }
 }
