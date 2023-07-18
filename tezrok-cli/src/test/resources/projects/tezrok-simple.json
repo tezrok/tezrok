@@ -11,6 +11,7 @@
         "entities": [
           {
             "name": "Order",
+            "customRepository" : true,
             "fields": [
               {
                 "name": "id",

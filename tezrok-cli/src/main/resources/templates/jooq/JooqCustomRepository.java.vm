@@ -1,0 +1,17 @@
+package ${package}.repository.custom;
+
+import ${package}.dto.${name}Dto;
+import ${package}.repository.${name}Repository;
+import org.jetbrains.annotations.NotNull;
+import org.jooq.DSLContext;
+import org.springframework.stereotype.Repository;
+
+/**
+ * This is a custom (not generated) repository for {@link ${name}Dto} entity.
+ */
+@Repository
+public class ${name}CustomRepository extends ${name}Repository {
+    public ${name}CustomRepository(@NotNull DSLContext dsl) {
+        super(dsl);
+    }
+}
