@@ -17,9 +17,19 @@ internal class MavenCoreFeature : TezrokFeature {
             .withGroupId(projectElem.packagePath)
             .withVersion(projectElem.version)
 
+        // add default properties
+        pomFile.addProperty("commons-lang3.version", "3.12.0")
+        pomFile.addProperty("logback.version", "1.4.6")
+        pomFile.addProperty("slf4j-api.version", "2.0.5")
+
         // add default dependencies
-        pomFile.addDependency("org.apache.commons:commons-lang3:3.12.0")
+        pomFile.addDependency("org.apache.commons:commons-lang3:${'$'}{commons-lang3.version}")
         pomFile.addDependency("org.jetbrains:annotations:24.0.1")
+        pomFile.addDependency("org.projectlombok:lombok:1.18.28")
+        // add logging dependencies
+        pomFile.addDependency("ch.qos.logback:logback-classic:${'$'}{logback.version}")
+        pomFile.addDependency("org.slf4j:slf4j-api:${'$'}{slf4j-api.version}")
+
         // add dependencies from project
         projectElem.modules.find { it.name == module.getName() }?.dependencies?.forEach(pomFile::addDependency)
 
