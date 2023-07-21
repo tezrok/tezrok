@@ -5,18 +5,23 @@ import io.tezrok.api.TezrokFeature
 import io.tezrok.api.maven.ProjectNode
 
 /**
- * Adds Maven core dependencies
+ * Adds Maven default and extra dependencies
  */
 internal class MavenCoreFeature : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
-        check(project.getModules().size == 1) { "MavenCoreFeature only supports single module" }
-        val module = project.getModules().first()
+        val module = project.getSingleModule()
         val projectElem = context.getProject()
         val pomFile = module.pom
         // set project groupId and version
         pomFile.dependencyId = pomFile.dependencyId
             .withGroupId(projectElem.packagePath)
             .withVersion(projectElem.version)
+
+        // add default dependencies
+        pomFile.addDependency("org.apache.commons:commons-lang3:3.12.0")
+        pomFile.addDependency("org.jetbrains:annotations:24.0.1")
+        // add dependencies from project
+        projectElem.modules.find { it.name == module.getName() }?.dependencies?.forEach(pomFile::addDependency)
 
         // add maven-compiler-plugin
         val pluginNode = module.pom.addPluginDependency("org.apache.maven.plugins:maven-compiler-plugin:3.11.0")

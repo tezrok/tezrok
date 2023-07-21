@@ -26,6 +26,7 @@ open class ModuleElem {
     var description: String = ""
     var type: String = "" // TODO: enum
     var schema: SchemaElem? = null
+    var dependencies: List<String>? = null
 
     override fun toString(): String {
         return "ModuleElem(name='$name')"
