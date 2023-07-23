@@ -74,8 +74,8 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
 
         // if plugin already exists
         if (pluginNode != null) {
-            // update version if it is newer
-            pluginNode.node.updateVersion(dependency.version)
+            // update scope and version if it is newer
+            pluginNode.node.updateVersionAndScope(dependency.version, dependency.scope)
             return pluginNode
         }
 
@@ -108,6 +108,10 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
             xml.removeAll(VERSION)
         else
             xml.getOrAdd(VERSION, value.version)
+        if (value.scope.isBlank())
+            xml.removeAll(SCOPE)
+        else
+            xml.getOrAdd(SCOPE, value.scope)
     }
 
     private fun getDependencyIdInternal(): MavenDependency = getXml().let { xml ->
@@ -122,6 +126,7 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
         const val GROUP_ID = "groupId"
         const val ARTIFACT_ID = "artifactId"
         const val VERSION = "version"
+        const val SCOPE = "scope"
         const val PLUGIN_PATH = "/project/build/plugins/plugin"
         const val SCHEMA_LOCATION = "http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
     }

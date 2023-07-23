@@ -20,18 +20,19 @@ internal class MavenDependenciesAccess(val parent: XmlNode) : MavenDependencies 
         val groupId = dependency.groupId
         val artifactId = dependency.artifactId
         val version = dependency.version
+        val scope = dependency.scope
         val shortId = dependency.shortId()
 
         val dependencyNode = dependencyNodes().find { node -> node.shortId() == shortId }
 
         if (dependencyNode != null) {
             // if dependency already exists, check if version is newer
-            return dependencyNode.updateVersion(version)
+            return dependencyNode.updateVersionAndScope(version, scope)
         }
 
         parent.getOrAdd("dependencies")
                 .add("dependency")
-                .addDependency(groupId, artifactId, version)
+                .addDependency(groupId, artifactId, version, scope)
 
         return true
     }
@@ -53,19 +54,22 @@ internal class MavenDependenciesAccess(val parent: XmlNode) : MavenDependencies 
 
 internal fun XmlNode.shortId(): String = getNodeValue(PomNode.GROUP_ID) + ":" + getNodeValue(PomNode.ARTIFACT_ID)
 
-internal fun XmlNode.addDependency(groupId: String, artifactId: String, version: String) {
+internal fun XmlNode.addDependency(groupId: String, artifactId: String, version: String, scope: String = "") {
     add(PomNode.GROUP_ID, groupId).and()
             .add(PomNode.ARTIFACT_ID, artifactId)
 
     if (version.isNotBlank()) {
         add(PomNode.VERSION, version)
     }
+    if (scope.isNotBlank()) {
+        add(PomNode.SCOPE, scope)
+    }
 }
 
 /**
  * Update dependency version if it is newer
  */
-internal fun XmlNode.updateVersion(version: String): Boolean {
+internal fun XmlNode.updateVersionAndScope(version: String, scope: String): Boolean {
     if (version.isNotBlank()) {
         val versionNode = getOrAdd(PomNode.VERSION)
 
@@ -74,5 +78,14 @@ internal fun XmlNode.updateVersion(version: String): Boolean {
             return true
         }
     }
+    if (scope.isNotBlank()) {
+        val scopeNode = getOrAdd(PomNode.SCOPE)
+
+        if (scopeNode.getValue()?.isBlank() == true || scope != scopeNode.getValue()!!) {
+            scopeNode.setValue(scope)
+            return true
+        }
+    }
+
     return false
 }

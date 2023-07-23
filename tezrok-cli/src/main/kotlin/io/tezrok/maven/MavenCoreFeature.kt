@@ -21,6 +21,7 @@ internal class MavenCoreFeature : TezrokFeature {
         pomFile.addProperty("commons-lang3.version", "3.12.0")
         pomFile.addProperty("logback.version", "1.4.6")
         pomFile.addProperty("slf4j-api.version", "2.0.5")
+        pomFile.addProperty("junit.version", "5.8.1")
 
         // add default dependencies
         pomFile.addDependency("org.apache.commons:commons-lang3:${'$'}{commons-lang3.version}")
@@ -29,6 +30,11 @@ internal class MavenCoreFeature : TezrokFeature {
         // add logging dependencies
         pomFile.addDependency("ch.qos.logback:logback-classic:${'$'}{logback.version}")
         pomFile.addDependency("org.slf4j:slf4j-api:${'$'}{slf4j-api.version}")
+        // add testing dependencies
+        pomFile.addDependency("org.junit.jupiter:junit-jupiter-api:${'$'}{junit.version}:test")
+        pomFile.addDependency("org.junit.jupiter:junit-jupiter-engine:${'$'}{junit.version}:test")
+        pomFile.addDependency("org.junit.platform:junit-platform-launcher:1.9.0:test")
+        pomFile.addDependency("org.mockito:mockito-core:5.2.0:test");
 
         // add dependencies from project
         projectElem.modules.find { it.name == module.getName() }?.dependencies?.forEach(pomFile::addDependency)
