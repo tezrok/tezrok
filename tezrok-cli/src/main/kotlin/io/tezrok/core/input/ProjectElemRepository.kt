@@ -93,7 +93,7 @@ internal class ProjectElemRepository {
                     pattern = definition.pattern,
                     minLength = definition.minLength,
                     maxLength = definition.maxLength,
-                    relation = definition.relation
+                    relation = relationFromDefinition(definition)
             )
 
     private fun typeFromDefinition(definition: Definition, name: String): String {
@@ -124,6 +124,9 @@ internal class ProjectElemRepository {
 
         return definition.type ?: throw IllegalArgumentException("Type must be defined")
     }
+
+    private fun relationFromDefinition(definition: Definition): EntityRelation? =
+        if (definition.isArray()) EntityRelation.OneToMany else null
 
     private companion object {
         val log: Logger = LoggerFactory.getLogger(ProjectElemRepository::class.java)

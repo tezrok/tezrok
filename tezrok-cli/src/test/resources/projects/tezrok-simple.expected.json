@@ -6,7 +6,7 @@
   "author": "",
   "modules": [
     {
-      "name": "simpleModule",
+      "name": "simpleModule", 
       "description": "",
       "type": "tezrok",
       "schema": {
@@ -35,7 +35,8 @@
               {
                 "name": "items",
                 "type": "Item",
-                "required": false
+                "required": false,
+                "relation": "OneToMany"
               }
             ]
           },

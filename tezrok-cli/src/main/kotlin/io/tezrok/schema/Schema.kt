@@ -2,7 +2,6 @@ package io.tezrok.schema
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.tezrok.api.input.EntityRelation
 
 /**
  * Represents a JSON schema
@@ -33,9 +32,7 @@ open class Definition(
         val items: Definition? = null,
         val enum: List<String>? = null,
         @JsonProperty("\$ref")
-    val ref: String? = null,
-        val customRepository: Boolean? = null,
-        val relation: EntityRelation? = null,
+        val ref: String? = null
 ) {
     @JsonIgnore
     fun isArray(): Boolean = type == "array"

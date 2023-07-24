@@ -33,7 +33,7 @@ class TezrokBuilder private constructor() {
         val context = CoreGeneratorContext(projectElem, generatorProvider, clock)
 
         if (outputProject) {
-            projectOutput.resolve(".tezrok.json") .writeText(projectElem.toPrettyJson())
+            projectOutput.resolve(".tezrok.json").writeText(projectElem.toPrettyJson())
         }
 
         featureManager.applyAll(project, context)
