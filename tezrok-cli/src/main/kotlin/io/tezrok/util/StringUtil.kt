@@ -9,6 +9,11 @@ fun String.resourceAsPath(): Path = ResourceUtil.getResourceAsPath(this)
 
 fun String.resourceAsString(): String = ResourceUtil.getResourceAsString(this)
 
+/**
+ * Convert camel case string to snake case
+ *
+ * Example: "FooBar" -> "Foo_bar"
+ */
 fun String.camelCaseToSnakeCase(): String = camelCaseRegex.replace(this, "$1_$2").lowercase()
 
 private val camelCaseRegex = Regex("([a-z])([A-Z]+)")

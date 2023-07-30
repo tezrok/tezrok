@@ -2,6 +2,7 @@ package io.tezrok.sql
 
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.input.EntityElem
+import io.tezrok.api.input.EntityRelation
 import io.tezrok.api.input.FieldElem
 import io.tezrok.api.input.SchemaElem
 import io.tezrok.api.model.SqlScript
@@ -19,10 +20,12 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
      */
     override fun generate(schema: SchemaElem, context: GeneratorContext): SqlScript {
         val sb = StringBuilder()
+        // TODO: sort entities by dependencies
         val entities = schema.entities ?: emptyList()
+        val targetEntities = mutableListOf<Pair<EntityElem, EntityElem>>()
 
         entities.forEachIndexed { index, entity ->
-            generateTable(entity, sb)
+            generateTable(entity, sb, targetEntities)
             if (index < entities.size - 1) {
                 addNewline(sb)
             }
@@ -34,7 +37,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
     /**
      * Generates a table from root schema definition
      */
-    private fun generateTable(entity: EntityElem, sb: StringBuilder) {
+    private fun generateTable(entity: EntityElem, sb: StringBuilder, targetEntities:  MutableList<Pair<EntityElem, EntityElem>>) {
         Validate.notBlank(entity.name, "Schema table is blank")
         val tableName = toTableName(entity.name)
         val fields = entity.fields
@@ -49,7 +52,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         if (fields.find { it.name == "id" } == null) {
             // TODO: not add automatic id if it's not a root schema
             sb.append(intent)
-            sb.append("id SERIAL PRIMARY KEY")
+            sb.append("id BIGSERIAL PRIMARY KEY")
             if (fields.isNotEmpty()) {
                 sb.append(",")
             }
@@ -68,7 +71,18 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
                 colCount++
             } else {
                 val ref = field.ref as EntityElem
-                TODO("Add field to reference table")
+                when (val relation = field.relation ?: error("Relation is not defined for field ${field.name}")) {
+                    EntityRelation.OneToOne,
+                    EntityRelation.ManyToMany -> {
+                        if (colCount > 0) {
+                            sb.append(",")
+                            addNewline(sb)
+                        }
+                        addRefColumn(field, ref, sb)
+                    }
+                    EntityRelation.OneToMany -> targetEntities.add(ref to entity)
+                    else -> error("Unknown relation type: $relation")
+                }
             }
         }
         addNewline(sb)
@@ -90,8 +104,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
     private fun generateColumn(field: FieldElem, sb: StringBuilder) {
         sb.append(intent)
         // TODO: Validate column name
-        // TODO: Convert to underscore case
-        sb.append(field.name)
+        sb.append(toColumnName(field.name))
         sb.append(" ")
         sb.append(getSqlType(field))
         // if field is serial, by default it's not null
@@ -100,6 +113,22 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         }
         if (field.primary == true) {
             sb.append(" PRIMARY KEY")
+        }
+    }
+
+    private fun addRefColumn(
+        field: FieldElem,
+        targetEntity: EntityElem,
+        sb: StringBuilder
+    ) {
+        sb.append(intent)
+        // TODO: Validate column name
+        sb.append(toColumnName(field.name) + "_id")
+        sb.append(" ")
+        sb.append(getTargetRefType(targetEntity))
+        // if field is serial, by default it's not null
+        if (field.required == true && !field.isSerialEffective()) {
+            sb.append(" NOT NULL")
         }
     }
 
@@ -119,11 +148,31 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
     }
 
     private fun getStringBasedType(definition: FieldElem) =
-            if (definition.maxLength != null) {
-                "VARCHAR(${definition.maxLength})"
+        if (definition.maxLength != null) {
+            "VARCHAR(${definition.maxLength})"
+        } else {
+            "VARCHAR($DEFAULT_VARCHAR_LENGTH)"
+        }
+
+    /**
+     * Returns the type of the reference column
+     */
+    private fun getTargetRefType(targetEntity: EntityElem): String {
+        return targetEntity.fields.find { it.primary == true }?.let { field ->
+            if (field.type == "integer") {
+                "INT"
             } else {
-                "VARCHAR($DEFAULT_VARCHAR_LENGTH)"
+                "BIGINT"
             }
+        } ?: "BIGINT"
+    }
+
+    /**
+     * Converts a field name to a column name
+     *
+     * Example: "firstName" -> "first_name"
+     */
+    private fun toColumnName(name: String) = name.camelCaseToSnakeCase().lowercase()
 
     private fun addNewline(sb: StringBuilder, count: Int = 1) {
         for (i in 1..count) {
