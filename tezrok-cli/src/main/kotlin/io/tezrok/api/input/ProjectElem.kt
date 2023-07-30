@@ -76,6 +76,9 @@ data class FieldElem(
     fun isSerialEffective() = this.serial ?: (this.primary ?: false)
 }
 
+/**
+ * Relation between entities
+ */
 enum class EntityRelation {
     OneToOne,
 

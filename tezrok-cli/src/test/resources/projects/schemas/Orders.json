@@ -14,6 +14,10 @@
           "type": "string",
           "format": "date-time"
         },
+        "selectedItem": {
+          "$ref": "#/definitions/Item",
+          "description": "The item that was selected by the user"
+        },
         "items": {
           "type": "array",
           "items": {

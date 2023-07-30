@@ -59,7 +59,6 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         var colCount = 0
 
         fields.forEach { field ->
-            // TODO: implement "array" in another place depending on the relation type
             if (field.ref == null) {
                 if (colCount > 0) {
                     sb.append(",")
@@ -68,7 +67,8 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
                 generateColumn(field, sb)
                 colCount++
             } else {
-                log.error("Not implemented")
+                val ref = field.ref as EntityElem
+                TODO("Add field to reference table")
             }
         }
         addNewline(sb)

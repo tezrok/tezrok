@@ -10,7 +10,7 @@ internal class ProjectElemRepositoryTest : BaseTest() {
     private val loader = ProjectElemRepository()
 
     @Test
-    fun testLoad() {
+    fun testLoad_FromJsonWithSchema() {
         val projectPath = ResourceUtil.getResourceAsPath("/projects/tezrok-simple.json")
         val project = loader.load(projectPath)
 

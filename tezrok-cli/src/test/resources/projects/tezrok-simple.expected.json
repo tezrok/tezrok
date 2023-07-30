@@ -33,6 +33,12 @@
                 "required": false
               },
               {
+                "name" : "selectedItem",
+                "type" : "Item",
+                "description" : "The item that was selected by the user",
+                "required" : false
+              },
+              {
                 "name": "items",
                 "type": "Item",
                 "required": false,

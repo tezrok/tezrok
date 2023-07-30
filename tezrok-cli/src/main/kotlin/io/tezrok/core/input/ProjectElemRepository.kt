@@ -103,17 +103,7 @@ internal class ProjectElemRepository {
         }
 
         if (definition.isArray()) {
-            val ref = definition.items?.ref ?: ""
-
-            if (ref.isNotBlank()) {
-                // parse string like '#/definitions/Item'
-                val index = ref.lastIndexOf('/')
-                if (index > 0) {
-                    return ref.substring(index + 1)
-                }
-            }
-
-            throw IllegalArgumentException("Array type must have ref property")
+            return parseRef(definition.items?.ref, "Array type must have ref property")
         }
 
         if (definition.format == "date-time") {
@@ -122,11 +112,30 @@ internal class ProjectElemRepository {
             return "date"
         }
 
-        return definition.type ?: throw IllegalArgumentException("Type must be defined")
+        return definition.type ?: parseRef(definition.ref, "Type must be defined")
+    }
+
+    /**
+     *  Parses string like '#/definitions/Item' and get 'Item' part
+     *
+     *  Throws IllegalArgumentException if ref is not valid
+     */
+    private fun parseRef(ref: String?, msg: String): String {
+        // TODO: proper parse
+        if (ref?.isNotBlank() == true && ref.startsWith("#/definitions/")) {
+            val index = ref.lastIndexOf('/')
+            if (index > 0) {
+                return ref.substring(index + 1)
+            }
+        }
+
+        throw IllegalArgumentException(msg)
     }
 
     private fun relationFromDefinition(definition: Definition): EntityRelation? =
-        if (definition.isArray()) EntityRelation.OneToMany else null
+        if (definition.isArray()) EntityRelation.OneToMany
+        else if (definition.ref?.isNotBlank() == true) EntityRelation.OneToOne
+        else null
 
     private companion object {
         val log: Logger = LoggerFactory.getLogger(ProjectElemRepository::class.java)
