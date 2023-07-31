@@ -50,7 +50,7 @@ internal class ProjectElemRepository {
     }
 
     private fun processField(field: FieldElem, entitiesMap: Map<String, EntityElem>, enumsMap: Map<String, EnumElem>, inheritField: FieldElem?): FieldElem {
-        return field.copy(ref = entitiesMap[field.type] ?: enumsMap[field.type])
+        return field.copy(refEntity = (entitiesMap[field.type] ?: enumsMap[field.type]) != null)
                 .copy(primary = inheritField?.primary ?: field.primary)
                 .copy(type = inheritField?.type ?: field.type)
     }

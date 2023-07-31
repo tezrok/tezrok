@@ -53,9 +53,9 @@ data class EnumElem(
 data class FieldElem(
         val name: String,
         // string, integer, long, enum or reference to another entity
-        val type: String? = null,
+        val type: String,
         @JsonIgnore
-        val ref: Any? = null, // TODO: EntityElem or EnumElem, make common interface
+        val refEntity: Boolean? = null,
         val description: String? = null,
         val required: Boolean? = null,
         val serial: Boolean? = null,
