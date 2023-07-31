@@ -45,6 +45,8 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
             }
         }
 
+        // TODO: Add comment on columns
+
         return SqlScript("schema", sb.toString())
     }
 
