@@ -102,7 +102,7 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
     }
 
     public int deleteAll() {
-        return dsl.truncate(table).execute();
+        return dsl.truncate(table).cascade().execute();
     }
 
     public boolean existsById(ID id) {
