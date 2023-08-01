@@ -1,4 +1,4 @@
-package io.tezrok.schema
+package io.tezrok.json.schema
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.tezrok.util.JsonUtil

@@ -1,9 +1,9 @@
 package io.tezrok.core.input
 
 import io.tezrok.api.input.*
-import io.tezrok.schema.Definition
-import io.tezrok.schema.Schema
-import io.tezrok.schema.SchemaLoader
+import io.tezrok.json.schema.Definition
+import io.tezrok.json.schema.Schema
+import io.tezrok.json.schema.SchemaLoader
 import io.tezrok.util.JsonUtil
 import io.tezrok.util.toURL
 import org.slf4j.Logger

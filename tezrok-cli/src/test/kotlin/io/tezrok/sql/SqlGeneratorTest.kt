@@ -4,7 +4,7 @@ import io.tezrok.BaseTest
 import io.tezrok.api.input.ProjectElem
 import io.tezrok.core.CoreGeneratorContext
 import io.tezrok.core.input.ProjectElemRepository
-import io.tezrok.schema.SchemaLoader
+import io.tezrok.json.schema.SchemaLoader
 import io.tezrok.util.resourceAsPath
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
