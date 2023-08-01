@@ -25,62 +25,166 @@ internal class ProjectElemRepository {
                     val jsonSchema = schemaLoader.load(schemaPath)
                     module.schema = schemaFromJson(jsonSchema, module.schema)
                 }
+
+                module.schema = normalizeSchema(module.schema!!)
             }
         }
 
         return project
     }
 
+    /**
+     * Converts json schema to a list of entities
+     *
+     * inheritSchema used to customize entities with options which not supported by json schema
+     *
+     * @param jsonSchema json schema
+     * @param inheritSchema schema inherited from parent module
+     */
     fun schemaFromJson(jsonSchema: Schema, inheritSchema: SchemaElem? = null): SchemaElem {
         val entities = entitiesFromSchema(jsonSchema)
         val enums = enumsFromSchema(jsonSchema)
-        val entitiesMap = entities.associateBy { it.name }
-        val enumsMap = enums.associateBy { it.name }
 
         return SchemaElem(
-                importSchema = inheritSchema?.importSchema,
-                entities = entities.map { entity -> processEntity(entity, entitiesMap, enumsMap, inheritSchema?.entities?.find { it.name == entity.name }) },
-                enums = enums
+            importSchema = inheritSchema?.importSchema,
+            entities = entities.map { entity ->
+                processEntity(
+                    entity,
+                    inheritSchema?.entities?.find { it.name == entity.name })
+            },
+            enums = enums
         )
     }
 
-    private fun processEntity(entity: EntityElem, entitiesMap: Map<String, EntityElem>, enumsMap: Map<String, EnumElem>, inheritEntity: EntityElem?): EntityElem {
-        return entity.copy(fields = processFields(entity, entitiesMap, enumsMap, inheritEntity))
-                .copy(customRepository = inheritEntity?.customRepository)
+    /**
+     * Creates primary fields if not defined.
+     * Creates synthetic fields and entities for relations.
+     */
+    private fun normalizeSchema(schema: SchemaElem): SchemaElem {
+        val schema = addPrimaryFields(schema)
+        return addSyntheticFields(schema)
     }
 
-    private fun processFields(
+    private fun addSyntheticFields(schema: SchemaElem): SchemaElem {
+        val entities = schema.entities ?: return schema
+        val entityMap = entities.associateBy { it.name }.toMutableMap()
+        val syntheticFields = mutableListOf<Pair<String, FieldElem>>() // entity name, field
+        val newEntities = entities.map { entity ->
+            val newEntity = entity.copy(fields = entity.fields.flatMap { field ->
+                addSyncFields(
+                    field,
+                    entity,
+                    entityMap,
+                    syntheticFields
+                )
+            })
+            entityMap[entity.name] = newEntity
+            newEntity
+        }
+
+        syntheticFields.forEach { syntheticField ->
+            val entityName = syntheticField.first
+            val entity = entityMap[entityName] ?: error("Entity \"$entityName\" not found")
+            // add synthetic field to entity
+            entityMap[entityName] = entity.copy(fields = entity.fields + syntheticField.second)
+        }
+
+        // keep order of entities
+        return schema.copy(entities = newEntities.map { entityMap[it.name]!! })
+    }
+
+    private fun addSyncFields(
+        field: FieldElem,
         entity: EntityElem,
-        entitiesMap: Map<String, EntityElem>,
-        enumsMap: Map<String, EnumElem>,
-        inheritEntity: EntityElem?
+        entityMap: Map<String, EntityElem>,
+        syntheticFields: MutableList<Pair<String, FieldElem>>
     ): List<FieldElem> {
-        val fields = entity.fields.map { field ->
-            processField(
-                field,
-                entitiesMap,
-                enumsMap,
-                inheritEntity?.fields?.find { it.name == field.name })
-        }.toMutableList()
+        // TODO: check enum entity as well
+        val refEntity = entityMap[field.type]
+
+        if (refEntity != null) {
+            val newField = field.copy(logicField = true)
+            val fullFieldName = "${entity.name}.${newField.name}"
+            val refPrimaryField = refEntity.fields.first { it.primary == true }
+            val primaryField = entity.fields.first { it.primary == true }
+
+            when(val relation = newField.relation ?: error("Relation is not defined for field \"$fullFieldName\"")) {
+                EntityRelation.OneToOne -> {
+                    val syntheticName = "${newField.name}Id"
+
+                    // TODO: optimize
+                    if (entity.fields.any { it.name == syntheticName }) {
+                        throw IllegalArgumentException("Field with name \"$syntheticName\" already exists in entity \"${entity.name}\"")
+                    }
+
+                    val syntheticField = field.copy(
+                        name = syntheticName,
+                        type = refPrimaryField.type,
+                        syntheticTo = fullFieldName,
+                        foreignField = "${refEntity.name}.${refPrimaryField.name}",
+                        description = "Synthetic field for \"${fullFieldName}\"",
+                        relation = null
+                    )
+
+                    return listOf(newField, syntheticField)
+                }
+                EntityRelation.OneToMany -> {
+                    // add sync field to ref entity
+                    val syntheticField = field.copy(
+                        name = "${entity.name}Id".replaceFirstChar { it.lowercase(Locale.getDefault()) },
+                        type = refPrimaryField.type,
+                        syntheticTo = fullFieldName,
+                        foreignField = "${entity.name}.${primaryField.name}",
+                        description = "Synthetic field for \"$fullFieldName\"",
+                        relation = null
+                    )
+                    syntheticFields.add(refEntity.name to syntheticField)
+
+                    return listOf(newField)
+                }
+                else -> TODO("relation type: $relation")
+            }
+        }
+
+        return listOf(field)
+    }
+
+    private fun addPrimaryFields(schema: SchemaElem): SchemaElem {
+        return schema.copy(entities = schema.entities?.map { entity -> addPrimaryFields(entity) })
+    }
+
+    private fun addPrimaryFields(entity: EntityElem): EntityElem {
+        val fields = entity.fields.toMutableList()
 
         if (fields.none { it.primary == true }) {
             // if no primary key is defined, add default primary key or use existing id field as primary key
-            val idx = fields.indexOfFirst { it.name == "id" }
+            val idx = fields.indexOfFirst { it.name == PRIMARY_FIELD_NAME }
 
             if (idx >= 0) {
                 fields[idx] = fields[idx].copy(primary = true)
             } else {
                 // add default primary key at the beginning
-                fields.add(0, FieldElem("id", "long", primary = true))
+                fields.add(0, FieldElem(PRIMARY_FIELD_NAME, "long", primary = true))
             }
         }
 
-        return fields
+        return entity.copy(fields = fields)
     }
 
-    private fun processField(field: FieldElem, entitiesMap: Map<String, EntityElem>, enumsMap: Map<String, EnumElem>, inheritField: FieldElem?): FieldElem {
-        return field.copy(refEntity = (entitiesMap[field.type] ?: enumsMap[field.type]) != null)
-                .copy(primary = inheritField?.primary ?: field.primary)
+    private fun processEntity(entity: EntityElem, inheritEntity: EntityElem?): EntityElem {
+        return entity.copy(fields = processFields(entity, inheritEntity))
+                .copy(customRepository = inheritEntity?.customRepository)
+    }
+
+    private fun processFields(
+        entity: EntityElem,
+        inheritEntity: EntityElem?
+    ): List<FieldElem> = entity.fields.map { field ->
+        processField(field, inheritEntity?.fields?.find { it.name == field.name })
+    }
+
+    private fun processField(field: FieldElem, inheritField: FieldElem?): FieldElem {
+        return field.copy(primary = inheritField?.primary ?: field.primary)
                 .copy(type = inheritField?.type ?: field.type)
     }
 
@@ -168,5 +272,6 @@ internal class ProjectElemRepository {
 
     private companion object {
         val log: Logger = LoggerFactory.getLogger(ProjectElemRepository::class.java)
+        const val PRIMARY_FIELD_NAME = "id"
     }
 }

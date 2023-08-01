@@ -54,8 +54,8 @@ data class FieldElem(
         val name: String,
         // string, integer, long, enum or reference to another entity
         val type: String,
-        @JsonIgnore
-        val refEntity: Boolean? = null,
+        // reference to field of another entity
+        val foreignField: String? = null,
         val description: String? = null,
         val required: Boolean? = null,
         val serial: Boolean? = null,
@@ -65,6 +65,9 @@ data class FieldElem(
         val maxLength: Int? = null,
         val unique: Boolean? = null,
         val defValue: String? = null,
+        val logicField: Boolean? = null,
+        // true if field is synthetic and contains reference to another entity
+        val syntheticTo: String? = null,
         val relation: EntityRelation? = null
 ) {
     /**

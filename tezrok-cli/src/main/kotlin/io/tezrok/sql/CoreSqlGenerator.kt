@@ -79,7 +79,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         var colCount = 0
 
         fields.forEach { field ->
-            if (field.refEntity != true) {
+            if (field.foreignField.isNullOrEmpty()) { // TODO: use new synthetic fields
                 if (colCount > 0) {
                     sb.append(",")
                     addNewline(sb)
@@ -255,8 +255,9 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
     }
 
     private fun sortEntities(entity1: EntityElem, entity2: EntityElem, entityMap: Map<String, EntityElem>): Int {
-        val refFields1 = entity1.fields.filter { it.refEntity == true && entityMap[it.type] == entity2 }
-        val refFields2 = entity2.fields.filter { it.refEntity == true && entityMap[it.type] == entity1 }
+        TODO()
+        val refFields1 = entity1.fields.filter { /*it.refEntity == true &&*/ entityMap[it.type] == entity2 }
+        val refFields2 = entity2.fields.filter { /*it.refEntity == true && */entityMap[it.type] == entity1 }
 
         if (refFields1.isEmpty() && refFields2.isEmpty()) {
             return 0

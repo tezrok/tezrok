@@ -6,7 +6,7 @@
   "author": "",
   "modules": [
     {
-      "name": "simpleModule", 
+      "name": "simpleModule",
       "description": "",
       "type": "tezrok",
       "schema": {
@@ -33,16 +33,26 @@
                 "required": false
               },
               {
-                "name" : "selectedItem",
-                "type" : "Item",
-                "description" : "The item that was selected by the user",
-                "required" : false,
-                "relation" : "OneToOne"
+                "name": "selectedItem",
+                "type": "Item",
+                "description": "The item that was selected by the user",
+                "required": false,
+                "logicField": true,
+                "relation": "OneToOne"
+              },
+              {
+                "name": "selectedItemId",
+                "type": "long",
+                "foreignField": "Item.id",
+                "description": "Synthetic field for \"Order.selectedItem\"",
+                "required": false,
+                "syntheticTo": "Order.selectedItem"
               },
               {
                 "name": "items",
                 "type": "Item",
                 "required": false,
+                "logicField": true,
                 "relation": "OneToMany"
               }
             ]
@@ -66,6 +76,14 @@
                 "name": "price",
                 "type": "number",
                 "required": true
+              },
+              {
+                "name": "orderId",
+                "type": "long",
+                "foreignField": "Order.id",
+                "description": "Synthetic field for \"Order.items\"",
+                "required": false,
+                "syntheticTo": "Order.items"
               }
             ]
           }
