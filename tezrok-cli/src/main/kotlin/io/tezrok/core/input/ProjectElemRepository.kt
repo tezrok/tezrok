@@ -45,8 +45,37 @@ internal class ProjectElemRepository {
     }
 
     private fun processEntity(entity: EntityElem, entitiesMap: Map<String, EntityElem>, enumsMap: Map<String, EnumElem>, inheritEntity: EntityElem?): EntityElem {
-        return entity.copy(fields = entity.fields.map { field -> processField(field, entitiesMap, enumsMap, inheritEntity?.fields?.find { it.name == field.name }) })
+        return entity.copy(fields = processFields(entity, entitiesMap, enumsMap, inheritEntity))
                 .copy(customRepository = inheritEntity?.customRepository)
+    }
+
+    private fun processFields(
+        entity: EntityElem,
+        entitiesMap: Map<String, EntityElem>,
+        enumsMap: Map<String, EnumElem>,
+        inheritEntity: EntityElem?
+    ): List<FieldElem> {
+        val fields = entity.fields.map { field ->
+            processField(
+                field,
+                entitiesMap,
+                enumsMap,
+                inheritEntity?.fields?.find { it.name == field.name })
+        }.toMutableList()
+
+        if (fields.none { it.primary == true }) {
+            // if no primary key is defined, add default primary key or use existing id field as primary key
+            val idx = fields.indexOfFirst { it.name == "id" }
+
+            if (idx >= 0) {
+                fields[idx] = fields[idx].copy(primary = true)
+            } else {
+                // add default primary key at the beginning
+                fields.add(0, FieldElem("id", "long", primary = true))
+            }
+        }
+
+        return fields
     }
 
     private fun processField(field: FieldElem, entitiesMap: Map<String, EntityElem>, enumsMap: Map<String, EnumElem>, inheritField: FieldElem?): FieldElem {

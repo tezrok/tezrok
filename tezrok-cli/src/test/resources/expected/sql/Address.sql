@@ -1,9 +1,9 @@
 CREATE TABLE public.address (
-  id SERIAL PRIMARY KEY,
+  id BIGSERIAL PRIMARY KEY,
   street VARCHAR(255) NOT NULL,
   city VARCHAR(50) NOT NULL,
   state VARCHAR(255) NOT NULL,
   zip VARCHAR(255),
   country VARCHAR(255) NOT NULL,
-  stateId INT NOT NULL
+  state_id INT NOT NULL
 );

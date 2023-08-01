@@ -36,7 +36,8 @@
                 "name" : "selectedItem",
                 "type" : "Item",
                 "description" : "The item that was selected by the user",
-                "required" : false
+                "required" : false,
+                "relation" : "OneToOne"
               },
               {
                 "name": "items",

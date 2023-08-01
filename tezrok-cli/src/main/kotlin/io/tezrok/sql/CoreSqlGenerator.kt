@@ -40,7 +40,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
             // generate foreign keys
             foreignKeys.forEach { foreignKey ->
                 val fkName = "fk_${foreignKey.sourceTable}_${foreignKey.sourceColumn}".replace("\"", "")
-                sb.append("ALTER TABLE ${foreignKey.sourceTable} ADD CONSTRAINT $fkName FOREIGN KEY(${foreignKey.sourceColumn}) REFERENCES ${foreignKey.targetTable}(${foreignKey.targetColumn});")
+                sb.append("ALTER TABLE ${foreignKey.schema}.${foreignKey.sourceTable} ADD CONSTRAINT $fkName FOREIGN KEY(${foreignKey.sourceColumn}) REFERENCES ${foreignKey.schema}.${foreignKey.targetTable}(${foreignKey.targetColumn});")
                 addNewline(sb)
             }
         }
@@ -79,7 +79,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         var colCount = 0
 
         fields.forEach { field ->
-            if (field.refEntity == false) {
+            if (field.refEntity != true) {
                 if (colCount > 0) {
                     sb.append(",")
                     addNewline(sb)
@@ -87,8 +87,8 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
                 generateColumn(field, sb)
                 colCount++
             } else {
-                val targetEntity = entityMap[field.type] ?: error("Entity ${field.type} not found")
-                when (val relation = field.relation ?: error("Relation is not defined for field ${field.name}")) {
+                val targetEntity = entityMap[field.type] ?: error("Entity ${field.type} not found in field \"${entity.name}.${field.name}\"")
+                when (val relation = field.relation ?: error("Relation is not defined for field \"${entity.name}.${field.name}\"")) {
                     EntityRelation.OneToOne,
                     EntityRelation.ManyToMany -> {
                         if (colCount > 0) {
@@ -283,6 +283,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         val sourceColumn: String,
         val sourceTable: String,
         val targetColumn: String,
-        val targetTable: String
+        val targetTable: String,
+        val schema: String = "public"
     )
 }
