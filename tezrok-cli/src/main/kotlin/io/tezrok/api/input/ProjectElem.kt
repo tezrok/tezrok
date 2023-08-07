@@ -65,6 +65,7 @@ data class FieldElem(
         val maxLength: Int? = null,
         val unique: Boolean? = null,
         val defValue: String? = null,
+        // if true then field is not stored in database, mostly used for object fields
         val logicField: Boolean? = null,
         // true if field is synthetic and contains reference to another entity
         val syntheticTo: String? = null,

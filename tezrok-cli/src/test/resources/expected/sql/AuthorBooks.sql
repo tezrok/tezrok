@@ -9,7 +9,7 @@ CREATE TABLE public.book (
   title VARCHAR(255) NOT NULL,
   isbn VARCHAR(255) NOT NULL,
   publication_date DATE NOT NULL,
-  author_id INT NOT NULL
+  author_id INT
 );
 
 -- foreign keys

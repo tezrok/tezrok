@@ -23,7 +23,7 @@ internal class ProjectElemRepository {
                     val schemaPath = projectPath.parent.resolve(schema.importSchema!!)
                     val schemaLoader = SchemaLoader()
                     val jsonSchema = schemaLoader.load(schemaPath)
-                    module.schema = schemaFromJson(jsonSchema, module.schema)
+                    module.schema = schemaFromJson(jsonSchema, module.schema, normalize = false)
                 }
 
                 module.schema = normalizeSchema(module.schema!!)
@@ -41,11 +41,10 @@ internal class ProjectElemRepository {
      * @param jsonSchema json schema
      * @param inheritSchema schema inherited from parent module
      */
-    fun schemaFromJson(jsonSchema: Schema, inheritSchema: SchemaElem? = null): SchemaElem {
+    fun schemaFromJson(jsonSchema: Schema, inheritSchema: SchemaElem? = null, normalize: Boolean = true): SchemaElem {
         val entities = entitiesFromSchema(jsonSchema)
         val enums = enumsFromSchema(jsonSchema)
-
-        return SchemaElem(
+        val schema = SchemaElem(
             importSchema = inheritSchema?.importSchema,
             entities = entities.map { entity ->
                 processEntity(
@@ -54,6 +53,8 @@ internal class ProjectElemRepository {
             },
             enums = enums
         )
+
+        return if (normalize) normalizeSchema(schema) else schema
     }
 
     /**
@@ -65,13 +66,16 @@ internal class ProjectElemRepository {
         return addSyntheticFields(schema)
     }
 
+    /**
+     * Adds synthetic fields and entities for relations.
+     */
     private fun addSyntheticFields(schema: SchemaElem): SchemaElem {
         val entities = schema.entities ?: return schema
         val entityMap = entities.associateBy { it.name }.toMutableMap()
         val syntheticFields = mutableListOf<Pair<String, FieldElem>>() // entity name, field
         val newEntities = entities.map { entity ->
             val newEntity = entity.copy(fields = entity.fields.flatMap { field ->
-                addSyncFields(
+                addSyntheticFields(
                     field,
                     entity,
                     entityMap,
@@ -93,7 +97,7 @@ internal class ProjectElemRepository {
         return schema.copy(entities = newEntities.map { entityMap[it.name]!! })
     }
 
-    private fun addSyncFields(
+    private fun addSyntheticFields(
         field: FieldElem,
         entity: EntityElem,
         entityMap: Map<String, EntityElem>,
@@ -129,7 +133,7 @@ internal class ProjectElemRepository {
                     return listOf(newField, syntheticField)
                 }
                 EntityRelation.OneToMany -> {
-                    // add sync field to ref entity
+                    // add synthetic field to ref entity
                     val syntheticField = field.copy(
                         name = "${entity.name}Id".replaceFirstChar { it.lowercase(Locale.getDefault()) },
                         type = refPrimaryField.type,
