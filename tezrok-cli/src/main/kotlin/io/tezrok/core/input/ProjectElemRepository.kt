@@ -98,59 +98,59 @@ internal class ProjectElemRepository {
     }
 
     private fun addSyntheticFields(
-        field: FieldElem,
-        entity: EntityElem,
+        sourceField: FieldElem,
+        sourceEntity: EntityElem,
         entityMap: Map<String, EntityElem>,
         syntheticFields: MutableList<Pair<String, FieldElem>>
     ): List<FieldElem> {
         // TODO: check enum entity as well
-        val refEntity = entityMap[field.type]
+        val targetEntity = entityMap[sourceField.type]
 
-        if (refEntity != null) {
-            val newField = field.copy(logicField = true)
-            val fullFieldName = "${entity.name}.${newField.name}"
-            val refPrimaryField = refEntity.fields.first { it.primary == true }
-            val primaryField = entity.fields.first { it.primary == true }
+        if (targetEntity != null) {
+            val logicField = sourceField.copy(logicField = true)
+            val fullFieldName = "${sourceEntity.name}.${sourceField.name}"
+            val targetPrimaryField = targetEntity.fields.first { it.primary == true }
 
-            when(val relation = newField.relation ?: error("Relation is not defined for field \"$fullFieldName\"")) {
+            when(val relation = sourceField.relation ?: error("Relation is not defined for field \"$fullFieldName\"")) {
                 EntityRelation.OneToOne -> {
-                    val syntheticName = "${newField.name}Id"
+                    val syntheticName = "${sourceField.name}Id"
 
                     // TODO: optimize
-                    if (entity.fields.any { it.name == syntheticName }) {
-                        throw IllegalArgumentException("Field with name \"$syntheticName\" already exists in entity \"${entity.name}\"")
+                    if (sourceEntity.fields.any { it.name == syntheticName }) {
+                        throw IllegalArgumentException("Field with name \"$syntheticName\" already exists in entity \"${sourceEntity.name}\"")
                     }
 
-                    val syntheticField = field.copy(
+                    val syntheticField = sourceField.copy(
                         name = syntheticName,
-                        type = refPrimaryField.type,
+                        type = targetPrimaryField.type,
                         syntheticTo = fullFieldName,
-                        foreignField = "${refEntity.name}.${refPrimaryField.name}",
+                        foreignField = "${targetEntity.name}.${targetPrimaryField.name}",
                         description = "Synthetic field for \"${fullFieldName}\"",
                         relation = null
                     )
 
-                    return listOf(newField, syntheticField)
+                    return listOf(logicField, syntheticField)
                 }
                 EntityRelation.OneToMany -> {
+                    val primaryField = sourceEntity.fields.first { it.primary == true }
                     // add synthetic field to ref entity
-                    val syntheticField = field.copy(
-                        name = "${entity.name}Id".replaceFirstChar { it.lowercase(Locale.getDefault()) },
-                        type = refPrimaryField.type,
+                    val syntheticField = sourceField.copy(
+                        name = "${sourceEntity.name}Id".replaceFirstChar { it.lowercase(Locale.getDefault()) },
+                        type = targetPrimaryField.type,
                         syntheticTo = fullFieldName,
-                        foreignField = "${entity.name}.${primaryField.name}",
+                        foreignField = "${sourceEntity.name}.${primaryField.name}",
                         description = "Synthetic field for \"$fullFieldName\"",
                         relation = null
                     )
-                    syntheticFields.add(refEntity.name to syntheticField)
+                    syntheticFields.add(targetEntity.name to syntheticField)
 
-                    return listOf(newField)
+                    return listOf(logicField)
                 }
                 else -> TODO("relation type: $relation")
             }
         }
 
-        return listOf(field)
+        return listOf(sourceField)
     }
 
     private fun addPrimaryFields(schema: SchemaElem): SchemaElem {
