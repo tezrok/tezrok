@@ -54,6 +54,13 @@
                 "required": false,
                 "logicField": true,
                 "relation": "OneToMany"
+              },
+              {
+                "name": "otherItems",
+                "type": "Item",
+                "required": false,
+                "logicField": true,
+                "relation": "ManyToMany"
               }
             ]
           },
@@ -84,6 +91,26 @@
                 "description": "Synthetic field for \"Order.items\"",
                 "required": false,
                 "syntheticTo": "Order.items"
+              }
+            ]
+          },
+          {
+            "name": "OrderItemOtherItems",
+            "description": "Synthetic entity of many-to-many relation for field \"Order.otherItems\"",
+            "fields": [
+              {
+                "name": "orderId",
+                "type": "long",
+                "foreignField": "Order.id",
+                "primary": true,
+                "syntheticTo": "Order.otherItems"
+              },
+              {
+                "name": "itemId",
+                "type": "long",
+                "foreignField": "Item.id",
+                "primary": true,
+                "syntheticTo": "Order.otherItems"
               }
             ]
           }

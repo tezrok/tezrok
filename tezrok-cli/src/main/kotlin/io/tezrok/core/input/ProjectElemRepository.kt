@@ -73,8 +73,8 @@ internal class ProjectElemRepository {
         val entities = schema.entities ?: return schema
         val entityMap = entities.associateBy { it.name }.toMutableMap()
         val syntheticFields = mutableListOf<Pair<String, FieldElem>>() // entity name, field
-        val newEntities = entities.map { entity ->
-            val newEntity = entity.copy(fields = entity.fields.flatMap { field ->
+        entities.forEach { entity ->
+            entityMap[entity.name] = entity.copy(fields = entity.fields.flatMap { field ->
                 addSyntheticFields(
                     field,
                     entity,
@@ -82,8 +82,6 @@ internal class ProjectElemRepository {
                     syntheticFields
                 )
             })
-            entityMap[entity.name] = newEntity
-            newEntity
         }
 
         syntheticFields.forEach { syntheticField ->
@@ -94,14 +92,17 @@ internal class ProjectElemRepository {
         }
 
         // keep order of entities
-        return schema.copy(entities = newEntities.map { entityMap[it.name]!! })
+        return schema.copy(entities = entityMap.values.toList())
     }
 
+    /**
+     * Adds synthetic fields or entities for field if one refer to another entity.
+     */
     private fun addSyntheticFields(
         sourceField: FieldElem,
         sourceEntity: EntityElem,
-        entityMap: Map<String, EntityElem>,
-        syntheticFields: MutableList<Pair<String, FieldElem>>
+        entityMap: MutableMap<String, EntityElem>,
+        syntheticFields: MutableList<Pair<String, FieldElem>>,
     ): List<FieldElem> {
         // TODO: check enum entity as well
         val targetEntity = entityMap[sourceField.type]
@@ -110,6 +111,7 @@ internal class ProjectElemRepository {
             val logicField = sourceField.copy(logicField = true)
             val fullFieldName = "${sourceEntity.name}.${sourceField.name}"
             val targetPrimaryField = targetEntity.fields.first { it.primary == true }
+            val sourcePrimaryField = sourceEntity.fields.first { it.primary == true }
 
             when(val relation = sourceField.relation ?: error("Relation is not defined for field \"$fullFieldName\"")) {
                 EntityRelation.OneToOne -> {
@@ -120,6 +122,7 @@ internal class ProjectElemRepository {
                         throw IllegalArgumentException("Field with name \"$syntheticName\" already exists in entity \"${sourceEntity.name}\"")
                     }
 
+                    // TODO: add unique constraint
                     val syntheticField = sourceField.copy(
                         name = syntheticName,
                         type = targetPrimaryField.type,
@@ -132,18 +135,44 @@ internal class ProjectElemRepository {
                     return listOf(logicField, syntheticField)
                 }
                 EntityRelation.OneToMany -> {
-                    val primaryField = sourceEntity.fields.first { it.primary == true }
                     // add synthetic field to ref entity
                     val syntheticField = sourceField.copy(
                         name = "${sourceField.name}${sourceEntity.name}Id",
                         type = targetPrimaryField.type,
                         syntheticTo = fullFieldName,
-                        foreignField = "${sourceEntity.name}.${primaryField.name}",
+                        foreignField = "${sourceEntity.name}.${sourcePrimaryField.name}",
                         description = "Synthetic field for \"$fullFieldName\"",
                         relation = null
                     )
                     syntheticFields.add(targetEntity.name to syntheticField)
 
+                    return listOf(logicField)
+                }
+                EntityRelation.ManyToMany -> {
+                    val entityName = "${sourceEntity.name}${targetEntity.name}" + sourceField.name.capitalize()
+                    require(!entityMap.containsKey(entityName)) { "Entity with name \"$entityName\" already exists" }
+
+                    // add synthetic table with two fields
+                    entityMap[entityName] = EntityElem(
+                        name = entityName,
+                        description = "Synthetic entity of many-to-many relation for field \"$fullFieldName\"",
+                        fields = listOf(
+                            FieldElem(
+                                "${sourceEntity.name}Id".decapitalize(),
+                                sourcePrimaryField.type,
+                                primary = true,
+                                syntheticTo = fullFieldName,
+                                foreignField = "${sourceEntity.name}.${sourcePrimaryField.name}",
+                            ),
+                            FieldElem(
+                                "${targetEntity.name}Id".decapitalize(),
+                                targetPrimaryField.type,
+                                primary = true,
+                                syntheticTo = fullFieldName,
+                                foreignField = "${targetEntity.name}.${targetPrimaryField.name}",
+                            )
+                        )
+                    )
                     return listOf(logicField)
                 }
                 else -> TODO("relation type: $relation")
@@ -187,10 +216,16 @@ internal class ProjectElemRepository {
         processField(field, inheritEntity?.fields?.find { it.name == field.name })
     }
 
-    private fun processField(field: FieldElem, inheritField: FieldElem?): FieldElem {
-        return field.copy(primary = inheritField?.primary ?: field.primary)
-                .copy(type = inheritField?.type ?: field.type)
-    }
+    private fun processField(field: FieldElem, inheritField: FieldElem?): FieldElem =
+        field.copy(
+            primary = inheritField?.primary ?: field.primary,
+            type = inheritField?.type ?: field.type,
+            required = inheritField?.required ?: field.required,
+            unique = inheritField?.unique ?: field.unique,
+            description = inheritField?.description ?: field.description,
+            defValue = inheritField?.defValue ?: field.defValue,
+            relation = inheritField?.relation ?: field.relation
+        )
 
     private fun entitiesFromSchema(schema: Schema): List<EntityElem> {
         if (schema.title?.isNotBlank() == true) {

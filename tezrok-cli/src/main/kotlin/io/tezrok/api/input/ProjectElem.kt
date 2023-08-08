@@ -41,6 +41,7 @@ data class SchemaElem(
 
 data class EntityElem(
         val name: String,
+        val description: String? = null,
         val customRepository: Boolean? = null,
         val fields: List<FieldElem>
 )
@@ -53,7 +54,7 @@ data class EnumElem(
 data class FieldElem(
         val name: String,
         // string, integer, long, enum or reference to another entity
-        val type: String,
+        val type: String? = null,
         // reference to field of another entity
         val foreignField: String? = null,
         val description: String? = null,

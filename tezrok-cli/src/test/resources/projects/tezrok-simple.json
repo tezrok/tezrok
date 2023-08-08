@@ -17,6 +17,10 @@
                 "name": "id",
                 "type": "long",
                 "primary": true
+              },
+              {
+                "name": "otherItems",
+                "relation": "ManyToMany"
               }
             ]
           },

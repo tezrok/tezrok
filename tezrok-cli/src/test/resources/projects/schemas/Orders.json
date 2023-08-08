@@ -23,6 +23,12 @@
           "items": {
             "$ref": "#/definitions/Item"
           }
+        },
+        "otherItems": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Item"
+          }
         }
       },
       "required": ["id", "name", "email"]
