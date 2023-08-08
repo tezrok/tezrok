@@ -78,7 +78,7 @@
                 "required": true
               },
               {
-                "name": "orderId",
+                "name": "itemsOrderId",
                 "type": "long",
                 "foreignField": "Order.id",
                 "description": "Synthetic field for \"Order.items\"",

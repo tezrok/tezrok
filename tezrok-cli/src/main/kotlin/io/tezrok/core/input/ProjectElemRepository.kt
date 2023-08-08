@@ -135,7 +135,7 @@ internal class ProjectElemRepository {
                     val primaryField = sourceEntity.fields.first { it.primary == true }
                     // add synthetic field to ref entity
                     val syntheticField = sourceField.copy(
-                        name = "${sourceEntity.name}Id".replaceFirstChar { it.lowercase(Locale.getDefault()) },
+                        name = "${sourceField.name}${sourceEntity.name}Id",
                         type = targetPrimaryField.type,
                         syntheticTo = fullFieldName,
                         foreignField = "${sourceEntity.name}.${primaryField.name}",

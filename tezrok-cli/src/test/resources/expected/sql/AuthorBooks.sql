@@ -9,8 +9,8 @@ CREATE TABLE public.book (
   title VARCHAR(255) NOT NULL,
   isbn VARCHAR(255) NOT NULL,
   publication_date DATE NOT NULL,
-  author_id INT
+  books_author_id INT
 );
 
 -- foreign keys
-ALTER TABLE public.book ADD CONSTRAINT fk_book_author_id FOREIGN KEY(author_id) REFERENCES public.author(id);
+ALTER TABLE public.book ADD CONSTRAINT fk_book_books_author_id FOREIGN KEY(books_author_id) REFERENCES public.author(id);
