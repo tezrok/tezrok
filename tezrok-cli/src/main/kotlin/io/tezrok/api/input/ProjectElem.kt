@@ -1,6 +1,5 @@
 package io.tezrok.api.input
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
@@ -43,6 +42,7 @@ data class EntityElem(
         val name: String,
         val description: String? = null,
         val customRepository: Boolean? = null,
+        val syntheticTo: String? = null,
         val fields: List<FieldElem>
 )
 
@@ -71,15 +71,7 @@ data class FieldElem(
         // true if field is synthetic and contains reference to another entity
         val syntheticTo: String? = null,
         val relation: EntityRelation? = null
-) {
-    /**
-     * Returns true if field is eventually serial
-     *
-     * If serial not defined and field is primary, then it's serial
-     */
-    @JsonIgnore
-    fun isSerialEffective() = this.serial ?: (this.primary ?: false)
-}
+)
 
 /**
  * Relation between entities

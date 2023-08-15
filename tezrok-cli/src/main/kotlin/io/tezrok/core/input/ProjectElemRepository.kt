@@ -155,6 +155,7 @@ internal class ProjectElemRepository {
                     // add synthetic table with two fields
                     entityMap[entityName] = EntityElem(
                         name = entityName,
+                        syntheticTo = fullFieldName,
                         description = "Synthetic entity of many-to-many relation for field \"$fullFieldName\"",
                         fields = listOf(
                             FieldElem(

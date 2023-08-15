@@ -1,0 +1,126 @@
+package ${package}.repository;
+
+import org.jetbrains.annotations.NotNull;
+import org.jooq.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
+import static org.jooq.impl.DSL.falseCondition;
+
+/**
+ * Base class for all Jooq repositories.
+ *
+ * @param <R>  Jooq record type
+ * @param <P>  Pojo type
+ */
+abstract class JooqBaseRepository<R extends UpdatableRecord<R>, P> {
+    protected final DSLContext dsl;
+
+    protected final Table<R> table;
+
+    protected final Class<P> pojoClass;
+
+    JooqBaseRepository(DSLContext dsl, Table<R> table, Class<P> pojoClass) {
+        this.dsl = dsl;
+        this.table = table;
+        this.pojoClass = pojoClass;
+    }
+
+    @NotNull
+    public List<P> findAll() {
+        return dsl.selectFrom(table).fetchInto(pojoClass);
+    }
+
+    public long count() {
+        return dsl.fetchCount(table);
+    }
+
+    @NotNull
+    public P create(P pojo) {
+        final R rec = newRecord(pojo);
+        rec.store();
+        return rec.into(pojoClass);
+    }
+
+    @NotNull
+    public List<P> saveAll(Iterable<P> entities) {
+        return StreamSupport.stream(entities.spliterator(), false).map(this::save).toList();
+    }
+
+    public int deleteAll() {
+        return dsl.truncate(table).cascade().execute();
+    }
+
+    @NotNull
+    protected R newRecord(Object obj) {
+        return dsl.newRecord(table, obj);
+    }
+
+    public abstract P save(@NotNull P pojo);
+
+    public abstract P update(@NotNull P pojo);
+
+    /**
+     * Search by all string fields, if any.
+     *
+     * @param term     search term
+     * @param pageable page request
+     * @return page of results
+     */
+    @NotNull
+    public Page<P> searchByTerm(final String term, final Pageable pageable) {
+        final String likeExpression = buildLikeExpression(term);
+        final List<P> result = dsl.selectFrom(table).where(whereClause(likeExpression)).orderBy(getSortFields(pageable.getSort())).limit(pageable.getPageSize()).offset(pageable.getOffset()).fetchInto(pojoClass);
+        final long totalCount = countByLikeExpression(likeExpression);
+        return new PageImpl<>(result, pageable, totalCount);
+    }
+
+    @NotNull
+    protected String buildLikeExpression(String term) {
+        return "%" + term + "%";
+    }
+
+    @NotNull
+    protected Condition whereClause(String likeExpression) {
+        // by default, all string fields are used for search term
+        return Arrays.stream(table.fields()).filter(field -> String.class.equals(field.getType())).map(f -> f.likeIgnoreCase(likeExpression)).map(Condition.class::cast).reduce(falseCondition(), Condition::or);
+    }
+
+    protected long countByLikeExpression(String likeExpression) {
+        return dsl.fetchCount(dsl.select().from(table).where(whereClause(likeExpression)));
+    }
+
+    @NotNull
+    protected Collection<SortField<?>> getSortFields(Sort sort) {
+        if (sort == null) {
+            return Collections.emptyList();
+        }
+        Collection<SortField<?>> sortFields = new ArrayList<>();
+        final Iterator<Sort.Order> sortOrders = sort.iterator();
+        while (sortOrders.hasNext()) {
+            final Sort.Order sortOrder = sortOrders.next();
+            final String sortFieldName = sortOrder.getProperty();
+            final Sort.Direction sortDirection = sortOrder.getDirection();
+            final TableField tableField = getTableField(sortFieldName);
+            final SortField<?> sortField = sortField(tableField, sortDirection);
+            sortFields.add(sortField);
+        }
+        return sortFields;
+    }
+
+    @NotNull
+    protected TableField<?, ?> getTableField(final String fieldName) {
+        return Arrays.stream(table.fields()).filter(p -> p.getName().equalsIgnoreCase(fieldName)).findFirst().map(TableField.class::cast).orElseThrow(() -> new IllegalStateException(String.format("Field not found: %s.%s, expected fields: %s", table.getName(), fieldName, Arrays.stream(table.fields()).map(Field::getName).collect(Collectors.joining(", ")))));
+    }
+
+    @NotNull
+    protected SortField<?> sortField(final TableField tableField, final Sort.Direction sortDirection) {
+        return sortDirection == Sort.Direction.ASC ? tableField.asc() : tableField.desc();
+    }
+}

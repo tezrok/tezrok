@@ -1,0 +1,77 @@
+package ${package}.repository;
+
+import ${package}.dto.WithId2;
+import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
+import org.jooq.*;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Base class for all Jooq repositories with two primary keys.
+ *
+ * @param <R>  Jooq record type
+ * @param <P>  Pojo type
+ */
+abstract class JooqRepository2<R extends UpdatableRecord<R>, ID1, ID2, P extends WithId2<ID1, ID2>> extends JooqBaseRepository<R, P> {
+
+    protected final Field<ID1> idField1;
+
+    protected final Field<ID2> idField2;
+
+    JooqRepository2(DSLContext dsl, Table<R> table, Field<ID1> idField1, Field<ID2> idField2, Class<P> pojoClass) {
+        super(dsl, table, pojoClass);
+        this.idField1 = idField1;
+        this.idField2 = idField2;
+    }
+
+    public Optional<P> getByIds(ID1 id1, ID2 id2) {
+        return getRecordByIds(id1, id2).map(rec -> rec.into(pojoClass));
+    }
+
+    @NotNull
+    public List<P> findAllByIds(Collection<Pair<ID1, ID2>> ids) {
+        return dsl.selectFrom(table).where(orCondition(ids)).fetchInto(pojoClass);
+    }
+
+    @NotNull
+    @Override
+    public P update(@NotNull P pojo) {
+        R rec = getRecordByIds(pojo.getId1(), pojo.getId2())
+                .orElseThrow(() -> new IllegalArgumentException("Record not found by id: " + pojo.getId1() + ", " + pojo.getId2()));
+        rec.from(pojo);
+        rec.store();
+        return rec.into(pojoClass);
+    }
+
+    @NotNull
+    @Override
+    public P save(@NotNull P pojo) {
+        return pojo.getId1() == null || pojo.getId2() == null ? create(pojo) : update(pojo);
+    }
+
+    public int deleteById(ID1 id1, ID2 id2) {
+        return dsl.delete(table).where(idField1.eq(id1).and(idField2.eq(id2))).execute();
+    }
+
+    public int deleteAllById(Collection<Pair<ID1, ID2>> ids) {
+        return dsl.delete(table).where(orCondition(ids)).execute();
+    }
+
+    public boolean existsByIds(ID1 id1, ID2 id2) {
+        return dsl.fetchExists(table, idField1.eq(id1).and(idField2.eq(id2)));
+    }
+
+    public Optional<R> getRecordByIds(ID1 id1, ID2 id2) {
+        return Optional.ofNullable(dsl.selectFrom(table).where(idField1.eq(id1).and(idField2.eq(id2))).fetchOne());
+    }
+
+    private Condition orCondition(Collection<Pair<ID1, ID2>> ids) {
+        return ids.stream()
+                .map(id -> idField1.eq(id.getLeft()).and(idField2.eq(id.getRight())))
+                .reduce(Condition::or)
+                .orElseThrow();
+    }
+}

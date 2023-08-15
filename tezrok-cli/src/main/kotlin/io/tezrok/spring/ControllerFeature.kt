@@ -2,6 +2,7 @@ package io.tezrok.spring
 
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
+import io.tezrok.api.input.EntityElem
 import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.maven.ProjectNode
 import org.slf4j.LoggerFactory
@@ -22,7 +23,7 @@ internal class ControllerFeature : TezrokFeature {
             val schema = context.getProject().modules.find { it.name == module.getName() }?.schema
 
             schema?.entities?.forEach { entity ->
-                addControllerClass(entity.name, webDir, projectElem.packagePath, context)
+                addControllerClass(entity, webDir, projectElem.packagePath, context)
             }
         } else {
             log.warn("Application package root is not set, module: {}", module.getName())
@@ -31,7 +32,13 @@ internal class ControllerFeature : TezrokFeature {
         return true
     }
 
-    private fun addControllerClass(name: String, webDir: JavaDirectoryNode, packagePath: String, context: GeneratorContext) {
+    private fun addControllerClass(entity: EntityElem, webDir: JavaDirectoryNode, packagePath: String, context: GeneratorContext) {
+        if (entity.syntheticTo?.isNotBlank() == true) {
+            // skip synthetic entities
+            return
+        }
+
+        val name = entity.name
         val fileName = "${name}Controller.java"
 
         if (!webDir.hasClass(fileName)) {

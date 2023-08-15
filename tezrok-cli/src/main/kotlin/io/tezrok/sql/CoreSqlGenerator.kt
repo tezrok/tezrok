@@ -1,5 +1,6 @@
 package io.tezrok.sql
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.input.EntityElem
 import io.tezrok.api.input.FieldElem
@@ -66,10 +67,9 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         sb.append(" (")
         addNewline(sb)
 
-        val primaryFieldCount = fields.count { it.primary == true }
+        val primaryFields = fields.filter { it.primary == true }
 
-        check(primaryFieldCount != 0) { "Primary field not found in entity: ${entity.name}" }
-        check(primaryFieldCount == 1) { "Multiple primary fields not supported yet, in entity: ${entity.name}" }
+        check(primaryFields.isNotEmpty()) { "Primary field not found in entity: ${entity.name}" }
 
         var colCount = 0
 
@@ -78,8 +78,22 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
                 sb.append(",")
                 addNewline(sb)
             }
-            generateColumn(field, sb)
+            generateColumn(field, sb, primaryFields.size == 1)
             colCount++
+        }
+
+        if (primaryFields.size > 1) {
+            sb.append(",")
+            addNewline(sb)
+            sb.append(intent)
+            sb.append("PRIMARY KEY (")
+            primaryFields.forEachIndexed { index, field ->
+                if (index > 0) {
+                    sb.append(", ")
+                }
+                sb.append(toColumnName(field.name))
+            }
+            sb.append(")")
         }
 
         addNewline(sb)
@@ -101,28 +115,29 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
             tableNameFinal.camelCaseToSnakeCase()
     }
 
-    private fun generateColumn(field: FieldElem, sb: StringBuilder) {
+    private fun generateColumn(field: FieldElem, sb: StringBuilder, singlePrimary: Boolean) {
         sb.append(intent)
         // TODO: Validate column name
         sb.append(toColumnName(field.name))
         sb.append(" ")
-        sb.append(getSqlType(field))
+        sb.append(getSqlType(field, singlePrimary))
         // if field is serial, by default it's not null
-        if (field.required == true && !field.isSerialEffective()) {
+        if (field.required == true && !field.isSerialEffective(singlePrimary)) {
             sb.append(" NOT NULL")
         }
-        if (field.primary == true) {
+        if (field.primary == true && singlePrimary) {
+            // for composite primary key, primary key is added at the end of the table
             sb.append(" PRIMARY KEY")
         }
     }
 
-    private fun getSqlType(field: FieldElem): String {
+    private fun getSqlType(field: FieldElem, singlePrimary: Boolean): String {
         return when (field.type) {
             "string" -> getStringBasedType(field)
             "date" -> "DATE"
             "dateTime" -> "TIMESTAMP"
-            "integer" -> if (field.isSerialEffective()) "SERIAL" else "INT"
-            "long" -> if (field.isSerialEffective()) "BIGSERIAL" else "BIGINT"
+            "integer" -> if (field.isSerialEffective(singlePrimary)) "SERIAL" else "INT"
+            "long" -> if (field.isSerialEffective(singlePrimary)) "BIGSERIAL" else "BIGINT"
             "number" -> "FLOAT"
             "boolean" -> "BOOLEAN"
             // TODO: Create new ref column on target table, or new table with ref columns to both tables
@@ -179,6 +194,14 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
             sb.append(System.lineSeparator())
         }
     }
+
+    /**
+     * Returns true if field is eventually serial
+     *
+     * If serial not defined and only single field is primary, then it's serial
+     */
+    @JsonIgnore
+    fun FieldElem.isSerialEffective(singlePrimary: Boolean) = this.serial ?: (singlePrimary && (this.primary ?: false))
 
     private companion object {
         const val DEFAULT_VARCHAR_LENGTH = 255

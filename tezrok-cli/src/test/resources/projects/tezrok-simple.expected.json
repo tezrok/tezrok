@@ -97,6 +97,7 @@
           {
             "name": "OrderItemOtherItems",
             "description": "Synthetic entity of many-to-many relation for field \"Order.otherItems\"",
+            "syntheticTo": "Order.otherItems",
             "fields": [
               {
                 "name": "orderId",

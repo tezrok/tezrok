@@ -6,10 +6,12 @@ import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.BooleanLiteralExpr
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
+import io.tezrok.api.input.EntityElem
 import io.tezrok.api.java.JavaClassNode
 import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.getRootClass
+import org.apache.commons.lang3.tuple.Pair
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import kotlin.io.path.exists
@@ -29,7 +31,7 @@ open class ServiceFeature : TezrokFeature {
             val schema = context.getProject().modules.find { it.name == module.getName() }?.schema
 
             schema?.entities?.forEach { entity ->
-                addServiceClass(entity.name, serviceDir, projectElem.packagePath, context)
+                addServiceClass(entity, serviceDir, projectElem.packagePath, context)
             }
         } else {
             log.warn("Application package root is not set")
@@ -38,14 +40,21 @@ open class ServiceFeature : TezrokFeature {
         return true
     }
 
-    private fun addServiceClass(name: String, serviceDir: JavaDirectoryNode, packagePath: String, context: GeneratorContext) {
+    private fun addServiceClass(entity: EntityElem, serviceDir: JavaDirectoryNode, packagePath: String, context: GeneratorContext) {
+        if (entity.syntheticTo?.isNotBlank() == true) {
+            // skip synthetic entities
+            return
+        }
+
+        val name = entity.name
         val fileName = "${name}Service.java"
         if (!serviceDir.hasFile(fileName)) {
             val serviceFile = serviceDir.addJavaFile(fileName)
             val values = mapOf("package" to packagePath, "name" to name, "lname" to name.replaceFirstChar { it.lowercase() })
             context.writeTemplate(serviceFile, "/templates/spring/EntityService.java.vm", values)
             val serviceClass = serviceFile.getRootClass()
-            addRepositoryMethods(serviceDir, name, serviceClass)
+            val singlePrimary = entity.fields.count { it.primary == true } == 1
+            addRepositoryMethods(serviceDir, name, serviceClass, singlePrimary)
             addCustomMethods(serviceDir, name, serviceClass)
         } else {
             log.warn("File already exists: {}", fileName)
@@ -53,23 +62,36 @@ open class ServiceFeature : TezrokFeature {
     }
 
     /**
-     * Adds service public methods from repository class.
+     * Adds service public methods from repository classes.
      */
-    private fun addRepositoryMethods(serviceDir: JavaDirectoryNode, name: String, serviceClass: JavaClassNode) {
-        val repoName = "${name}Repository"
-        val repoBaseName = "JooqRepository" // TODO: get from config
-        val fieldName = repoName.replaceFirstChar { it.lowercase() }
+    private fun addRepositoryMethods(
+        serviceDir: JavaDirectoryNode,
+        name: String,
+        serviceClass: JavaClassNode,
+        singlePrimary: Boolean
+    ) {
+        val itemRepoName = "${name}Repository"
+        val repoBaseName = "JooqBaseRepository" // TODO: get from config
+        val repoExtName = if (singlePrimary) "JooqRepository" else "JooqRepository2"
+        val fieldName = itemRepoName.replaceFirstChar { it.lowercase() }
         val repoDir = serviceDir.getParentDirectory()?.getJavaDirectory("repository")
         repoDir?.getJavaFile(repoBaseName)?.getRootClass()?.let { repoBaseClass ->
             addMethodsFromRepoClass(serviceClass, repoBaseClass, fieldName, name)
         }
-        repoDir?.getJavaFile(repoName)?.getRootClass()?.let { repoClass ->
+        repoDir?.getJavaFile(repoExtName)?.getRootClass()?.let { repoBaseClass ->
+            addMethodsFromRepoClass(serviceClass, repoBaseClass, fieldName, name)
+        }
+        repoDir?.getJavaFile(itemRepoName)?.getRootClass()?.let { repoClass ->
             addMethodsFromRepoClass(serviceClass, repoClass, fieldName)
+        }
+
+        if (!singlePrimary) {
+            serviceClass.addImport(Pair::class.java)
         }
     }
 
     private fun addMethodsFromRepoClass(serviceClass: JavaClassNode, repoClass: JavaClassNode, fieldName: String, name: String = "") {
-        repoClass.getMethods().filter { method -> method.isPublic() }.forEach { method ->
+        repoClass.getMethods().filter { method -> method.isPublic() && !method.isAbstract() }.forEach { method ->
             val newMethod = serviceClass.addMethod(method.getName())
                     .withModifiers(Modifier.Keyword.PUBLIC)
                     .setReturnType(replaceType(method.getTypeAsString(), name))
@@ -163,6 +185,6 @@ open class ServiceFeature : TezrokFeature {
         val log = LoggerFactory.getLogger(ServiceFeature::class.java)!!
         val pojoParamPattern = Regex("\\bP\\b")
         val recordParamPattern = Regex("\\bR\\b")
-        val idParamPattern = Regex("\\bID\\b")
+        val idParamPattern = Regex("\\bID\\d*\\b")
     }
 }

@@ -2,52 +2,29 @@ package ${package}.repository;
 
 import ${package}.dto.WithId;
 import org.jetbrains.annotations.NotNull;
-import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
-import org.jooq.SortField;
 import org.jooq.Table;
-import org.jooq.TableField;
 import org.jooq.UpdatableRecord;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
-import static org.jooq.impl.DSL.falseCondition;
 
 /**
- * Base class for all Jooq repositories.
+ * Base class for all Jooq repositories with single primary key.
  *
  * @param <R>  Jooq record type
  * @param <ID> primary type
  * @param <P>  Pojo type
  */
-abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId<ID>> {
-
-    protected final DSLContext dsl;
-
-    protected final Table<R> table;
+abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId<ID>> extends JooqBaseRepository<R, P> {
 
     protected final Field<ID> idField;
 
-    protected final Class<P> pojoClass;
-
     JooqRepository(DSLContext dsl, Table<R> table, Field<ID> idField, Class<P> pojoClass) {
-        this.dsl = dsl;
-        this.table = table;
+        super(dsl, table, pojoClass);
         this.idField = idField;
-        this.pojoClass = pojoClass;
     }
 
     public Optional<P> getById(ID id) {
@@ -55,20 +32,12 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
     }
 
     @NotNull
-    public List<P> findAll() {
-        return dsl.selectFrom(table).fetchInto(pojoClass);
-    }
-
-    @NotNull
     public List<P> findAllById(Collection<ID> ids) {
         return dsl.selectFrom(table).where(idField.in(ids)).fetchInto(pojoClass);
     }
 
-    public long count() {
-        return dsl.fetchCount(table);
-    }
-
     @NotNull
+    @Override
     public P update(@NotNull P pojo) {
         R rec = getRecordById(pojo.getId()).orElseThrow(() -> new IllegalArgumentException("Record not found by id: " + pojo.getId()));
         rec.from(pojo);
@@ -77,20 +46,9 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
     }
 
     @NotNull
-    public P create(P pojo) {
-        final R rec = newRecord(pojo);
-        rec.store();
-        return rec.into(pojoClass);
-    }
-
-    @NotNull
+    @Override
     public P save(@NotNull P pojo) {
         return pojo.getId() == null ? create(pojo) : update(pojo);
-    }
-
-    @NotNull
-    public List<P> saveAll(Iterable<P> entities) {
-        return StreamSupport.stream(entities.spliterator(), false).map(this::save).toList();
     }
 
     public int deleteById(ID id) {
@@ -101,92 +59,11 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
         return dsl.delete(table).where(idField.in(ids)).execute();
     }
 
-    public int deleteAll() {
-        return dsl.truncate(table).cascade().execute();
-    }
-
     public boolean existsById(ID id) {
         return dsl.fetchExists(table, idField.eq(id));
     }
 
     public Optional<R> getRecordById(ID id) {
         return Optional.ofNullable(dsl.selectFrom(table).where(idField.eq(id)).fetchOne());
-    }
-
-    @NotNull
-    protected R newRecord(Object obj) {
-        return dsl.newRecord(table, obj);
-    }
-
-    /**
-     * Search by all string fields, if any.
-     *
-     * @param term     search term
-     * @param pageable page request
-     * @return page of results
-     */
-    @NotNull
-    public Page<P> searchByTerm(final String term, final Pageable pageable) {
-        final String likeExpression = buildLikeExpression(term);
-
-        final List<P> result = dsl.selectFrom(table)
-                .where(whereClause(likeExpression))
-                .orderBy(getSortFields(pageable.getSort()))
-                .limit(pageable.getPageSize()).offset(pageable.getOffset())
-                .fetchInto(pojoClass);
-        final long totalCount = countByLikeExpression(likeExpression);
-
-        return new PageImpl<>(result, pageable, totalCount);
-    }
-
-    @NotNull
-    protected String buildLikeExpression(String term) {
-        return "%" + term + "%";
-    }
-
-    @NotNull
-    protected Condition whereClause(String likeExpression) {
-        // by default, all string fields are used for search term
-        return Arrays.stream(table.fields())
-                .filter(field -> String.class.equals(field.getType()))
-                .map(f -> f.likeIgnoreCase(likeExpression))
-                .map(Condition.class::cast)
-                .reduce(falseCondition(), Condition::or);
-    }
-
-    protected long countByLikeExpression(String likeExpression) {
-        return dsl.fetchCount(dsl.select()
-                .from(table)
-                .where(whereClause(likeExpression)));
-    }
-
-    @NotNull
-    protected Collection<SortField<?>> getSortFields(Sort sort) {
-        if (sort == null) {
-            return Collections.emptyList();
-        }
-        Collection<SortField<?>> sortFields = new ArrayList<>();
-        final Iterator<Sort.Order> sortOrders = sort.iterator();
-        while (sortOrders.hasNext()) {
-            final Sort.Order sortOrder = sortOrders.next();
-            final String sortFieldName = sortOrder.getProperty();
-            final Sort.Direction sortDirection = sortOrder.getDirection();
-            final TableField tableField = getTableField(sortFieldName);
-            final SortField<?> sortField = sortField(tableField, sortDirection);
-            sortFields.add(sortField);
-        }
-        return sortFields;
-    }
-
-    @NotNull
-    protected TableField<?, ?> getTableField(final String fieldName) {
-        return Arrays.stream(table.fields()).filter(p -> p.getName().equalsIgnoreCase(fieldName))
-                .findFirst().map(TableField.class::cast)
-                .orElseThrow(() -> new IllegalStateException(String.format("Field not found: %s.%s, expected fields: %s", table.getName(), fieldName, Arrays.stream(table.fields()).map(Field::getName).collect(Collectors.joining(", ")))));
-    }
-
-    @NotNull
-    protected SortField<?> sortField(final TableField tableField, final Sort.Direction sortDirection) {
-        return sortDirection == Sort.Direction.ASC ? tableField.asc() : tableField.desc();
     }
 }
