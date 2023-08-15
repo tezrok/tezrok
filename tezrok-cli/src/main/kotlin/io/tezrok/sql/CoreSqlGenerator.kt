@@ -1,6 +1,5 @@
 package io.tezrok.sql
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.input.EntityElem
 import io.tezrok.api.input.FieldElem
@@ -8,6 +7,7 @@ import io.tezrok.api.input.SchemaElem
 import io.tezrok.api.model.SqlScript
 import io.tezrok.api.sql.SqlGenerator
 import io.tezrok.util.camelCaseToSnakeCase
+import io.tezrok.util.isSerialEffective
 import org.apache.commons.lang3.Validate
 import org.slf4j.LoggerFactory
 
@@ -194,14 +194,6 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
             sb.append(System.lineSeparator())
         }
     }
-
-    /**
-     * Returns true if field is eventually serial
-     *
-     * If serial not defined and only single field is primary, then it's serial
-     */
-    @JsonIgnore
-    fun FieldElem.isSerialEffective(singlePrimary: Boolean) = this.serial ?: (singlePrimary && (this.primary ?: false))
 
     private companion object {
         const val DEFAULT_VARCHAR_LENGTH = 255

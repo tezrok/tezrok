@@ -11,6 +11,7 @@ import io.tezrok.api.input.ProjectElem
 import io.tezrok.api.java.JavaClassNode
 import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.maven.ProjectNode
+import io.tezrok.util.asJavaType
 import io.tezrok.util.camelCaseToSnakeCase
 import io.tezrok.util.getRootClass
 import org.slf4j.LoggerFactory
@@ -108,24 +109,27 @@ internal class JooqRepositoryFeature : TezrokFeature {
         if (!dtoDir.hasFile("$className.java")) {
             val dtoClass = dtoDir.addClass(className)
             dtoClass.extendClass("$jooqPackageRoot.tables.pojos.$name")
-            // TODO: use certain type instead of Long
+            val fields = entity.fields.filter { it.primary == true }
+            val type1 = fields[0].asJavaType()
+            val name1 = fields[0].name.capitalize()
             if (singlePrimary) {
-                dtoClass.implementInterface("WithId<Long>")
+                dtoClass.implementInterface("WithId<$type1>")
                 dtoClass.addMethod("getId")
                     .withModifiers(Modifier.Keyword.PUBLIC)
-                    .setReturnType("Long")
-                    .setBody(ReturnStmt("super.getId()"));
+                    .setReturnType(type1)
+                    .setBody(ReturnStmt("super.get$name1()"));
             } else {
-                dtoClass.implementInterface("WithId2<Long, Long>")
-                val fields = entity.fields.filter { it.primary == true }.map { it.name.capitalize() }
+                val type2 = fields[1].asJavaType()
+                val name2 = fields[1].name.capitalize()
+                dtoClass.implementInterface("WithId2<$type1, $type2>")
                 dtoClass.addMethod("getId1")
                     .withModifiers(Modifier.Keyword.PUBLIC)
-                    .setReturnType("Long")
-                    .setBody(ReturnStmt("get${fields[0]}()"))
+                    .setReturnType(type1)
+                    .setBody(ReturnStmt("super.get$name1()"))
                 dtoClass.addMethod("getId2")
                     .withModifiers(Modifier.Keyword.PUBLIC)
-                    .setReturnType("Long")
-                    .setBody(ReturnStmt("get${fields[1]}()"))
+                    .setReturnType(type2)
+                    .setBody(ReturnStmt("super.get$name2()"))
             }
         } else {
             log.warn(FILE_ALREADY_EXISTS, "$className.java")

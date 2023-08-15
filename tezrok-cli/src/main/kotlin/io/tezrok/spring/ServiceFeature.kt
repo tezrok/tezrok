@@ -10,6 +10,7 @@ import io.tezrok.api.input.EntityElem
 import io.tezrok.api.java.JavaClassNode
 import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.maven.ProjectNode
+import io.tezrok.util.asJavaType
 import io.tezrok.util.getRootClass
 import org.apache.commons.lang3.tuple.Pair
 import org.slf4j.LoggerFactory
@@ -53,8 +54,8 @@ open class ServiceFeature : TezrokFeature {
             val values = mapOf("package" to packagePath, "name" to name, "lname" to name.replaceFirstChar { it.lowercase() })
             context.writeTemplate(serviceFile, "/templates/spring/EntityService.java.vm", values)
             val serviceClass = serviceFile.getRootClass()
-            val singlePrimary = entity.fields.count { it.primary == true } == 1
-            addRepositoryMethods(serviceDir, name, serviceClass, singlePrimary)
+            val primaryFields = entity.fields.filter { it.primary == true }.map { it.asJavaType() }
+            addRepositoryMethods(serviceDir, name, serviceClass, primaryFields)
             addCustomMethods(serviceDir, name, serviceClass)
         } else {
             log.warn("File already exists: {}", fileName)
@@ -68,21 +69,22 @@ open class ServiceFeature : TezrokFeature {
         serviceDir: JavaDirectoryNode,
         name: String,
         serviceClass: JavaClassNode,
-        singlePrimary: Boolean
+        primaryFields: List<String>
     ) {
         val itemRepoName = "${name}Repository"
         val repoBaseName = "JooqBaseRepository" // TODO: get from config
+        val singlePrimary = primaryFields.size == 1
         val repoExtName = if (singlePrimary) "JooqRepository" else "JooqRepository2"
         val fieldName = itemRepoName.replaceFirstChar { it.lowercase() }
         val repoDir = serviceDir.getParentDirectory()?.getJavaDirectory("repository")
         repoDir?.getJavaFile(repoBaseName)?.getRootClass()?.let { repoBaseClass ->
-            addMethodsFromRepoClass(serviceClass, repoBaseClass, fieldName, name)
+            addMethodsFromRepoClass(serviceClass, repoBaseClass, fieldName, primaryFields, name)
         }
         repoDir?.getJavaFile(repoExtName)?.getRootClass()?.let { repoBaseClass ->
-            addMethodsFromRepoClass(serviceClass, repoBaseClass, fieldName, name)
+            addMethodsFromRepoClass(serviceClass, repoBaseClass, fieldName, primaryFields, name)
         }
         repoDir?.getJavaFile(itemRepoName)?.getRootClass()?.let { repoClass ->
-            addMethodsFromRepoClass(serviceClass, repoClass, fieldName)
+            addMethodsFromRepoClass(serviceClass, repoClass, fieldName, primaryFields)
         }
 
         if (!singlePrimary) {
@@ -90,15 +92,21 @@ open class ServiceFeature : TezrokFeature {
         }
     }
 
-    private fun addMethodsFromRepoClass(serviceClass: JavaClassNode, repoClass: JavaClassNode, fieldName: String, name: String = "") {
+    private fun addMethodsFromRepoClass(
+        serviceClass: JavaClassNode,
+        repoClass: JavaClassNode,
+        fieldName: String,
+        primaryFields: List<String>,
+        entityName: String = "",
+    ) {
         repoClass.getMethods().filter { method -> method.isPublic() && !method.isAbstract() }.forEach { method ->
             val newMethod = serviceClass.addMethod(method.getName())
-                    .withModifiers(Modifier.Keyword.PUBLIC)
-                    .setReturnType(replaceType(method.getTypeAsString(), name))
+                .withModifiers(Modifier.Keyword.PUBLIC)
+                .setReturnType(replaceType(method.getTypeAsString(), entityName, primaryFields))
             val callExpr = newMethod.addCallExpression(fieldName + "." + method.getName())
 
             method.getParameters().forEach { param ->
-                newMethod.addParameter(replaceType(param.getTypeAsString(), name), param.getName())
+                newMethod.addParameter(replaceType(param.getTypeAsString(), entityName, primaryFields), param.getName())
                 callExpr.addNameArgument(param.getName())
             }
             newMethod.addReturnToLastExpression()
@@ -113,14 +121,18 @@ open class ServiceFeature : TezrokFeature {
                 || it.startsWith("exists") || it.startsWith("search") || it.startsWith("list")
     }
 
-    private fun replaceType(typeName: String, name: String): String {
-        val newType = if (name.isEmpty()) {
+    private fun replaceType(typeName: String, entityName: String, primaryFields: List<String>): String {
+        val newType = if (entityName.isEmpty()) {
             typeName
         } else {
-            typeName.replace(pojoParamPattern, "${name}Dto").replace(recordParamPattern, "${name}Record")
+            typeName.replace(pojoParamPattern, "${entityName}Dto").replace(recordParamPattern, "${entityName}Record")
         }
 
-        return newType.replace(idParamPattern, "Long")
+        return if (primaryFields.size == 1) {
+            newType.replace(idParamPattern, primaryFields[0])
+        } else {
+            newType.replace(id1ParamPattern, primaryFields[0]).replace(id2ParamPattern, primaryFields[1])
+        }
     }
 
     /**
@@ -185,6 +197,8 @@ open class ServiceFeature : TezrokFeature {
         val log = LoggerFactory.getLogger(ServiceFeature::class.java)!!
         val pojoParamPattern = Regex("\\bP\\b")
         val recordParamPattern = Regex("\\bR\\b")
-        val idParamPattern = Regex("\\bID\\d*\\b")
+        val idParamPattern = Regex("\\bID\\b")
+        val id1ParamPattern = Regex("\\bID1\\b")
+        val id2ParamPattern = Regex("\\bID2\\b")
     }
 }
