@@ -27,7 +27,7 @@ internal class SpringFeature : TezrokFeature {
         val mainClass = module.source.main.java.applicationClass
         if (mainClass != null) {
             handleMainMethod(mainClass)
-            updateApplicationProperties(module)
+            updateApplicationProperties(module, context)
         } else {
             log.warn("Main application class not found")
         }
@@ -35,15 +35,16 @@ internal class SpringFeature : TezrokFeature {
         return true
     }
 
-    private fun updateApplicationProperties(module: ModuleNode) {
+    private fun updateApplicationProperties(module: ModuleNode, context: GeneratorContext) {
         val appProps = module.source.main.resources.getOrAddFile("application.properties")
         val text = appProps.asString()
         if (!text.contains("spring.datasource")) {
             // TODO: update only specified properties
+            val moduleName = module.getName()
             val newLines = """
-                spring.datasource.url=jdbc:postgresql://localhost:5432/tezrokdb
-                spring.datasource.username=tezrokAdmin
-                spring.datasource.password=tezrokPwd
+                spring.datasource.url=jdbc:postgresql://localhost:5432/${moduleName}db
+                spring.datasource.username=${context.getAuthor()}
+                spring.datasource.password=${moduleName}Pwd
                 spring.datasource.driver-class-name=org.postgresql.Driver
                 spring.data.web.pageable.default-page-size=10
                 spring.data.web.pageable.max-page-size=20${NEW_LINE}

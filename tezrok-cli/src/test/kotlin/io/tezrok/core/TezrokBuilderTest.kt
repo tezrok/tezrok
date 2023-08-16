@@ -34,8 +34,10 @@ internal class TezrokBuilderTest : BaseTest() {
         TezrokBuilder.from(projectPath)
             .setOutput(projectOutput)
             .setOutputFinalProject(true)
+            .setGenerateTime(false)
+            .setAuthor("timelineAdmin")
             .setFinalProjectPath(projectPath.parent)
-            .setClock(fixedClock)
+            .setClock(getFixedClock("2023-08-17T20:57:04.00Z"))
             .generate()
     }
 }

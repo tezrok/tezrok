@@ -15,13 +15,17 @@ import java.util.function.Consumer
 internal class CoreGeneratorContext(
         private val project: ProjectElem,
         private val generatorProvider: GeneratorProvider = NullGeneratorProvider,
-        private val clock: Clock = Clock.systemDefaultZone()
+        private val clock: Clock = Clock.systemDefaultZone(),
+        private val generateTime: Boolean = true,
+        private val author: String = "TezrokUser"
 ) : GeneratorContext {
-    override fun getAuthor(): String = "TezrokUser"
+    override fun getAuthor(): String = author
 
     override fun getClock(): Clock = clock
 
     override fun getProject(): ProjectElem = project
+
+    override fun isGenerateTime(): Boolean = generateTime
 
     override fun writeTemplate(writer: Writer, templatePath: String, contextInitializer: Consumer<VelocityContext>) {
         val masterTemplate = VelocityUtil.getTemplate(templatePath)

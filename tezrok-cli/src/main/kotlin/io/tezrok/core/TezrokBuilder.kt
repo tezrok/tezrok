@@ -26,7 +26,8 @@ class TezrokBuilder private constructor() {
     private val generator = ProjectOutputGenerator()
     private var outputFinalProject: Boolean = false
     private var finalProjectPath: Path? = null
-
+    private var generateTime: Boolean = true
+    private var author: String = "tezrokUser"
 
     fun generate() {
         val inputPath = path ?: throw IllegalStateException("Path not set")
@@ -38,7 +39,13 @@ class TezrokBuilder private constructor() {
 
         val projectElem = projectElemRepo.load(inputPath)
         val project = projectNodeFactory.fromProject(projectElem, projectOutput)
-        val context = CoreGeneratorContext(projectElem, generatorProvider, clock)
+        val context = CoreGeneratorContext(
+            projectElem,
+            generatorProvider,
+            clock,
+            generateTime = generateTime,
+            author = author
+        )
 
         if (outputFinalProject) {
             val outputFinalProjectPath = finalProjectPath?.also { it.mkdirs() } ?: projectOutput
@@ -89,6 +96,16 @@ class TezrokBuilder private constructor() {
      */
     fun setFinalProjectPath(path: Path): TezrokBuilder {
         this.finalProjectPath = path
+        return this
+    }
+
+    fun setGenerateTime(generateTime: Boolean): TezrokBuilder {
+        this.generateTime = generateTime
+        return this
+    }
+
+    fun setAuthor(author: String): TezrokBuilder {
+        this.author = author
         return this
     }
 

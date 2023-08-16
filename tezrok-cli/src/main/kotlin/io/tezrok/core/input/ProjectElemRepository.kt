@@ -122,7 +122,8 @@ internal class ProjectElemRepository {
             val sourcePrimaryField = sourceEntity.fields.first { it.primary == true }
 
             when(val relation = sourceField.relation ?: error("Relation is not defined for field \"$fullFieldName\"")) {
-                EntityRelation.OneToOne -> {
+                EntityRelation.OneToOne,
+                EntityRelation.ManyToOne -> {
                     val syntheticName = "${sourceField.name}Id"
 
                     // TODO: optimize
@@ -130,11 +131,11 @@ internal class ProjectElemRepository {
                         throw IllegalArgumentException("Field with name \"$syntheticName\" already exists in entity \"${sourceEntity.name}\"")
                     }
 
-                    // TODO: add unique constraint
                     val syntheticField = sourceField.copy(
                         name = syntheticName,
                         type = targetPrimaryField.type,
                         syntheticTo = fullFieldName,
+                        unique = if (relation == EntityRelation.OneToOne) true else sourceField.unique,
                         foreignField = "${targetEntity.name}.${targetPrimaryField.name}",
                         description = "Synthetic field for \"${fullFieldName}\"",
                         relation = null

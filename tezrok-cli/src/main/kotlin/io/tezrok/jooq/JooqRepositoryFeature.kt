@@ -164,19 +164,10 @@ internal class JooqRepositoryFeature : TezrokFeature {
         if (!repositoryDir.hasFile(repoClassFileName)) {
             val repoClassFile = repositoryDir.addJavaFile(repoClassFileName)
             val values = mapOf("package" to rootPackage, "name" to name, "uname" to name.camelCaseToSnakeCase().uppercase())
+            val fields = generateFields(entity)
+            val templateName = if (singlePrimary) "JooqTargetRepository" else "JooqTargetRepository2"
 
-            if (singlePrimary) {
-                context.writeTemplate(repoClassFile, "/templates/jooq/JooqTargetRepository.java.vm", values)
-            } else {
-                var counter = 1
-                val fields = entity.fields.filter { it.primary == true }
-                    .map { it.name }
-                    .map { it.camelCaseToSnakeCase() }
-                    .map {  "field${counter++}" to  it.uppercase() }
-                    .toMap()
-                context.writeTemplate(repoClassFile, "/templates/jooq/JooqTargetRepository2.java.vm",
-                    values + fields)
-            }
+            context.writeTemplate(repoClassFile, "/templates/jooq/${templateName}.java.vm", values + fields)
             val repoClass = repoClassFile.getRootClass()
             val constructor = repoClass.getConstructors()
                     .findFirst()
@@ -255,6 +246,15 @@ internal class JooqRepositoryFeature : TezrokFeature {
                         mapOf("package" to context.getProject().packagePath, "name" to name))
             }
         }
+    }
+
+    private fun generateFields(entity: EntityElem): Map<String, String> {
+        var counter = 1
+        return entity.fields.filter { it.primary == true }
+            .map { it.name }
+            .map { it.camelCaseToSnakeCase() }
+            .map { "field${counter++}" to it.uppercase() }
+            .toMap()
     }
 
     private companion object {
