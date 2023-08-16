@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+bash stop-db.sh
+
+bash start-db.sh

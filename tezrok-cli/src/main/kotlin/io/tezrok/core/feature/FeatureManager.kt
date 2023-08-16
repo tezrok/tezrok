@@ -4,6 +4,7 @@ import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.api.maven.UseMavenDependency
+import io.tezrok.docker.DockerFeature
 import io.tezrok.java.GitIgnoreFeature
 import io.tezrok.java.HelloWorldFeature
 import io.tezrok.jooq.JooqFeature
@@ -33,6 +34,7 @@ internal class FeatureManager {
         features.add(JooqRepositoryFeature())
         features.add(ServiceFeature())
         features.add(ControllerFeature())
+        features.add(DockerFeature())
     }
 
     fun applyAll(project: ProjectNode, context: GeneratorContext) {
