@@ -35,6 +35,7 @@ open class ProjectNode(name: String) : DirectoryNode(name, null) {
      * TODO: remove this temporal method when multiple modules are supported
      */
     fun getSingleModule(): ModuleNode {
+        check(modules.isNotEmpty()) { "No modules found" }
         check(modules.size == 1) { "TODO: Support multiple modules" }
         return modules.first()
     }

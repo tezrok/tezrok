@@ -6,6 +6,8 @@ import java.nio.file.Paths
 
 fun Path.toURL(): URL = toUri().toURL()
 
+fun Path.mkdirs(): Boolean = toFile().mkdirs()
+
 object PathUtil {
     /**
      * Returns the current directory

@@ -4,10 +4,12 @@ import io.tezrok.core.feature.FeatureManager
 import io.tezrok.core.input.ProjectElemRepository
 import io.tezrok.core.output.ProjectNodeFactory
 import io.tezrok.core.output.ProjectOutputGenerator
+import io.tezrok.util.mkdirs
 import io.tezrok.util.toPrettyJson
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Clock
+import kotlin.io.path.exists
 import kotlin.io.path.writeText
 
 /**
@@ -22,19 +24,28 @@ class TezrokBuilder private constructor() {
     private val featureManager = FeatureManager()
     private val generatorProvider = CoreGeneratorProvider()
     private val generator = ProjectOutputGenerator()
-    private var outputProject: Boolean = false
+    private var outputFinalProject: Boolean = false
+    private var finalProjectPath: Path? = null
+
 
     fun generate() {
         val inputPath = path ?: throw IllegalStateException("Path not set")
         val projectOutput = output ?: throw IllegalStateException("Output not set")
 
+        if (!projectOutput.exists()) {
+            projectOutput.mkdirs()
+        }
+
         val projectElem = projectElemRepo.load(inputPath)
         val project = projectNodeFactory.fromProject(projectElem, projectOutput)
         val context = CoreGeneratorContext(projectElem, generatorProvider, clock)
 
-        if (outputProject) {
-            projectOutput.resolve(".tezrok.json").writeText(projectElem.toPrettyJson())
+        if (outputFinalProject) {
+            val outputFinalProjectPath = finalProjectPath?.also { it.mkdirs() } ?: projectOutput
+            outputFinalProjectPath.resolve("tezrok-final.json").writeText(projectElem.toPrettyJson())
         }
+
+        check(project.getModules().isNotEmpty()) { "No modules found" }
 
         featureManager.applyAll(project, context)
         generator.generate(project, projectOutput)
@@ -68,8 +79,16 @@ class TezrokBuilder private constructor() {
     /**
      * Set to true to output effective project file as json-file
      */
-    fun setOutputProject(outputProject: Boolean): TezrokBuilder {
-        this.outputProject = outputProject
+    fun setOutputFinalProject(outputProject: Boolean): TezrokBuilder {
+        this.outputFinalProject = outputProject
+        return this
+    }
+
+    /**
+     * Set path to output effective project file
+     */
+    fun setFinalProjectPath(path: Path): TezrokBuilder {
+        this.finalProjectPath = path
         return this
     }
 

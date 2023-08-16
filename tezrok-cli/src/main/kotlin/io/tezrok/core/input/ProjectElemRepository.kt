@@ -10,10 +10,18 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.util.*
+import kotlin.io.path.exists
+import kotlin.io.path.fileSize
+import kotlin.io.path.isRegularFile
 
 internal class ProjectElemRepository {
     fun load(projectPath: Path): ProjectElem {
-        log.debug("Loading project from {}", projectPath)
+        log.info("Loading project from {}", projectPath)
+
+        check(projectPath.exists()) { "Project file not found: $projectPath" }
+        check(projectPath.isRegularFile()) { "Project file is not a regular file: $projectPath" }
+        check(projectPath.fileSize() > 0) { "Project file is empty: $projectPath" }
+
         val project = JsonUtil.mapper.readValue(projectPath.toURL(), ProjectElem::class.java)
 
         for (module in project.modules) {
