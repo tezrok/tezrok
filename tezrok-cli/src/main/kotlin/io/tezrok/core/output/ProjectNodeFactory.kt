@@ -24,7 +24,7 @@ internal class ProjectNodeFactory(private val projectElemRepository: ProjectElem
     }
 
     private fun mapModule(moduleElem: ModuleElem, project: ProjectNode, physicalPath: Path? = null): ModuleNode {
-        val module = project.addModule(moduleElem.name)
+        val module = project.addModule(moduleElem)
         module.setPhysicalPath(physicalPath?.normalize())
         return module
     }

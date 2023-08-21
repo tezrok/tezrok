@@ -1,5 +1,6 @@
 package io.tezrok.api.maven
 
+import io.tezrok.api.input.ModuleElem
 import io.tezrok.api.node.BaseFileNode
 import io.tezrok.api.node.DirectoryNode
 import java.util.Collections
@@ -14,10 +15,10 @@ open class ProjectNode(name: String) : DirectoryNode(name, null) {
 
     override fun getFiles(): List<BaseFileNode> = Collections.unmodifiableList(modules + super.getFiles())
 
-    fun addModule(name: String): ModuleNode {
+    fun addModule(moduleElem: ModuleElem): ModuleNode {
         // TODO: check if module already exists
         // TODO: validate module name
-        val module = ModuleNode(name, this)
+        val module = ModuleNode(moduleElem.name, this, moduleElem)
         modules.add(module)
         return module
     }

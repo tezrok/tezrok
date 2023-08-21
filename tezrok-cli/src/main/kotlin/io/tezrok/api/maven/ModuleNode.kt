@@ -1,5 +1,7 @@
 package io.tezrok.api.maven
 
+import io.tezrok.api.TezrokProperties
+import io.tezrok.api.input.ModuleElem
 import io.tezrok.api.node.BaseFileNode
 import io.tezrok.api.node.BaseNode
 import io.tezrok.api.node.DirectoryNode
@@ -9,10 +11,12 @@ import java.nio.file.Path
  * Represents a module. Which represents a separate maven module
  * which can be a library or a web application
  */
-open class ModuleNode(name: String, parent: BaseNode?, private var physicalPath: Path? = null) : DirectoryNode(name, parent) {
+open class ModuleNode(name: String, parent: BaseNode?, moduleElem: ModuleElem, private var physicalPath: Path? = null) : DirectoryNode(name, parent) {
     val source: SourceNode = SourceNode(this)
 
     val pom: PomNode = PomNode(artifactId = name, parent = this)
+
+    val properties: TezrokProperties = PropertiesNode(moduleElem)
 
     override fun getPhysicalPath(): Path? = physicalPath
 
