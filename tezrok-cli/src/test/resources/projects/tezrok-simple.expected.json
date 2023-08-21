@@ -46,6 +46,7 @@
                 "foreignField": "Item.id",
                 "description": "Synthetic field for \"Order.selectedItem\"",
                 "required": false,
+                "unique": true,
                 "syntheticTo": "Order.selectedItem"
               },
               {

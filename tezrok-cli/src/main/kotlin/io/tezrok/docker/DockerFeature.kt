@@ -13,8 +13,7 @@ internal class DockerFeature : TezrokFeature {
         val moduleName = module.getName()
         val values = mapOf(
             "name" to moduleName,
-            "userName" to context.getAuthor(),
-            "userPassword" to "${moduleName}Pwd"
+            "userName" to context.getAuthor()
         )
 
         val dockerDir = project.getOrAddDirectory("docker")

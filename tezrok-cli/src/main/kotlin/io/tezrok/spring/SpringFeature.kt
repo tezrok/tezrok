@@ -42,9 +42,9 @@ internal class SpringFeature : TezrokFeature {
             // TODO: update only specified properties
             val moduleName = module.getName()
             val newLines = """
-                spring.datasource.url=jdbc:postgresql://localhost:5432/${moduleName}db
+                spring.datasource.url=jdbc:postgresql://localhost:5432/${moduleName}Db
                 spring.datasource.username=${context.getAuthor()}
-                spring.datasource.password=${moduleName}Pwd
+                spring.datasource.password=${context.getAuthor()}Pwd
                 spring.datasource.driver-class-name=org.postgresql.Driver
                 spring.data.web.pageable.default-page-size=10
                 spring.data.web.pageable.max-page-size=20${NEW_LINE}

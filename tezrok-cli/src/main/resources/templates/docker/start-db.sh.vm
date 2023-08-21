@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-docker run --name ${name}test --rm -p 5432:5432 -e POSTGRES_DB=${name}db -e POSTGRES_USER=${userName} -e POSTGRES_PASSWORD=${userPassword} -d postgres:15.2
+docker run --name ${name}Test --rm -p 5432:5432 -e POSTGRES_DB=${name}Db -e POSTGRES_USER=${userName} -e POSTGRES_PASSWORD=${userName}Pwd -d postgres:15.2
