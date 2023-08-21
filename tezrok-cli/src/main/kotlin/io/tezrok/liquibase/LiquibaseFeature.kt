@@ -28,12 +28,13 @@ internal class LiquibaseFeature : TezrokFeature {
         val pomFile = module.pom
         pomFile.addProperty("liquibase.version", "4.22.0")
         // create changelog files
+        val properties = module.properties
         val resource = module.source.main.resources
         val dbDir = resource.getOrAddDirectory("db")
         val updatesDir = dbDir.getOrAddDirectory("updates")
         val changelogFile = updatesDir.getOrAddFile(datePrefix(context) + "-Initial.sql")
         context.writeTemplate(changelogFile, "/templates/liquibase/changelog.sql.vm") { velContext ->
-            velContext.put("author", context.getAuthor())
+            velContext.put("author", properties.getProperty("datasource.username"))
             velContext.put("name", FilenameUtils.getBaseName(changelogFile.getName()))
             velContext.put("comment", "Initial script for creating the structure")
             velContext.put("sql_statement", sqlGenerator.generate(schema, context).content)

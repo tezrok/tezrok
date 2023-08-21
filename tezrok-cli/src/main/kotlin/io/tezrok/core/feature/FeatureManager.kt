@@ -4,6 +4,7 @@ import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.api.maven.UseMavenDependency
+import io.tezrok.db.DataSourceFeature
 import io.tezrok.docker.DockerFeature
 import io.tezrok.java.GitIgnoreFeature
 import io.tezrok.java.HelloWorldFeature
@@ -25,6 +26,7 @@ internal class FeatureManager {
 
     init {
         // TODO: load features from configuration
+        features.add(DataSourceFeature())
         features.add(MavenCoreFeature())
         features.add(GitIgnoreFeature())
         features.add(HelloWorldFeature())

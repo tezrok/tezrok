@@ -28,6 +28,7 @@ internal class LiquibaseFeatureTest : BaseTest() {
         val generatorContext = CoreGeneratorContext(projectInput, generatorProvider, fixedClock)
         val project = ProjectNode("TestProject")
         val module = project.addModule(projectInput.modules[0])
+        module.properties.setProperty("datasource.username", "TestTezrokUser")
         liquibaseFeature.apply(project, generatorContext)
         val files = module.source.main.resources.getFiles()
         assertEquals(2, files.size) { "Expected 1 file, but was: $files" }

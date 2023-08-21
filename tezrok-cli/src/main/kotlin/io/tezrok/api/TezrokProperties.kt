@@ -13,4 +13,16 @@ interface TezrokProperties {
     fun removeProperty(key: String): String?
 
     fun getPropertyNames(): Set<String>
+
+    fun hasProperty(key: String): Boolean
+
+    fun setPropertyIfAbsent(key: String, value: String?) {
+        if (!hasProperty(key))
+            setProperty(key, value)
+    }
+
+    fun setPropertyIfPresent(key: String, value: String?) {
+        if (hasProperty(key))
+            setProperty(key, value)
+    }
 }

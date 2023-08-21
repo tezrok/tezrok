@@ -9,11 +9,17 @@ import io.tezrok.api.maven.ProjectNode
  */
 internal class DockerFeature : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
+        // TODO: support sqlite database
         val module = project.getSingleModule()
+        val properties = module.properties
         val moduleName = module.getName()
+        val dockerName = "${moduleName}Test"
         val values = mapOf(
             "name" to moduleName,
-            "userName" to context.getAuthor()
+            "userName" to properties.getProperty("datasource.username"),
+            "userPassword" to properties.getProperty("datasource.password"),
+            "dbName" to properties.getProperty("datasource.db-name"),
+            "dockerName" to dockerName,
         )
 
         val dockerDir = project.getOrAddDirectory("docker")
@@ -29,6 +35,8 @@ internal class DockerFeature : TezrokFeature {
         if (stopDbFile.isEmpty()) {
             context.writeTemplate(stopDbFile, "/templates/docker/stop-db.sh.vm", values)
         }
+
+        properties.setPropertyIfAbsent("test.docker.name", dockerName)
 
         return true
     }
