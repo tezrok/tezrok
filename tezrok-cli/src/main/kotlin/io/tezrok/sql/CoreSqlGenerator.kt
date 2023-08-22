@@ -96,6 +96,22 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
             sb.append(")")
         }
 
+        fields.filter { it.uniqueGroup != null }
+            .groupBy { it.uniqueGroup }
+            .forEach { (_, fields) ->
+                sb.append(",")
+                addNewline(sb)
+                sb.append(intent)
+                sb.append("UNIQUE (")
+                fields.forEachIndexed { index, field ->
+                    if (index > 0) {
+                        sb.append(", ")
+                    }
+                    sb.append(toColumnName(field.name))
+                }
+                sb.append(")")
+            }
+
         addNewline(sb)
         sb.append(");")
         addNewline(sb)
@@ -128,6 +144,8 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         if (field.primary == true && singlePrimary) {
             // for composite primary key, primary key is added at the end of the table
             sb.append(" PRIMARY KEY")
+        } else if (field.unique == true) {
+            sb.append(" UNIQUE")
         }
     }
 

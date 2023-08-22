@@ -19,6 +19,10 @@
                 "primary": true
               },
               {
+                "name": "name",
+                "unique": true
+              },
+              {
                 "name": "otherItems",
                 "relation": "ManyToMany"
               }

@@ -66,6 +66,7 @@ data class FieldElem(
     val minLength: Int? = null,
     val maxLength: Int? = null,
     val unique: Boolean? = null,
+    val uniqueGroup: String? = null,
     val defValue: String? = null,
     // if true then field is not stored in database, mostly used for object fields
     val logicField: Boolean? = null,

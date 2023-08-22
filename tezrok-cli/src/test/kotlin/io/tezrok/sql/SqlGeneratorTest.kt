@@ -1,11 +1,15 @@
 package io.tezrok.sql
 
 import io.tezrok.BaseTest
+import io.tezrok.api.input.EntityElem
+import io.tezrok.api.input.FieldElem
 import io.tezrok.api.input.ProjectElem
+import io.tezrok.api.input.SchemaElem
 import io.tezrok.core.CoreGeneratorContext
 import io.tezrok.core.input.ProjectElemRepository
 import io.tezrok.json.schema.SchemaLoader
 import io.tezrok.util.resourceAsPath
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 
@@ -18,7 +22,23 @@ internal class SqlGeneratorTest : BaseTest() {
     @Test
     fun testGenerateAsString() {
         val jsonSchema = schemaLoader.load("/schemas/Address.json".resourceAsPath())
-        val schema = projectElemRepository.schemaFromJson(jsonSchema)
+        val inheritSchema = SchemaElem(
+            entities = listOf(
+                EntityElem(
+                    name = "Address",
+                    fields = listOf(
+                        FieldElem(name = "stateId", unique = true),
+                        FieldElem(name = "city", uniqueGroup = "CITY_GRP"),
+                        FieldElem(name = "zip", uniqueGroup = "CITY_GRP"),
+                        FieldElem(name = "street", uniqueGroup = "STREET_UNIQUE")
+                    )
+                )
+            )
+        )
+        val schema = projectElemRepository.schemaFromJson(jsonSchema, inheritSchema = inheritSchema)
+
+        assertTrue(schema.entities!!.first().fields.first { it.name == "stateId" }.unique == true)
+
         val actualSql = sqlGenerator.generate(schema, generatorContext)
 
         assertResourceEquals("/expected/sql/Address.sql", actualSql.content)

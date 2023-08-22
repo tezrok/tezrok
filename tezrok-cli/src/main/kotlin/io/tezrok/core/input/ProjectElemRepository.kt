@@ -236,6 +236,7 @@ internal class ProjectElemRepository {
             type = inheritField?.type ?: field.type,
             required = inheritField?.required ?: field.required,
             unique = inheritField?.unique ?: field.unique,
+            uniqueGroup = inheritField?.uniqueGroup ?: field.uniqueGroup,
             description = inheritField?.description ?: field.description,
             defValue = inheritField?.defValue ?: field.defValue,
             relation = inheritField?.relation ?: field.relation

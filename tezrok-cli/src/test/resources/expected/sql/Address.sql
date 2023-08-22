@@ -5,5 +5,7 @@ CREATE TABLE public.address (
   state VARCHAR(255) NOT NULL,
   zip VARCHAR(255),
   country VARCHAR(255) NOT NULL,
-  state_id INT NOT NULL
+  state_id INT NOT NULL UNIQUE,
+  UNIQUE (street),
+  UNIQUE (city, zip)
 );
