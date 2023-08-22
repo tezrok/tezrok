@@ -2,6 +2,7 @@ package io.tezrok.api.maven
 
 import io.tezrok.api.TezrokProperties
 import io.tezrok.api.input.ModuleElem
+import java.util.TreeMap
 
 /**
  * Represents a module's properties.
@@ -23,8 +24,11 @@ internal class PropertiesNode(private val moduleElem: ModuleElem) : TezrokProper
     override fun hasProperty(key: String): Boolean = readonlyMap().containsKey(key)
 
     private fun writableMap(): MutableMap<String, String?> {
+        // properties should be sorted by key, so we use TreeMap
         if (moduleElem.properties == null) {
-            moduleElem.properties = mutableMapOf()
+            moduleElem.properties = TreeMap()
+        } else if (moduleElem.properties !is TreeMap) {
+            moduleElem.properties = TreeMap(moduleElem.properties)
         }
         return moduleElem.properties!!
     }
