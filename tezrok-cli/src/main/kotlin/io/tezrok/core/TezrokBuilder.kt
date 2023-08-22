@@ -5,7 +5,7 @@ import io.tezrok.core.input.ProjectElemRepository
 import io.tezrok.core.output.ProjectNodeFactory
 import io.tezrok.core.output.ProjectOutputGenerator
 import io.tezrok.util.mkdirs
-import io.tezrok.util.toPrettyJson
+import io.tezrok.util.toSecuredPrettyJson
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Clock
@@ -39,6 +39,9 @@ class TezrokBuilder private constructor() {
 
         val projectElem = projectElemRepo.load(inputPath)
         val project = projectNodeFactory.fromProject(projectElem, projectOutput)
+
+        check(project.getModules().isNotEmpty()) { "No modules found" }
+
         val context = CoreGeneratorContext(
             projectElem,
             generatorProvider,
@@ -47,15 +50,13 @@ class TezrokBuilder private constructor() {
             author = author
         )
 
-        if (outputFinalProject) {
-            val outputFinalProjectPath = finalProjectPath?.also { it.mkdirs() } ?: projectOutput
-            outputFinalProjectPath.resolve("tezrok-final.json").writeText(projectElem.toPrettyJson())
-        }
-
-        check(project.getModules().isNotEmpty()) { "No modules found" }
-
         featureManager.applyAll(project, context)
         generator.generate(project, projectOutput)
+
+        if (outputFinalProject) {
+            val outputFinalProjectPath = finalProjectPath?.also { it.mkdirs() } ?: projectOutput
+            outputFinalProjectPath.resolve("tezrok-final.json").writeText(projectElem.toSecuredPrettyJson())
+        }
     }
 
     fun setOutput(path: Path): TezrokBuilder {
