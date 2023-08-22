@@ -326,7 +326,7 @@ internal class ProjectElemRepository {
 
     private fun relationFromDefinition(definition: Definition): EntityRelation? =
         if (definition.isArray()) EntityRelation.OneToMany
-        else if (definition.ref?.isNotBlank() == true) EntityRelation.OneToOne
+        else if (definition.ref?.isNotBlank() == true) EntityRelation.ManyToOne
         else null
 
     private companion object {

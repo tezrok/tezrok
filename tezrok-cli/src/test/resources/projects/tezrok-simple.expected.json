@@ -38,7 +38,7 @@
                 "description": "The item that was selected by the user",
                 "required": false,
                 "logicField": true,
-                "relation": "OneToOne"
+                "relation": "ManyToOne"
               },
               {
                 "name": "selectedItemId",
@@ -46,7 +46,6 @@
                 "foreignField": "Item.id",
                 "description": "Synthetic field for \"Order.selectedItem\"",
                 "required": false,
-                "unique": true,
                 "syntheticTo": "Order.selectedItem"
               },
               {
