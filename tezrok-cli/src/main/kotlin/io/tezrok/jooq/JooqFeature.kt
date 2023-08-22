@@ -39,8 +39,8 @@ internal class JooqFeature : TezrokFeature {
         val executionStart = pluginNode.addExecution("testcontainer-start", BuildPhase.GenerateSources, "execute")
         val configurationStart = executionStart.getConfiguration()
         configurationStart.node.add(
-                "source",
-                """
+            "source",
+            """
                 db = new org.testcontainers.containers.PostgreSQLContainer("postgres:${POSTGRESQL_VER}")
                     .withUsername("${'$'}{db.username}")
                     .withDatabaseName("postgres")
@@ -56,8 +56,8 @@ internal class JooqFeature : TezrokFeature {
         val executionStop = pluginNode.addExecution("testcontainer-stop", BuildPhase.Test, "execute")
         val configurationStop = executionStop.getConfiguration()
         configurationStop.node.add(
-                "source",
-                """
+            "source",
+            """
                 containerId = "${'$'}{testcontainer.containerid}"
                 imageName = "${'$'}{testcontainer.imageName}"
                 println("Stopping testcontainer ${'$'}containerId - ${'$'}imageName")
@@ -72,8 +72,10 @@ internal class JooqFeature : TezrokFeature {
     }
 
     private fun addLiquibasePlugin(pomFile: PomNode) {
-        check(pomFile.getProperty("liquibase.version")?.isNotBlank()
-                ?: false) { "Expected property in maven: liquibase.version" }
+        check(
+            pomFile.getProperty("liquibase.version")?.isNotBlank()
+                ?: false
+        ) { "Expected property in maven: liquibase.version" }
 
         val pluginNode = pomFile.addPluginDependency("org.liquibase:liquibase-maven-plugin:${'$'}{liquibase.version}")
         val execution = pluginNode.addExecution("liquibase-update", BuildPhase.GenerateSources, "update")

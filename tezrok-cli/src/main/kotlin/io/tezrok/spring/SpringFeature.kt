@@ -19,7 +19,8 @@ internal class SpringFeature : TezrokFeature {
         val module = project.getSingleModule()
         val pom = module.pom
         // TODO: get spring version from context
-        pom.getParentNode().dependencyId = MavenDependency.of("org.springframework.boot:spring-boot-starter-parent:3.1.0")
+        pom.getParentNode().dependencyId =
+            MavenDependency.of("org.springframework.boot:spring-boot-starter-parent:3.1.0")
         pom.addDependency("org.springframework.boot:spring-boot-starter")
         pom.addDependency("org.springframework.data:spring-data-commons:3.1.1")
         pom.addPluginDependency("org.springframework.boot:spring-boot-maven-plugin")
@@ -41,7 +42,6 @@ internal class SpringFeature : TezrokFeature {
         if (!text.contains("spring.datasource")) {
             val properties = module.properties
             // TODO: update only specified properties
-            val moduleName = module.getName()
             val newLines = """
                 spring.datasource.url=${properties.getProperty("datasource.url")}
                 spring.datasource.username=${properties.getProperty("datasource.username")}
@@ -62,8 +62,8 @@ internal class SpringFeature : TezrokFeature {
         // TODO: add spring feature: not to clear body
         mainMethod.clearBody()
         mainMethod.addCallExpression("SpringApplication.run")
-                .addNameArgument(mainClass.getName() + ".class")
-                .addNameArgument("args")
+            .addNameArgument(mainClass.getName() + ".class")
+            .addNameArgument("args")
     }
 
     private companion object {

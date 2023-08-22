@@ -40,38 +40,38 @@ data class SchemaElem(
 )
 
 data class EntityElem(
-        val name: String,
-        val description: String? = null,
-        val customRepository: Boolean? = null,
-        val syntheticTo: String? = null,
-        val fields: List<FieldElem>
+    val name: String,
+    val description: String? = null,
+    val customRepository: Boolean? = null,
+    val syntheticTo: String? = null,
+    val fields: List<FieldElem>
 )
 
 data class EnumElem(
-        val name: String,
-        val values: List<String>
+    val name: String,
+    val values: List<String>
 )
 
 data class FieldElem(
-        val name: String,
-        // string, integer, long, enum or reference to another entity
-        val type: String? = null,
-        // reference to field of another entity
-        val foreignField: String? = null,
-        val description: String? = null,
-        val required: Boolean? = null,
-        val serial: Boolean? = null,
-        val primary: Boolean? = null,
-        val pattern: String? = null,
-        val minLength: Int? = null,
-        val maxLength: Int? = null,
-        val unique: Boolean? = null,
-        val defValue: String? = null,
-        // if true then field is not stored in database, mostly used for object fields
-        val logicField: Boolean? = null,
-        // true if field is synthetic and contains reference to another entity
-        val syntheticTo: String? = null,
-        val relation: EntityRelation? = null
+    val name: String,
+    // string, integer, long, enum or reference to another entity
+    val type: String? = null,
+    // reference to field of another entity
+    val foreignField: String? = null,
+    val description: String? = null,
+    val required: Boolean? = null,
+    val serial: Boolean? = null,
+    val primary: Boolean? = null,
+    val pattern: String? = null,
+    val minLength: Int? = null,
+    val maxLength: Int? = null,
+    val unique: Boolean? = null,
+    val defValue: String? = null,
+    // if true then field is not stored in database, mostly used for object fields
+    val logicField: Boolean? = null,
+    // true if field is synthetic and contains reference to another entity
+    val syntheticTo: String? = null,
+    val relation: EntityRelation? = null
 )
 
 /**

@@ -28,17 +28,17 @@ interface GeneratorContext : GeneratorProvider {
      * Writes content to [Writer] using specified template.
      */
     fun writeTemplate(writer: Writer, templatePath: String, values: Map<String, Any?>) =
-            writeTemplate(writer, templatePath) { context -> values.forEach { (k, v) -> context.put(k, v) } }
+        writeTemplate(writer, templatePath) { context -> values.forEach { (k, v) -> context.put(k, v) } }
 
     /**
      * Writes content to [OutStream] using specified template.
      */
     fun writeTemplate(output: OutStream, templatePath: String, contextInitializer: Consumer<VelocityContext>) =
-            output.getOutputStream().bufferedWriter().use { writeTemplate(it, templatePath, contextInitializer) }
+        output.getOutputStream().bufferedWriter().use { writeTemplate(it, templatePath, contextInitializer) }
 
     /**
      * Writes content to [OutStream] using specified template.
      */
     fun writeTemplate(output: OutStream, templatePath: String, values: Map<String, Any?>) =
-            writeTemplate(output, templatePath) { context -> values.forEach { (k, v) -> context.put(k, v) } }
+        writeTemplate(output, templatePath) { context -> values.forEach { (k, v) -> context.put(k, v) } }
 }

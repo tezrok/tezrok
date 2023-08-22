@@ -32,7 +32,12 @@ internal class ControllerFeature : TezrokFeature {
         return true
     }
 
-    private fun addControllerClass(entity: EntityElem, webDir: JavaDirectoryNode, packagePath: String, context: GeneratorContext) {
+    private fun addControllerClass(
+        entity: EntityElem,
+        webDir: JavaDirectoryNode,
+        packagePath: String,
+        context: GeneratorContext
+    ) {
         if (entity.syntheticTo?.isNotBlank() == true) {
             // skip synthetic entities
             return
@@ -43,7 +48,8 @@ internal class ControllerFeature : TezrokFeature {
 
         if (!webDir.hasClass(fileName)) {
             val controllerFile = webDir.addJavaFile(fileName)
-            val values = mapOf("package" to packagePath, "name" to name, "lname" to name.replaceFirstChar { it.lowercase() })
+            val values =
+                mapOf("package" to packagePath, "name" to name, "lname" to name.replaceFirstChar { it.lowercase() })
             context.writeTemplate(controllerFile, "/templates/spring/EntityController.java.vm", values)
             // TODO: extract method from service class and add corresponding methods to controller
             // TODO: add custom methods

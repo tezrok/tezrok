@@ -39,7 +39,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
             addWithIdInterfaces(dtoDir)
 
             val schemaModule = context.getProject().modules.find { it.name == module.getName() }
-                    ?: throw IllegalStateException("Module ${module.getName()} not found")
+                ?: throw IllegalStateException("Module ${module.getName()} not found")
 
             val schema = schemaModule.schema
 
@@ -50,8 +50,15 @@ internal class JooqRepositoryFeature : TezrokFeature {
                     val singlePrimary = primaryCount == 1
 
                     addDtoClass(dtoDir, entity, projectElem.packagePath, singlePrimary)
-                    val baseMethods = getRepoMethods(repositoryDir, entity, singlePrimary)
-                    addRepositoryClass(repositoryDir, entity, entity.customRepository == true, baseMethods, singlePrimary, context)
+                    val baseMethods = getRepoMethods(repositoryDir, singlePrimary)
+                    addRepositoryClass(
+                        repositoryDir,
+                        entity,
+                        entity.customRepository == true,
+                        baseMethods,
+                        singlePrimary,
+                        context
+                    )
                 }
                 // TODO: handle enums
             }
@@ -65,7 +72,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
     /**
      * Returns set of methods from base repository class depending on number of primary keys.
      */
-    private fun getRepoMethods(repoDir: JavaDirectoryNode, entity: EntityElem, singlePrimary: Boolean): Set<String> {
+    private fun getRepoMethods(repoDir: JavaDirectoryNode, singlePrimary: Boolean): Set<String> {
         val jooqBaseRepoFile = JOOQ_BASE_REPO
         val jooqRepoFile = if (singlePrimary) JOOQ_SINGLE_ID_REPO else JOOQ_TWO_ID_REPO
 
@@ -102,7 +109,12 @@ internal class JooqRepositoryFeature : TezrokFeature {
             .setReturnType("ID2")
     }
 
-    private fun addDtoClass(dtoDir: JavaDirectoryNode, entity: EntityElem, rootPackage: String, singlePrimary: Boolean) {
+    private fun addDtoClass(
+        dtoDir: JavaDirectoryNode,
+        entity: EntityElem,
+        rootPackage: String,
+        singlePrimary: Boolean
+    ) {
         val name = entity.name
         val jooqPackageRoot = "${rootPackage}.jooq"
         val className = "${name}Dto"
@@ -136,7 +148,11 @@ internal class JooqRepositoryFeature : TezrokFeature {
         }
     }
 
-    private fun addBaseRepositoryFile(repositoryDir: JavaDirectoryNode, projectElem: ProjectElem, context: GeneratorContext) {
+    private fun addBaseRepositoryFile(
+        repositoryDir: JavaDirectoryNode,
+        projectElem: ProjectElem,
+        context: GeneratorContext
+    ) {
         val values = mapOf("package" to projectElem.packagePath)
         val jooqSingleRepoFile = repositoryDir.addJavaFile(JOOQ_SINGLE_ID_REPO)
         context.writeTemplate(jooqSingleRepoFile, "/templates/jooq/JooqRepository.java.vm", values)
@@ -155,7 +171,14 @@ internal class JooqRepositoryFeature : TezrokFeature {
      * @param custom true if custom repository class already exists or must be created
      * @param baseMethods set of base methods which must be ignored during custom methods generating
      */
-    private fun addRepositoryClass(repositoryDir: JavaDirectoryNode, entity: EntityElem, custom: Boolean, baseMethods: Set<String>, singlePrimary: Boolean, context: GeneratorContext) {
+    private fun addRepositoryClass(
+        repositoryDir: JavaDirectoryNode,
+        entity: EntityElem,
+        custom: Boolean,
+        baseMethods: Set<String>,
+        singlePrimary: Boolean,
+        context: GeneratorContext
+    ) {
         val name = entity.name
         val rootPackage = context.getProject().packagePath
         val repoClassFileName = "${name}Repository.java"
@@ -163,15 +186,16 @@ internal class JooqRepositoryFeature : TezrokFeature {
 
         if (!repositoryDir.hasFile(repoClassFileName)) {
             val repoClassFile = repositoryDir.addJavaFile(repoClassFileName)
-            val values = mapOf("package" to rootPackage, "name" to name, "uname" to name.camelCaseToSnakeCase().uppercase())
+            val values =
+                mapOf("package" to rootPackage, "name" to name, "uname" to name.camelCaseToSnakeCase().uppercase())
             val fields = generateFields(entity)
             val templateName = if (singlePrimary) "JooqTargetRepository" else "JooqTargetRepository2"
 
             context.writeTemplate(repoClassFile, "/templates/jooq/${templateName}.java.vm", values + fields)
             val repoClass = repoClassFile.getRootClass()
             val constructor = repoClass.getConstructors()
-                    .findFirst()
-                    .orElseThrow { IllegalStateException("Constructor not found") }
+                .findFirst()
+                .orElseThrow { IllegalStateException("Constructor not found") }
 
             if (custom) {
                 constructor.setModifiers(Modifier.Keyword.PROTECTED)
@@ -193,7 +217,13 @@ internal class JooqRepositoryFeature : TezrokFeature {
      * @param repositoryDir directory where repository class is located
      * @param baseMethods set of base methods which must be ignored during custom methods generating
      */
-    private fun addCustomMethods(name: String, repoClass: JavaClassNode, repositoryDir: JavaDirectoryNode, baseMethods: Set<String>, context: GeneratorContext) {
+    private fun addCustomMethods(
+        name: String,
+        repoClass: JavaClassNode,
+        repositoryDir: JavaDirectoryNode,
+        baseMethods: Set<String>,
+        context: GeneratorContext
+    ) {
         val repositoryPhysicalPath = repositoryDir.getPhysicalPath()
 
         if (repositoryPhysicalPath != null && repositoryPhysicalPath.exists()) {
@@ -220,9 +250,9 @@ internal class JooqRepositoryFeature : TezrokFeature {
                         if (!baseMethods.contains(methodName)) {
                             addedMethods.add(methodName)
                             val newMethod = repoClass.addMethod(methodName)
-                                    .withModifiers(Modifier.Keyword.PUBLIC, Modifier.Keyword.ABSTRACT)
-                                    .removeBody()
-                                    .setReturnType(method.typeAsString)
+                                .withModifiers(Modifier.Keyword.PUBLIC, Modifier.Keyword.ABSTRACT)
+                                .removeBody()
+                                .setReturnType(method.typeAsString)
                             method.parameters.forEach { param ->
                                 // TODO: use type as fully qualified name
                                 newMethod.addParameter(param.typeAsString, param.nameAsString)
@@ -231,7 +261,11 @@ internal class JooqRepositoryFeature : TezrokFeature {
                     }
 
                     if (addedMethods.isNotEmpty() && log.isDebugEnabled) {
-                        log.debug("Added methods to class: {}, methods: {}", repoClass.getName(), addedMethods.joinToString(", "))
+                        log.debug(
+                            "Added methods to class: {}, methods: {}",
+                            repoClass.getName(),
+                            addedMethods.joinToString(", ")
+                        )
                     }
                 } else {
                     log.warn("Failed to parse file: {}", customFilePath)
@@ -241,9 +275,12 @@ internal class JooqRepositoryFeature : TezrokFeature {
                 }
             } else {
                 log.debug("Custom repository file not found, create it: {}", customFilePath)
-                val customRepoFile = repositoryDir.getOrAddJavaDirectory("custom").addJavaFile("${name}CustomRepository");
-                context.writeTemplate(customRepoFile, "/templates/jooq/JooqCustomRepository.java.vm",
-                        mapOf("package" to context.getProject().packagePath, "name" to name))
+                val customRepoFile =
+                    repositoryDir.getOrAddJavaDirectory("custom").addJavaFile("${name}CustomRepository");
+                context.writeTemplate(
+                    customRepoFile, "/templates/jooq/JooqCustomRepository.java.vm",
+                    mapOf("package" to context.getProject().packagePath, "name" to name)
+                )
             }
         }
     }

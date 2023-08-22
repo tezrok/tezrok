@@ -23,16 +23,18 @@ class JavaFileNodeTest {
         assertEquals(0, clazz.getMethods().count())
 
         clazz.addMethod("main")
-                .withModifiers(Modifier.Keyword.PROTECTED)
-                .addParameter("String[]", "args")
-                .setReturnType(Int::class.java)
+            .withModifiers(Modifier.Keyword.PROTECTED)
+            .addParameter("String[]", "args")
+            .setReturnType(Int::class.java)
 
-        assertEquals("""public class MainApp {
+        assertEquals(
+            """public class MainApp {
 
     protected int main(String[] args) {
     }
 }
-""", javaFile.asString())
+""", javaFile.asString()
+        )
 
         assertEquals(1, clazz.getParent().types.size)
         assertEquals(1, clazz.getMethods().count())
@@ -43,8 +45,8 @@ class JavaFileNodeTest {
         val javaFile = JavaFileNode("MainApp")
         val clazz = javaFile.getRootClass()
         clazz.addMethod("main")
-                .addParameter("String[]", "args")
-                .setReturnType(String::class.java)
+            .addParameter("String[]", "args")
+            .setReturnType(String::class.java)
         assertEquals("/", javaFile.getPackagePath())
 
         javaFile.setString("class MainApp { }")
@@ -57,8 +59,10 @@ class JavaFileNodeTest {
         assertEquals("MainApp", clazzActual.getName())
         assertEquals(1, clazzActual.getParent().types.size)
         assertEquals(0, clazzActual.getMethods().count())
-        assertEquals("class MainApp {$NEW_LINE" +
-                "}$NEW_LINE", javaFile.asString())
+        assertEquals(
+            "class MainApp {$NEW_LINE" +
+                    "}$NEW_LINE", javaFile.asString()
+        )
     }
 
     @Test
@@ -66,8 +70,8 @@ class JavaFileNodeTest {
         val javaFile = JavaFileNode("MainApp")
         val clazz = javaFile.getRootClass()
         clazz.addMethod("main")
-                .addParameter("String[]", "args")
-                .setReturnType(String::class.java)
+            .addParameter("String[]", "args")
+            .setReturnType(String::class.java)
         assertEquals("/", javaFile.getPackagePath())
 
         javaFile.setString("abstract class Foo { }")
@@ -88,8 +92,8 @@ class JavaFileNodeTest {
         val javaFile = JavaFileNode("MainApp")
         val clazz = javaFile.getRootClass()
         clazz.addMethod("main")
-                .addParameter("String[]", "args")
-                .setReturnType(String::class.java)
+            .addParameter("String[]", "args")
+            .setReturnType(String::class.java)
         assertEquals("/", javaFile.getPackagePath())
 
         javaFile.setString("package foo.bar.xyz;${NEW_LINE} class Bar { }")
@@ -112,8 +116,8 @@ class JavaFileNodeTest {
         val javaFile = JavaFileNode("MainApp", javaExample)
         val clazz = javaFile.getRootClass()
         clazz.addMethod("main")
-                .addParameter("String[]", "args")
-                .setReturnType(String::class.java)
+            .addParameter("String[]", "args")
+            .setReturnType(String::class.java)
         assertEquals("/com/example", javaFile.getPackagePath())
 
         javaFile.setString("package foo.bar.xyz;${NEW_LINE} class Bar { }")

@@ -41,7 +41,12 @@ open class ServiceFeature : TezrokFeature {
         return true
     }
 
-    private fun addServiceClass(entity: EntityElem, serviceDir: JavaDirectoryNode, packagePath: String, context: GeneratorContext) {
+    private fun addServiceClass(
+        entity: EntityElem,
+        serviceDir: JavaDirectoryNode,
+        packagePath: String,
+        context: GeneratorContext
+    ) {
         if (entity.syntheticTo?.isNotBlank() == true) {
             // skip synthetic entities
             return
@@ -51,7 +56,8 @@ open class ServiceFeature : TezrokFeature {
         val fileName = "${name}Service.java"
         if (!serviceDir.hasFile(fileName)) {
             val serviceFile = serviceDir.addJavaFile(fileName)
-            val values = mapOf("package" to packagePath, "name" to name, "lname" to name.replaceFirstChar { it.lowercase() })
+            val values =
+                mapOf("package" to packagePath, "name" to name, "lname" to name.replaceFirstChar { it.lowercase() })
             context.writeTemplate(serviceFile, "/templates/spring/EntityService.java.vm", values)
             val serviceClass = serviceFile.getRootClass()
             val primaryFields = entity.fields.filter { it.primary == true }.map { it.asJavaType() }
@@ -164,9 +170,9 @@ open class ServiceFeature : TezrokFeature {
                         if (!serviceClass.hasMethod(methodName)) {
                             addedMethods.add(methodName)
                             val newMethod = serviceClass.addMethod(methodName)
-                                    .withModifiers(Modifier.Keyword.PUBLIC, Modifier.Keyword.ABSTRACT)
-                                    .removeBody()
-                                    .setReturnType(method.typeAsString)
+                                .withModifiers(Modifier.Keyword.PUBLIC, Modifier.Keyword.ABSTRACT)
+                                .removeBody()
+                                .setReturnType(method.typeAsString)
                             method.parameters.forEach { param ->
                                 // TODO: use type as fully qualified name
                                 newMethod.addParameter(param.typeAsString, param.nameAsString)
@@ -175,14 +181,18 @@ open class ServiceFeature : TezrokFeature {
                     }
 
                     if (addedMethods.isNotEmpty() && log.isDebugEnabled) {
-                        log.debug("Added methods to class: {}, methods: {}", serviceClass.getName(), addedMethods.joinToString(", "))
+                        log.debug(
+                            "Added methods to class: {}, methods: {}",
+                            serviceClass.getName(),
+                            addedMethods.joinToString(", ")
+                        )
                     }
 
                     // if we have custom service class, we need to remove annotations and make class abstract
                     serviceClass.withModifiers(Modifier.Keyword.ABSTRACT)
-                            .removeAnnotation(Service::class.java)
-                            .removeImport(Service::class.java)
-                            .removeAnnotation("Transactional")
+                        .removeAnnotation(Service::class.java)
+                        .removeImport(Service::class.java)
+                        .removeAnnotation("Transactional")
                 } else {
                     log.warn("Failed to parse file: {}", customFilePath)
                     parsedFile.problems.forEach { problem ->

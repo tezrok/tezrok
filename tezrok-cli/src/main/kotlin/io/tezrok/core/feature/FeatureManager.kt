@@ -56,13 +56,13 @@ internal class FeatureManager {
             val module = project.getSingleModule()
 
             feature.javaClass.annotations
-                    .filterIsInstance<UseMavenDependency>()
-                    .map { it.value }
-                    .forEach { dependency ->
-                        if (module.pom.addDependency(dependency)) {
-                            log.debug("Automatically added dependency '{}' to module '{}'", dependency, module.getName())
-                        }
+                .filterIsInstance<UseMavenDependency>()
+                .map { it.value }
+                .forEach { dependency ->
+                    if (module.pom.addDependency(dependency)) {
+                        log.debug("Automatically added dependency '{}' to module '{}'", dependency, module.getName())
                     }
+                }
         }
     }
 

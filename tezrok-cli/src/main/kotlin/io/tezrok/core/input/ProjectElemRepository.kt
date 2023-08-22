@@ -121,7 +121,8 @@ internal class ProjectElemRepository {
             val targetPrimaryField = targetEntity.fields.first { it.primary == true }
             val sourcePrimaryField = sourceEntity.fields.first { it.primary == true }
 
-            when(val relation = sourceField.relation ?: error("Relation is not defined for field \"$fullFieldName\"")) {
+            when (val relation =
+                sourceField.relation ?: error("Relation is not defined for field \"$fullFieldName\"")) {
                 EntityRelation.OneToOne,
                 EntityRelation.ManyToOne -> {
                     val syntheticName = "${sourceField.name}Id"
@@ -143,6 +144,7 @@ internal class ProjectElemRepository {
 
                     return listOf(logicField, syntheticField)
                 }
+
                 EntityRelation.OneToMany -> {
                     // add synthetic field to ref entity
                     val syntheticField = sourceField.copy(
@@ -157,6 +159,7 @@ internal class ProjectElemRepository {
 
                     return listOf(logicField)
                 }
+
                 EntityRelation.ManyToMany -> {
                     val entityName = "${sourceEntity.name}${targetEntity.name}" + sourceField.name.capitalize()
                     require(!entityMap.containsKey(entityName)) { "Entity with name \"$entityName\" already exists" }
@@ -185,6 +188,7 @@ internal class ProjectElemRepository {
                     )
                     return listOf(logicField)
                 }
+
                 else -> TODO("relation type: $relation")
             }
         }
@@ -216,7 +220,7 @@ internal class ProjectElemRepository {
 
     private fun processEntity(entity: EntityElem, inheritEntity: EntityElem?): EntityElem {
         return entity.copy(fields = processFields(entity, inheritEntity))
-                .copy(customRepository = inheritEntity?.customRepository)
+            .copy(customRepository = inheritEntity?.customRepository)
     }
 
     private fun processFields(
@@ -247,36 +251,42 @@ internal class ProjectElemRepository {
     }
 
     private fun enumsFromSchema(schema: Schema): List<EnumElem> =
-            schema.definitions?.map { enumFromDefinition(it.key, it.value) }?.filterNotNull() ?: emptyList()
+        schema.definitions?.map { enumFromDefinition(it.key, it.value) }?.filterNotNull() ?: emptyList()
 
     private fun enumFromDefinition(name: String, definition: Definition): EnumElem? =
-            if (definition.enum?.isNotEmpty() == true) {
-                EnumElem(
-                        name = typeFromDefinition(definition, name),
-                        values = definition.enum
-                )
-            } else {
-                null
-            }
+        if (definition.enum?.isNotEmpty() == true) {
+            EnumElem(
+                name = typeFromDefinition(definition, name),
+                values = definition.enum
+            )
+        } else {
+            null
+        }
 
     private fun entityFromDefinition(name: String, definition: Definition): EntityElem =
-            EntityElem(
-                    name = name,
-                    fields = definition.properties?.map { fieldFromProperty(it.key, it.value, definition.required?.contains(it.key) == true) }
-                            ?: emptyList()
-            )
+        EntityElem(
+            name = name,
+            fields = definition.properties?.map {
+                fieldFromProperty(
+                    it.key,
+                    it.value,
+                    definition.required?.contains(it.key) == true
+                )
+            }
+                ?: emptyList()
+        )
 
     private fun fieldFromProperty(name: String, definition: Definition, required: Boolean): FieldElem =
-            FieldElem(
-                    name = name,
-                    type = typeFromDefinition(definition, name),
-                    description = definition.description,
-                    required = required,
-                    pattern = definition.pattern,
-                    minLength = definition.minLength,
-                    maxLength = definition.maxLength,
-                    relation = relationFromDefinition(definition)
-            )
+        FieldElem(
+            name = name,
+            type = typeFromDefinition(definition, name),
+            description = definition.description,
+            required = required,
+            pattern = definition.pattern,
+            minLength = definition.minLength,
+            maxLength = definition.maxLength,
+            relation = relationFromDefinition(definition)
+        )
 
     private fun typeFromDefinition(definition: Definition, name: String): String {
         if (definition.enum?.isNotEmpty() == true) {

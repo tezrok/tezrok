@@ -13,11 +13,11 @@ import java.time.format.DateTimeFormatter
 import java.util.function.Consumer
 
 internal class CoreGeneratorContext(
-        private val project: ProjectElem,
-        private val generatorProvider: GeneratorProvider = NullGeneratorProvider,
-        private val clock: Clock = Clock.systemDefaultZone(),
-        private val generateTime: Boolean = true,
-        private val author: String = "TezrokUser"
+    private val project: ProjectElem,
+    private val generatorProvider: GeneratorProvider = NullGeneratorProvider,
+    private val clock: Clock = Clock.systemDefaultZone(),
+    private val generateTime: Boolean = true,
+    private val author: String = "TezrokUser"
 ) : GeneratorContext {
     override fun getAuthor(): String = author
 
@@ -32,15 +32,18 @@ internal class CoreGeneratorContext(
         val velocityContext = VelocityContext()
 
         if (isGenerateTime()) {
-            velocityContext.put("generateTime", LocalDateTime.now(getClock()).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+            velocityContext.put(
+                "generateTime",
+                LocalDateTime.now(getClock()).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            )
         }
         contextInitializer.accept(velocityContext)
         masterTemplate.merge(velocityContext, writer)
     }
 
     override fun <T : TezrokGenerator<*, *>> getGenerator(clazz: Class<T>): T? =
-            generatorProvider.getGenerator(clazz)
+        generatorProvider.getGenerator(clazz)
 
     override fun <T, R> getGenerator(clasFrom: Class<T>, classTo: Class<R>): TezrokGenerator<T, R>? =
-            generatorProvider.getGenerator(clasFrom, classTo)
+        generatorProvider.getGenerator(clasFrom, classTo)
 }

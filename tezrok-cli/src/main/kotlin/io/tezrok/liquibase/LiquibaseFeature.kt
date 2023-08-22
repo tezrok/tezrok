@@ -19,10 +19,10 @@ import java.time.format.DateTimeFormatter
 internal class LiquibaseFeature : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
         val sqlGenerator = context.getGenerator(SqlGenerator::class.java)
-                ?: throw IllegalArgumentException("SqlGenerator not found")
+            ?: throw IllegalArgumentException("SqlGenerator not found")
         val module = project.getSingleModule()
         val schema = context.getProject().modules.find { it.name == module.getName() }?.schema
-                ?: throw IllegalArgumentException("No schema found for module ${module.getName()}")
+            ?: throw IllegalArgumentException("No schema found for module ${module.getName()}")
         updateApplicationProperties(module)
         // update pom
         val pomFile = module.pom
@@ -63,7 +63,7 @@ internal class LiquibaseFeature : TezrokFeature {
     }
 
     private fun datePrefix(context: GeneratorContext): String =
-            LocalDateTime.now(context.getClock()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"))
+        LocalDateTime.now(context.getClock()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"))
 
     override fun toString(): String {
         return "Feature[LiquibaseGenerator]"
