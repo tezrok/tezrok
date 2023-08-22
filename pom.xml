@@ -11,9 +11,6 @@
     <name>Tezrok Project</name>
 
     <modules>
-        <module>tezrok-api</module>
-        <module>tezrok-core</module>
-        <module>tezrok-spring</module>
         <module>tezrok-cli</module>
     </modules>
 
