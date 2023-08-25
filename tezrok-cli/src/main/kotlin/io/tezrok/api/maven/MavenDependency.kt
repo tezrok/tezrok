@@ -1,17 +1,24 @@
 package io.tezrok.api.maven
 
-data class MavenDependency(val groupId: String, val artifactId: String, val version: String, val scope: String = "") {
+data class MavenDependency(val groupId: String, val artifactId: String, val version: String, val scope: String = "", val packaging: String = "") {
+    init {
+        check(scope.isEmpty() || supportedScopes.contains(scope)) { "Unsupported scope: $scope" }
+        check(packaging.isEmpty() || supportedPackages.contains(packaging)) { "Unsupported packaging: $packaging" }
+    }
+
     fun shortId(): String = "$groupId:$artifactId"
 
     fun fullId(): String = "$groupId:$artifactId:$version:$scope"
 
-    fun withGroupId(groupId: String): MavenDependency = MavenDependency(groupId, artifactId, version)
+    fun withGroupId(groupId: String): MavenDependency = MavenDependency(groupId, artifactId, version, scope, packaging)
 
-    fun withArtifactId(artifactId: String): MavenDependency = MavenDependency(groupId, artifactId, version)
+    fun withArtifactId(artifactId: String): MavenDependency = MavenDependency(groupId, artifactId, version, scope, packaging)
 
-    fun withVersion(version: String): MavenDependency = MavenDependency(groupId, artifactId, version)
+    fun withVersion(version: String): MavenDependency = MavenDependency(groupId, artifactId, version, scope, packaging)
 
-    fun withScope(scope: String): MavenDependency = MavenDependency(groupId, artifactId, version, scope)
+    fun withScope(scope: String): MavenDependency = MavenDependency(groupId, artifactId, version, scope, packaging)
+
+    fun withPackaging(packaging: String): MavenDependency = MavenDependency(groupId, artifactId, version, scope, packaging)
 
     companion object {
         /**
@@ -28,8 +35,12 @@ data class MavenDependency(val groupId: String, val artifactId: String, val vers
                     groupId = parts[0],
                     artifactId = parts[1],
                     version = if (parts.size > 2) parts[2] else "",
-                    scope = if (parts.size > 3) parts[3] else ""
+                    scope = if (parts.size > 3) parts[3] else "",
+                    packaging = if (parts.size > 4) parts[4] else ""
             )
         }
+
+        private val supportedScopes = setOf("compile", "provided", "runtime", "test", "system")
+        private val supportedPackages = setOf("jar", "war", "pom")
     }
 }

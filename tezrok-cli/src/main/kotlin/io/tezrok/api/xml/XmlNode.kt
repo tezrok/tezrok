@@ -126,6 +126,8 @@ open class XmlNode private constructor(private val element: Element) {
         return this
     }
 
+    fun hasChildren(): Boolean = element.hasChildNodes()
+
     override fun toString(): String = ByteArrayUtil.outputAsArray(this::writeAsString).toString(Charsets.UTF_8)
 
     private fun itemsStream(): Stream<XmlNode> = nodesStream().map { XmlNode(it) }

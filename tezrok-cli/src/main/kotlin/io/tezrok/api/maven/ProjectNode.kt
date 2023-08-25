@@ -11,15 +11,23 @@ import java.util.Collections
 open class ProjectNode(name: String) : DirectoryNode(name, null) {
     private val modules: MutableList<ModuleNode> = mutableListOf()
 
+    val pom: PomNode = PomNode(artifactId = name, parent = this)
+
+    init {
+        pom.dependencyId = pom.dependencyId.withPackaging("pom")
+    }
+
     fun getModules(): List<ModuleNode> = Collections.unmodifiableList(modules.toList())
 
-    override fun getFiles(): List<BaseFileNode> = Collections.unmodifiableList(modules + super.getFiles())
+    override fun getFiles(): List<BaseFileNode> = Collections.unmodifiableList(listOf(pom) + modules + super.getFiles())
 
     fun addModule(moduleElem: ModuleElem): ModuleNode {
         // TODO: check if module already exists
         // TODO: validate module name
         val module = ModuleNode(moduleElem.name, this, moduleElem)
         modules.add(module)
+        pom.getModulesRefNode().addModule(moduleElem.name)
+        // TODO: set ref to parent pom
         return module
     }
 
@@ -28,6 +36,9 @@ open class ProjectNode(name: String) : DirectoryNode(name, null) {
      */
     fun removeModules(list: List<String>): Boolean {
         val success = modules.removeAll { list.contains(it.getName()) }
+        val modulesRefNode = pom.getModulesRefNode()
+        list.forEach { modulesRefNode.removeModule(it) }
+
         log.debug("From project {} removed {} modules: {}, success: {}", getName(), list.size, list, success)
         return success
     }

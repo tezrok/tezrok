@@ -91,6 +91,8 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
 
     fun getParentNode(): ParentNode = ParentNode(getXml().getOrAdd("parent"))
 
+    fun getModulesRefNode(): ModulesRefNode = ModulesRefNode(getXml().getOrAdd("modules"))
+
     private fun dependenciesAccess() = MavenDependenciesAccess(getXml())
 
     private fun pluginNodes(): Stream<PluginNode> = getXml().nodesByPath(PLUGIN_PATH).map { PluginNode(it) }
@@ -112,30 +114,31 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
             xml.removeAll(SCOPE)
         else
             xml.getOrAdd(SCOPE, value.scope)
+        if (value.packaging.isBlank())
+            xml.removeAll(PACKAGING)
+        else
+            xml.getOrAdd(PACKAGING, value.packaging)
     }
 
-    private fun getDependencyIdInternal(): MavenDependency = getXml().let { xml ->
-        MavenDependency(
-                xml.getNodeValue(GROUP_ID),
-                xml.getNodeValue(ARTIFACT_ID),
-                xml.getNodeValue(VERSION)
-        )
-    }
+    private fun getDependencyIdInternal(): MavenDependency = getXml().toDependency()
 
     companion object {
         const val GROUP_ID = "groupId"
         const val ARTIFACT_ID = "artifactId"
         const val VERSION = "version"
         const val SCOPE = "scope"
+        const val PACKAGING = "packaging"
         const val PLUGIN_PATH = "/project/build/plugins/plugin"
         const val SCHEMA_LOCATION = "http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
     }
 }
 
 internal fun XmlNode.toDependency() = MavenDependency(
-        groupId = getNodeValue(PomNode.GROUP_ID),
-        artifactId = getNodeValue(PomNode.ARTIFACT_ID),
-        version = getNodeValue(PomNode.VERSION)
+    groupId = getNodeValue(PomNode.GROUP_ID),
+    artifactId = getNodeValue(PomNode.ARTIFACT_ID),
+    version = getNodeValue(PomNode.VERSION),
+    scope = getNodeValue(PomNode.SCOPE),
+    packaging = getNodeValue(PomNode.PACKAGING)
 )
 
 data class MavenProperty(val name: String, val value: String)

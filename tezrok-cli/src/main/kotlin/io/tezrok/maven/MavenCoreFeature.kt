@@ -2,6 +2,8 @@ package io.tezrok.maven
 
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
+import io.tezrok.api.input.ProjectElem
+import io.tezrok.api.maven.PomNode
 import io.tezrok.api.maven.ProjectNode
 
 /**
@@ -11,6 +13,8 @@ internal class MavenCoreFeature : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
         val module = project.getSingleModule()
         val projectElem = context.getProject()
+        fillRootPom(project, projectElem)
+
         val pomFile = module.pom
         // set project groupId and version
         pomFile.dependencyId = pomFile.dependencyId
@@ -39,12 +43,7 @@ internal class MavenCoreFeature : TezrokFeature {
         // add dependencies from project
         projectElem.modules.find { it.name == module.getName() }?.dependencies?.forEach(pomFile::addDependency)
 
-        // add maven-compiler-plugin
-        val pluginNode = module.pom.addPluginDependency("org.apache.maven.plugins:maven-compiler-plugin:3.11.0")
-        val configuration = pluginNode.getConfiguration().node
-        // TODO: get java version from context
-        configuration.getOrAdd("source", "17")
-        configuration.getOrAdd("target", "17")
+        addMavenCoplierPlugin(pomFile)
 
         val javaRoot = module.source.main.java
         if (javaRoot.applicationPackageRoot == null) {
@@ -53,5 +52,24 @@ internal class MavenCoreFeature : TezrokFeature {
         }
 
         return true
+    }
+
+    private fun fillRootPom(project: ProjectNode, projectElem: ProjectElem) {
+        val pomFile = project.pom
+        pomFile.dependencyId = pomFile.dependencyId
+            .withGroupId(projectElem.packagePath)
+            .withVersion(projectElem.version)
+        addMavenCoplierPlugin(pomFile)
+    }
+
+    /**
+     * Add maven-compiler-plugin to pom.xml
+     */
+    private fun addMavenCoplierPlugin(pomFile: PomNode) {
+        val pluginNode = pomFile.addPluginDependency("org.apache.maven.plugins:maven-compiler-plugin:3.11.0")
+        val configuration = pluginNode.getConfiguration().node
+        // TODO: get java version from context
+        configuration.getOrAdd("source", "17")
+        configuration.getOrAdd("target", "17")
     }
 }
