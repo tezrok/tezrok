@@ -12,8 +12,8 @@ import java.util.stream.Stream
 open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNode? = null) :
         XmlFileNode(name, "project", parent), MavenDependencies {
     var dependencyId: MavenDependency
-        get() = getDependencyIdInternal()
-        set(value) = setDependencyIdInternal(value)
+        get() = getXml().toDependency()
+        set(value) = getXml().setDependency(value)
 
     init {
         getXml().addAttr("xmlns", "http://maven.apache.org/POM/4.0.0")
@@ -97,31 +97,6 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
 
     private fun pluginNodes(): Stream<PluginNode> = getXml().nodesByPath(PLUGIN_PATH).map { PluginNode(it) }
 
-    private fun setDependencyIdInternal(value: MavenDependency) {
-        val xml = getXml()
-        if (value.groupId.isBlank())
-            xml.removeAll(GROUP_ID)
-        else
-            xml.getOrAdd(GROUP_ID, value.groupId)
-        // artifactId is required
-        if (value.artifactId.isNotBlank())
-            xml.getOrAdd(ARTIFACT_ID, value.artifactId)
-        if (value.version.isBlank())
-            xml.removeAll(VERSION)
-        else
-            xml.getOrAdd(VERSION, value.version)
-        if (value.scope.isBlank())
-            xml.removeAll(SCOPE)
-        else
-            xml.getOrAdd(SCOPE, value.scope)
-        if (value.packaging.isBlank())
-            xml.removeAll(PACKAGING)
-        else
-            xml.getOrAdd(PACKAGING, value.packaging)
-    }
-
-    private fun getDependencyIdInternal(): MavenDependency = getXml().toDependency()
-
     companion object {
         const val GROUP_ID = "groupId"
         const val ARTIFACT_ID = "artifactId"
@@ -140,5 +115,27 @@ internal fun XmlNode.toDependency() = MavenDependency(
     scope = getNodeValue(PomNode.SCOPE),
     packaging = getNodeValue(PomNode.PACKAGING)
 )
+
+internal fun XmlNode.setDependency(value: MavenDependency) {
+    if (value.groupId.isBlank())
+        removeAll(PomNode.GROUP_ID)
+    else
+        getOrAdd(PomNode.GROUP_ID, value.groupId)
+    // artifactId is required
+    if (value.artifactId.isNotBlank())
+        getOrAdd(PomNode.ARTIFACT_ID, value.artifactId)
+    if (value.version.isBlank())
+        removeAll(PomNode.VERSION)
+    else
+        getOrAdd(PomNode.VERSION, value.version)
+    if (value.scope.isBlank())
+        removeAll(PomNode.SCOPE)
+    else
+        getOrAdd(PomNode.SCOPE, value.scope)
+    if (value.packaging.isBlank())
+        removeAll(PomNode.PACKAGING)
+    else
+        getOrAdd(PomNode.PACKAGING, value.packaging)
+}
 
 data class MavenProperty(val name: String, val value: String)
