@@ -14,8 +14,11 @@ class PluginNode(val node: XmlNode) : MavenDependencies by MavenDependenciesAcce
             node.getOrAdd("executions")
                 .add("execution")
                 .add("id", id).and()
-                .add("goals").add("goal", goal).and().and()
-                .add("phase", phase.id).and()
+                .add("goals").add("goal", goal).and().and().apply {
+                    if (phase != BuildPhase.None) {
+                        add("phase", phase.id)
+                    }
+                }
         )
 
     fun getConfiguration(): ConfigurationNode = ConfigurationNode(node.getOrAdd("configuration"))

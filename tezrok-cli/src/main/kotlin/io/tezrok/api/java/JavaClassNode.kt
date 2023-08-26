@@ -14,6 +14,8 @@ import kotlin.streams.asStream
 open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration) {
     fun getName(): String = clazz.nameAsString
 
+    fun getFullName(): String = clazz.fullyQualifiedName.orElseGet { getName() }
+
     fun getParent(): CompilationUnit = clazz.findAncestor(CompilationUnit::class.java)
             .orElseThrow { IllegalStateException("Compilation unit not found for class: " + getName()) }
 

@@ -3,6 +3,7 @@ package io.tezrok.spring
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.java.JavaClassNode
+import io.tezrok.api.maven.BuildPhase
 import io.tezrok.api.maven.ModuleNode
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.PathUtil.NEW_LINE
@@ -20,13 +21,20 @@ internal class SpringFeature : TezrokFeature {
         // TODO: get spring version from context
         pom.addProperty("spring-boot.version", "3.1.3")
         pom.addDependency("org.springframework.boot:spring-boot-starter:${'$'}{spring-boot.version}")
-        pom.addDependency("org.springframework.data:spring-data-commons:3.1.1")
-        pom.addPluginDependency("org.springframework.boot:spring-boot-maven-plugin:${'$'}{spring-boot.version}")
+        pom.addDependency("org.springframework.data:spring-data-commons:3.1.3")
+        val springBootPlugin = pom.addPluginDependency("org.springframework.boot:spring-boot-maven-plugin:${'$'}{spring-boot.version}")
 
         val mainClass = module.source.main.java.applicationClass
         if (mainClass != null) {
             handleMainMethod(mainClass)
             updateApplicationProperties(module)
+
+            springBootPlugin.getConfiguration().node.apply {
+                add("mainClass", mainClass.getFullName())
+                add("layout", "JAR")
+            }
+
+            springBootPlugin.addExecution("app-repackage", BuildPhase.None, "repackage")
         } else {
             log.warn("Main application class not found")
         }
