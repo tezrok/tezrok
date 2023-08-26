@@ -27,7 +27,6 @@ open class ProjectNode(name: String) : DirectoryNode(name, null) {
         val module = ModuleNode(moduleElem.name, this, moduleElem)
         modules.add(module)
         pom.getModulesRefNode().addModule(moduleElem.name)
-        // TODO: set ref to parent pom
         return module
     }
 

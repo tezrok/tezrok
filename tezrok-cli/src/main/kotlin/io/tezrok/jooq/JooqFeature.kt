@@ -17,7 +17,7 @@ internal class JooqFeature : TezrokFeature {
         val module = project.getSingleModule()
         // update pom
         val pomFile = module.pom
-        pomFile.addDependency("org.springframework.boot:spring-boot-starter-jooq")
+        pomFile.addDependency("org.springframework.boot:spring-boot-starter-jooq:${'$'}{spring-boot.version}")
         pomFile.addDependency("org.postgresql:postgresql:42.6.0")
         pomFile.addDependency("org.jooq:jooq:${'$'}{jooq.version}")
         pomFile.addProperty("testcontainers.version", "1.18.0")

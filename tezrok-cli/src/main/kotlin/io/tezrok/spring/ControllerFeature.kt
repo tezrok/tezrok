@@ -15,7 +15,7 @@ internal class ControllerFeature : TezrokFeature {
         val module = project.getSingleModule()
         val applicationPackageRoot = module.source.main.java.applicationPackageRoot
         val pom = module.pom
-        pom.addDependency("org.springframework.boot:spring-boot-starter-web")
+        pom.addDependency("org.springframework.boot:spring-boot-starter-web:${'$'}{spring-boot.version}")
 
         if (applicationPackageRoot != null) {
             val projectElem = context.getProject()

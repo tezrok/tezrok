@@ -13,13 +13,18 @@ internal class MavenCoreFeature : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
         val module = project.getSingleModule()
         val projectElem = context.getProject()
-        fillRootPom(project, projectElem)
+        val parentPomDependency = fillParentPom(project, projectElem).dependencyId
 
         val pomFile = module.pom
         // set project groupId and version
         pomFile.dependencyId = pomFile.dependencyId
             .withGroupId(projectElem.packagePath)
             .withVersion(projectElem.version)
+
+        pomFile.getParentNode().dependencyId = pomFile.getParentNode().dependencyId
+            .withGroupId(parentPomDependency.groupId)
+            .withArtifactId(parentPomDependency.artifactId)
+            .withVersion(parentPomDependency.version)
 
         // add default properties
         pomFile.addProperty("commons-lang3.version", "3.12.0")
@@ -54,12 +59,17 @@ internal class MavenCoreFeature : TezrokFeature {
         return true
     }
 
-    private fun fillRootPom(project: ProjectNode, projectElem: ProjectElem) {
+    private fun fillParentPom(project: ProjectNode, projectElem: ProjectElem): PomNode {
         val pomFile = project.pom
-        pomFile.dependencyId = pomFile.dependencyId
-            .withGroupId(projectElem.packagePath)
-            .withVersion(projectElem.version)
+
+        if (pomFile.dependencyId.groupId.isBlank()) {
+            pomFile.dependencyId = pomFile.dependencyId
+                .withGroupId(projectElem.packagePath)
+                .withVersion(projectElem.version)
+        }
         addMavenCoplierPlugin(pomFile)
+
+        return project.pom
     }
 
     /**

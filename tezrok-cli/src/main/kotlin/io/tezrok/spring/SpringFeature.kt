@@ -3,7 +3,6 @@ package io.tezrok.spring
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.java.JavaClassNode
-import io.tezrok.api.maven.MavenDependency
 import io.tezrok.api.maven.ModuleNode
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.PathUtil.NEW_LINE
@@ -19,11 +18,10 @@ internal class SpringFeature : TezrokFeature {
         val module = project.getSingleModule()
         val pom = module.pom
         // TODO: get spring version from context
-        pom.getParentNode().dependencyId =
-            MavenDependency.of("org.springframework.boot:spring-boot-starter-parent:3.1.0")
-        pom.addDependency("org.springframework.boot:spring-boot-starter")
+        pom.addProperty("spring-boot.version", "3.1.3")
+        pom.addDependency("org.springframework.boot:spring-boot-starter:${'$'}{spring-boot.version}")
         pom.addDependency("org.springframework.data:spring-data-commons:3.1.1")
-        pom.addPluginDependency("org.springframework.boot:spring-boot-maven-plugin")
+        pom.addPluginDependency("org.springframework.boot:spring-boot-maven-plugin:${'$'}{spring-boot.version}")
 
         val mainClass = module.source.main.java.applicationClass
         if (mainClass != null) {
