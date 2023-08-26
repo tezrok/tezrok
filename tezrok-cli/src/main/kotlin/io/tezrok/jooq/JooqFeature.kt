@@ -36,7 +36,7 @@ internal class JooqFeature : TezrokFeature {
 
     private fun addGroovyPlugin(pomFile: PomNode) {
         val pluginNode = pomFile.addPluginDependency("org.codehaus.gmaven:groovy-maven-plugin:2.1.1")
-        val executionStart = pluginNode.addExecution("testcontainer-start", BuildPhase.GenerateSources, "execute")
+        val executionStart = pluginNode.addExecution("testcontainer-start", "execute", BuildPhase.GenerateSources)
         val configurationStart = executionStart.getConfiguration()
         configurationStart.node.add(
             "source",
@@ -53,7 +53,7 @@ internal class JooqFeature : TezrokFeature {
             """
         )
 
-        val executionStop = pluginNode.addExecution("testcontainer-stop", BuildPhase.Test, "execute")
+        val executionStop = pluginNode.addExecution("testcontainer-stop", "execute", BuildPhase.Test)
         val configurationStop = executionStop.getConfiguration()
         configurationStop.node.add(
             "source",
@@ -78,7 +78,7 @@ internal class JooqFeature : TezrokFeature {
         ) { "Expected property in maven: liquibase.version" }
 
         val pluginNode = pomFile.addPluginDependency("org.liquibase:liquibase-maven-plugin:${'$'}{liquibase.version}")
-        val execution = pluginNode.addExecution("liquibase-update", BuildPhase.GenerateSources, "update")
+        val execution = pluginNode.addExecution("liquibase-update", "update", BuildPhase.GenerateSources)
         val configuration = execution.getConfiguration().node
         // TODO: get changeLogFile from context
         configuration.add("changeLogFile", "src/main/resources/db/master.xml")
@@ -90,7 +90,7 @@ internal class JooqFeature : TezrokFeature {
 
     private fun addJooqPlugin(pomFile: PomNode, classPath: String) {
         val pluginNode = pomFile.addPluginDependency("org.jooq:jooq-codegen-maven:${'$'}{jooq.version}")
-        val execution = pluginNode.addExecution("jooq-codegen", BuildPhase.GenerateSources, "generate")
+        val execution = pluginNode.addExecution("jooq-codegen", "generate", BuildPhase.GenerateSources)
         val configuration = execution.getConfiguration().node
         val jdbcNode = configuration.add("jdbc")
         jdbcNode.add("url", "${'$'}{db.url}")

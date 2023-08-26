@@ -9,7 +9,7 @@ class PluginNode(val node: XmlNode) : MavenDependencies by MavenDependenciesAcce
     val executions: Stream<ExecutionNode> = node.nodesByPath("executions/execution")
         .map { ExecutionNode(it) }
 
-    fun addExecution(id: String, phase: BuildPhase, goal: String): ExecutionNode =
+    fun addExecution(id: String, goal: String, phase: BuildPhase = BuildPhase.None): ExecutionNode =
         ExecutionNode(
             node.getOrAdd("executions")
                 .add("execution")

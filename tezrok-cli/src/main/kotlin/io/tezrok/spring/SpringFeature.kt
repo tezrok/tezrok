@@ -3,7 +3,6 @@ package io.tezrok.spring
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.java.JavaClassNode
-import io.tezrok.api.maven.BuildPhase
 import io.tezrok.api.maven.ModuleNode
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.PathUtil.NEW_LINE
@@ -34,7 +33,7 @@ internal class SpringFeature : TezrokFeature {
                 add("layout", "JAR")
             }
 
-            springBootPlugin.addExecution("app-repackage", BuildPhase.None, "repackage")
+            springBootPlugin.addExecution("app-repackage", "repackage")
         } else {
             log.warn("Main application class not found")
         }
