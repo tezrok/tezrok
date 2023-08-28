@@ -16,6 +16,7 @@ import io.tezrok.util.camelCaseToSnakeCase
 import io.tezrok.util.getRootClass
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
+import java.util.*
 import java.util.stream.Collectors
 import java.util.stream.Stream
 import kotlin.io.path.exists
@@ -193,12 +194,13 @@ internal class JooqRepositoryFeature : TezrokFeature {
 
             context.writeTemplate(repoClassFile, "/templates/jooq/${templateName}.java.vm", values + fields)
             val repoClass = repoClassFile.getRootClass()
-            val constructor = repoClass.getConstructors()
-                .findFirst()
-                .orElseThrow { IllegalStateException("Constructor not found") }
+            addMethodsByUniqueFields(entity, repoClass)
 
             if (custom) {
-                constructor.setModifiers(Modifier.Keyword.PROTECTED)
+                repoClass.getConstructors()
+                    .findFirst()
+                    .orElseThrow { IllegalStateException("Constructor not found") }
+                    .setModifiers(Modifier.Keyword.PROTECTED)
                 repoClass.setModifiers(Modifier.Keyword.PUBLIC, Modifier.Keyword.ABSTRACT)
                 addCustomMethods(name, repoClass, repositoryDir, baseMethods, context)
             } else {
@@ -206,6 +208,29 @@ internal class JooqRepositoryFeature : TezrokFeature {
             }
         } else {
             log.warn(FILE_ALREADY_EXISTS, repoClassFileName)
+        }
+    }
+
+    /**
+     * Adds methods for getting entity by unique fields.
+     */
+    private fun addMethodsByUniqueFields(entity: EntityElem, repoClass: JavaClassNode) {
+        val fields = entity.fields.filter { it.unique == true }
+
+        if (fields.isNotEmpty()) {
+            repoClass.addImport(Optional::class.java)
+            val dtoName = "${entity.name}Dto"
+            val uName = entity.name.camelCaseToSnakeCase().uppercase()
+            fields.forEach { field ->
+                val fieldName = field.name
+                val uField = fieldName.camelCaseToSnakeCase().uppercase()
+                val methodName = "getBy${fieldName.capitalize()}"
+                repoClass.addMethod(methodName)
+                    .withModifiers(Modifier.Keyword.PUBLIC)
+                    .setReturnType("Optional<$dtoName>")
+                    .setBody(ReturnStmt("Optional.ofNullable(dsl.selectFrom(table).where(Tables.${uName}.${uField}.eq($fieldName)).fetchOneInto(${dtoName}.class))"))
+                    .addParameter(field.asJavaType(), fieldName)
+            }
         }
     }
 
