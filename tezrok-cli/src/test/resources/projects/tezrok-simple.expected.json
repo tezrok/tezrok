@@ -29,6 +29,11 @@
                 "unique": true
               },
               {
+                "name": "category",
+                "type": "string",
+                "required": true
+              },
+              {
                 "name": "created",
                 "type": "dateTime",
                 "required": false

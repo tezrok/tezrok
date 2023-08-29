@@ -10,6 +10,9 @@
         "name": {
           "type": "string"
         },
+        "category": {
+          "type": "string"
+        },
         "created": {
           "type": "string",
           "format": "date-time"
@@ -31,7 +34,7 @@
           }
         }
       },
-      "required": ["id", "name", "email"]
+      "required": ["id", "name", "email", "category"]
     },
     "Item": {
       "type": "object",

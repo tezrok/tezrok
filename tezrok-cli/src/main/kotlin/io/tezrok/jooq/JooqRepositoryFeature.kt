@@ -2,8 +2,10 @@ package io.tezrok.jooq
 
 import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.Modifier
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.stmt.ReturnStmt
+import com.github.javaparser.ast.stmt.Statement
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.EntityElem
@@ -16,6 +18,7 @@ import io.tezrok.util.camelCaseToSnakeCase
 import io.tezrok.util.getRootClass
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
+import java.nio.file.Path
 import java.util.*
 import java.util.stream.Collectors
 import java.util.stream.Stream
@@ -202,7 +205,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
                     .orElseThrow { IllegalStateException("Constructor not found") }
                     .setModifiers(Modifier.Keyword.PROTECTED)
                 repoClass.setModifiers(Modifier.Keyword.PUBLIC, Modifier.Keyword.ABSTRACT)
-                addCustomMethods(name, repoClass, repositoryDir, baseMethods, context)
+                addCustomMethods(entity, repoClass, repositoryDir, baseMethods, context)
             } else {
                 repoClass.addAnnotation(Repository::class.java)
             }
@@ -243,12 +246,13 @@ internal class JooqRepositoryFeature : TezrokFeature {
      * @param baseMethods set of base methods which must be ignored during custom methods generating
      */
     private fun addCustomMethods(
-        name: String,
+        entity: EntityElem,
         repoClass: JavaClassNode,
         repositoryDir: JavaDirectoryNode,
         baseMethods: Set<String>,
         context: GeneratorContext
     ) {
+        val name = entity.name
         val repositoryPhysicalPath = repositoryDir.getPhysicalPath()
 
         if (repositoryPhysicalPath != null && repositoryPhysicalPath.exists()) {
@@ -266,11 +270,11 @@ internal class JooqRepositoryFeature : TezrokFeature {
 
                 if (parsedFile.isSuccessful) {
                     val cu = parsedFile.result.get()
-                    val clazz = cu.getRootClass()
+                    val customRepoClass = cu.getRootClass()
                     val addedMethods = mutableListOf<String>()
 
                     // add methods from custom repository class
-                    clazz.findAll(MethodDeclaration::class.java).filter { it.isPublic }.forEach { method ->
+                    customRepoClass.findAll(MethodDeclaration::class.java).filter { it.isPublic }.forEach { method ->
                         val methodName = method.nameAsString
                         if (!baseMethods.contains(methodName)) {
                             addedMethods.add(methodName)
@@ -284,6 +288,15 @@ internal class JooqRepositoryFeature : TezrokFeature {
                             }
                         }
                     }
+
+                    addMethodsFromCustomInterface(
+                        entity,
+                        repoClass,
+                        customRepoClass,
+                        baseMethods,
+                        addedMethods,
+                        repositoryPhysicalPath
+                    )
 
                     if (addedMethods.isNotEmpty() && log.isDebugEnabled) {
                         log.debug(
@@ -310,6 +323,109 @@ internal class JooqRepositoryFeature : TezrokFeature {
         }
     }
 
+    /**
+     * Adds (generates) methods from custom repository interface into generated repository class by methods names.
+     */
+    private fun addMethodsFromCustomInterface(
+        entity: EntityElem,
+        repoClass: JavaClassNode,
+        customRepoClass: ClassOrInterfaceDeclaration,
+        baseMethods: Set<String>,
+        addedMethods: MutableList<String>,
+        repositoryPhysicalPath: Path
+    ) {
+        if (customRepoClass.implementedTypes.isNonEmpty) {
+            val interfaceName = customRepoClass.implementedTypes.first().nameAsString
+            val interfaceFileName = "${interfaceName}.java"
+            val interfaceFilePath = repositoryPhysicalPath.resolve("custom/$interfaceFileName")
+
+            if (interfaceFilePath.exists()) {
+                log.debug("Found custom repository interface file: {}", interfaceFilePath)
+
+                val javaParser = JavaParser()
+                val parsedFile = javaParser.parse(interfaceFilePath)
+
+                if (parsedFile.isSuccessful) {
+                    val interfaceRepoClass = parsedFile.result.get().getRootClass()
+                    check(interfaceRepoClass.isInterface) { "Class is not interface: $interfaceFilePath" }
+
+                    // generates methods from custom repository interface by methods names
+                    interfaceRepoClass.findAll(MethodDeclaration::class.java).filter { !it.isDefault }.forEach { method ->
+                        val methodName = method.nameAsString
+                        if (!baseMethods.contains(methodName)) {
+                            generateMethodByName(entity, methodName, method, repoClass)
+                            addedMethods.add(methodName)
+                        }
+                    }
+                } else {
+                    log.warn("Failed to parse file: {}", interfaceFilePath)
+                    parsedFile.problems.forEach { problem ->
+                        log.warn("Problem: {}", problem)
+                    }
+                }
+
+            } else {
+                log.debug("Custom repository file not found, create it: {}", interfaceFilePath)
+            }
+        }
+    }
+
+    private fun generateMethodByName(
+        entity: EntityElem,
+        methodName: String,
+        method: MethodDeclaration,
+        repoClass: JavaClassNode
+    ) {
+        val returnType = method.typeAsString!!
+        val newMethod = repoClass.addMethod(methodName)
+            .withModifiers(Modifier.Keyword.PUBLIC)
+            .setReturnType(returnType)
+        // TODO: use type as fully qualified name
+        val params = method.parameters.associate { it.nameAsString to it.typeAsString }
+        params.forEach { param -> newMethod.addParameter(param.value, param.key) }
+
+        if (methodName.startsWith(PREFIX_FIND_BY)) {
+            newMethod.setBody(generateFindByBody(entity, methodName, returnType, params))
+        } else {
+            error("Unsupported method name: $methodName")
+        }
+
+        if (returnType.startsWith("List<")) {
+            repoClass.addImport(List::class.java)
+        }
+    }
+
+    /**
+     * Generates body for List<DtoType> findBySomeField() methods.
+     */
+    private fun generateFindByBody(
+        entity: EntityElem,
+        methodName: String,
+        returnType: String,
+        params: Map<String, String>
+    ): Statement {
+        val name = entity.name
+        val dtoName = "${name}Dto"
+
+        try {
+            check(returnType == "List<$dtoName>") { "Unsupported return type: $returnType" }
+
+            val fieldName = methodName.substring(PREFIX_FIND_BY.length).decapitalize()
+            val field = entity.fields.find { it.name == fieldName }
+                ?: error("Field ($fieldName) not found in entity (${entity.name})")
+            val paramName = params.keys.first()
+            val paramType = params[paramName] ?: error("Parameter type not found for parameter: $paramName")
+
+            check(field.asJavaType() == paramType) { "Field type (${field.asJavaType()}) and parameter type ($paramType) mismatch" }
+
+            val uName = name.camelCaseToSnakeCase().uppercase()
+            val uField = fieldName.camelCaseToSnakeCase().uppercase()
+            return ReturnStmt("dsl.selectFrom(table).where(Tables.${uName}.${uField}.eq($paramName)).fetchInto(${dtoName}.class)")
+        } catch (ex: Exception) {
+            throw RuntimeException("Failed to generate body for method \"$methodName\": ${ex.message}", ex)
+        }
+    }
+
     private fun generateFields(entity: EntityElem): Map<String, String> {
         var counter = 1
         return entity.fields.filter { it.primary == true }
@@ -324,6 +440,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
         const val JOOQ_SINGLE_ID_REPO = "JooqRepository.java"
         const val JOOQ_TWO_ID_REPO = "JooqRepository2.java"
         const val JOOQ_BASE_REPO = "JooqBaseRepository.java"
+        const val PREFIX_FIND_BY = "findBy"
         const val FILE_ALREADY_EXISTS = "File already exists: {}"
     }
 }
