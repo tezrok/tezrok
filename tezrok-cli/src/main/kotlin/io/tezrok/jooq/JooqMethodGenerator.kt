@@ -5,6 +5,7 @@ import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.stmt.ReturnStmt
 import com.github.javaparser.ast.stmt.Statement
 import io.tezrok.api.input.EntityElem
+import io.tezrok.api.input.FieldElem
 import io.tezrok.api.java.JavaClassNode
 import io.tezrok.util.asJavaType
 import io.tezrok.util.camelCaseToSnakeCase
@@ -54,52 +55,74 @@ internal class JooqMethodGenerator(
             check(returnType == "List<$dtoName>") { "Unsupported return type: '$returnType', expected 'List<$dtoName>'" }
 
             val expressionPart = methodName.substring(PREFIX_FIND_BY.length)
-            val jooqExpression = composeWhereExpression(entity, expressionPart, params)
-            return ReturnStmt("dsl.selectFrom(table).where($jooqExpression).fetchInto(${dtoName}.class)")
+            val (where, orderBy) = parseAsJooqExpression(entity, expressionPart, params)
+            return ReturnStmt("dsl.selectFrom(table).where($where)$orderBy.fetchInto(${dtoName}.class)")
         } catch (ex: Exception) {
             throw RuntimeException("Failed to generate body for method \"$methodName\": ${ex.message}", ex)
         }
     }
 
-    private fun composeWhereExpression(
+    private fun parseAsJooqExpression(
         entity: EntityElem,
         expressionPart: String,
         params: Map<String, String>
-    ): String {
+    ): JooqExpression {
         val name = entity.name
         val tableName = name.camelCaseToSnakeCase().uppercase()
         val names = parseNameExpression(expressionPart)
         val sb = StringBuilder()
         val paramNames = params.keys.toList()
+        var orderBy = ""
 
         names.forEachIndexed { index, token ->
-            if (token.operator) {
-                sb.append(".${token.name}(")
-            } else {
-                val field = entity.fields.find { fieldElem -> fieldElem.name == token.name }
-                    ?: error("Field (${token.name}) not found in entity (${entity.name})")
-                check(token.index < params.size) { "Parameter index of '${token.name}' out of bounds (${params.size})" }
-                val paramName = paramNames[token.index]
-                val paramType = params[paramName]!!
+            when (token) {
+                is Operator -> sb.append(".${token.name}(")
+                is FieldName -> {
+                    check(token.index < params.size) { "Parameter index of '${token.name}' out of bounds (${params.size})" }
+                    val field = getFieldByName(entity, token.name)
+                    val paramName = paramNames[token.index]
+                    val paramType = params[paramName]!!
 
-                if (field.logicField == true) {
-                    // TODO: support logic fields in method name expressions
-                    error("Logic field (${field.name}) cannot be used in where expression, use instead related real field")
+                    check(field.asJavaType() == paramType) { "Field type (${field.asJavaType()}) and parameter type ($paramType) mismatch" }
+
+                    val fieldName = token.name.camelCaseToSnakeCase().uppercase()
+                    sb.append("Tables.${tableName}.${fieldName}.eq($paramName)")
+
+                    if (index > 0) {
+                        // if param is not the first one, we should close previously opened operator
+                        sb.append(")")
+                    }
                 }
 
-                check(field.asJavaType() == paramType) { "Field type (${field.asJavaType()}) and parameter type ($paramType) mismatch" }
+                is OrderBy -> orderBy = ".orderBy("
+                is SortName -> {
+                    val field = getFieldByName(entity, token.name)
+                    val fieldName = field.name.camelCaseToSnakeCase().uppercase()
+                    orderBy += "Tables.${tableName}.${fieldName}"
 
-                val fieldName = token.name.camelCaseToSnakeCase().uppercase()
-                sb.append("Tables.${tableName}.${fieldName}.eq($paramName)")
-
-                if (index > 0) {
-                    // if param is not the first one, we should close previously opened operator
-                    sb.append(")")
+                    if (token.sort == Sort.Asc) {
+                        orderBy += ".asc()"
+                    } else if (token.sort == Sort.Desc) {
+                        orderBy += ".desc()"
+                    }
+                    orderBy += ")"
                 }
             }
         }
 
-        return sb.toString()
+        return JooqExpression(where = sb.toString(), orderBy = orderBy)
+    }
+
+
+    private fun getFieldByName(entity: EntityElem, name: String): FieldElem {
+        val field = entity.fields.find { fieldElem -> fieldElem.name == name }
+            ?: error("Field ($name) not found in entity (${entity.name})")
+        if (field.logicField == true) {
+            // TODO: support logic fields in method name expressions
+            error("Logic field (${field.name}) cannot be used in method expression, use instead related real field")
+        }
+
+        return field
     }
 
     private fun parseNameExpression(expressionName: String): List<Token> {
@@ -107,31 +130,68 @@ internal class JooqMethodGenerator(
         if (parts.isNotEmpty()) {
             val tokens = mutableListOf<Token>()
             var indexFrom = 0
+            var lastOperatorIsOrderBy = false
 
             parts.forEachIndexed { index, part ->
                 val indexOfOperator = part.range.first
                 val operator = part.value
                 val name = expressionName.substring(indexFrom, indexOfOperator)
-                tokens.add(Token(name.decapitalize(), index))
-                tokens.add(Token(operator.decapitalize(), -1, true))
+                tokens.add(FieldName(name.decapitalize(), index))
+                check(!lastOperatorIsOrderBy) { "Only one OrderBy operator is allowed" }
+                lastOperatorIsOrderBy = operator == OPERATOR_ORDER_BY
+                if (lastOperatorIsOrderBy) {
+                    tokens.add(OrderBy())
+                } else {
+                    tokens.add(Operator(operator.decapitalize()))
+                }
                 indexFrom = part.range.last + 1
             }
 
             if (indexFrom < expressionName.length) {
                 val name = expressionName.substring(indexFrom)
-                tokens.add(Token(name.decapitalize(), parts.size))
+
+                if (lastOperatorIsOrderBy) {
+                    if (name.endsWith(SORT_ASC)) {
+                        tokens.add(SortName(name.removeSuffix(SORT_ASC).decapitalize(), Sort.Asc))
+                    } else if (name.endsWith(SORT_DESC)) {
+                        tokens.add(SortName(name.removeSuffix(SORT_DESC).decapitalize(), Sort.Desc))
+                    } else {
+                        tokens.add(SortName(name.decapitalize()))
+                    }
+                } else {
+                    tokens.add(FieldName(name.decapitalize(), parts.size))
+                }
             }
 
             return tokens
         }
 
-        return listOf(Token(expressionName.decapitalize(), 0))
+        return listOf(FieldName(expressionName.decapitalize(), 0))
     }
 
-    private data class Token(val name: String, val index: Int, val operator: Boolean = false)
+    private data class JooqExpression(val where: String, val orderBy: String)
+
+    private abstract class Token(val name: String)
+
+    private class Operator(name: String) : Token(name)
+
+    private class OrderBy : Token("OrderBy")
+
+    private class FieldName(name: String, val index: Int) : Token(name)
+
+    private class SortName(name: String, val sort: Sort = Sort.Default) : Token(name)
+
+    enum class Sort {
+        Default,
+        Asc,
+        Desc
+    }
 
     private companion object {
         const val PREFIX_FIND_BY = "findBy"
-        val OPERATOR = Regex("(?<=[a-z])(And|Or)(?=[A-Z])")
+        const val OPERATOR_ORDER_BY = "OrderBy"
+        const val SORT_ASC = "Asc"
+        const val SORT_DESC = "Desc"
+        val OPERATOR = Regex("(?<=[a-z])(And|Or|OrderBy)(?=[A-Z])")
     }
 }
