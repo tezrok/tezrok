@@ -12,8 +12,15 @@ fun String.resourceAsString(): String = ResourceUtil.getResourceAsString(this)
 /**
  * Convert camel case string to snake case
  *
- * Example: "FooBar" -> "Foo_bar"
+ * Example: "FooBar" -> "Foo_Bar"
  */
-fun String.camelCaseToSnakeCase(): String = camelCaseRegex.replace(this, "$1_$2").lowercase()
+fun String.camelCaseToSnakeCase(): String = camelCaseRegex.replace(this, "$1_$2")
+
+/**
+ * Convert camel case string to sql case
+ *
+ * Example: "FooBar" -> "foo_bar"
+ */
+fun String.camelCaseToSqlCase(): String = camelCaseToSnakeCase().lowercase()
 
 private val camelCaseRegex = Regex("([a-z])([A-Z]+)")

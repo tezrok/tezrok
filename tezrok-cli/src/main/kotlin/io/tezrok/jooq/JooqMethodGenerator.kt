@@ -69,45 +69,73 @@ internal class JooqMethodGenerator(
     ): JooqExpression {
         val name = entity.name
         val tableName = name.camelCaseToSnakeCase().uppercase()
-        val names = parseNameExpression(expressionPart)
+        val names = MethodExpressionParser.parse(expressionPart)
         val sb = StringBuilder()
         val paramNames = params.keys.toList()
         var orderBy = ""
+        var paramIndex = -1
 
         names.forEachIndexed { index, token ->
             when (token) {
-                is Operator -> sb.append(".${token.name}(")
-                is FieldName -> {
-                    check(token.index < params.size) { "Parameter index of '${token.name}' out of bounds (${params.size})" }
+                is MethodExpressionParser.And,
+                is MethodExpressionParser.Or -> {
+                    val operator = token.name.lowercase()
+                    sb.append(".$operator(")
+                }
+
+                is MethodExpressionParser.Name -> {
                     val field = getFieldByName(entity, token.name)
-                    val paramName = paramNames[token.index]
-                    val paramType = params[paramName]!!
-
-                    check(field.asJavaType() == paramType) { "Field type (${field.asJavaType()}) and parameter type ($paramType) mismatch" }
-
                     val fieldName = token.name.camelCaseToSnakeCase().uppercase()
-                    sb.append("Tables.${tableName}.${fieldName}.eq($paramName)")
+                    val nextOp = if (index + 1 < names.size) names[index + 1] else null
+                    val isOp = nextOp is MethodExpressionParser.Is || nextOp is MethodExpressionParser.IsNot
 
+                    if (isOp && index + 2 < names.size && names[index + 2] is MethodExpressionParser.Null) {
+                        sb.append("Tables.${tableName}.${fieldName}")
+                        if (nextOp is MethodExpressionParser.Is) {
+                            sb.append(".isNull()")
+                        } else {
+                            sb.append(".isNotNull()")
+                        }
+                    } else {
+                        paramIndex++
+                        check(paramIndex < params.size) { "Parameter index of '${token.name}' out of bounds (${params.size})" }
+                        val paramName = paramNames[paramIndex]
+                        val paramType = params[paramName]!!
+
+                        check(field.asJavaType() == paramType) { "Field type (${field.asJavaType()}) and parameter type ($paramType) mismatch" }
+
+                        sb.append("Tables.${tableName}.${fieldName}.eq($paramName)")
+                        if (nextOp is MethodExpressionParser.IsNot) {
+                            sb.append(".not()")
+                        }
+                    }
                     if (index > 0) {
                         // if param is not the first one, we should close previously opened operator
                         sb.append(")")
                     }
                 }
 
-                is OrderBy -> orderBy = ".orderBy("
-                is SortName -> {
+                is MethodExpressionParser.OrderBy -> orderBy = ".orderBy("
+                is MethodExpressionParser.SortName -> {
+                    // TODO: support several fields in order by
                     val field = getFieldByName(entity, token.name)
                     val fieldName = field.name.camelCaseToSnakeCase().uppercase()
                     orderBy += "Tables.${tableName}.${fieldName}"
 
-                    if (token.sort == Sort.Asc) {
+                    if (token.sort == MethodExpressionParser.Sort.Asc) {
                         orderBy += ".asc()"
-                    } else if (token.sort == Sort.Desc) {
+                    } else if (token.sort == MethodExpressionParser.Sort.Desc) {
                         orderBy += ".desc()"
                     }
                     orderBy += ")"
                 }
             }
+        }
+
+        paramIndex++
+        if (paramIndex < params.size) {
+            val notUsedParams = paramNames.subList(paramIndex, params.size).joinToString(", ")
+            error("Not all parameters used in method: $notUsedParams")
         }
 
         return JooqExpression(where = sb.toString(), orderBy = orderBy)
@@ -125,72 +153,10 @@ internal class JooqMethodGenerator(
         return field
     }
 
-    private fun parseNameExpression(expressionName: String): List<Token> {
-        val parts = OPERATOR.findAll(expressionName).toList()
-        if (parts.isNotEmpty()) {
-            val tokens = mutableListOf<Token>()
-            var indexFrom = 0
-            var lastOperatorIsOrderBy = false
-
-            parts.forEachIndexed { index, part ->
-                val indexOfOperator = part.range.first
-                val operator = part.value
-                val name = expressionName.substring(indexFrom, indexOfOperator)
-                tokens.add(FieldName(name.decapitalize(), index))
-                check(!lastOperatorIsOrderBy) { "Only one OrderBy operator is allowed" }
-                lastOperatorIsOrderBy = operator == OrderBy.name
-                if (lastOperatorIsOrderBy) {
-                    tokens.add(OrderBy)
-                } else {
-                    tokens.add(Operator(operator.decapitalize()))
-                }
-                indexFrom = part.range.last + 1
-            }
-
-            if (indexFrom < expressionName.length) {
-                val name = expressionName.substring(indexFrom)
-
-                if (lastOperatorIsOrderBy) {
-                    if (name.endsWith(SORT_ASC)) {
-                        tokens.add(SortName(name.removeSuffix(SORT_ASC).decapitalize(), Sort.Asc))
-                    } else if (name.endsWith(SORT_DESC)) {
-                        tokens.add(SortName(name.removeSuffix(SORT_DESC).decapitalize(), Sort.Desc))
-                    } else {
-                        tokens.add(SortName(name.decapitalize()))
-                    }
-                } else {
-                    tokens.add(FieldName(name.decapitalize(), parts.size))
-                }
-            }
-
-            return tokens
-        }
-
-        return listOf(FieldName(expressionName.decapitalize(), 0))
-    }
-
     private data class JooqExpression(val where: String, val orderBy: String)
 
-    private abstract class Token(val name: String)
-
-    private class Operator(name: String) : Token(name)
-
-    private object OrderBy : Token("OrderBy")
-
-    private class FieldName(name: String, val index: Int) : Token(name)
-
-    private class SortName(name: String, val sort: Sort = Sort.Default) : Token(name)
-
-    enum class Sort {
-        Default,
-        Asc,
-        Desc
-    }
 
     private companion object {
         const val PREFIX_FIND_BY = "findBy"
-        const val SORT_ASC = "Asc"
-        const val SORT_DESC = "Desc"
-        val OPERATOR = Regex("(?<=[a-z])(And|Or|OrderBy)(?=[A-Z])")
     }
 }

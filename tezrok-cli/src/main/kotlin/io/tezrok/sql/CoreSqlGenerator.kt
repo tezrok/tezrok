@@ -6,7 +6,7 @@ import io.tezrok.api.input.FieldElem
 import io.tezrok.api.input.SchemaElem
 import io.tezrok.api.model.SqlScript
 import io.tezrok.api.sql.SqlGenerator
-import io.tezrok.util.camelCaseToSnakeCase
+import io.tezrok.util.camelCaseToSqlCase
 import io.tezrok.util.isSerialEffective
 import org.apache.commons.lang3.Validate
 import org.slf4j.LoggerFactory
@@ -126,9 +126,9 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
 
         // TODO: get schema from context
         return if (withSchema)
-            "public." + tableNameFinal.camelCaseToSnakeCase()
+            "public." + tableNameFinal.camelCaseToSqlCase()
         else
-            tableNameFinal.camelCaseToSnakeCase()
+            tableNameFinal.camelCaseToSqlCase()
     }
 
     private fun generateColumn(field: FieldElem, sb: StringBuilder, singlePrimary: Boolean) {
@@ -205,7 +205,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
      *
      * Example: "firstName" -> "first_name"
      */
-    private fun toColumnName(name: String) = name.camelCaseToSnakeCase().lowercase()
+    private fun toColumnName(name: String) = name.camelCaseToSqlCase()
 
     private fun addNewline(sb: StringBuilder, count: Int = 1) {
         for (i in 1..count) {
