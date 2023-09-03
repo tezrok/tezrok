@@ -39,7 +39,7 @@ internal class JooqMethodGenerator(
     }
 
     /**
-     * Generates body for List<DtoType> findBySomeField() methods.
+     * Generates body for List<DtoType> findBySomeFieldOrExpression() methods.
      */
     private fun generateFindByBody(
         entity: EntityElem,
@@ -51,25 +51,87 @@ internal class JooqMethodGenerator(
         val dtoName = "${name}Dto"
 
         try {
-            check(returnType == "List<$dtoName>") { "Unsupported return type: $returnType" }
+            check(returnType == "List<$dtoName>") { "Unsupported return type: '$returnType', expected 'List<$dtoName>'" }
 
-            val fieldName = methodName.substring(PREFIX_FIND_BY.length).decapitalize()
-            val field = entity.fields.find { it.name == fieldName }
-                ?: error("Field ($fieldName) not found in entity (${entity.name})")
-            val paramName = params.keys.first()
-            val paramType = params[paramName] ?: error("Parameter type not found for parameter: $paramName")
-
-            check(field.asJavaType() == paramType) { "Field type (${field.asJavaType()}) and parameter type ($paramType) mismatch" }
-
-            val uName = name.camelCaseToSnakeCase().uppercase()
-            val uField = fieldName.camelCaseToSnakeCase().uppercase()
-            return ReturnStmt("dsl.selectFrom(table).where(Tables.${uName}.${uField}.eq($paramName)).fetchInto(${dtoName}.class)")
+            val expressionPart = methodName.substring(PREFIX_FIND_BY.length)
+            val jooqExpression = composeWhereExpression(entity, expressionPart, params)
+            return ReturnStmt("dsl.selectFrom(table).where($jooqExpression).fetchInto(${dtoName}.class)")
         } catch (ex: Exception) {
             throw RuntimeException("Failed to generate body for method \"$methodName\": ${ex.message}", ex)
         }
     }
 
+    private fun composeWhereExpression(
+        entity: EntityElem,
+        expressionPart: String,
+        params: Map<String, String>
+    ): String {
+        val name = entity.name
+        val tableName = name.camelCaseToSnakeCase().uppercase()
+        val names = parseNameExpression(expressionPart)
+        val sb = StringBuilder()
+        val paramNames = params.keys.toList()
+
+        names.forEachIndexed { index, token ->
+            if (token.operator) {
+                sb.append(".${token.name}(")
+            } else {
+                val field = entity.fields.find { fieldElem -> fieldElem.name == token.name }
+                    ?: error("Field (${token.name}) not found in entity (${entity.name})")
+                check(token.index < params.size) { "Parameter index of '${token.name}' out of bounds (${params.size})" }
+                val paramName = paramNames[token.index]
+                val paramType = params[paramName]!!
+
+                if (field.logicField == true) {
+                    // TODO: support logic fields in method name expressions
+                    error("Logic field (${field.name}) cannot be used in where expression, use instead related real field")
+                }
+
+                check(field.asJavaType() == paramType) { "Field type (${field.asJavaType()}) and parameter type ($paramType) mismatch" }
+
+                val fieldName = token.name.camelCaseToSnakeCase().uppercase()
+                sb.append("Tables.${tableName}.${fieldName}.eq($paramName)")
+
+                if (index > 0) {
+                    // if param is not the first one, we should close previously opened operator
+                    sb.append(")")
+                }
+            }
+        }
+
+        return sb.toString()
+    }
+
+    private fun parseNameExpression(expressionName: String): List<Token> {
+        val parts = OPERATOR.findAll(expressionName).toList()
+        if (parts.isNotEmpty()) {
+            val tokens = mutableListOf<Token>()
+            var indexFrom = 0
+
+            parts.forEachIndexed { index, part ->
+                val indexOfOperator = part.range.first
+                val operator = part.value
+                val name = expressionName.substring(indexFrom, indexOfOperator)
+                tokens.add(Token(name.decapitalize(), index))
+                tokens.add(Token(operator.decapitalize(), -1, true))
+                indexFrom = part.range.last + 1
+            }
+
+            if (indexFrom < expressionName.length) {
+                val name = expressionName.substring(indexFrom)
+                tokens.add(Token(name.decapitalize(), parts.size))
+            }
+
+            return tokens
+        }
+
+        return listOf(Token(expressionName.decapitalize(), 0))
+    }
+
+    private data class Token(val name: String, val index: Int, val operator: Boolean = false)
+
     private companion object {
         const val PREFIX_FIND_BY = "findBy"
+        val OPERATOR = Regex("(?<=[a-z])(And|Or)(?=[A-Z])")
     }
 }
