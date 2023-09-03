@@ -138,9 +138,9 @@ internal class JooqMethodGenerator(
                 val name = expressionName.substring(indexFrom, indexOfOperator)
                 tokens.add(FieldName(name.decapitalize(), index))
                 check(!lastOperatorIsOrderBy) { "Only one OrderBy operator is allowed" }
-                lastOperatorIsOrderBy = operator == OPERATOR_ORDER_BY
+                lastOperatorIsOrderBy = operator == OrderBy.name
                 if (lastOperatorIsOrderBy) {
-                    tokens.add(OrderBy())
+                    tokens.add(OrderBy)
                 } else {
                     tokens.add(Operator(operator.decapitalize()))
                 }
@@ -175,7 +175,7 @@ internal class JooqMethodGenerator(
 
     private class Operator(name: String) : Token(name)
 
-    private class OrderBy : Token("OrderBy")
+    private object OrderBy : Token("OrderBy")
 
     private class FieldName(name: String, val index: Int) : Token(name)
 
@@ -189,7 +189,6 @@ internal class JooqMethodGenerator(
 
     private companion object {
         const val PREFIX_FIND_BY = "findBy"
-        const val OPERATOR_ORDER_BY = "OrderBy"
         const val SORT_ASC = "Asc"
         const val SORT_DESC = "Desc"
         val OPERATOR = Regex("(?<=[a-z])(And|Or|OrderBy)(?=[A-Z])")
