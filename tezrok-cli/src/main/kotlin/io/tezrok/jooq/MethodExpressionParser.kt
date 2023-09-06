@@ -5,7 +5,7 @@ import io.tezrok.util.camelCaseToSnakeCase
 /**
  * Parses method name into tokens.
  *
- * Example: "findByNameAndAgeOrderByAgeDesc" -> [Name("name"), And, Name("age"), OrderBy, SortName("age", Sort.Desc)]
+ * Example: "NameAndAgeOrderByAgeDesc" -> [Name("name"), And, Name("age"), OrderBy, SortName("age", Sort.Desc)]
  */
 object MethodExpressionParser {
     fun parse(name: String): List<Token> {

@@ -9,6 +9,7 @@ import io.tezrok.api.input.FieldElem
 import io.tezrok.api.java.JavaClassNode
 import io.tezrok.util.asJavaType
 import io.tezrok.util.camelCaseToSnakeCase
+import java.util.*
 
 /**
  * Generates jooq methods for repository classes.
@@ -30,12 +31,17 @@ internal class JooqMethodGenerator(
 
         if (methodName.startsWith(PREFIX_FIND_BY)) {
             newMethod.setBody(generateFindByBody(entity, methodName, returnType, params))
+        } else if (methodName.startsWith(PREFIX_GET_BY)) {
+            newMethod.setBody(generateGetByBody(entity, methodName, returnType, params))
         } else {
             error("Unsupported method name: $methodName")
         }
 
         if (returnType.startsWith("List<")) {
             repoClass.addImport(List::class.java)
+        }
+        if (returnType.startsWith("Optional<")) {
+            repoClass.addImport(Optional::class.java)
         }
     }
 
@@ -57,6 +63,34 @@ internal class JooqMethodGenerator(
             val expressionPart = methodName.substring(PREFIX_FIND_BY.length)
             val (where, orderBy) = parseAsJooqExpression(entity, expressionPart, params)
             return ReturnStmt("dsl.selectFrom(table).where($where)$orderBy.fetchInto(${dtoName}.class)")
+        } catch (ex: Exception) {
+            throw RuntimeException("Failed to generate body for method \"$methodName\": ${ex.message}", ex)
+        }
+    }
+
+    /**
+     * Generates body for Optional<DtoType> getBySomeFieldOrExpression() methods.
+     */
+    private fun generateGetByBody(
+        entity: EntityElem,
+        methodName: String,
+        returnType: String,
+        params: Map<String, String>
+    ): Statement {
+        val name = entity.name
+        val dtoName = "${name}Dto"
+
+        try {
+            val isOptionalReturn = returnType == "Optional<$dtoName>"
+            check(returnType == dtoName || isOptionalReturn) { "Unsupported return type: '$returnType', expected '$dtoName' or 'Optional<$dtoName>'" }
+
+            val expressionPart = methodName.substring(PREFIX_GET_BY.length)
+            val (where, orderBy) = parseAsJooqExpression(entity, expressionPart, params)
+
+            check(orderBy.isBlank()) { "OrderBy is not supported in 'getBy' methods" }
+
+            val finalMethod = if (isOptionalReturn) "fetchOptionalInto" else "fetchOneInto"
+            return ReturnStmt("dsl.selectFrom(table).where($where)$orderBy.$finalMethod(${dtoName}.class)")
         } catch (ex: Exception) {
             throw RuntimeException("Failed to generate body for method \"$methodName\": ${ex.message}", ex)
         }
@@ -158,5 +192,6 @@ internal class JooqMethodGenerator(
 
     private companion object {
         const val PREFIX_FIND_BY = "findBy"
+        const val PREFIX_GET_BY = "getBy"
     }
 }
