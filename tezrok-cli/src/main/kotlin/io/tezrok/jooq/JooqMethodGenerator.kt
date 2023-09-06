@@ -29,9 +29,9 @@ internal class JooqMethodGenerator(
         val params = method.parameters.associate { it.nameAsString to it.typeAsString }
         params.forEach { param -> newMethod.addParameter(param.value, param.key) }
 
-        if (methodName.startsWith(PREFIX_FIND_BY)) {
+        if (methodName.startsWith(PREFIX_FIND_BY) || methodName.startsWith(PREFIX_FIND)) {
             newMethod.setBody(generateFindByBody(entity, methodName, returnType, params))
-        } else if (methodName.startsWith(PREFIX_GET_BY)) {
+        } else if (methodName.startsWith(PREFIX_GET_BY) || methodName.startsWith(PREFIX_GET)) {
             newMethod.setBody(generateGetByBody(entity, methodName, returnType, params))
         } else {
             error("Unsupported method name: $methodName")
@@ -60,9 +60,12 @@ internal class JooqMethodGenerator(
         try {
             check(returnType == "List<$dtoName>") { "Unsupported return type: '$returnType', expected 'List<$dtoName>'" }
 
-            val expressionPart = methodName.substring(PREFIX_FIND_BY.length)
-            val (where, orderBy) = parseAsJooqExpression(entity, expressionPart, params)
-            return ReturnStmt("dsl.selectFrom(table).where($where)$orderBy.fetchInto(${dtoName}.class)")
+            val expressionPart = if (methodName.startsWith(PREFIX_FIND_BY))
+                methodName.substring(PREFIX_FIND_BY.length)
+            else
+                methodName.substring(PREFIX_FIND.length)
+            val (where, orderBy, limit) = parseAsJooqExpression(entity, expressionPart, params, false)
+            return ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchInto(${dtoName}.class)")
         } catch (ex: Exception) {
             throw RuntimeException("Failed to generate body for method \"$methodName\": ${ex.message}", ex)
         }
@@ -84,13 +87,13 @@ internal class JooqMethodGenerator(
             val isOptionalReturn = returnType == "Optional<$dtoName>"
             check(returnType == dtoName || isOptionalReturn) { "Unsupported return type: '$returnType', expected '$dtoName' or 'Optional<$dtoName>'" }
 
-            val expressionPart = methodName.substring(PREFIX_GET_BY.length)
-            val (where, orderBy) = parseAsJooqExpression(entity, expressionPart, params)
-
-            check(orderBy.isBlank()) { "OrderBy is not supported in 'getBy' methods" }
-
+            val expressionPart = if (methodName.startsWith(PREFIX_GET_BY))
+                methodName.substring(PREFIX_GET_BY.length)
+            else
+                methodName.substring(PREFIX_GET.length)
+            val (where, orderBy, limit) = parseAsJooqExpression(entity, expressionPart, params, true)
             val finalMethod = if (isOptionalReturn) "fetchOptionalInto" else "fetchOneInto"
-            return ReturnStmt("dsl.selectFrom(table).where($where)$orderBy.$finalMethod(${dtoName}.class)")
+            return ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.$finalMethod(${dtoName}.class)")
         } catch (ex: Exception) {
             throw RuntimeException("Failed to generate body for method \"$methodName\": ${ex.message}", ex)
         }
@@ -99,7 +102,8 @@ internal class JooqMethodGenerator(
     private fun parseAsJooqExpression(
         entity: EntityElem,
         expressionPart: String,
-        params: Map<String, String>
+        params: Map<String, String>,
+        singleResult: Boolean
     ): JooqExpression {
         val name = entity.name
         val tableName = name.camelCaseToSnakeCase().uppercase()
@@ -107,7 +111,9 @@ internal class JooqMethodGenerator(
         val sb = StringBuilder()
         val paramNames = params.keys.toList()
         var orderBy = ""
+        var limit = ""
         var paramIndex = -1
+        var namesCount = 0
 
         names.forEachIndexed { index, token ->
             when (token) {
@@ -122,6 +128,7 @@ internal class JooqMethodGenerator(
                     val fieldName = token.name.camelCaseToSnakeCase().uppercase()
                     val nextOp = if (index + 1 < names.size) names[index + 1] else null
                     val isOp = nextOp is MethodExpressionParser.Is || nextOp is MethodExpressionParser.IsNot
+                    namesCount++
 
                     if (isOp && index + 2 < names.size && names[index + 2] is MethodExpressionParser.Null) {
                         sb.append("Tables.${tableName}.${fieldName}")
@@ -134,7 +141,7 @@ internal class JooqMethodGenerator(
                         paramIndex++
                         check(paramIndex < params.size) { "Parameter index of '${token.name}' out of bounds (${params.size})" }
                         val paramName = paramNames[paramIndex]
-                        val paramType = params[paramName]!!
+                        val paramType = params[paramName] ?: error("Parameter type not found: $paramName")
 
                         check(field.asJavaType() == paramType) { "Field type (${field.asJavaType()}) and parameter type ($paramType) mismatch" }
 
@@ -143,7 +150,7 @@ internal class JooqMethodGenerator(
                             sb.append(".not()")
                         }
                     }
-                    if (index > 0) {
+                    if (namesCount > 1) {
                         // if param is not the first one, we should close previously opened operator
                         sb.append(")")
                     }
@@ -163,6 +170,11 @@ internal class JooqMethodGenerator(
                     }
                     orderBy += ")"
                 }
+
+                is MethodExpressionParser.Top -> {
+                    check(!singleResult || token.limit == 1) { "Top limit should be 1 for single result method" }
+                    limit = ".limit(${token.limit})"
+                }
             }
         }
 
@@ -172,7 +184,11 @@ internal class JooqMethodGenerator(
             error("Not all parameters used in method: $notUsedParams")
         }
 
-        return JooqExpression(where = sb.toString(), orderBy = orderBy)
+        if (singleResult && orderBy.isNotEmpty() && limit.isEmpty()) {
+            error("Single result method with OrderBy should use top 1")
+        }
+
+        return JooqExpression(where = sb.toString(), orderBy = orderBy, limit = limit)
     }
 
 
@@ -187,11 +203,13 @@ internal class JooqMethodGenerator(
         return field
     }
 
-    private data class JooqExpression(val where: String, val orderBy: String)
+    private data class JooqExpression(val where: String, val orderBy: String, val limit: String)
 
 
     private companion object {
         const val PREFIX_FIND_BY = "findBy"
+        const val PREFIX_FIND = "find"
         const val PREFIX_GET_BY = "getBy"
+        const val PREFIX_GET = "get"
     }
 }

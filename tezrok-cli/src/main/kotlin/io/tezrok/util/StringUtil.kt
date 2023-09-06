@@ -23,4 +23,4 @@ fun String.camelCaseToSnakeCase(): String = camelCaseRegex.replace(this, "$1_$2"
  */
 fun String.camelCaseToSqlCase(): String = camelCaseToSnakeCase().lowercase()
 
-private val camelCaseRegex = Regex("([a-z])([A-Z]+)")
+private val camelCaseRegex = Regex("([a-z\\d])([A-Z]+)")

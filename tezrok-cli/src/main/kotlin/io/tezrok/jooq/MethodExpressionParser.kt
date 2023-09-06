@@ -55,7 +55,10 @@ object MethodExpressionParser {
                     }
 
                     NAME_BY -> {
-                        addNamePart(part)
+                        // ignore "By" after "Top"
+                        if (tokens.lastOrNull() !is Top) {
+                            addNamePart(part)
+                        }
                     }
 
                     NAME_NOT -> {
@@ -78,7 +81,16 @@ object MethodExpressionParser {
                     }
 
                     else -> {
-                        addNamePart(part)
+                        if (part.name.startsWith(NAME_TOP)) {
+                            val limit = part.name.substring(NAME_TOP.length)
+                                .let { if (it.isEmpty()) 1 else it.toIntOrNull() }
+                            check(limit != null) { "Top value should be valid int, but found: ${part.name}" }
+                            check(tokens.isEmpty()) { "Top should be used only once and at the beginning" }
+
+                            tokens.add(Top(limit))
+                        } else {
+                            addNamePart(part)
+                        }
                     }
                 }
             } else if (part is Equals) {
@@ -103,6 +115,8 @@ object MethodExpressionParser {
     }
 
     data class SortName(override val name: String, val sort: Sort = Sort.Default) : Token(name)
+
+    data class Top(val limit: Int = 1) : Token(NAME_TOP)
 
     object OrderBy : Token("OrderBy")
 
@@ -129,6 +143,7 @@ object MethodExpressionParser {
     private const val NAME_NOT = "Not"
     private const val NAME_ASC = "Asc"
     private const val NAME_DESC = "Desc"
+    private const val NAME_TOP = "Top"
     private val map = mapOf(
         "Is" to Is,
         "Equals" to Equals,
