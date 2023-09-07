@@ -43,7 +43,6 @@ object MethodExpressionParser {
                                 // probably field name is "OrderBy"
                                 addNamePart(part.copy(name = part.name + NAME_BY))
                             } else {
-                                check(tokens.lastOrNull() is Name) { "Order by should be preceded by field name" }
                                 check(tokens.find { it is OrderBy } == null) { "Order by should be used only once" }
                                 tokens.add(OrderBy)
                             }
@@ -108,7 +107,9 @@ object MethodExpressionParser {
     }
 
 
-    abstract class Token(open val name: String)
+    abstract class Token(open val name: String) {
+        override fun toString(): String = "Token($name)"
+    }
 
     data class Name(override val name: String) : Token(name) {
         fun decapitalize(): Name = this.copy(name = name.decapitalize())

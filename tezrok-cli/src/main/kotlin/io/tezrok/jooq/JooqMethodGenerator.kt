@@ -9,6 +9,8 @@ import io.tezrok.api.input.FieldElem
 import io.tezrok.api.java.JavaClassNode
 import io.tezrok.util.asJavaType
 import io.tezrok.util.camelCaseToSnakeCase
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import java.util.*
 
 /**
@@ -43,6 +45,10 @@ internal class JooqMethodGenerator(
         if (returnType.startsWith("Optional<")) {
             repoClass.addImport(Optional::class.java)
         }
+        if (returnType.startsWith("Page<")) {
+            repoClass.addImport(Page::class.java)
+            repoClass.addImport(Pageable::class.java)
+        }
     }
 
     /**
@@ -56,17 +62,27 @@ internal class JooqMethodGenerator(
     ): Statement {
         try {
             val dtoName = "${entity.name}Dto"
+            val recordName = "${entity.name}Record"
             val dtoList = "List<$dtoName>"
-            val recordList = "List<${entity.name}Record>"
-            val supportedTypes = setOf(dtoList, recordList)
+            val recordList = "List<$recordName>"
+            val dtoPage = "Page<$dtoName>"
+            val recordPage = "Page<$recordName>"
+            val supportedTypes = setOf(dtoList, recordList, dtoPage, recordPage)
             check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
 
+            val pageableRequest = returnType == dtoPage || returnType == recordPage
+            val (params, pageableParam) = if (pageableRequest) processParamsIfPageable(params) else params to ""
             val expressionPart = removeFindByPrefix(methodName)
             val (where, orderBy, limit) = parseAsJooqExpression(entity, expressionPart, params, false)
+
+            check(limit.isEmpty() || !pageableRequest) { "Top and Pageable cannot be used together" }
+            check(orderBy.isEmpty() || !pageableRequest) { "OrderBy and Pageable cannot be used together" }
 
             return when (returnType) {
                 dtoList -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchInto(${dtoName}.class)")
                 recordList -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetch()")
+                dtoPage -> ReturnStmt("findPage($where, $pageableParam, ${dtoName}.class)")
+                recordPage -> ReturnStmt("findPage($where, $pageableParam, $recordName.class)")
                 else -> error("Unsupported return type: $returnType")
             }
         } catch (ex: Exception) {
@@ -160,7 +176,7 @@ internal class JooqMethodGenerator(
                         val paramName = paramNames[paramIndex]
                         val paramType = params[paramName] ?: error("Parameter type not found: $paramName")
 
-                        check(field.asJavaType() == paramType) { "Field type (${field.asJavaType()}) and parameter type ($paramType) mismatch" }
+                        check(field.asJavaType() == paramType) { "Field type (${field.asJavaType()}) and type ($paramType) of parameter \"$paramName\" mismatch" }
 
                         sb.append("Tables.${tableName}.${fieldName}.eq($paramName)")
                         if (nextOp is MethodExpressionParser.IsNot) {
@@ -208,6 +224,12 @@ internal class JooqMethodGenerator(
         return JooqExpression(where = sb.toString(), orderBy = orderBy, limit = limit)
     }
 
+    private fun processParamsIfPageable(params: Map<String, String>): Pair<Map<String, String>, String> {
+        check(params.isNotEmpty()) { "Page return type requires at least Pageable parameter" }
+        val pageableParam = params.keys.last()
+        check(params[pageableParam] == "Pageable") { "Last parameter should be Pageable for Page return type, but found: " + params[pageableParam] }
+        return params.filterKeys { it != pageableParam } to pageableParam
+    }
 
     private fun getFieldByName(entity: EntityElem, name: String): FieldElem {
         val field = entity.fields.find { fieldElem -> fieldElem.name == name }
