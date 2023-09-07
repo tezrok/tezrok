@@ -60,10 +60,7 @@ internal class JooqMethodGenerator(
         try {
             check(returnType == "List<$dtoName>") { "Unsupported return type: '$returnType', expected 'List<$dtoName>'" }
 
-            val expressionPart = if (methodName.startsWith(PREFIX_FIND_BY))
-                methodName.substring(PREFIX_FIND_BY.length)
-            else
-                methodName.substring(PREFIX_FIND.length)
+            val expressionPart = removeFindByPrefix(methodName)
             val (where, orderBy, limit) = parseAsJooqExpression(entity, expressionPart, params, false)
             return ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchInto(${dtoName}.class)")
         } catch (ex: Exception) {
@@ -84,20 +81,33 @@ internal class JooqMethodGenerator(
         val dtoName = "${name}Dto"
 
         try {
-            val isOptionalReturn = returnType == "Optional<$dtoName>"
-            check(returnType == dtoName || isOptionalReturn) { "Unsupported return type: '$returnType', expected '$dtoName' or 'Optional<$dtoName>'" }
+            val optionalResult = "Optional<$dtoName>"
+            val supportedTypes = setOf(dtoName, optionalResult)
+            check(supportedTypes.contains(returnType))
+            { "Unsupported return type: '$returnType', expected: $supportedTypes" }
 
-            val expressionPart = if (methodName.startsWith(PREFIX_GET_BY))
-                methodName.substring(PREFIX_GET_BY.length)
-            else
-                methodName.substring(PREFIX_GET.length)
+            val expressionPart = removeGetByPrefix(methodName)
             val (where, orderBy, limit) = parseAsJooqExpression(entity, expressionPart, params, true)
-            val finalMethod = if (isOptionalReturn) "fetchOptionalInto" else "fetchOneInto"
-            return ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.$finalMethod(${dtoName}.class)")
+
+            return when (returnType) {
+                dtoName -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchOneInto(${dtoName}.class)")
+                optionalResult -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchOptionalInto(${dtoName}.class)")
+                else -> error("Unsupported return type: $returnType")
+            }
         } catch (ex: Exception) {
             throw RuntimeException("Failed to generate body for method \"$methodName\": ${ex.message}", ex)
         }
     }
+
+    private fun removeFindByPrefix(methodName: String) = if (methodName.startsWith(PREFIX_FIND_BY))
+        methodName.substring(PREFIX_FIND_BY.length)
+    else
+        methodName.substring(PREFIX_FIND.length)
+
+    private fun removeGetByPrefix(methodName: String) = if (methodName.startsWith(PREFIX_GET_BY))
+        methodName.substring(PREFIX_GET_BY.length)
+    else
+        methodName.substring(PREFIX_GET.length)
 
     private fun parseAsJooqExpression(
         entity: EntityElem,
