@@ -54,15 +54,21 @@ internal class JooqMethodGenerator(
         returnType: String,
         params: Map<String, String>
     ): Statement {
-        val name = entity.name
-        val dtoName = "${name}Dto"
-
         try {
-            check(returnType == "List<$dtoName>") { "Unsupported return type: '$returnType', expected 'List<$dtoName>'" }
+            val dtoName = "${entity.name}Dto"
+            val dtoList = "List<$dtoName>"
+            val recordList = "List<${entity.name}Record>"
+            val supportedTypes = setOf(dtoList, recordList)
+            check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
 
             val expressionPart = removeFindByPrefix(methodName)
             val (where, orderBy, limit) = parseAsJooqExpression(entity, expressionPart, params, false)
-            return ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchInto(${dtoName}.class)")
+
+            return when (returnType) {
+                dtoList -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchInto(${dtoName}.class)")
+                recordList -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetch()")
+                else -> error("Unsupported return type: $returnType")
+            }
         } catch (ex: Exception) {
             throw RuntimeException("Failed to generate body for method \"$methodName\": ${ex.message}", ex)
         }
@@ -77,21 +83,22 @@ internal class JooqMethodGenerator(
         returnType: String,
         params: Map<String, String>
     ): Statement {
-        val name = entity.name
-        val dtoName = "${name}Dto"
-
         try {
-            val optionalResult = "Optional<$dtoName>"
-            val supportedTypes = setOf(dtoName, optionalResult)
-            check(supportedTypes.contains(returnType))
-            { "Unsupported return type: '$returnType', expected: $supportedTypes" }
+            val dtoName = "${entity.name}Dto"
+            val optionalDto = "Optional<$dtoName>"
+            val recordResult = "${entity.name}Record"
+            val optionalRecord = "Optional<$recordResult>"
+            val supportedTypes = setOf(dtoName, optionalDto, recordResult, optionalRecord)
+            check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
 
             val expressionPart = removeGetByPrefix(methodName)
             val (where, orderBy, limit) = parseAsJooqExpression(entity, expressionPart, params, true)
 
             return when (returnType) {
                 dtoName -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchOneInto(${dtoName}.class)")
-                optionalResult -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchOptionalInto(${dtoName}.class)")
+                optionalDto -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchOptionalInto(${dtoName}.class)")
+                recordResult -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchOne()")
+                optionalRecord -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchOptional()")
                 else -> error("Unsupported return type: $returnType")
             }
         } catch (ex: Exception) {
