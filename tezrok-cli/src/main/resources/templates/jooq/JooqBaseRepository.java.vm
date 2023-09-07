@@ -75,10 +75,7 @@ abstract class JooqBaseRepository<R extends UpdatableRecord<R>, P> {
      */
     @NotNull
     public Page<P> searchByTerm(final String term, final Pageable pageable) {
-        final String likeExpression = buildLikeExpression(term);
-        final List<P> result = dsl.selectFrom(table).where(whereClause(likeExpression)).orderBy(getSortFields(pageable.getSort())).limit(pageable.getPageSize()).offset(pageable.getOffset()).fetchInto(pojoClass);
-        final long totalCount = countByLikeExpression(likeExpression);
-        return new PageImpl<>(result, pageable, totalCount);
+        return findPage(whereClause(buildLikeExpression(term)), pageable, pojoClass);
     }
 
     @NotNull
@@ -87,13 +84,20 @@ abstract class JooqBaseRepository<R extends UpdatableRecord<R>, P> {
     }
 
     @NotNull
+    protected <T> Page<T> findPage(final Condition where, final Pageable pageable, Class<T> clazz) {
+        final List<T> result = dsl.selectFrom(table).where(where).orderBy(getSortFields(pageable.getSort())).limit(pageable.getPageSize()).offset(pageable.getOffset()).fetchInto(clazz);
+        final long totalCount = countByLikeExpression(where);
+        return new PageImpl<>(result, pageable, totalCount);
+    }
+
+    @NotNull
     protected Condition whereClause(String likeExpression) {
         // by default, all string fields are used for search term
         return Arrays.stream(table.fields()).filter(field -> String.class.equals(field.getType())).map(f -> f.likeIgnoreCase(likeExpression)).map(Condition.class::cast).reduce(falseCondition(), Condition::or);
     }
 
-    protected long countByLikeExpression(String likeExpression) {
-        return dsl.fetchCount(dsl.select().from(table).where(whereClause(likeExpression)));
+    protected long countByLikeExpression(Condition where) {
+        return dsl.fetchCount(dsl.select().from(table).where(where));
     }
 
     @NotNull
