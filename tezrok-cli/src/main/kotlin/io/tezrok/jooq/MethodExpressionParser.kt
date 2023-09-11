@@ -34,11 +34,12 @@ object MethodExpressionParser {
 
         while (index < parts.size) {
             val part = parts[index]
+            val nextPart = if (index + 1 < parts.size) parts[index + 1].name else null
 
             if (part is Name) {
                 when (part.name) {
                     NAME_ORDER -> {
-                        if (index + 1 < parts.size && parts[index + 1].name == NAME_BY) {
+                        if (nextPart != null && nextPart == NAME_BY) {
                             if (tokens.isEmpty()) {
                                 // probably field name is "OrderBy"
                                 addNamePart(part.copy(name = part.name + NAME_BY))
@@ -60,9 +61,64 @@ object MethodExpressionParser {
                         }
                     }
 
+                    NAME_STARTING -> {
+                        if (nextPart != null && nextPart == NAME_WITH) {
+                            val last = tokens.lastOrNull()
+                            if (last is Name || last is Not) {
+                                tokens.add(StartingWith)
+                            } else {
+                                // probably field name is "StartingWith"
+                                addNamePart(part.copy(name = part.name + NAME_WITH))
+                            }
+                            index++
+                        } else {
+                            addNamePart(part)
+                        }
+                    }
+
+                    NAME_ENDING -> {
+                        if (nextPart != null && nextPart == NAME_WITH) {
+                            val last = tokens.lastOrNull()
+                            if (last is Name || last is Not) {
+                                tokens.add(EndingWith)
+                            } else {
+                                // probably field name is "EndingWith"
+                                addNamePart(part.copy(name = part.name + NAME_WITH))
+                            }
+                            index++
+                        } else {
+                            addNamePart(part)
+                        }
+                    }
+
+                    NAME_WITH -> addNamePart(part)
+
+                    NAME_CONTAINING -> {
+                        val last = tokens.lastOrNull()
+                        if (last is Name || last is Not) {
+                            tokens.add(Containing)
+                        } else {
+                            // probably field name is "Containing"
+                            addNamePart(part)
+                        }
+                    }
+
+                    NAME_LIKE -> {
+                        val last = tokens.lastOrNull()
+                        if (last is Name || last is Not) {
+                            tokens.add(Like)
+                        } else {
+                            // probably field name is "Like"
+                            addNamePart(part)
+                        }
+                    }
+
                     NAME_NOT -> {
-                        if (tokens.lastOrNull() is Is) {
+                        val last = tokens.lastOrNull()
+                        if (last is Is) {
                             tokens[tokens.size - 1] = IsNot
+                        } else if (nextPart != null && (nextPart == NAME_STARTING || nextPart == NAME_CONTAINING || nextPart == NAME_ENDING || nextPart == NAME_LIKE)) {
+                            tokens.add(Not)
                         } else {
                             addNamePart(part)
                         }
@@ -121,6 +177,14 @@ object MethodExpressionParser {
 
     object OrderBy : Token("OrderBy")
 
+    object StartingWith : Token("StartingWith")
+
+    object EndingWith : Token("EndingWith")
+
+    object Containing : Token(NAME_CONTAINING)
+
+    object Like : Token(NAME_LIKE)
+
     object And : Token("And")
 
     object Or : Token("Or")
@@ -133,6 +197,8 @@ object MethodExpressionParser {
 
     object Null : Token("Null")
 
+    object Not : Token(NAME_NOT)
+
     enum class Sort {
         Default,
         Asc,
@@ -140,6 +206,11 @@ object MethodExpressionParser {
     }
 
     private const val NAME_ORDER = "Order"
+    private const val NAME_STARTING = "Starting"
+    private const val NAME_ENDING = "Ending"
+    private const val NAME_CONTAINING = "Containing"
+    private const val NAME_LIKE = "Like"
+    private const val NAME_WITH = "With"
     private const val NAME_BY = "By"
     private const val NAME_NOT = "Not"
     private const val NAME_ASC = "Asc"

@@ -172,11 +172,61 @@ internal class JooqMethodGenerator(
                         val paramName = paramNames[paramIndex]
                         val paramType = params[paramName] ?: error("Parameter type not found: $paramName")
 
-                        check(field.asJavaType() == paramType) { "Field type (${field.asJavaType()}) and type ($paramType) of parameter \"$paramName\" mismatch" }
+                        when (nextOp) {
+                            is MethodExpressionParser.StartingWith -> {
+                                check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for StartingWith method" }
+                                sb.append("Tables.${tableName}.${fieldName}.like($paramName + \"%\")")
+                            }
 
-                        sb.append("Tables.${tableName}.${fieldName}.eq($paramName)")
-                        if (nextOp is MethodExpressionParser.IsNot) {
-                            sb.append(".not()")
+                            is MethodExpressionParser.Containing -> {
+                                check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for Containing method" }
+                                sb.append("Tables.${tableName}.${fieldName}.like(\"%\" + $paramName + \"%\")")
+                            }
+
+                            is MethodExpressionParser.EndingWith -> {
+                                check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for EndingWith method" }
+                                sb.append("Tables.${tableName}.${fieldName}.like(\"%\" + $paramName)")
+                            }
+
+                            is MethodExpressionParser.Like -> {
+                                check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for Like method" }
+                                sb.append("Tables.${tableName}.${fieldName}.like($paramName)")
+                            }
+
+                            is MethodExpressionParser.Not -> {
+                                val nextNextOp = if (index + 2 < names.size) names[index + 2] else null
+
+                                when (nextNextOp) {
+                                    is MethodExpressionParser.StartingWith -> {
+                                        sb.append("Tables.${tableName}.${fieldName}.notLike($paramName + \"%\")")
+                                    }
+
+                                    is MethodExpressionParser.Containing -> {
+                                        sb.append("Tables.${tableName}.${fieldName}.notLike(\"%\" + $paramName + \"%\")")
+                                    }
+
+                                    is MethodExpressionParser.EndingWith -> {
+                                        sb.append("Tables.${tableName}.${fieldName}.notLike(\"%\" + $paramName)")
+                                    }
+
+                                    is MethodExpressionParser.Like -> {
+                                        sb.append("Tables.${tableName}.${fieldName}.notLike($paramName)")
+                                    }
+
+                                    else -> {
+                                        error("Unsupported operator: $nextNextOp")
+                                    }
+                                }
+                            }
+
+                            else -> {
+                                check(field.asJavaType() == paramType) { "Field type (${field.asJavaType()}) and type ($paramType) of parameter \"$paramName\" mismatch" }
+
+                                sb.append("Tables.${tableName}.${fieldName}.eq($paramName)")
+                                if (nextOp is MethodExpressionParser.IsNot) {
+                                    sb.append(".not()")
+                                }
+                            }
                         }
                     }
                     if (namesCount > 1) {
