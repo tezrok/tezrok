@@ -31,9 +31,9 @@ internal class JooqMethodGenerator(
         val params = method.parameters.associate { it.nameAsString to it.typeAsString }
         params.forEach { param -> newMethod.addParameter(param.value, param.key) }
 
-        if (methodName.startsWith(PREFIX_FIND_BY) || methodName.startsWith(PREFIX_FIND)) {
+        if (methodName.startsWith(PREFIX_FIND)) {
             newMethod.setBody(generateFindByBody(entity, methodName, returnType, params))
-        } else if (methodName.startsWith(PREFIX_GET_BY) || methodName.startsWith(PREFIX_GET)) {
+        } else if (methodName.startsWith(PREFIX_GET)) {
             newMethod.setBody(generateGetByBody(entity, methodName, returnType, params))
         } else {
             error("Unsupported method name: $methodName")
@@ -72,7 +72,7 @@ internal class JooqMethodGenerator(
 
             val pageableRequest = returnType == dtoPage || returnType == recordPage
             val (params, pageableParam) = if (pageableRequest) processParamsIfPageable(params) else params to ""
-            val expressionPart = removeFindByPrefix(methodName)
+            val expressionPart = removeFindByPrefix(methodName, "${entity.name}s")
             val (where, orderBy, limit) = parseAsJooqExpression(entity, expressionPart, params, false)
 
             check(limit.isEmpty() || !pageableRequest) { "Top and Pageable cannot be used together" }
@@ -107,7 +107,7 @@ internal class JooqMethodGenerator(
             val supportedTypes = setOf(dtoName, optionalDto, recordResult, optionalRecord)
             check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
 
-            val expressionPart = removeGetByPrefix(methodName)
+            val expressionPart = removeGetByPrefix(methodName, entity.name)
             val (where, orderBy, limit) = parseAsJooqExpression(entity, expressionPart, params, true)
 
             return when (returnType) {
@@ -122,11 +122,11 @@ internal class JooqMethodGenerator(
         }
     }
 
-    private fun removeFindByPrefix(methodName: String) =
-        methodName.removePrefix(PREFIX_FIND_BY).removePrefix(PREFIX_FIND)
+    private fun removeFindByPrefix(methodName: String, entityPrefix: String) =
+        methodName.removePrefix(PREFIX_FIND).removePrefix(entityPrefix).removePrefix(PREFIX_BY)
 
-    private fun removeGetByPrefix(methodName: String) =
-        methodName.removePrefix(PREFIX_GET_BY).removePrefix(PREFIX_GET)
+    private fun removeGetByPrefix(methodName: String, entityPrefix: String) =
+        methodName.removePrefix(PREFIX_GET).removePrefix(entityPrefix).removePrefix(PREFIX_BY)
 
     private fun parseAsJooqExpression(
         entity: EntityElem,
@@ -242,9 +242,8 @@ internal class JooqMethodGenerator(
 
 
     private companion object {
-        const val PREFIX_FIND_BY = "findBy"
         const val PREFIX_FIND = "find"
-        const val PREFIX_GET_BY = "getBy"
         const val PREFIX_GET = "get"
+        const val PREFIX_BY = "By"
     }
 }
