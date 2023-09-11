@@ -122,15 +122,11 @@ internal class JooqMethodGenerator(
         }
     }
 
-    private fun removeFindByPrefix(methodName: String) = if (methodName.startsWith(PREFIX_FIND_BY))
-        methodName.substring(PREFIX_FIND_BY.length)
-    else
-        methodName.substring(PREFIX_FIND.length)
+    private fun removeFindByPrefix(methodName: String) =
+        methodName.removePrefix(PREFIX_FIND_BY).removePrefix(PREFIX_FIND)
 
-    private fun removeGetByPrefix(methodName: String) = if (methodName.startsWith(PREFIX_GET_BY))
-        methodName.substring(PREFIX_GET_BY.length)
-    else
-        methodName.substring(PREFIX_GET.length)
+    private fun removeGetByPrefix(methodName: String) =
+        methodName.removePrefix(PREFIX_GET_BY).removePrefix(PREFIX_GET)
 
     private fun parseAsJooqExpression(
         entity: EntityElem,
