@@ -156,10 +156,11 @@ internal class JooqMethodGenerator(
                     val field = getFieldByName(entity, token.name)
                     val fieldName = token.name.camelCaseToSnakeCase().uppercase()
                     val nextOp = if (index + 1 < names.size) names[index + 1] else null
+                    val nextNextOp = if (index + 2 < names.size) names[index + 2] else null
                     val isOp = nextOp is MethodExpressionParser.Is || nextOp is MethodExpressionParser.IsNot
                     namesCount++
 
-                    if (isOp && index + 2 < names.size && names[index + 2] is MethodExpressionParser.Null) {
+                    if (isOp && nextNextOp is MethodExpressionParser.Null) {
                         sb.append("Tables.${tableName}.${fieldName}")
                         if (nextOp is MethodExpressionParser.Is) {
                             sb.append(".isNull()")
@@ -171,6 +172,7 @@ internal class JooqMethodGenerator(
                         check(paramIndex < params.size) { "Parameter index of '${token.name}' out of bounds (${params.size})" }
                         val paramName = paramNames[paramIndex]
                         val paramType = params[paramName] ?: error("Parameter type not found: $paramName")
+                        check(field.asJavaType() == paramType) { "Field type (${field.asJavaType()}) and type ($paramType) of parameter \"$paramName\" mismatch" }
 
                         when (nextOp) {
                             is MethodExpressionParser.StartingWith -> {
@@ -194,7 +196,7 @@ internal class JooqMethodGenerator(
                             }
 
                             is MethodExpressionParser.Not -> {
-                                val nextNextOp = if (index + 2 < names.size) names[index + 2] else null
+                                check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for method: $nextNextOp" }
 
                                 when (nextNextOp) {
                                     is MethodExpressionParser.StartingWith -> {
@@ -220,8 +222,6 @@ internal class JooqMethodGenerator(
                             }
 
                             else -> {
-                                check(field.asJavaType() == paramType) { "Field type (${field.asJavaType()}) and type ($paramType) of parameter \"$paramName\" mismatch" }
-
                                 sb.append("Tables.${tableName}.${fieldName}.eq($paramName)")
                                 if (nextOp is MethodExpressionParser.IsNot) {
                                     sb.append(".not()")
