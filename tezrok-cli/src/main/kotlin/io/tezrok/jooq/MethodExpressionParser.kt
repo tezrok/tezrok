@@ -39,7 +39,7 @@ object MethodExpressionParser {
             if (part is Name) {
                 when (part.name) {
                     NAME_ORDER -> {
-                        if (nextPart != null && nextPart == NAME_BY) {
+                        if (nextPart == NAME_BY) {
                             if (tokens.isEmpty()) {
                                 // probably field name is "OrderBy"
                                 addNamePart(part.copy(name = part.name + NAME_BY))
@@ -62,7 +62,7 @@ object MethodExpressionParser {
                     }
 
                     NAME_STARTING -> {
-                        if (nextPart != null && nextPart == NAME_WITH) {
+                        if (nextPart == NAME_WITH) {
                             val last = tokens.lastOrNull()
                             if (last is Name || last is Not) {
                                 tokens.add(StartingWith)
@@ -77,7 +77,7 @@ object MethodExpressionParser {
                     }
 
                     NAME_ENDING -> {
-                        if (nextPart != null && nextPart == NAME_WITH) {
+                        if (nextPart == NAME_WITH) {
                             val last = tokens.lastOrNull()
                             if (last is Name || last is Not) {
                                 tokens.add(EndingWith)
@@ -110,6 +110,61 @@ object MethodExpressionParser {
                         } else {
                             // probably field name is "Like"
                             addNamePart(part)
+                        }
+                    }
+
+                    NAME_GREATER -> {
+                        if (nextPart == NAME_THAN) {
+                            val last = tokens.lastOrNull()
+                            if (last is Name) {
+                                tokens.add(GreaterThan)
+                            } else {
+                                // probably field name is "GreaterThan"
+                                addNamePart(part.copy(name = part.name + NAME_THAN))
+                            }
+                            index++
+                        } else {
+                            // probably field name is  "Greater"
+                            addNamePart(part)
+                        }
+                    }
+
+                    NAME_LESS -> {
+                        if (nextPart == NAME_THAN) {
+                            val last = tokens.lastOrNull()
+                            if (last is Name) {
+                                tokens.add(LessThan)
+                            } else {
+                                // probably field name is "LessThan"
+                                addNamePart(part.copy(name = part.name + NAME_THAN))
+                            }
+                            index++
+                        } else {
+                            // probably field name is  "Less"
+                            addNamePart(part)
+                        }
+                    }
+
+                    NAME_EQUAL -> {
+                        val last = tokens.lastOrNull()
+                        when (last) {
+                            is Name -> {
+                                // equals is equivalent to "is"
+                                tokens.add(Is)
+                            }
+
+                            is GreaterThan -> {
+                                tokens[tokens.size - 1] = GreaterThanEqual
+                            }
+
+                            is LessThan -> {
+                                tokens[tokens.size - 1] = LessThanEqual
+                            }
+
+                            else -> {
+                                // probably field name is "Equal"
+                                addNamePart(part)
+                            }
                         }
                     }
 
@@ -185,6 +240,14 @@ object MethodExpressionParser {
 
     object Like : Token(NAME_LIKE)
 
+    object GreaterThan : Token("GreaterThan")
+
+    object GreaterThanEqual : Token("GreaterThanEqual")
+
+    object LessThan : Token("LessThan")
+
+    object LessThanEqual : Token("LessThanEqual")
+
     object And : Token("And")
 
     object Or : Token("Or")
@@ -192,6 +255,8 @@ object MethodExpressionParser {
     object Is : Token("Is")
 
     object Equals : Token("Equals")
+
+    object Equal : Token("Equal")
 
     object IsNot : Token("IsNot")
 
@@ -209,6 +274,10 @@ object MethodExpressionParser {
     private const val NAME_STARTING = "Starting"
     private const val NAME_ENDING = "Ending"
     private const val NAME_CONTAINING = "Containing"
+    private const val NAME_LESS = "Less"
+    private const val NAME_GREATER = "Greater"
+    private const val NAME_THAN = "Than"
+    private const val NAME_EQUAL = "Equal"
     private const val NAME_LIKE = "Like"
     private const val NAME_WITH = "With"
     private const val NAME_BY = "By"

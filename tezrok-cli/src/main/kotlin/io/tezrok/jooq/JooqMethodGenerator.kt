@@ -172,7 +172,8 @@ internal class JooqMethodGenerator(
                         check(paramIndex < params.size) { "Parameter index of '${token.name}' out of bounds (${params.size})" }
                         val paramName = paramNames[paramIndex]
                         val paramType = params[paramName] ?: error("Parameter type not found: $paramName")
-                        check(field.asJavaType() == paramType) { "Field type (${field.asJavaType()}) and type ($paramType) of parameter \"$paramName\" mismatch" }
+                        check(typesEqual(field, paramType))
+                        { "Field type (${field.asJavaType()}) and type ($paramType) of parameter \"$paramName\" mismatch" }
 
                         when (nextOp) {
                             is MethodExpressionParser.StartingWith -> {
@@ -193,6 +194,22 @@ internal class JooqMethodGenerator(
                             is MethodExpressionParser.Like -> {
                                 check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for Like method" }
                                 sb.append("Tables.${tableName}.${fieldName}.like($paramName)")
+                            }
+
+                            is MethodExpressionParser.GreaterThan -> {
+                                sb.append("Tables.${tableName}.${fieldName}.greaterThan($paramName)")
+                            }
+
+                            is MethodExpressionParser.GreaterThanEqual -> {
+                                sb.append("Tables.${tableName}.${fieldName}.greaterOrEqual($paramName)")
+                            }
+
+                            is MethodExpressionParser.LessThanEqual -> {
+                                sb.append("Tables.${tableName}.${fieldName}.lessOrEqual($paramName)")
+                            }
+
+                            is MethodExpressionParser.LessThan -> {
+                                sb.append("Tables.${tableName}.${fieldName}.lessThan($paramName)")
                             }
 
                             is MethodExpressionParser.Not -> {
@@ -268,6 +285,13 @@ internal class JooqMethodGenerator(
         }
 
         return JooqExpression(where = sb.toString(), orderBy = orderBy, limit = limit)
+    }
+
+    private fun typesEqual(field: FieldElem, paramType: String): Boolean = when (field.asJavaType()) {
+        paramType -> true
+        "Integer" -> paramType == "int"
+        "Long" -> paramType == "long"
+        else -> error("Unsupported field type: ${field.asJavaType()}")
     }
 
     private fun processParamsIfPageable(params: Map<String, String>): Pair<Map<String, String>, String> {
