@@ -11,6 +11,8 @@ import io.tezrok.util.asJavaType
 import io.tezrok.util.camelCaseToSnakeCase
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.*
 
 /**
@@ -48,6 +50,16 @@ internal class JooqMethodGenerator(
         if (returnType.startsWith("Page<")) {
             repoClass.addImport(Page::class.java)
             repoClass.addImport(Pageable::class.java)
+        }
+        params.values.toSet().forEach { type ->
+            when (type) {
+                "LocalDateTime" -> {
+                    repoClass.addImport(LocalDateTime::class.java)
+                }
+                "LocalDate" -> {
+                    repoClass.addImport(LocalDate::class.java)
+                }
+            }
         }
     }
 
@@ -212,23 +224,48 @@ internal class JooqMethodGenerator(
                                 sb.append("Tables.${tableName}.${fieldName}.lessThan($paramName)")
                             }
 
+                            is MethodExpressionParser.Between -> {
+                                check(paramIndex + 1 < paramNames.size) { "Operator \"Between\" requires two parameters" }
+                                paramIndex++
+                                val paramName2 = paramNames[paramIndex]
+                                val paramType2 = params[paramName]!!
+                                check(typesEqual(field, paramType2))
+                                { "Field type (${field.asJavaType()}) and type ($paramType2) of parameter \"$paramName2\" mismatch" }
+
+                                sb.append("Tables.${tableName}.${fieldName}.between($paramName, $paramName2)")
+                            }
+
                             is MethodExpressionParser.Not -> {
-                                check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for method: $nextNextOp" }
 
                                 when (nextNextOp) {
+                                    is MethodExpressionParser.Between -> {
+                                        check(paramIndex + 1 < paramNames.size) { "Operator \"Between\" requires two parameters" }
+                                        paramIndex++
+                                        val paramName2 = paramNames[paramIndex]
+                                        val paramType2 = params[paramName]!!
+                                        check(typesEqual(field, paramType2))
+                                        { "Field type (${field.asJavaType()}) and type ($paramType2) of parameter \"$paramName2\" mismatch" }
+
+                                        sb.append("Tables.${tableName}.${fieldName}.notBetween($paramName, $paramName2)")
+                                    }
+
                                     is MethodExpressionParser.StartingWith -> {
+                                        check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for method: $nextNextOp" }
                                         sb.append("Tables.${tableName}.${fieldName}.notLike($paramName + \"%\")")
                                     }
 
                                     is MethodExpressionParser.Containing -> {
+                                        check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for method: $nextNextOp" }
                                         sb.append("Tables.${tableName}.${fieldName}.notLike(\"%\" + $paramName + \"%\")")
                                     }
 
                                     is MethodExpressionParser.EndingWith -> {
+                                        check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for method: $nextNextOp" }
                                         sb.append("Tables.${tableName}.${fieldName}.notLike(\"%\" + $paramName)")
                                     }
 
                                     is MethodExpressionParser.Like -> {
+                                        check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for method: $nextNextOp" }
                                         sb.append("Tables.${tableName}.${fieldName}.notLike($paramName)")
                                     }
 

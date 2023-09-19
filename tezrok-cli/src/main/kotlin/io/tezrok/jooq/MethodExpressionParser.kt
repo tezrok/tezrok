@@ -172,7 +172,7 @@ object MethodExpressionParser {
                         val last = tokens.lastOrNull()
                         if (last is Is) {
                             tokens[tokens.size - 1] = IsNot
-                        } else if (nextPart != null && (nextPart == NAME_STARTING || nextPart == NAME_CONTAINING || nextPart == NAME_ENDING || nextPart == NAME_LIKE)) {
+                        } else if (nextPart != null && allowedNotSuffixes.contains(nextPart)) {
                             tokens.add(Not)
                         } else {
                             addNamePart(part)
@@ -240,6 +240,8 @@ object MethodExpressionParser {
 
     object Like : Token(NAME_LIKE)
 
+    object Between : Token(NAME_BETWEEN)
+
     object GreaterThan : Token("GreaterThan")
 
     object GreaterThanEqual : Token("GreaterThanEqual")
@@ -280,6 +282,7 @@ object MethodExpressionParser {
     private const val NAME_EQUAL = "Equal"
     private const val NAME_LIKE = "Like"
     private const val NAME_WITH = "With"
+    private const val NAME_BETWEEN = "Between"
     private const val NAME_BY = "By"
     private const val NAME_NOT = "Not"
     private const val NAME_ASC = "Asc"
@@ -290,6 +293,9 @@ object MethodExpressionParser {
         "Equals" to Equals,
         "Null" to Null,
         "And" to And,
-        "Or" to Or
+        "Or" to Or,
+        NAME_BETWEEN to Between
     )
+
+    private val allowedNotSuffixes = setOf(NAME_STARTING, NAME_CONTAINING, NAME_ENDING, NAME_LIKE, NAME_BETWEEN)
 }

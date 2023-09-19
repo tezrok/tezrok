@@ -16,7 +16,7 @@ fun FieldElem.asJavaType(): String {
         "long" -> "Long"
         "boolean" -> "Boolean"
         "date" -> "LocalDate"
-        "dateTime" -> "OffsetDateTime"
+        "dateTime" -> "LocalDateTime"
         else -> error("Unknown type: ${this.type}")
     }
 }
