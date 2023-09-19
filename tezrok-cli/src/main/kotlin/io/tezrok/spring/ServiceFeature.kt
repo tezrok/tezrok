@@ -10,13 +10,12 @@ import io.tezrok.api.input.EntityElem
 import io.tezrok.api.java.JavaClassNode
 import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.maven.ProjectNode
+import io.tezrok.util.addImportsByType
 import io.tezrok.util.asJavaType
 import io.tezrok.util.getRootClass
 import org.apache.commons.lang3.tuple.Pair
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.time.LocalDate
-import java.time.LocalDateTime
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 
@@ -117,22 +116,11 @@ open class ServiceFeature : TezrokFeature {
                 val typeName = replaceType(param.getTypeAsString(), entityName, primaryFields)
                 newMethod.addParameter(typeName, param.getName())
                 callExpr.addNameArgument(param.getName())
-                addImportIfNeeded(serviceClass, typeName)
+                serviceClass.addImportsByType(typeName)
             }
             newMethod.addReturnToLastExpression()
             if (isMethodReadOnly(method.getName())) {
                 newMethod.addAnnotation("Transactional", mapOf("readOnly" to BooleanLiteralExpr(true)))
-            }
-        }
-    }
-
-    private fun addImportIfNeeded(clazz: JavaClassNode, typeName: String) {
-        when (typeName) {
-            "LocalDateTime" -> {
-                clazz.addImport(LocalDateTime::class.java)
-            }
-            "LocalDate" -> {
-                clazz.addImport(LocalDate::class.java)
             }
         }
     }

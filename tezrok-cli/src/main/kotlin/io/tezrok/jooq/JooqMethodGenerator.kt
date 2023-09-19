@@ -7,13 +7,9 @@ import com.github.javaparser.ast.stmt.Statement
 import io.tezrok.api.input.EntityElem
 import io.tezrok.api.input.FieldElem
 import io.tezrok.api.java.JavaClassNode
+import io.tezrok.util.addImportsByType
 import io.tezrok.util.asJavaType
 import io.tezrok.util.camelCaseToSnakeCase
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.Pageable
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.util.*
 
 /**
  * Generates jooq methods for repository classes.
@@ -41,26 +37,8 @@ internal class JooqMethodGenerator(
             error("Unsupported method name: $methodName")
         }
 
-        if (returnType.startsWith("List<")) {
-            repoClass.addImport(List::class.java)
-        }
-        if (returnType.startsWith("Optional<")) {
-            repoClass.addImport(Optional::class.java)
-        }
-        if (returnType.startsWith("Page<")) {
-            repoClass.addImport(Page::class.java)
-            repoClass.addImport(Pageable::class.java)
-        }
-        params.values.toSet().forEach { type ->
-            when (type) {
-                "LocalDateTime" -> {
-                    repoClass.addImport(LocalDateTime::class.java)
-                }
-                "LocalDate" -> {
-                    repoClass.addImport(LocalDate::class.java)
-                }
-            }
-        }
+        repoClass.addImportsByType(returnType)
+        params.values.toSet().forEach { type -> repoClass.addImportsByType(type) }
     }
 
     /**
@@ -184,7 +162,8 @@ internal class JooqMethodGenerator(
                         check(paramIndex < params.size) { "Parameter index of '${token.name}' out of bounds (${params.size})" }
                         val paramName = paramNames[paramIndex]
                         val paramType = params[paramName] ?: error("Parameter type not found: $paramName")
-                        check(typesEqual(field, paramType))
+                        val isCollection = nextOp is MethodExpressionParser.In || nextOp is MethodExpressionParser.Not && nextNextOp is MethodExpressionParser.In
+                        check(typesEqual(field, paramType, isCollection))
                         { "Field type (${field.asJavaType()}) and type ($paramType) of parameter \"$paramName\" mismatch" }
 
                         when (nextOp) {
@@ -224,6 +203,10 @@ internal class JooqMethodGenerator(
                                 sb.append("Tables.${tableName}.${fieldName}.lessThan($paramName)")
                             }
 
+                            is MethodExpressionParser.In -> {
+                                sb.append("Tables.${tableName}.${fieldName}.in($paramName)")
+                            }
+
                             is MethodExpressionParser.Between -> {
                                 check(paramIndex + 1 < paramNames.size) { "Operator \"Between\" requires two parameters" }
                                 paramIndex++
@@ -238,6 +221,10 @@ internal class JooqMethodGenerator(
                             is MethodExpressionParser.Not -> {
 
                                 when (nextNextOp) {
+                                    is MethodExpressionParser.In -> {
+                                        sb.append("Tables.${tableName}.${fieldName}.notIn($paramName)")
+                                    }
+
                                     is MethodExpressionParser.Between -> {
                                         check(paramIndex + 1 < paramNames.size) { "Operator \"Between\" requires two parameters" }
                                         paramIndex++
@@ -324,10 +311,10 @@ internal class JooqMethodGenerator(
         return JooqExpression(where = sb.toString(), orderBy = orderBy, limit = limit)
     }
 
-    private fun typesEqual(field: FieldElem, paramType: String): Boolean = when (field.asJavaType()) {
+    private fun typesEqual(field: FieldElem, paramType: String, supportCollection: Boolean = false): Boolean = when (field.asJavaType()) {
         paramType -> true
-        "Integer" -> paramType == "int"
-        "Long" -> paramType == "long"
+        "Integer" -> paramType == "int" || supportCollection && (paramType == "Collection<Integer>" || paramType == "List<Integer>")
+        "Long" -> paramType == "long" || supportCollection && (paramType == "Collection<Long>" || paramType == "List<Long>")
         else -> error("Unsupported field type: ${field.asJavaType()}")
     }
 

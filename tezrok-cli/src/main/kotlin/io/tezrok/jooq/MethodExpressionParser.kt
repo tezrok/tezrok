@@ -256,6 +256,8 @@ object MethodExpressionParser {
 
     object Is : Token("Is")
 
+    object In : Token(NAME_IN)
+
     object Equals : Token("Equals")
 
     object Equal : Token("Equal")
@@ -288,14 +290,18 @@ object MethodExpressionParser {
     private const val NAME_ASC = "Asc"
     private const val NAME_DESC = "Desc"
     private const val NAME_TOP = "Top"
+    private const val NAME_IN = "In"
     private val map = mapOf(
         "Is" to Is,
         "Equals" to Equals,
         "Null" to Null,
         "And" to And,
         "Or" to Or,
-        NAME_BETWEEN to Between
+        NAME_BETWEEN to Between,
+        NAME_IN to In,
     )
 
-    private val allowedNotSuffixes = setOf(NAME_STARTING, NAME_CONTAINING, NAME_ENDING, NAME_LIKE, NAME_BETWEEN)
+    private val allowedNotSuffixes = setOf(
+        NAME_STARTING, NAME_CONTAINING, NAME_ENDING, NAME_LIKE, NAME_BETWEEN, NAME_IN
+    )
 }
