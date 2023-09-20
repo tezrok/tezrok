@@ -34,6 +34,11 @@
                 "required": true
               },
               {
+                "name": "qty",
+                "type": "integer",
+                "required": false
+              },
+              {
                 "name": "created",
                 "type": "dateTime",
                 "required": false
@@ -67,6 +72,11 @@
                 "required": false,
                 "logicField": true,
                 "relation": "ManyToMany"
+              },
+              {
+                "name": "active",
+                "type": "boolean",
+                "required": true
               }
             ]
           },

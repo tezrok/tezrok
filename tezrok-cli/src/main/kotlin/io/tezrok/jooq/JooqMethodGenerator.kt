@@ -315,6 +315,7 @@ internal class JooqMethodGenerator(
         paramType -> true
         "Integer" -> paramType == "int" || supportCollection && (paramType == "Collection<Integer>" || paramType == "List<Integer>")
         "Long" -> paramType == "long" || supportCollection && (paramType == "Collection<Long>" || paramType == "List<Long>")
+        "Boolean" -> paramType == "boolean" || supportCollection && (paramType == "Collection<Boolean>" || paramType == "List<Boolean>")
         else -> error("Unsupported field type: ${field.asJavaType()}")
     }
 

@@ -226,8 +226,11 @@ internal class ProjectElemRepository {
     private fun processFields(
         entity: EntityElem,
         inheritEntity: EntityElem?
-    ): List<FieldElem> = entity.fields.map { field ->
-        processField(field, inheritEntity?.fields?.find { it.name == field.name })
+    ): List<FieldElem> {
+        val inheritFields = inheritEntity?.fields?.associateBy { it.name }?.toMutableMap() ?: mutableMapOf()
+        val fields = entity.fields.map { field -> processField(field, inheritFields.remove(field.name)) }
+        // add fields which not defined in imported entity but defined in custom entity
+        return fields + inheritFields.values
     }
 
     private fun processField(field: FieldElem, inheritField: FieldElem?): FieldElem =

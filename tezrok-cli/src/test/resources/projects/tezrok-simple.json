@@ -25,6 +25,11 @@
               {
                 "name": "otherItems",
                 "relation": "ManyToMany"
+              },
+              {
+                "name": "active",
+                "type": "boolean",
+                "required": true
               }
             ]
           },
