@@ -242,6 +242,10 @@ object MethodExpressionParser {
 
     object Between : Token(NAME_BETWEEN)
 
+    object Before : Token(NAME_BEFORE)
+
+    object After : Token(NAME_AFTER)
+
     object GreaterThan : Token("GreaterThan")
 
     object GreaterThanEqual : Token("GreaterThanEqual")
@@ -285,6 +289,8 @@ object MethodExpressionParser {
     private const val NAME_LIKE = "Like"
     private const val NAME_WITH = "With"
     private const val NAME_BETWEEN = "Between"
+    private const val NAME_AFTER = "After"
+    private const val NAME_BEFORE = "Before"
     private const val NAME_BY = "By"
     private const val NAME_NOT = "Not"
     private const val NAME_ASC = "Asc"
@@ -299,6 +305,8 @@ object MethodExpressionParser {
         "Or" to Or,
         NAME_BETWEEN to Between,
         NAME_IN to In,
+        NAME_BEFORE to Before,
+        NAME_AFTER to After,
     )
 
     private val allowedNotSuffixes = setOf(

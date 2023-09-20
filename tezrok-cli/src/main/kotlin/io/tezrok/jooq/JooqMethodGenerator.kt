@@ -203,6 +203,16 @@ internal class JooqMethodGenerator(
                                 sb.append("Tables.${tableName}.${fieldName}.lessThan($paramName)")
                             }
 
+                            is MethodExpressionParser.Before -> {
+                                check(paramType == "LocalDateTime") { "Parameter type ($paramType) of parameter \"$paramName\" should be LocalDateTime for Before method" }
+                                sb.append("Tables.${tableName}.${fieldName}.lessThan($paramName)")
+                            }
+
+                            is MethodExpressionParser.After -> {
+                                check(paramType == "LocalDateTime") { "Parameter type ($paramType) of parameter \"$paramName\" should be LocalDateTime for After method" }
+                                sb.append("Tables.${tableName}.${fieldName}.greaterThan($paramName)")
+                            }
+
                             is MethodExpressionParser.In -> {
                                 sb.append("Tables.${tableName}.${fieldName}.in($paramName)")
                             }
