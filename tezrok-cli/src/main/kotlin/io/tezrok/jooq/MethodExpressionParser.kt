@@ -55,8 +55,9 @@ object MethodExpressionParser {
                     }
 
                     NAME_BY -> {
-                        // ignore "By" after "Top"
-                        if (tokens.lastOrNull() !is Top) {
+                        // ignore "By" after "Top" or "Distinct"
+                        val last = tokens.lastOrNull()
+                        if (last !is Top && last !is Distinct) {
                             addNamePart(part)
                         }
                     }
@@ -190,6 +191,15 @@ object MethodExpressionParser {
                         }
                     }
 
+                    NAME_DISTINCT -> {
+                        if (tokens.isEmpty()) {
+                            tokens.add(Distinct)
+                        } else {
+                            // probably field name is "Distinct"
+                            addNamePart(part)
+                        }
+                    }
+
                     else -> {
                         if (part.name.startsWith(NAME_TOP)) {
                             val limit = part.name.substring(NAME_TOP.length)
@@ -254,6 +264,8 @@ object MethodExpressionParser {
 
     object LessThanEqual : Token("LessThanEqual")
 
+    object Distinct : Token(NAME_DISTINCT)
+
     object And : Token("And")
 
     object Or : Token("Or")
@@ -291,6 +303,7 @@ object MethodExpressionParser {
     private const val NAME_BETWEEN = "Between"
     private const val NAME_AFTER = "After"
     private const val NAME_BEFORE = "Before"
+    private const val NAME_DISTINCT = "Distinct"
     private const val NAME_BY = "By"
     private const val NAME_NOT = "Not"
     private const val NAME_ASC = "Asc"
@@ -307,6 +320,7 @@ object MethodExpressionParser {
         NAME_IN to In,
         NAME_BEFORE to Before,
         NAME_AFTER to After,
+        NAME_DISTINCT to Distinct,
     )
 
     private val allowedNotSuffixes = setOf(

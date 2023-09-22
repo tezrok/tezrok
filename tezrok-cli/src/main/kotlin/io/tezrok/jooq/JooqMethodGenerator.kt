@@ -33,6 +33,8 @@ internal class JooqMethodGenerator(
             newMethod.setBody(generateFindByBody(entity, methodName, returnType, params))
         } else if (methodName.startsWith(PREFIX_GET)) {
             newMethod.setBody(generateGetByBody(entity, methodName, returnType, params))
+        } else if (methodName.startsWith(PREFIX_COUNT)) {
+            newMethod.setBody(generateCountByBody(entity, methodName, returnType, params))
         } else {
             error("Unsupported method name: $methodName")
         }
@@ -112,11 +114,40 @@ internal class JooqMethodGenerator(
         }
     }
 
+    private fun generateCountByBody(
+        entity: EntityElem,
+        methodName: String,
+        returnType: String,
+        params: Map<String, String>
+    ): Statement {
+        try {
+            val supportedTypes = setOf("int", "Integer")
+            check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
+
+            val expressionPart = removeCountByPrefix(methodName, entity.name)
+            val (where, orderBy, limit, distinct) = parseAsJooqExpression(entity, expressionPart, params, false)
+
+            check(orderBy.isEmpty()) { "OrderBy cannot be used with count methods" }
+            check(limit.isEmpty()) { "Top cannot be used with count methods" }
+
+            return if (distinct)
+                ReturnStmt("dsl.fetchCount(dsl.selectDistinct(table).where($where))")
+            else
+                ReturnStmt("dsl.fetchCount(table, $where)")
+
+        } catch (ex: Exception) {
+            throw RuntimeException("Failed to generate body for method \"$methodName\": ${ex.message}", ex)
+        }
+    }
+
     private fun removeFindByPrefix(methodName: String, entityPrefix: String) =
         methodName.removePrefix(PREFIX_FIND).removePrefix(entityPrefix).removePrefix(PREFIX_BY)
 
     private fun removeGetByPrefix(methodName: String, entityPrefix: String) =
         methodName.removePrefix(PREFIX_GET).removePrefix(entityPrefix).removePrefix(PREFIX_BY)
+
+    private fun removeCountByPrefix(methodName: String, entityPrefix: String) =
+        methodName.removePrefix(PREFIX_COUNT).removePrefix(entityPrefix).removePrefix(PREFIX_BY)
 
     private fun parseAsJooqExpression(
         entity: EntityElem,
@@ -126,7 +157,7 @@ internal class JooqMethodGenerator(
     ): JooqExpression {
         val name = entity.name
         val tableName = name.camelCaseToSnakeCase().uppercase()
-        val names = MethodExpressionParser.parse(expressionPart)
+        val (names, distinct) = parseTokensAndDistinct(MethodExpressionParser.parse(expressionPart))
         val sb = StringBuilder()
         val paramNames = params.keys.toList()
         var orderBy = ""
@@ -318,7 +349,15 @@ internal class JooqMethodGenerator(
             error("Single result method with OrderBy should use top 1")
         }
 
-        return JooqExpression(where = sb.toString(), orderBy = orderBy, limit = limit)
+        return JooqExpression(where = sb.toString(), orderBy = orderBy, limit = limit, distinct = distinct)
+    }
+
+    private fun parseTokensAndDistinct(names: List<MethodExpressionParser.Token>): Pair<List<MethodExpressionParser.Token>, Boolean> {
+        val distinct: Boolean = names.firstOrNull() == MethodExpressionParser.Distinct
+        return if (distinct)
+            names.subList(1, names.size) to true
+        else
+            names to false
     }
 
     private fun typesEqual(field: FieldElem, paramType: String, supportCollection: Boolean = false): Boolean = when (field.asJavaType()) {
@@ -347,12 +386,13 @@ internal class JooqMethodGenerator(
         return field
     }
 
-    private data class JooqExpression(val where: String, val orderBy: String, val limit: String)
+    private data class JooqExpression(val where: String, val orderBy: String, val limit: String, val distinct: Boolean)
 
 
     private companion object {
         const val PREFIX_FIND = "find"
         const val PREFIX_GET = "get"
+        const val PREFIX_COUNT = "count"
         const val PREFIX_BY = "By"
     }
 }
