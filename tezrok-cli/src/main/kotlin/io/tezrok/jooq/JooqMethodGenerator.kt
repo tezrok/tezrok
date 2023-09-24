@@ -65,10 +65,11 @@ internal class JooqMethodGenerator(
             val pageableRequest = returnType == dtoPage || returnType == recordPage
             val (params, pageableParam) = if (pageableRequest) processParamsIfPageable(params) else params to ""
             val expressionPart = removeFindByPrefix(methodName, "${entity.name}s")
-            val (where, orderBy, limit) = parseAsJooqExpression(entity, expressionPart, params, false)
+            val (where, orderBy, limit, distinct) = parseAsJooqExpression(entity, expressionPart, params, false)
 
             check(limit.isEmpty() || !pageableRequest) { "Top and Pageable cannot be used together" }
             check(orderBy.isEmpty() || !pageableRequest) { "OrderBy and Pageable cannot be used together" }
+            check(!distinct) { "Distinct cannot be used whole table select" }
 
             return when (returnType) {
                 dtoList -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchInto(${dtoName}.class)")
@@ -100,7 +101,9 @@ internal class JooqMethodGenerator(
             check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
 
             val expressionPart = removeGetByPrefix(methodName, entity.name)
-            val (where, orderBy, limit) = parseAsJooqExpression(entity, expressionPart, params, true)
+            val (where, orderBy, limit, distinct) = parseAsJooqExpression(entity, expressionPart, params, true)
+
+            check(!distinct) { "Distinct cannot be used whole table select" }
 
             return when (returnType) {
                 dtoName -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchOneInto(${dtoName}.class)")
@@ -129,11 +132,9 @@ internal class JooqMethodGenerator(
 
             check(orderBy.isEmpty()) { "OrderBy cannot be used with count methods" }
             check(limit.isEmpty()) { "Top cannot be used with count methods" }
+            check(!distinct) { "Distinct cannot be used whole table select" }
 
-            return if (distinct)
-                ReturnStmt("dsl.fetchCount(dsl.selectDistinct(table).where($where))")
-            else
-                ReturnStmt("dsl.fetchCount(table, $where)")
+            return ReturnStmt("dsl.fetchCount(table, $where)")
 
         } catch (ex: Exception) {
             throw RuntimeException("Failed to generate body for method \"$methodName\": ${ex.message}", ex)
