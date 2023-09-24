@@ -31,6 +31,7 @@ object MethodExpressionParser {
                 }
             }
         }
+        var allIgnoreCaseUsed = false
 
         while (index < parts.size) {
             val part = parts[index]
@@ -200,6 +201,51 @@ object MethodExpressionParser {
                         }
                     }
 
+                    NAME_IGNORE -> {
+                        if (nextPart == NAME_CASE) {
+                            val last = tokens.lastOrNull()
+                            if (last is Name) {
+                                tokens[tokens.size - 1] = last.ignoreCase()
+                            } else {
+                                // probably field name is "IgnoreCase"
+                                addNamePart(part.copy(name = part.name + NAME_CASE))
+                            }
+                            index++
+                        } else {
+                            // probably field name is "Ignore"
+                            addNamePart(part)
+                        }
+                    }
+
+                    NAME_ALL -> {
+                        if (nextPart == NAME_IGNORE) {
+                            val nextNextPart = if (index + 2 < parts.size) parts[index + 2].name else null
+                            if (nextNextPart == NAME_CASE) {
+                                val last = tokens.lastOrNull()
+                                if (last is Name) {
+                                    check(!allIgnoreCaseUsed) { "AllIgnoreCase should be used only once and at the end" }
+                                    allIgnoreCaseUsed = true
+                                    for ((idx, token) in tokens.withIndex()) {
+                                        if (token is Name) {
+                                            tokens[idx] = token.ignoreCase()
+                                        }
+                                    }
+                                } else {
+                                    // probably field name is "AllIgnoreCase"
+                                    addNamePart(part.copy(name = part.name + NAME_IGNORE + NAME_CASE))
+                                }
+                                index++
+                            } else {
+                                // probably field name is "AllIgnore"
+                                addNamePart(part.copy(name = part.name + NAME_IGNORE))
+                            }
+                            index++
+                        } else {
+                            // probably field name is "All"
+                            addNamePart(part)
+                        }
+                    }
+
                     else -> {
                         if (part.name.startsWith(NAME_TOP)) {
                             val limit = part.name.substring(NAME_TOP.length)
@@ -232,8 +278,10 @@ object MethodExpressionParser {
         override fun toString(): String = "Token($name)"
     }
 
-    data class Name(override val name: String) : Token(name) {
+    data class Name(override val name: String, val ignoreCase: Boolean = false) : Token(name) {
         fun decapitalize(): Name = this.copy(name = name.decapitalize())
+
+        fun ignoreCase(ignoreCase: Boolean = true): Name = this.copy(ignoreCase = ignoreCase)
     }
 
     data class SortName(override val name: String, val sort: Sort = Sort.Default) : Token(name)
@@ -310,6 +358,9 @@ object MethodExpressionParser {
     private const val NAME_DESC = "Desc"
     private const val NAME_TOP = "Top"
     private const val NAME_IN = "In"
+    private const val NAME_IGNORE = "Ignore"
+    private const val NAME_CASE = "Case"
+    private const val NAME_ALL = "All"
     private val map = mapOf(
         "Is" to Is,
         "Equals" to Equals,

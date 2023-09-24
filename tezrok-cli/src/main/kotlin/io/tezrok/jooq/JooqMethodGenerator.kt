@@ -165,6 +165,7 @@ internal class JooqMethodGenerator(
         var limit = ""
         var paramIndex = -1
         var namesCount = 0
+        var ignoreCaseIgnored = 0
 
         names.forEachIndexed { index, token ->
             when (token) {
@@ -197,26 +198,35 @@ internal class JooqMethodGenerator(
                         val isCollection = nextOp is MethodExpressionParser.In || nextOp is MethodExpressionParser.Not && nextNextOp is MethodExpressionParser.In
                         check(typesEqual(field, paramType, isCollection))
                         { "Field type (${field.asJavaType()}) and type ($paramType) of parameter \"$paramName\" mismatch" }
+                        val ignoreCase = token.ignoreCase && paramType == "String"
+
+                        if (token.ignoreCase && !ignoreCase) {
+                            ignoreCaseIgnored++
+                        }
 
                         when (nextOp) {
                             is MethodExpressionParser.StartingWith -> {
                                 check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for StartingWith method" }
-                                sb.append("Tables.${tableName}.${fieldName}.like($paramName + \"%\")")
+                                val likeOp = if (ignoreCase) "likeIgnoreCase" else "like"
+                                sb.append("Tables.${tableName}.${fieldName}.$likeOp($paramName + \"%\")")
                             }
 
                             is MethodExpressionParser.Containing -> {
                                 check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for Containing method" }
-                                sb.append("Tables.${tableName}.${fieldName}.like(\"%\" + $paramName + \"%\")")
+                                val likeOp = if (ignoreCase) "likeIgnoreCase" else "like"
+                                sb.append("Tables.${tableName}.${fieldName}.$likeOp(\"%\" + $paramName + \"%\")")
                             }
 
                             is MethodExpressionParser.EndingWith -> {
                                 check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for EndingWith method" }
-                                sb.append("Tables.${tableName}.${fieldName}.like(\"%\" + $paramName)")
+                                val likeOp = if (ignoreCase) "likeIgnoreCase" else "like"
+                                sb.append("Tables.${tableName}.${fieldName}.$likeOp(\"%\" + $paramName)")
                             }
 
                             is MethodExpressionParser.Like -> {
                                 check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for Like method" }
-                                sb.append("Tables.${tableName}.${fieldName}.like($paramName)")
+                                val likeOp = if (ignoreCase) "likeIgnoreCase" else "like"
+                                sb.append("Tables.${tableName}.${fieldName}.$likeOp($paramName)")
                             }
 
                             is MethodExpressionParser.GreaterThan -> {
@@ -280,22 +290,26 @@ internal class JooqMethodGenerator(
 
                                     is MethodExpressionParser.StartingWith -> {
                                         check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for method: $nextNextOp" }
-                                        sb.append("Tables.${tableName}.${fieldName}.notLike($paramName + \"%\")")
+                                        val notLikeOp = if (ignoreCase) "notLikeIgnoreCase" else "notLike"
+                                        sb.append("Tables.${tableName}.${fieldName}.$notLikeOp($paramName + \"%\")")
                                     }
 
                                     is MethodExpressionParser.Containing -> {
                                         check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for method: $nextNextOp" }
-                                        sb.append("Tables.${tableName}.${fieldName}.notLike(\"%\" + $paramName + \"%\")")
+                                        val notLikeOp = if (ignoreCase) "notLikeIgnoreCase" else "notLike"
+                                        sb.append("Tables.${tableName}.${fieldName}.$notLikeOp(\"%\" + $paramName + \"%\")")
                                     }
 
                                     is MethodExpressionParser.EndingWith -> {
                                         check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for method: $nextNextOp" }
-                                        sb.append("Tables.${tableName}.${fieldName}.notLike(\"%\" + $paramName)")
+                                        val notLikeOp = if (ignoreCase) "notLikeIgnoreCase" else "notLike"
+                                        sb.append("Tables.${tableName}.${fieldName}.$notLikeOp(\"%\" + $paramName)")
                                     }
 
                                     is MethodExpressionParser.Like -> {
                                         check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for method: $nextNextOp" }
-                                        sb.append("Tables.${tableName}.${fieldName}.notLike($paramName)")
+                                        val notLikeOp = if (ignoreCase) "notLikeIgnoreCase" else "notLike"
+                                        sb.append("Tables.${tableName}.${fieldName}.$notLikeOp($paramName)")
                                     }
 
                                     else -> {
@@ -305,7 +319,8 @@ internal class JooqMethodGenerator(
                             }
 
                             else -> {
-                                sb.append("Tables.${tableName}.${fieldName}.eq($paramName)")
+                                val eqOp = if (ignoreCase) "equalIgnoreCase" else "eq"
+                                sb.append("Tables.${tableName}.${fieldName}.$eqOp($paramName)")
                                 if (nextOp is MethodExpressionParser.IsNot) {
                                     sb.append(".not()")
                                 }
@@ -348,6 +363,10 @@ internal class JooqMethodGenerator(
 
         if (singleResult && orderBy.isNotEmpty() && limit.isEmpty()) {
             error("Single result method with OrderBy should use top 1")
+        }
+
+        if (paramIndex > 0 && paramIndex == ignoreCaseIgnored) {
+            error("At least one parameter should be String to use AllIgnoreCase")
         }
 
         return JooqExpression(where = sb.toString(), orderBy = orderBy, limit = limit, distinct = distinct)
