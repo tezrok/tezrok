@@ -38,6 +38,7 @@ object MethodExpressionParser {
             val nextPart = if (index + 1 < parts.size) parts[index + 1].name else null
 
             if (part is Name) {
+                val lastToken = tokens.lastOrNull()
                 when (part.name) {
                     NAME_ORDER -> {
                         if (nextPart == NAME_BY) {
@@ -57,16 +58,14 @@ object MethodExpressionParser {
 
                     NAME_BY -> {
                         // ignore "By" after "Top" or "Distinct"
-                        val last = tokens.lastOrNull()
-                        if (last !is Top && last !is Distinct) {
+                        if (lastToken !is Top && lastToken !is Distinct) {
                             addNamePart(part)
                         }
                     }
 
                     NAME_STARTING -> {
                         if (nextPart == NAME_WITH) {
-                            val last = tokens.lastOrNull()
-                            if (last is Name || last is Not) {
+                            if (lastToken is Name || lastToken is Not) {
                                 tokens.add(StartingWith)
                             } else {
                                 // probably field name is "StartingWith"
@@ -80,8 +79,7 @@ object MethodExpressionParser {
 
                     NAME_ENDING -> {
                         if (nextPart == NAME_WITH) {
-                            val last = tokens.lastOrNull()
-                            if (last is Name || last is Not) {
+                            if (lastToken is Name || lastToken is Not) {
                                 tokens.add(EndingWith)
                             } else {
                                 // probably field name is "EndingWith"
@@ -96,8 +94,7 @@ object MethodExpressionParser {
                     NAME_WITH -> addNamePart(part)
 
                     NAME_CONTAINING -> {
-                        val last = tokens.lastOrNull()
-                        if (last is Name || last is Not) {
+                        if (lastToken is Name || lastToken is Not) {
                             tokens.add(Containing)
                         } else {
                             // probably field name is "Containing"
@@ -106,8 +103,7 @@ object MethodExpressionParser {
                     }
 
                     NAME_LIKE -> {
-                        val last = tokens.lastOrNull()
-                        if (last is Name || last is Not) {
+                        if (lastToken is Name || lastToken is Not) {
                             tokens.add(Like)
                         } else {
                             // probably field name is "Like"
@@ -117,8 +113,7 @@ object MethodExpressionParser {
 
                     NAME_GREATER -> {
                         if (nextPart == NAME_THAN) {
-                            val last = tokens.lastOrNull()
-                            if (last is Name) {
+                            if (lastToken is Name) {
                                 tokens.add(GreaterThan)
                             } else {
                                 // probably field name is "GreaterThan"
@@ -133,8 +128,7 @@ object MethodExpressionParser {
 
                     NAME_LESS -> {
                         if (nextPart == NAME_THAN) {
-                            val last = tokens.lastOrNull()
-                            if (last is Name) {
+                            if (lastToken is Name) {
                                 tokens.add(LessThan)
                             } else {
                                 // probably field name is "LessThan"
@@ -148,8 +142,7 @@ object MethodExpressionParser {
                     }
 
                     NAME_EQUAL -> {
-                        val last = tokens.lastOrNull()
-                        when (last) {
+                        when (lastToken) {
                             is Name -> {
                                 // equals is equivalent to "is"
                                 tokens.add(Is)
@@ -171,8 +164,7 @@ object MethodExpressionParser {
                     }
 
                     NAME_NOT -> {
-                        val last = tokens.lastOrNull()
-                        if (last is Is) {
+                        if (lastToken is Is) {
                             tokens[tokens.size - 1] = IsNot
                         } else if (nextPart != null && allowedNotSuffixes.contains(nextPart)) {
                             tokens.add(Not)
@@ -183,10 +175,9 @@ object MethodExpressionParser {
 
                     NAME_ASC,
                     NAME_DESC -> {
-                        val last = tokens.lastOrNull()
-                        if (last is SortName) {
+                        if (lastToken is SortName) {
                             val sort = if (part.name == NAME_ASC) Sort.Asc else Sort.Desc
-                            tokens[tokens.size - 1] = last.copy(sort = sort)
+                            tokens[tokens.size - 1] = lastToken.copy(sort = sort)
                         } else {
                             addNamePart(part)
                         }
@@ -203,9 +194,8 @@ object MethodExpressionParser {
 
                     NAME_IGNORE -> {
                         if (nextPart == NAME_CASE) {
-                            val last = tokens.lastOrNull()
-                            if (last is Name) {
-                                tokens[tokens.size - 1] = last.ignoreCase()
+                            if (lastToken is Name) {
+                                tokens[tokens.size - 1] = lastToken.ignoreCase()
                             } else {
                                 // probably field name is "IgnoreCase"
                                 addNamePart(part.copy(name = part.name + NAME_CASE))
@@ -221,8 +211,7 @@ object MethodExpressionParser {
                         if (nextPart == NAME_IGNORE) {
                             val nextNextPart = if (index + 2 < parts.size) parts[index + 2].name else null
                             if (nextNextPart == NAME_CASE) {
-                                val last = tokens.lastOrNull()
-                                if (last is Name) {
+                                if (lastToken is Name) {
                                     check(!allIgnoreCaseUsed) { "AllIgnoreCase should be used only once and at the end" }
                                     allIgnoreCaseUsed = true
                                     for ((idx, token) in tokens.withIndex()) {
