@@ -1,5 +1,6 @@
 package io.tezrok.jooq
 
+import io.tezrok.jooq.Token.*
 import io.tezrok.util.camelCaseToSnakeCase
 
 /**
@@ -14,21 +15,13 @@ object MethodExpressionParser {
         var index = 0
         val addNamePart = { part: Name ->
             when (val last = tokens.lastOrNull()) {
-                is OrderBy -> {
-                    tokens.add(SortName(part.name.decapitalize()))
-                }
+                is OrderBy -> tokens.add(SortName(part.name.decapitalize()))
 
-                is Name -> {
-                    tokens[tokens.size - 1] = last.copy(name = last.name + part.name)
-                }
+                is Name -> tokens[tokens.size - 1] = last.copy(name = last.name + part.name)
 
-                is SortName -> {
-                    tokens[tokens.size - 1] = last.copy(name = last.name + part.name)
-                }
+                is SortName -> tokens[tokens.size - 1] = last.copy(name = last.name + part.name)
 
-                else -> {
-                    tokens.add(part.decapitalize())
-                }
+                else -> tokens.add(part.decapitalize())
             }
         }
         var allIgnoreCaseUsed = false
@@ -260,71 +253,6 @@ object MethodExpressionParser {
 
 
         return tokens
-    }
-
-
-    abstract class Token(open val name: String) {
-        override fun toString(): String = "Token($name)"
-    }
-
-    data class Name(override val name: String, val ignoreCase: Boolean = false) : Token(name) {
-        fun decapitalize(): Name = this.copy(name = name.decapitalize())
-
-        fun ignoreCase(ignoreCase: Boolean = true): Name = this.copy(ignoreCase = ignoreCase)
-    }
-
-    data class SortName(override val name: String, val sort: Sort = Sort.Default) : Token(name)
-
-    data class Top(val limit: Int = 1) : Token(NAME_TOP)
-
-    object OrderBy : Token("OrderBy")
-
-    object StartingWith : Token("StartingWith")
-
-    object EndingWith : Token("EndingWith")
-
-    object Containing : Token(NAME_CONTAINING)
-
-    object Like : Token(NAME_LIKE)
-
-    object Between : Token(NAME_BETWEEN)
-
-    object Before : Token(NAME_BEFORE)
-
-    object After : Token(NAME_AFTER)
-
-    object GreaterThan : Token("GreaterThan")
-
-    object GreaterThanEqual : Token("GreaterThanEqual")
-
-    object LessThan : Token("LessThan")
-
-    object LessThanEqual : Token("LessThanEqual")
-
-    object Distinct : Token(NAME_DISTINCT)
-
-    object And : Token("And")
-
-    object Or : Token("Or")
-
-    object Is : Token("Is")
-
-    object In : Token(NAME_IN)
-
-    object Equals : Token("Equals")
-
-    object Equal : Token("Equal")
-
-    object IsNot : Token("IsNot")
-
-    object Null : Token("Null")
-
-    object Not : Token(NAME_NOT)
-
-    enum class Sort {
-        Default,
-        Asc,
-        Desc
     }
 
     private const val NAME_ORDER = "Order"

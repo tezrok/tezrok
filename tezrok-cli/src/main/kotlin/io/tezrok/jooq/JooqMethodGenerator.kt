@@ -187,23 +187,23 @@ internal class JooqMethodGenerator(
 
         names.forEachIndexed { index, token ->
             when (token) {
-                is MethodExpressionParser.And,
-                is MethodExpressionParser.Or -> {
+                is Token.And,
+                is Token.Or -> {
                     val operator = token.name.lowercase()
                     sb.append(".$operator(")
                 }
 
-                is MethodExpressionParser.Name -> {
+                is Token.Name -> {
                     val field = getFieldByName(entity, token.name)
                     val fieldName = token.name.camelCaseToSnakeCase().uppercase()
                     val nextOp = if (index + 1 < names.size) names[index + 1] else null
                     val nextNextOp = if (index + 2 < names.size) names[index + 2] else null
-                    val isOp = nextOp is MethodExpressionParser.Is || nextOp is MethodExpressionParser.IsNot
+                    val isOp = nextOp is Token.Is || nextOp is Token.IsNot
                     namesCount++
 
-                    if (isOp && nextNextOp is MethodExpressionParser.Null) {
+                    if (isOp && nextNextOp is Token.Null) {
                         sb.append("Tables.${tableName}.${fieldName}")
-                        if (nextOp is MethodExpressionParser.Is) {
+                        if (nextOp is Token.Is) {
                             sb.append(".isNull()")
                         } else {
                             sb.append(".isNotNull()")
@@ -214,7 +214,7 @@ internal class JooqMethodGenerator(
                         val paramName = paramNames[paramIndex]
                         val paramType = params[paramName] ?: error("Parameter type not found: $paramName")
                         val isCollection =
-                            nextOp is MethodExpressionParser.In || nextOp is MethodExpressionParser.Not && nextNextOp is MethodExpressionParser.In
+                            nextOp is Token.In || nextOp is Token.Not && nextNextOp is Token.In
                         check(typesEqual(field, paramType, isCollection))
                         { "Field type (${field.asJavaType()}) and type ($paramType) of parameter \"$paramName\" mismatch" }
                         val ignoreCase = token.ignoreCase && paramType == "String"
@@ -224,61 +224,61 @@ internal class JooqMethodGenerator(
                         }
 
                         when (nextOp) {
-                            is MethodExpressionParser.StartingWith -> {
+                            is Token.StartingWith -> {
                                 check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for StartingWith method" }
                                 val likeOp = if (ignoreCase) "likeIgnoreCase" else "like"
                                 sb.append("Tables.${tableName}.${fieldName}.$likeOp($paramName + \"%\")")
                             }
 
-                            is MethodExpressionParser.Containing -> {
+                            is Token.Containing -> {
                                 check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for Containing method" }
                                 val likeOp = if (ignoreCase) "likeIgnoreCase" else "like"
                                 sb.append("Tables.${tableName}.${fieldName}.$likeOp(\"%\" + $paramName + \"%\")")
                             }
 
-                            is MethodExpressionParser.EndingWith -> {
+                            is Token.EndingWith -> {
                                 check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for EndingWith method" }
                                 val likeOp = if (ignoreCase) "likeIgnoreCase" else "like"
                                 sb.append("Tables.${tableName}.${fieldName}.$likeOp(\"%\" + $paramName)")
                             }
 
-                            is MethodExpressionParser.Like -> {
+                            is Token.Like -> {
                                 check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for Like method" }
                                 val likeOp = if (ignoreCase) "likeIgnoreCase" else "like"
                                 sb.append("Tables.${tableName}.${fieldName}.$likeOp($paramName)")
                             }
 
-                            is MethodExpressionParser.GreaterThan -> {
+                            is Token.GreaterThan -> {
                                 sb.append("Tables.${tableName}.${fieldName}.greaterThan($paramName)")
                             }
 
-                            is MethodExpressionParser.GreaterThanEqual -> {
+                            is Token.GreaterThanEqual -> {
                                 sb.append("Tables.${tableName}.${fieldName}.greaterOrEqual($paramName)")
                             }
 
-                            is MethodExpressionParser.LessThanEqual -> {
+                            is Token.LessThanEqual -> {
                                 sb.append("Tables.${tableName}.${fieldName}.lessOrEqual($paramName)")
                             }
 
-                            is MethodExpressionParser.LessThan -> {
+                            is Token.LessThan -> {
                                 sb.append("Tables.${tableName}.${fieldName}.lessThan($paramName)")
                             }
 
-                            is MethodExpressionParser.Before -> {
+                            is Token.Before -> {
                                 check(paramType == "LocalDateTime") { "Parameter type ($paramType) of parameter \"$paramName\" should be LocalDateTime for Before method" }
                                 sb.append("Tables.${tableName}.${fieldName}.lessThan($paramName)")
                             }
 
-                            is MethodExpressionParser.After -> {
+                            is Token.After -> {
                                 check(paramType == "LocalDateTime") { "Parameter type ($paramType) of parameter \"$paramName\" should be LocalDateTime for After method" }
                                 sb.append("Tables.${tableName}.${fieldName}.greaterThan($paramName)")
                             }
 
-                            is MethodExpressionParser.In -> {
+                            is Token.In -> {
                                 sb.append("Tables.${tableName}.${fieldName}.in($paramName)")
                             }
 
-                            is MethodExpressionParser.Between -> {
+                            is Token.Between -> {
                                 check(paramIndex + 1 < paramNames.size) { "Operator \"Between\" requires two parameters" }
                                 paramIndex++
                                 val paramName2 = paramNames[paramIndex]
@@ -289,14 +289,14 @@ internal class JooqMethodGenerator(
                                 sb.append("Tables.${tableName}.${fieldName}.between($paramName, $paramName2)")
                             }
 
-                            is MethodExpressionParser.Not -> {
+                            is Token.Not -> {
 
                                 when (nextNextOp) {
-                                    is MethodExpressionParser.In -> {
+                                    is Token.In -> {
                                         sb.append("Tables.${tableName}.${fieldName}.notIn($paramName)")
                                     }
 
-                                    is MethodExpressionParser.Between -> {
+                                    is Token.Between -> {
                                         check(paramIndex + 1 < paramNames.size) { "Operator \"Between\" requires two parameters" }
                                         paramIndex++
                                         val paramName2 = paramNames[paramIndex]
@@ -307,25 +307,25 @@ internal class JooqMethodGenerator(
                                         sb.append("Tables.${tableName}.${fieldName}.notBetween($paramName, $paramName2)")
                                     }
 
-                                    is MethodExpressionParser.StartingWith -> {
+                                    is Token.StartingWith -> {
                                         check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for method: $nextNextOp" }
                                         val notLikeOp = if (ignoreCase) "notLikeIgnoreCase" else "notLike"
                                         sb.append("Tables.${tableName}.${fieldName}.$notLikeOp($paramName + \"%\")")
                                     }
 
-                                    is MethodExpressionParser.Containing -> {
+                                    is Token.Containing -> {
                                         check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for method: $nextNextOp" }
                                         val notLikeOp = if (ignoreCase) "notLikeIgnoreCase" else "notLike"
                                         sb.append("Tables.${tableName}.${fieldName}.$notLikeOp(\"%\" + $paramName + \"%\")")
                                     }
 
-                                    is MethodExpressionParser.EndingWith -> {
+                                    is Token.EndingWith -> {
                                         check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for method: $nextNextOp" }
                                         val notLikeOp = if (ignoreCase) "notLikeIgnoreCase" else "notLike"
                                         sb.append("Tables.${tableName}.${fieldName}.$notLikeOp(\"%\" + $paramName)")
                                     }
 
-                                    is MethodExpressionParser.Like -> {
+                                    is Token.Like -> {
                                         check(paramType == "String") { "Parameter type ($paramType) of parameter \"$paramName\" should be String for method: $nextNextOp" }
                                         val notLikeOp = if (ignoreCase) "notLikeIgnoreCase" else "notLike"
                                         sb.append("Tables.${tableName}.${fieldName}.$notLikeOp($paramName)")
@@ -340,7 +340,7 @@ internal class JooqMethodGenerator(
                             else -> {
                                 val eqOp = if (ignoreCase) "equalIgnoreCase" else "eq"
                                 sb.append("Tables.${tableName}.${fieldName}.$eqOp($paramName)")
-                                if (nextOp is MethodExpressionParser.IsNot) {
+                                if (nextOp is Token.IsNot) {
                                     sb.append(".not()")
                                 }
                             }
@@ -352,22 +352,22 @@ internal class JooqMethodGenerator(
                     }
                 }
 
-                is MethodExpressionParser.OrderBy -> orderBy = ".orderBy("
-                is MethodExpressionParser.SortName -> {
+                is Token.OrderBy -> orderBy = ".orderBy("
+                is Token.SortName -> {
                     // TODO: support several fields in order by
                     val field = getFieldByName(entity, token.name)
                     val fieldName = field.name.camelCaseToSnakeCase().uppercase()
                     orderBy += "Tables.${tableName}.${fieldName}"
 
-                    if (token.sort == MethodExpressionParser.Sort.Asc) {
+                    if (token.sort == Token.Sort.Asc) {
                         orderBy += ".asc()"
-                    } else if (token.sort == MethodExpressionParser.Sort.Desc) {
+                    } else if (token.sort == Token.Sort.Desc) {
                         orderBy += ".desc()"
                     }
                     orderBy += ")"
                 }
 
-                is MethodExpressionParser.Top -> {
+                is Token.Top -> {
                     check(!singleResult || token.limit == 1) { "Top limit should be 1 for single result method" }
                     limit = ".limit(${token.limit})"
                 }
@@ -391,8 +391,8 @@ internal class JooqMethodGenerator(
         return JooqExpression(where = sb.toString(), orderBy = orderBy, limit = limit, distinct = distinct)
     }
 
-    private fun parseTokensAndDistinct(names: List<MethodExpressionParser.Token>): Pair<List<MethodExpressionParser.Token>, Boolean> {
-        val distinct: Boolean = names.firstOrNull() == MethodExpressionParser.Distinct
+    private fun parseTokensAndDistinct(names: List<Token>): Pair<List<Token>, Boolean> {
+        val distinct: Boolean = names.firstOrNull() == Token.Distinct
         return if (distinct)
             names.subList(1, names.size) to true
         else
