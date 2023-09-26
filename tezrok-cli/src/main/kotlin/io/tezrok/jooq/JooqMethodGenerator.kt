@@ -32,14 +32,17 @@ internal class JooqMethodGenerator(
         val params = method.parameters.associate { it.nameAsString to it.typeAsString }
         params.forEach { param -> newMethod.addParameter(param.value, param.key) }
 
-        if (methodName.startsWith(PREFIX_FIND)) {
-            newMethod.setBody(generateFindByBody(entity, methodName, returnType, params))
-        } else if (methodName.startsWith(PREFIX_GET)) {
-            newMethod.setBody(generateGetByBody(entity, methodName, returnType, params))
-        } else if (methodName.startsWith(PREFIX_COUNT)) {
-            newMethod.setBody(generateCountByBody(entity, methodName, returnType, params))
-        } else {
-            error("Unsupported method name: $methodName")
+        when {
+            methodName.startsWith(PREFIX_FIND) ->
+                newMethod.setBody(generateFindByBody(entity, methodName, returnType, params))
+
+            methodName.startsWith(PREFIX_GET) ->
+                newMethod.setBody(generateGetByBody(entity, methodName, returnType, params))
+
+            methodName.startsWith(PREFIX_COUNT) ->
+                newMethod.setBody(generateCountByBody(entity, methodName, returnType, params))
+
+            else -> error("Unsupported method name: $methodName")
         }
 
         repoClass.addImportsByType(returnType)
@@ -67,7 +70,7 @@ internal class JooqMethodGenerator(
             check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
 
             val pageableRequest = returnType == dtoPage || returnType == recordPage
-            val (params, lastParam) = when(returnType) {
+            val (params, lastParam) = when (returnType) {
                 dtoPage, recordPage -> processParamsWithLastParam(params, "Pageable")
                 genericList -> processParamsWithLastParam(params, "Class<T>")
                 else -> params to ""
@@ -77,7 +80,7 @@ internal class JooqMethodGenerator(
 
             check(limit.isEmpty() || !pageableRequest) { "Top and Pageable cannot be used together" }
             check(orderBy.isEmpty() || !pageableRequest) { "OrderBy and Pageable cannot be used together" }
-            check(!distinct) { "Distinct cannot be used whole table select" }
+            check(!distinct) { DISTINCT_CANNOT_BE_USED_WHOLE_TABLE }
 
             return when (returnType) {
                 dtoList -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchInto(${dtoName}.class)")
@@ -110,14 +113,14 @@ internal class JooqMethodGenerator(
             val supportedTypes = setOf(dtoName, optionalDto, recordResult, optionalRecord, genericDto)
             check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
 
-            val (params, lastParam) = when(returnType) {
+            val (params, lastParam) = when (returnType) {
                 genericDto -> processParamsWithLastParam(params, "Class<T>")
                 else -> params to ""
             }
             val expressionPart = removeGetByPrefix(methodName, entity.name)
             val (where, orderBy, limit, distinct) = parseAsJooqExpression(entity, expressionPart, params, true)
 
-            check(!distinct) { "Distinct cannot be used whole table select" }
+            check(!distinct) { DISTINCT_CANNOT_BE_USED_WHOLE_TABLE }
 
             return when (returnType) {
                 dtoName -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchOneInto(${dtoName}.class)")
@@ -147,7 +150,7 @@ internal class JooqMethodGenerator(
 
             check(orderBy.isEmpty()) { "OrderBy cannot be used with count methods" }
             check(limit.isEmpty()) { "Top cannot be used with count methods" }
-            check(!distinct) { "Distinct cannot be used whole table select" }
+            check(!distinct) { DISTINCT_CANNOT_BE_USED_WHOLE_TABLE }
 
             return ReturnStmt("dsl.fetchCount(table, $where)")
 
@@ -210,7 +213,8 @@ internal class JooqMethodGenerator(
                         check(paramIndex < params.size) { "Parameter index of '${token.name}' out of bounds (${params.size})" }
                         val paramName = paramNames[paramIndex]
                         val paramType = params[paramName] ?: error("Parameter type not found: $paramName")
-                        val isCollection = nextOp is MethodExpressionParser.In || nextOp is MethodExpressionParser.Not && nextNextOp is MethodExpressionParser.In
+                        val isCollection =
+                            nextOp is MethodExpressionParser.In || nextOp is MethodExpressionParser.Not && nextNextOp is MethodExpressionParser.In
                         check(typesEqual(field, paramType, isCollection))
                         { "Field type (${field.asJavaType()}) and type ($paramType) of parameter \"$paramName\" mismatch" }
                         val ignoreCase = token.ignoreCase && paramType == "String"
@@ -395,20 +399,24 @@ internal class JooqMethodGenerator(
             names to false
     }
 
-    private fun typesEqual(field: FieldElem, paramType: String, supportCollection: Boolean = false): Boolean = when (field.asJavaType()) {
-        paramType -> true
-        "Integer" -> paramType == "int" || supportCollection && (paramType == "Collection<Integer>" || paramType == "List<Integer>")
-        "Long" -> paramType == "long" || supportCollection && (paramType == "Collection<Long>" || paramType == "List<Long>")
-        "Boolean" -> paramType == "boolean" || supportCollection && (paramType == "Collection<Boolean>" || paramType == "List<Boolean>")
-        else -> error("Unsupported field type: ${field.asJavaType()}")
-    }
+    private fun typesEqual(field: FieldElem, paramType: String, supportCollection: Boolean = false): Boolean =
+        when (field.asJavaType()) {
+            paramType -> true
+            "Integer" -> paramType == "int" || supportCollection && (paramType == "Collection<Integer>" || paramType == "List<Integer>")
+            "Long" -> paramType == "long" || supportCollection && (paramType == "Collection<Long>" || paramType == "List<Long>")
+            "Boolean" -> paramType == "boolean" || supportCollection && (paramType == "Collection<Boolean>" || paramType == "List<Boolean>")
+            else -> error("Unsupported field type: ${field.asJavaType()}")
+        }
 
     /**
      * Removes last parameter from params map and returns it as a separate value.
      *
      * Checks that last parameter is of required type.
      */
-    private fun processParamsWithLastParam(params: Map<String, String>, reqType: String): Pair<Map<String, String>, String> {
+    private fun processParamsWithLastParam(
+        params: Map<String, String>,
+        reqType: String
+    ): Pair<Map<String, String>, String> {
         check(params.isNotEmpty()) { "Last parameter required to be: $reqType" }
         val lastParam = params.keys.last()
         check(params[lastParam] == reqType) { "Last parameter required to be '$reqType', but found: " + params[lastParam] }
@@ -434,5 +442,6 @@ internal class JooqMethodGenerator(
         const val PREFIX_GET = "get"
         const val PREFIX_COUNT = "count"
         const val PREFIX_BY = "By"
+        const val DISTINCT_CANNOT_BE_USED_WHOLE_TABLE = "Distinct cannot be used whole table select"
     }
 }
