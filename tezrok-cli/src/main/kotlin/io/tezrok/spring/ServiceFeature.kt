@@ -110,6 +110,7 @@ open class ServiceFeature : TezrokFeature {
             val newMethod = serviceClass.addMethod(method.getName())
                 .withModifiers(Modifier.Keyword.PUBLIC)
                 .setReturnType(replaceType(method.getTypeAsString(), entityName, primaryFields))
+                .setTypeParameters(method.getTypeParameters())
             val callExpr = newMethod.addCallExpression(fieldName + "." + method.getName())
 
             method.getParameters().forEach { param ->

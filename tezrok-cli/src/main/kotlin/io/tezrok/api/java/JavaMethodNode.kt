@@ -10,6 +10,8 @@ import com.github.javaparser.ast.expr.MethodCallExpr
 import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.ast.stmt.ReturnStmt
 import com.github.javaparser.ast.stmt.Statement
+import com.github.javaparser.ast.type.Type
+import com.github.javaparser.ast.type.TypeParameter
 
 /**
  * Node that represents a Java method
@@ -47,6 +49,11 @@ open class JavaMethodNode(private val method: MethodDeclaration) {
 
     fun setReturnType(clazz: Class<*>): JavaMethodNode {
         method.setType(clazz)
+        return this
+    }
+
+    fun setReturnType(type: Type): JavaMethodNode {
+        method.setType(type)
         return this
     }
 
@@ -147,4 +154,12 @@ open class JavaMethodNode(private val method: MethodDeclaration) {
     override fun toString(): String {
         return "JavaMethodNode: $method"
     }
+
+    fun setTypeParameters(typeParameters: List<TypeParameter>): JavaMethodNode {
+        method.setTypeParameters(NodeList(typeParameters))
+        return this
+    }
+
+    fun getTypeParameters(): List<TypeParameter> = method.typeParameters
 }
+

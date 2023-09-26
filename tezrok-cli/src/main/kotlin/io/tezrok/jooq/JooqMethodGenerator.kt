@@ -25,6 +25,9 @@ internal class JooqMethodGenerator(
         val newMethod = repoClass.addMethod(methodName)
             .withModifiers(Modifier.Keyword.PUBLIC)
             .setReturnType(returnType)
+        if (method.typeParameters.isNonEmpty) {
+            newMethod.setTypeParameters(method.typeParameters)
+        }
         // TODO: use type as fully qualified name
         val params = method.parameters.associate { it.nameAsString to it.typeAsString }
         params.forEach { param -> newMethod.addParameter(param.value, param.key) }
@@ -59,11 +62,16 @@ internal class JooqMethodGenerator(
             val recordList = "List<$recordName>"
             val dtoPage = "Page<$dtoName>"
             val recordPage = "Page<$recordName>"
-            val supportedTypes = setOf(dtoList, recordList, dtoPage, recordPage)
+            val genericList = "List<T>"
+            val supportedTypes = setOf(dtoList, recordList, dtoPage, recordPage, genericList)
             check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
 
             val pageableRequest = returnType == dtoPage || returnType == recordPage
-            val (params, pageableParam) = if (pageableRequest) processParamsIfPageable(params) else params to ""
+            val (params, lastParam) = when(returnType) {
+                dtoPage, recordPage -> processParamsWithLastParam(params, "Pageable")
+                genericList -> processParamsWithLastParam(params, "Class<T>")
+                else -> params to ""
+            }
             val expressionPart = removeFindByPrefix(methodName, "${entity.name}s")
             val (where, orderBy, limit, distinct) = parseAsJooqExpression(entity, expressionPart, params, false)
 
@@ -74,8 +82,9 @@ internal class JooqMethodGenerator(
             return when (returnType) {
                 dtoList -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchInto(${dtoName}.class)")
                 recordList -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetch()")
-                dtoPage -> ReturnStmt("findPage($where, $pageableParam, ${dtoName}.class)")
-                recordPage -> ReturnStmt("findPage($where, $pageableParam, $recordName.class)")
+                dtoPage -> ReturnStmt("findPage($where, $lastParam, ${dtoName}.class)")
+                recordPage -> ReturnStmt("findPage($where, $lastParam, $recordName.class)")
+                genericList -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchInto($lastParam)")
                 else -> error("Unsupported return type: $returnType")
             }
         } catch (ex: Exception) {
@@ -97,9 +106,14 @@ internal class JooqMethodGenerator(
             val optionalDto = "Optional<$dtoName>"
             val recordResult = "${entity.name}Record"
             val optionalRecord = "Optional<$recordResult>"
-            val supportedTypes = setOf(dtoName, optionalDto, recordResult, optionalRecord)
+            val genericDto = "T"
+            val supportedTypes = setOf(dtoName, optionalDto, recordResult, optionalRecord, genericDto)
             check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
 
+            val (params, lastParam) = when(returnType) {
+                genericDto -> processParamsWithLastParam(params, "Class<T>")
+                else -> params to ""
+            }
             val expressionPart = removeGetByPrefix(methodName, entity.name)
             val (where, orderBy, limit, distinct) = parseAsJooqExpression(entity, expressionPart, params, true)
 
@@ -110,6 +124,7 @@ internal class JooqMethodGenerator(
                 optionalDto -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchOptionalInto(${dtoName}.class)")
                 recordResult -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchOne()")
                 optionalRecord -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchOptional()")
+                genericDto -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchOneInto($lastParam)")
                 else -> error("Unsupported return type: $returnType")
             }
         } catch (ex: Exception) {
@@ -388,11 +403,16 @@ internal class JooqMethodGenerator(
         else -> error("Unsupported field type: ${field.asJavaType()}")
     }
 
-    private fun processParamsIfPageable(params: Map<String, String>): Pair<Map<String, String>, String> {
-        check(params.isNotEmpty()) { "Page return type requires at least Pageable parameter" }
-        val pageableParam = params.keys.last()
-        check(params[pageableParam] == "Pageable") { "Last parameter should be Pageable for Page return type, but found: " + params[pageableParam] }
-        return params.filterKeys { it != pageableParam } to pageableParam
+    /**
+     * Removes last parameter from params map and returns it as a separate value.
+     *
+     * Checks that last parameter is of required type.
+     */
+    private fun processParamsWithLastParam(params: Map<String, String>, reqType: String): Pair<Map<String, String>, String> {
+        check(params.isNotEmpty()) { "Last parameter required to be: $reqType" }
+        val lastParam = params.keys.last()
+        check(params[lastParam] == reqType) { "Last parameter required to be '$reqType', but found: " + params[lastParam] }
+        return params.filterKeys { it != lastParam } to lastParam
     }
 
     private fun getFieldByName(entity: EntityElem, name: String): FieldElem {
