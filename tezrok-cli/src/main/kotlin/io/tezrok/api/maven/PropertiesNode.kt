@@ -10,7 +10,6 @@ import java.util.TreeMap
  * Implementation of [TezrokProperties] for [ModuleNode].
  */
 internal class PropertiesNode(private val moduleElem: ModuleElem) : TezrokProperties {
-    val sd: ArrayList<String> = arrayListOf()
     override fun getProperties(): Map<String, String?> = readonlyMap().toMap()
 
     override fun getProperty(key: String): String? = readonlyMap()[key]

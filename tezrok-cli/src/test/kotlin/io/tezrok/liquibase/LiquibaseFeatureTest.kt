@@ -45,12 +45,7 @@ internal class LiquibaseFeatureTest : BaseTest() {
     }
 
     private fun mockProjectInput(moduleName: String, schema: Schema): ProjectElem {
-        val projectInput = ProjectElem()
-        val moduleInput = ModuleElem()
-        moduleInput.schema = projectElemRepository.schemaFromJson(schema)
-        moduleInput.name = moduleName
-        projectInput.modules = listOf(moduleInput)
-
-        return projectInput
+        val moduleInput = ModuleElem(name = moduleName, schema = projectElemRepository.schemaFromJson(schema))
+        return ProjectElem(modules = listOf(moduleInput))
     }
 }

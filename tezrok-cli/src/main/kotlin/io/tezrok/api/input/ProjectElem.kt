@@ -3,40 +3,40 @@ package io.tezrok.api.input
 import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
- * Represents a model of a project loaded from a tezrok.json file
+ * Represents a model of a project loaded from a tezrok.json file.
  */
-open class ProjectElem {
-    var name: String = ""
-    var version: String = ""
-    var description: String = ""
+data class ProjectElem(
+    val name: String = "",
+    val version: String = "",
+    val description: String = "",
 
     @JsonProperty("package")
-    var packagePath: String = ""
-    var author: String = ""
-    var modules: List<ModuleElem> = emptyList()
-
+    val packagePath: String = "",
+    val author: String = "",
+    val modules: List<ModuleElem> = emptyList()
+) {
     override fun toString(): String {
         return "ProjectElem(name='$name')"
     }
 }
 
-open class ModuleElem {
-    var name: String = ""
-    var description: String = ""
-    var type: String = "" // TODO: enum
-    var schema: SchemaElem? = null
-    var dependencies: List<String>? = null
-    var properties: MutableMap<String, String?>? = null
-
+data class ModuleElem(
+    val name: String = "",
+    val description: String = "",
+    val type: String = "", // TODO: enum
+    val schema: SchemaElem? = null,
+    val dependencies: List<String>? = null,
+    var properties: MutableMap<String, String?>? = null // TODO: make immutable
+) {
     override fun toString(): String {
         return "ModuleElem(name='$name')"
     }
 }
 
 data class SchemaElem(
-    var importSchema: String? = null,
-    var entities: List<EntityElem>? = null,
-    var enums: List<EnumElem>? = null
+    val importSchema: String? = null,
+    val entities: List<EntityElem>? = null,
+    val enums: List<EnumElem>? = null
 )
 
 data class EntityElem(

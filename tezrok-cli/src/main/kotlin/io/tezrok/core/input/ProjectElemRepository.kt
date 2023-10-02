@@ -23,22 +23,28 @@ internal class ProjectElemRepository {
         check(projectPath.fileSize() > 0) { "Project file is empty: $projectPath" }
 
         val project = JsonUtil.mapper.readValue(projectPath.toURL(), ProjectElem::class.java)
+        val normalizedModules = project.modules.map { module -> normalizeModule(module, projectPath) }
 
-        for (module in project.modules) {
-            module.schema?.let { schema ->
-                if (schema.importSchema?.isNotBlank() == true) {
-                    log.debug("Loading schema from {}", schema.importSchema)
-                    val schemaPath = projectPath.parent.resolve(schema.importSchema!!)
-                    val schemaLoader = SchemaLoader()
-                    val jsonSchema = schemaLoader.load(schemaPath)
-                    module.schema = schemaFromJson(jsonSchema, module.schema, normalize = false)
-                }
+        return project.copy(modules = normalizedModules)
+    }
 
-                module.schema = normalizeSchema(module.schema!!)
-            }
-        }
+    private fun normalizeModule(module: ModuleElem, projectPath: Path): ModuleElem {
+        return module.copy(schema = normalizeSchema(module.schema, projectPath))
+    }
 
-        return project
+    private fun normalizeSchema(schema: SchemaElem?, projectPath: Path): SchemaElem? {
+        return if (schema != null) {
+            val newSchema = if (schema.importSchema?.isNotBlank() == true) {
+                log.debug("Loading schema from {}", schema.importSchema)
+                val schemaPath = projectPath.parent.resolve(schema.importSchema!!)
+                val schemaLoader = SchemaLoader()
+                val jsonSchema = schemaLoader.load(schemaPath)
+                schemaFromJson(jsonSchema, schema, normalize = false)
+            } else schema
+
+            return normalizeSchema(newSchema)
+        } else
+            null
     }
 
     /**
