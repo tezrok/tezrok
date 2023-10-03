@@ -1,6 +1,7 @@
 package io.tezrok.api.input
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import java.util.*
 
 /**
  * Represents a model of a project loaded from a tezrok.json file.
@@ -26,7 +27,8 @@ data class ModuleElem(
     val type: String = "", // TODO: enum
     val schema: SchemaElem? = null,
     val dependencies: List<String>? = null,
-    var properties: MutableMap<String, String?>? = null // TODO: make immutable
+    // properties should be sorted by key, so we use TreeMap
+    val properties: MutableMap<String, String?> = TreeMap()
 ) {
     override fun toString(): String {
         return "ModuleElem(name='$name')"
