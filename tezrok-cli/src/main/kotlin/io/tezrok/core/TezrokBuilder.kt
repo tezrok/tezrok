@@ -37,7 +37,7 @@ class TezrokBuilder private constructor() {
             projectOutput.mkdirs()
         }
 
-        val projectElem = projectElemRepo.load(inputPath)
+        val projectElem = projectElemRepo.load(inputPath, featureManager::processModel)
         val project = projectNodeFactory.fromProject(projectElem, projectOutput)
 
         check(project.getModules().isNotEmpty()) { "No modules found" }

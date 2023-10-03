@@ -15,34 +15,42 @@ import kotlin.io.path.fileSize
 import kotlin.io.path.isRegularFile
 
 internal class ProjectElemRepository {
-    fun load(projectPath: Path): ProjectElem {
+    fun load(projectPath: Path, projectModifier: (ProjectElem) -> ProjectElem = { it }): ProjectElem {
         log.info("Loading project from {}", projectPath)
 
         check(projectPath.exists()) { "Project file not found: $projectPath" }
         check(projectPath.isRegularFile()) { "Project file is not a regular file: $projectPath" }
         check(projectPath.fileSize() > 0) { "Project file is empty: $projectPath" }
 
-        val project = JsonUtil.mapper.readValue(projectPath.toURL(), ProjectElem::class.java)
-        val normalizedModules = project.modules.map { module -> normalizeModule(module, projectPath) }
+        val rawProject = JsonUtil.mapper.readValue(projectPath.toURL(), ProjectElem::class.java)
+        val jsonProject = rawProject.copy(modules = rawProject.modules.map { module -> tryLoadModuleFromJson(module, projectPath) })
+        val modifiedProject = projectModifier(jsonProject)
 
-        return project.copy(modules = normalizedModules)
+        return modifiedProject.copy(modules = modifiedProject.modules.map { module -> normalizeModule(module) })
     }
 
-    private fun normalizeModule(module: ModuleElem, projectPath: Path): ModuleElem {
-        return module.copy(schema = normalizeSchema(module.schema, projectPath))
+    private fun normalizeModule(module: ModuleElem): ModuleElem {
+        if (module.schema == null) {
+            return module
+        }
+
+        return module.copy(schema = normalizeSchema(module.schema!!))
     }
 
-    private fun normalizeSchema(schema: SchemaElem?, projectPath: Path): SchemaElem? {
+    private fun tryLoadModuleFromJson(module: ModuleElem, projectPath: Path): ModuleElem {
+        return module.copy(schema = tryLoadSchemaFromJson(module.schema, projectPath))
+    }
+
+    private fun tryLoadSchemaFromJson(schema: SchemaElem?, projectPath: Path): SchemaElem? {
         return if (schema != null) {
-            val newSchema = if (schema.importSchema?.isNotBlank() == true) {
+             if (schema.importSchema?.isNotBlank() == true) {
+                 // TODO: import schema from json via TezrokFeature.processModel
                 log.debug("Loading schema from {}", schema.importSchema)
                 val schemaPath = projectPath.parent.resolve(schema.importSchema!!)
                 val schemaLoader = SchemaLoader()
                 val jsonSchema = schemaLoader.load(schemaPath)
                 schemaFromJson(jsonSchema, schema, normalize = false)
             } else schema
-
-            return normalizeSchema(newSchema)
         } else
             null
     }

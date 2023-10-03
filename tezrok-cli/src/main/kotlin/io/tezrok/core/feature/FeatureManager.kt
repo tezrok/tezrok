@@ -2,6 +2,7 @@ package io.tezrok.core.feature
 
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
+import io.tezrok.api.input.ProjectElem
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.api.maven.UseMavenDependency
 import io.tezrok.db.DataSourceFeature
@@ -14,6 +15,7 @@ import io.tezrok.spring.ServiceFeature
 import io.tezrok.liquibase.LiquibaseFeature
 import io.tezrok.maven.MavenCoreFeature
 import io.tezrok.spring.ControllerFeature
+import io.tezrok.spring.SpringSecurityFeature
 import io.tezrok.spring.SpringFeature
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -31,6 +33,7 @@ internal class FeatureManager {
         features.add(GitIgnoreFeature())
         features.add(HelloWorldFeature())
         features.add(SpringFeature())
+        features.add(SpringSecurityFeature())
         features.add(LiquibaseFeature())
         features.add(JooqFeature())
         features.add(JooqRepositoryFeature())
@@ -64,6 +67,15 @@ internal class FeatureManager {
                     }
                 }
         }
+    }
+
+    fun processModel(project: ProjectElem): ProjectElem {
+        var result = project
+        for (feature in features) {
+            result = feature.processModel(result)
+        }
+
+        return result
     }
 
     private companion object {
