@@ -27,7 +27,8 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": "integer"
+          "type": "integer",
+          "description": "Unique identifier for the book"
         },
         "title": {
           "type": "string"

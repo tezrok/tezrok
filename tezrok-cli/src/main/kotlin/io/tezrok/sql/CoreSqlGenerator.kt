@@ -23,6 +23,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
     override fun generate(schema: SchemaElem, context: GeneratorContext): SqlScript {
         val sb = StringBuilder()
         // TODO: generate enum tables
+        val comments = mutableListOf<CommentOn>()
         val entities = schema.entities ?: emptyList()
         val schemaName = schema.schemaName
 
@@ -32,7 +33,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         }
 
         entities.forEachIndexed { index, entity ->
-            generateTable(entity, sb, schemaName)
+            generateTable(entity, sb, schemaName, comments)
             if (index < entities.size - 1) {
                 addNewline(sb)
             }
@@ -51,7 +52,16 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
             }
         }
 
-        // TODO: Add comment on columns
+        if (comments.isNotEmpty()) {
+            addNewline(sb)
+            sb.append("-- comments")
+            addNewline(sb)
+            comments.forEach { comment ->
+                // TODO: escape single quotes in comment
+                sb.append("COMMENT ON ${comment.type} ${comment.name} IS '${comment.comment.trim()}';")
+                addNewline(sb)
+            }
+        }
 
         return SqlScript("schema", sb.toString())
     }
@@ -62,7 +72,8 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
     private fun generateTable(
         entity: EntityElem,
         sb: StringBuilder,
-        schemaName: String
+        schemaName: String,
+        comments: MutableList<CommentOn>
     ) {
         Validate.notBlank(entity.name, "Schema table is blank")
         val tableName = toTableName(entity.name, schemaName)
@@ -86,7 +97,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
                 sb.append(",")
                 addNewline(sb)
             }
-            generateColumn(field, sb, primaryFields.size == 1)
+            generateColumn(field, sb, primaryFields.size == 1, tableName, comments)
             colCount++
         }
 
@@ -123,6 +134,16 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         addNewline(sb)
         sb.append(");")
         addNewline(sb)
+
+        if (entity.description?.isNotBlank() == true) {
+            comments.add(
+                CommentOn(
+                    type = SqlObjectType.TABLE,
+                    name = tableName,
+                    comment = entity.description
+                )
+            )
+        }
     }
 
     private fun toTableName(tableName: String, schemaName: String = ""): String {
@@ -138,10 +159,17 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
             tableNameFinal.camelCaseToSqlCase()
     }
 
-    private fun generateColumn(field: FieldElem, sb: StringBuilder, singlePrimary: Boolean) {
+    private fun generateColumn(
+        field: FieldElem,
+        sb: StringBuilder,
+        singlePrimary: Boolean,
+        tableName: String,
+        comments: MutableList<CommentOn>
+    ) {
         sb.append(intent)
         // TODO: Validate column name
-        sb.append(toColumnName(field.name))
+        val columnName = toColumnName(field.name)
+        sb.append(columnName)
         sb.append(" ")
         sb.append(getSqlType(field, singlePrimary))
         // if field is serial, by default it's not null
@@ -157,6 +185,16 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         if (field.defValue?.isNotBlank() == true) {
             sb.append(" DEFAULT ")
             sb.append(getSqlDefault(field))
+        }
+
+        if (field.description?.isNotBlank() == true) {
+            comments.add(
+                CommentOn(
+                    type = SqlObjectType.COLUMN,
+                    name = "${tableName}.$columnName",
+                    comment = field.description
+                )
+            )
         }
     }
 
@@ -182,9 +220,15 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
             "string" -> "'$defValue'"
             "date" -> if (defValue == "now()") "CURRENT_DATE" else defValue
             "dateTime" -> if (defValue == "now()") "CURRENT_TIMESTAMP" else defValue
-            "integer" -> defValue.toIntOrNull()?.toString() ?: throw IllegalArgumentException("Invalid default value: $defValue")
-            "long" -> defValue.toLongOrNull()?.toString() ?: throw IllegalArgumentException("Invalid default value: $defValue")
-            "number" -> defValue.toFloatOrNull()?.toString() ?: throw IllegalArgumentException("Invalid default value: $defValue")
+            "integer" -> defValue.toIntOrNull()?.toString()
+                ?: throw IllegalArgumentException("Invalid default value: $defValue")
+
+            "long" -> defValue.toLongOrNull()?.toString()
+                ?: throw IllegalArgumentException("Invalid default value: $defValue")
+
+            "number" -> defValue.toFloatOrNull()?.toString()
+                ?: throw IllegalArgumentException("Invalid default value: $defValue")
+
             "boolean" -> defValue.toBooleanStrict().toString()
             else -> throw IllegalArgumentException("Unsupported type: ${field.type}")
         }
@@ -256,5 +300,17 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         init {
             check(schema.isNotBlank()) { "Schema is blank" }
         }
+    }
+
+    data class CommentOn(
+        // table, column, index, sequence, etc.
+        val type: SqlObjectType,
+        val name: String,
+        val comment: String
+    )
+
+    enum class SqlObjectType {
+        TABLE,
+        COLUMN
     }
 }

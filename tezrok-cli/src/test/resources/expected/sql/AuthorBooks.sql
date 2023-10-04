@@ -14,3 +14,7 @@ CREATE TABLE public.book (
 
 -- foreign keys
 ALTER TABLE public.book ADD CONSTRAINT fk_book_books_author_id FOREIGN KEY(books_author_id) REFERENCES public.author(id);
+
+-- comments
+COMMENT ON COLUMN public.book.id IS 'Unique identifier for the book';
+COMMENT ON COLUMN public.book.books_author_id IS 'Synthetic field for "Author.books"';
