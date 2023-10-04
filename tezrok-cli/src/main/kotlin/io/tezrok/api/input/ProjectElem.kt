@@ -39,6 +39,7 @@ data class ModuleElem(
 data class AuthElem(val type: String)
 
 data class SchemaElem(
+    val schemaName: String = "public", // by default schema name is public
     val importSchema: String? = null,
     val entities: List<EntityElem>? = null,
     val enums: List<EnumElem>? = null

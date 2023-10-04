@@ -67,6 +67,7 @@ internal class ProjectElemRepository {
         val entities = entitiesFromSchema(jsonSchema)
         val enums = enumsFromSchema(jsonSchema)
         val schema = SchemaElem(
+            schemaName = inheritSchema?.schemaName ?: "public",
             importSchema = inheritSchema?.importSchema,
             entities = entities.map { entity ->
                 processEntity(

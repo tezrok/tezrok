@@ -10,6 +10,7 @@
       "description": "",
       "type": "tezrok",
       "schema": {
+        "schemaName": "smpl",
         "importSchema": "./schemas/Orders.json",
         "entities": [
           {

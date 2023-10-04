@@ -15,6 +15,10 @@ internal class JooqFeature : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
         val projectElem = context.getProject()
         val module = project.getSingleModule()
+        val schemaModule = context.getProject().modules.find { it.name == module.getName() }
+            ?: throw IllegalStateException("Module ${module.getName()} not found")
+        val schema = schemaModule.schema
+
         // update pom
         val pomFile = module.pom
         pomFile.addDependency("org.springframework.boot:spring-boot-starter-jooq:${'$'}{spring-boot.version}")
@@ -27,7 +31,7 @@ internal class JooqFeature : TezrokFeature {
 
         addGroovyPlugin(pomFile)
         addLiquibasePlugin(pomFile)
-        addJooqPlugin(pomFile, projectElem.packagePath + ".jooq")
+        addJooqPlugin(pomFile, projectElem.packagePath + ".jooq", schema?.schemaName ?: "public")
 
         addJooqConfiguration(module, context)
 
@@ -88,7 +92,7 @@ internal class JooqFeature : TezrokFeature {
         configuration.add("password", "${'$'}{db.password}")
     }
 
-    private fun addJooqPlugin(pomFile: PomNode, classPath: String) {
+    private fun addJooqPlugin(pomFile: PomNode, classPath: String, schemaName: String) {
         val pluginNode = pomFile.addPluginDependency("org.jooq:jooq-codegen-maven:${'$'}{jooq.version}")
         val execution = pluginNode.addExecution("jooq-codegen", "generate", BuildPhase.GenerateSources)
         val configuration = execution.getConfiguration().node
@@ -98,7 +102,7 @@ internal class JooqFeature : TezrokFeature {
         jdbcNode.add("password", "${'$'}{db.password}")
         val generatorNode = configuration.add("generator")
         val databaseNode = generatorNode.add("database")
-        databaseNode.add("inputSchema", "public")
+        databaseNode.add("inputSchema", schemaName)
         databaseNode.add("excludes", "databasechangelog|databasechangeloglock")
         val generateNode = generatorNode.add("generate")
         generateNode.add("pojos", "true")

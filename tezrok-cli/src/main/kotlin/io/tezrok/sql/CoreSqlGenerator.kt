@@ -24,14 +24,21 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         val sb = StringBuilder()
         // TODO: generate enum tables
         val entities = schema.entities ?: emptyList()
+        val schemaName = schema.schemaName
+
+        if (schemaName != DEFAULT_SCHEMA_NAME) {
+            sb.append("CREATE SCHEMA IF NOT EXISTS $schemaName;")
+            addNewline(sb, 2)
+        }
+
         entities.forEachIndexed { index, entity ->
-            generateTable(entity, sb)
+            generateTable(entity, sb, schemaName)
             if (index < entities.size - 1) {
                 addNewline(sb)
             }
         }
 
-        val foreignKeys = calculateForeignKeys(entities)
+        val foreignKeys = calculateForeignKeys(entities, schemaName)
         if (foreignKeys.isNotEmpty()) {
             addNewline(sb)
             sb.append("-- foreign keys")
@@ -54,10 +61,11 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
      */
     private fun generateTable(
         entity: EntityElem,
-        sb: StringBuilder
+        sb: StringBuilder,
+        schemaName: String
     ) {
         Validate.notBlank(entity.name, "Schema table is blank")
-        val tableName = toTableName(entity.name)
+        val tableName = toTableName(entity.name, schemaName)
         val fields = entity.fields
         // TODO: Validate table name
         // TODO: Validate properties
@@ -117,16 +125,15 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         addNewline(sb)
     }
 
-    private fun toTableName(tableName: String, withSchema: Boolean = true): String {
+    private fun toTableName(tableName: String, schemaName: String = ""): String {
         val tableNameFinal = if (postgresKeywords.contains(tableName.lowercase())) {
             "\"$tableName\""
         } else {
             tableName
         }
 
-        // TODO: get schema from context
-        return if (withSchema)
-            "public." + tableNameFinal.camelCaseToSqlCase()
+        return if (schemaName.isNotBlank())
+            "$schemaName." + tableNameFinal.camelCaseToSqlCase()
         else
             tableNameFinal.camelCaseToSqlCase()
     }
@@ -190,7 +197,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
             "VARCHAR($DEFAULT_VARCHAR_LENGTH)"
         }
 
-    private fun calculateForeignKeys(entities: List<EntityElem>): List<ForeignKey> {
+    private fun calculateForeignKeys(entities: List<EntityElem>, schemaName: String): List<ForeignKey> {
         val foreignKeys = mutableListOf<ForeignKey>()
         val entityNames = entities.associateBy { it.name }
 
@@ -201,11 +208,11 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
                     val targetEntity = entityNames[entityName] ?: error("Entity not found: $entityName")
                     val targetField = targetEntity.fields.find { it.name == fieldName }
                         ?: error("Field not found: ${field.foreignField})")
-                    val sourceTableName = toTableName(entity.name, false)
-                    val targetTableName = toTableName(targetEntity.name, false)
+                    val sourceTableName = toTableName(entity.name)
+                    val targetTableName = toTableName(targetEntity.name)
 
                     val foreignKey = ForeignKey(
-                        schema = "public",
+                        schema = schemaName,
                         sourceTable = sourceTableName,
                         sourceColumn = toColumnName(field.name),
                         targetTable = targetTableName,
@@ -234,6 +241,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
 
     private companion object {
         const val DEFAULT_VARCHAR_LENGTH = 255
+        const val DEFAULT_SCHEMA_NAME = "public"
         val postgresKeywords = setOf("order")
         val log = LoggerFactory.getLogger(CoreSqlGenerator::class.java)!!
     }
@@ -243,6 +251,10 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         val sourceTable: String,
         val targetColumn: String,
         val targetTable: String,
-        val schema: String = "public"
-    )
+        val schema: String
+    ) {
+        init {
+            check(schema.isNotBlank()) { "Schema is blank" }
+        }
+    }
 }
