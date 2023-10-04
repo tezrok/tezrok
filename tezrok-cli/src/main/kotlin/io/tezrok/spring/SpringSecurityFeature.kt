@@ -87,8 +87,8 @@ open class SpringSecurityFeature : TezrokFeature {
                 ),
                 FieldElem(name = "activated", type = "boolean", required = true, defValue = "false"),
                 FieldElem(name = "banned", type = "boolean", required = true, defValue = "false"),
-                FieldElem(name = "createdAt", type = "dateTime", required = true),
-                FieldElem(name = "updatedAt", type = "dateTime", required = true),
+                FieldElem(name = "createdAt", type = "dateTime", required = true, defValue = "now()"),
+                FieldElem(name = "updatedAt", type = "dateTime", required = true, defValue = "now()"),
                 FieldElem(name = "roles", type = "Role", relation = EntityRelation.ManyToMany)
             )
         )

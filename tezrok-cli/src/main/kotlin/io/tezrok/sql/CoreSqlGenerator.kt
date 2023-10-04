@@ -147,6 +147,10 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         } else if (field.unique == true) {
             sb.append(" UNIQUE")
         }
+        if (field.defValue?.isNotBlank() == true) {
+            sb.append(" DEFAULT ")
+            sb.append(getSqlDefault(field))
+        }
     }
 
     private fun getSqlType(field: FieldElem, singlePrimary: Boolean): String {
@@ -160,6 +164,21 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
             "boolean" -> "BOOLEAN"
             // TODO: Create new ref column on target table, or new table with ref columns to both tables
             "array" -> throw IllegalArgumentException("Array type is implemented in another way")
+            else -> throw IllegalArgumentException("Unsupported type: ${field.type}")
+        }
+    }
+
+    private fun getSqlDefault(field: FieldElem): String {
+        val defValue = field.defValue ?: throw IllegalArgumentException("Default value is not set")
+
+        return when (field.type) {
+            "string" -> "'$defValue'"
+            "date" -> if (defValue == "now()") "CURRENT_DATE" else defValue
+            "dateTime" -> if (defValue == "now()") "CURRENT_TIMESTAMP" else defValue
+            "integer" -> defValue.toIntOrNull()?.toString() ?: throw IllegalArgumentException("Invalid default value: $defValue")
+            "long" -> defValue.toLongOrNull()?.toString() ?: throw IllegalArgumentException("Invalid default value: $defValue")
+            "number" -> defValue.toFloatOrNull()?.toString() ?: throw IllegalArgumentException("Invalid default value: $defValue")
+            "boolean" -> defValue.toBooleanStrict().toString()
             else -> throw IllegalArgumentException("Unsupported type: ${field.type}")
         }
     }
