@@ -92,6 +92,16 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
 
         var colCount = 0
 
+        if (entity.description?.isNotBlank() == true) {
+            comments.add(
+                CommentOn(
+                    type = SqlObjectType.TABLE,
+                    name = tableName,
+                    comment = entity.description
+                )
+            )
+        }
+
         fields.filter { it.logicField != true }.forEach { field ->
             if (colCount > 0) {
                 sb.append(",")
@@ -134,16 +144,6 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         addNewline(sb)
         sb.append(");")
         addNewline(sb)
-
-        if (entity.description?.isNotBlank() == true) {
-            comments.add(
-                CommentOn(
-                    type = SqlObjectType.TABLE,
-                    name = tableName,
-                    comment = entity.description
-                )
-            )
-        }
     }
 
     private fun toTableName(tableName: String, schemaName: String = ""): String {

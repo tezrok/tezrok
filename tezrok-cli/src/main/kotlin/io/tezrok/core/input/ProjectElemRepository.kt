@@ -234,8 +234,11 @@ internal class ProjectElemRepository {
     }
 
     private fun processEntity(entity: EntityElem, inheritEntity: EntityElem?): EntityElem {
-        return entity.copy(fields = processFields(entity, inheritEntity))
-            .copy(customRepository = inheritEntity?.customRepository)
+        return entity.copy(
+            description = inheritEntity?.description ?: entity.description,
+            customRepository = inheritEntity?.customRepository ?: entity.customRepository,
+            fields = processFields(entity, inheritEntity)
+        )
     }
 
     private fun processFields(
@@ -285,6 +288,7 @@ internal class ProjectElemRepository {
     private fun entityFromDefinition(name: String, definition: Definition): EntityElem =
         EntityElem(
             name = name,
+            description = definition.description,
             fields = definition.properties?.map {
                 fieldFromProperty(
                     it.key,

@@ -25,6 +25,7 @@
     },
     "Book": {
       "type": "object",
+      "description": "A book entity",
       "properties": {
         "id": {
           "type": "integer",
