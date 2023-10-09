@@ -1,0 +1,57 @@
+package ${package}.dto;
+
+import org.jetbrains.annotations.NotNull;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+
+/**
+ * Implementation of {@link UserDetails} for {@link UserDto}.
+ */
+public class UserDetailsImpl implements UserDetails {
+    private final UserDto user;
+    private final Collection<? extends GrantedAuthority> roles;
+
+    public UserDetailsImpl(@NotNull final UserDto user, @NotNull final Collection<? extends GrantedAuthority> roles) {
+        this.user = user;
+        this.roles = Collections.unmodifiableCollection(new ArrayList<>(roles));
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return roles;
+    }
+
+    @Override
+    public String getPassword() {
+        return user.getPassword();
+    }
+
+    @Override
+    public String getUsername() {
+        return user.getName();
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return !user.getBanned();
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return user.getActivated();
+    }
+}

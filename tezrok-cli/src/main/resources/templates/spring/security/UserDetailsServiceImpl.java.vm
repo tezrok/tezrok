@@ -1,0 +1,37 @@
+package ${package}.service;
+
+
+import ${package}.dto.UserDetailsImpl;
+import ${package}.dto.UserDto;
+import ${package}.repository.RoleRepository;
+import ${package}.repository.UserRepository;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+import java.util.Collections;
+
+@Service
+public class UserDetailsServiceImpl implements UserDetailsService {
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+
+    public UserDetailsServiceImpl(@NotNull final UserRepository userRepository, @NotNull final RoleRepository roleRepository) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(final String username) throws UsernameNotFoundException {
+        UserDto user = userRepository.getByName(username).orElseGet(() -> userRepository.getByEmail(username).orElse(null));
+
+        if (user == null) {
+            throw new UsernameNotFoundException("User not found: " + username);
+        }
+
+        // TODO: load roles and permissions
+        return new UserDetailsImpl(user, Collections.emptyList());
+    }
+}

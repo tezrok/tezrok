@@ -143,12 +143,6 @@
                 "maxLength": 100
               },
               {
-                "name": "description",
-                "type": "string",
-                "minLength": 0,
-                "maxLength": 150
-              },
-              {
                 "name": "activated",
                 "type": "boolean",
                 "required": true,

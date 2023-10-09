@@ -11,7 +11,20 @@ import org.slf4j.LoggerFactory
  */
 open class SpringSecurityFeature : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
-        log.error("TODO: implement SpringSecurityFeature")
+        val module = project.getSingleModule()
+        val pom = module.pom
+        pom.addDependency("org.springframework.boot:spring-boot-starter-security:${'$'}{spring-boot.version}")
+        val applicationPackageRoot = module.source.main.java.applicationPackageRoot
+
+        if (applicationPackageRoot != null) {
+            val projectElem = context.getProject()
+            val values = mapOf("package" to projectElem.packagePath)
+            val userDetails = applicationPackageRoot.getOrAddJavaDirectory("dto").addJavaFile("UserDetailsImpl")
+            context.writeTemplate(userDetails, "/templates/spring/security/UserDetailsImpl.java.vm", values)
+            val userDetailsService = applicationPackageRoot.getOrAddJavaDirectory("service").addJavaFile("UserDetailsServiceImpl")
+            context.writeTemplate(userDetailsService, "/templates/spring/security/UserDetailsServiceImpl.java.vm", values)
+        }
+
         return true
     }
 
@@ -79,12 +92,6 @@ open class SpringSecurityFeature : TezrokFeature {
                     minLength = USER_EMAIL_MIN
                 ),
                 FieldElem(name = "password", type = "string", maxLength = USER_PASSWORD_HASH_MAX, required = true),
-                FieldElem(
-                    name = "description",
-                    type = "string",
-                    maxLength = DESCRIPTION_MAX,
-                    minLength = DESCRIPTION_MIN
-                ),
                 FieldElem(name = "activated", type = "boolean", required = true, defValue = "false"),
                 FieldElem(name = "banned", type = "boolean", required = true, defValue = "false"),
                 FieldElem(name = "createdAt", type = "dateTime", required = true, defValue = "now()"),
