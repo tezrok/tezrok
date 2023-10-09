@@ -20,9 +20,10 @@ interface TezrokFeature {
      * Method provides a way to modify the model of the project before applying the features.
      *
      * @param project the model of the project
+     * @param phase the phase of the model processing
      * @return the modified model of the project
      */
-    fun processModel(project: ProjectElem): ProjectElem {
+    fun processModel(project: ProjectElem, phase: ProcessModelPhase): ProjectElem {
         return project
     }
 }

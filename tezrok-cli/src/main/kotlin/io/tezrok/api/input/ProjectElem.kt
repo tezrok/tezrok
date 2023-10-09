@@ -49,9 +49,19 @@ data class EntityElem(
     val name: String,
     val description: String? = null,
     val customRepository: Boolean? = null,
+    val customMethods: Set<String>? = null,
     val syntheticTo: String? = null,
     val fields: List<FieldElem>
-)
+) {
+    fun withCustomMethod(method: String): EntityElem {
+        check(method.isNotBlank()) { "Custom method cannot be blank" }
+        check(method.first().isLetterOrDigit() && method.last().isLetterOrDigit()) {
+            "Custom method should start and end with letter or digit"
+        }
+
+        return this.copy(customMethods = (customMethods ?: emptySet()) + method)
+    }
+}
 
 data class EnumElem(
     val name: String,

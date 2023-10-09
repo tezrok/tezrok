@@ -84,6 +84,10 @@
           {
             "name": "Item",
             "customRepository": true,
+            "customMethods": [
+              "findOtherItemsByOrderId",
+              "findItemsByItemsOrderId"
+            ],
             "fields": [
               {
                 "name": "id",
@@ -177,6 +181,9 @@
           {
             "name": "Role",
             "description": "Role entity",
+            "customMethods": [
+              "findRolesByUserId"
+            ],
             "fields": [
               {
                 "name": "id",
@@ -218,6 +225,9 @@
           {
             "name": "Permission",
             "description": "Permission entity",
+            "customMethods": [
+              "findPermissionsByRoleId"
+            ],
             "fields": [
               {
                 "name": "id",

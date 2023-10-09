@@ -1,5 +1,6 @@
 package io.tezrok.core.input
 
+import io.tezrok.api.ProcessModelPhase
 import io.tezrok.api.input.*
 import io.tezrok.json.schema.Definition
 import io.tezrok.json.schema.Schema
@@ -15,7 +16,10 @@ import kotlin.io.path.fileSize
 import kotlin.io.path.isRegularFile
 
 internal class ProjectElemRepository {
-    fun load(projectPath: Path, projectModifier: (ProjectElem) -> ProjectElem = { it }): ProjectElem {
+    fun load(
+        projectPath: Path,
+        projectModifier: (ProjectElem, ProcessModelPhase) -> ProjectElem = { project: ProjectElem, _: ProcessModelPhase -> project }
+    ): ProjectElem {
         log.info("Loading project from {}", projectPath)
 
         check(projectPath.exists()) { "Project file not found: $projectPath" }
@@ -24,9 +28,12 @@ internal class ProjectElemRepository {
 
         val rawProject = JsonUtil.mapper.readValue(projectPath.toURL(), ProjectElem::class.java)
         val jsonProject = rawProject.copy(modules = rawProject.modules.map { module -> tryLoadModuleFromJson(module, projectPath) })
-        val modifiedProject = projectModifier(jsonProject)
+        val preProject = projectModifier(jsonProject, ProcessModelPhase.PreProcess)
+        val preProjectFinal = preProject.copy(modules = preProject.modules.map { module -> normalizeModule(module) })
+        val processProject = projectModifier(preProjectFinal, ProcessModelPhase.Process)
+        val postProcessProject = projectModifier(processProject, ProcessModelPhase.PostProcess)
 
-        return modifiedProject.copy(modules = modifiedProject.modules.map { module -> normalizeModule(module) })
+        return postProcessProject
     }
 
     private fun normalizeModule(module: ModuleElem): ModuleElem {
@@ -43,8 +50,8 @@ internal class ProjectElemRepository {
 
     private fun tryLoadSchemaFromJson(schema: SchemaElem?, projectPath: Path): SchemaElem? {
         return if (schema != null) {
-             if (schema.importSchema?.isNotBlank() == true) {
-                 // TODO: import schema from json via TezrokFeature.processModel
+            if (schema.importSchema?.isNotBlank() == true) {
+                // TODO: import schema from json via TezrokFeature.processModel
                 log.debug("Loading schema from {}", schema.importSchema)
                 val schemaPath = projectPath.parent.resolve(schema.importSchema!!)
                 val schemaLoader = SchemaLoader()

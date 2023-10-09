@@ -1,6 +1,7 @@
 package io.tezrok.core.feature
 
 import io.tezrok.api.GeneratorContext
+import io.tezrok.api.ProcessModelPhase
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.ProjectElem
 import io.tezrok.api.maven.ProjectNode
@@ -9,6 +10,7 @@ import io.tezrok.db.DataSourceFeature
 import io.tezrok.docker.DockerFeature
 import io.tezrok.java.GitIgnoreFeature
 import io.tezrok.java.HelloWorldFeature
+import io.tezrok.jooq.JooqEntityCustomMethodsFeature
 import io.tezrok.jooq.JooqFeature
 import io.tezrok.jooq.JooqRepositoryFeature
 import io.tezrok.spring.ServiceFeature
@@ -37,6 +39,7 @@ internal class FeatureManager {
         features.add(LiquibaseFeature())
         features.add(JooqFeature())
         features.add(JooqRepositoryFeature())
+        features.add(JooqEntityCustomMethodsFeature())
         features.add(ServiceFeature())
         features.add(ControllerFeature())
         features.add(DockerFeature())
@@ -69,10 +72,10 @@ internal class FeatureManager {
         }
     }
 
-    fun processModel(project: ProjectElem): ProjectElem {
+    fun processModel(project: ProjectElem, phase: ProcessModelPhase): ProjectElem {
         var result = project
         for (feature in features) {
-            result = feature.processModel(result)
+            result = feature.processModel(result, phase)
         }
 
         return result

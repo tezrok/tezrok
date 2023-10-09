@@ -1,6 +1,7 @@
 package io.tezrok.spring
 
 import io.tezrok.api.GeneratorContext
+import io.tezrok.api.ProcessModelPhase
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.*
 import io.tezrok.api.maven.ProjectNode
@@ -28,7 +29,12 @@ open class SpringSecurityFeature : TezrokFeature {
         return true
     }
 
-    override fun processModel(project: ProjectElem): ProjectElem {
+    override fun processModel(project: ProjectElem, phase: ProcessModelPhase): ProjectElem {
+        if (phase != ProcessModelPhase.PreProcess) {
+            // we need only PreProcess phase to add Auth entities
+            return project
+        }
+
         return project.copy(modules = project.modules.map { module -> processModule(module) })
     }
 
