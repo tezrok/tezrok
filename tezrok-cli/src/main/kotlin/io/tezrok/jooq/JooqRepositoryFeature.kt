@@ -47,6 +47,8 @@ internal class JooqRepositoryFeature : TezrokFeature {
             val schema = schemaModule.schema
 
             if (schema != null) {
+                val entities = schema.entities?.associate { it.name to it } ?: emptyMap()
+
                 schema.entities?.forEach { entity ->
                     val primaryCount = entity.fields.count { it.primary == true }
                     check(primaryCount in 1..2) { "Entity ${entity.name} has unsupported count of primary keys: $primaryCount" }
@@ -58,6 +60,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
                         repositoryDir,
                         entity,
                         entity.customRepository == true,
+                        entities,
                         baseMethods,
                         singlePrimary,
                         context
@@ -178,6 +181,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
         repositoryDir: JavaDirectoryNode,
         entity: EntityElem,
         custom: Boolean,
+        entities: Map<String, EntityElem>,
         baseMethods: Set<String>,
         singlePrimary: Boolean,
         context: GeneratorContext
@@ -204,10 +208,12 @@ internal class JooqRepositoryFeature : TezrokFeature {
                     .orElseThrow { IllegalStateException("Constructor not found") }
                     .setModifiers(Modifier.Keyword.PROTECTED)
                 repoClass.setModifiers(Modifier.Keyword.PUBLIC, Modifier.Keyword.ABSTRACT)
-                addCustomMethods(entity, repoClass, repositoryDir, baseMethods, context)
+                addCustomMethods(entity, repoClass, repositoryDir, entities, baseMethods, context)
             } else {
                 repoClass.addAnnotation(Repository::class.java)
             }
+
+            addCustomMethodsByNames(entity, repoClass, entities, baseMethods)
         } else {
             log.warn(FILE_ALREADY_EXISTS, repoClassFileName)
         }
@@ -239,7 +245,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
     /**
      * Adds custom methods from custom (not generated) repository class into generated repository class.
      *
-     * @param name entity name
+     * @param entity target entity
      * @param repoClass generated repository class
      * @param repositoryDir directory where repository class is located
      * @param baseMethods set of base methods which must be ignored during custom methods generating
@@ -248,6 +254,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
         entity: EntityElem,
         repoClass: JavaClassNode,
         repositoryDir: JavaDirectoryNode,
+        entities: Map<String, EntityElem>,
         baseMethods: Set<String>,
         context: GeneratorContext
     ) {
@@ -292,6 +299,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
                         entity,
                         repoClass,
                         customRepoClass,
+                        entities,
                         baseMethods,
                         addedMethods,
                         repositoryPhysicalPath
@@ -329,6 +337,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
         entity: EntityElem,
         repoClass: JavaClassNode,
         customRepoClass: ClassOrInterfaceDeclaration,
+        entities: Map<String, EntityElem>,
         baseMethods: Set<String>,
         addedMethods: MutableList<String>,
         repositoryPhysicalPath: Path
@@ -341,7 +350,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
             if (interfaceFilePath.exists()) {
                 log.debug("Found custom repository interface file: {}", interfaceFilePath)
 
-                val methodGenerator = JooqMethodGenerator(entity, repoClass)
+                val methodGenerator = JooqMethodGenerator(entity, repoClass, entities)
                 val javaParser = JavaParser()
                 val parsedFile = javaParser.parse(interfaceFilePath)
 
@@ -350,13 +359,14 @@ internal class JooqRepositoryFeature : TezrokFeature {
                     check(interfaceRepoClass.isInterface) { "Class is not interface: $interfaceFilePath" }
 
                     // generates methods from custom repository interface by methods names
-                    interfaceRepoClass.findAll(MethodDeclaration::class.java).filter { !it.isDefault }.forEach { method ->
-                        val methodName = method.nameAsString
-                        if (!baseMethods.contains(methodName)) {
-                            methodGenerator.generateByName(methodName, method)
-                            addedMethods.add(methodName)
+                    interfaceRepoClass.findAll(MethodDeclaration::class.java).filter { !it.isDefault }
+                        .forEach { method ->
+                            val methodName = method.nameAsString
+                            if (!baseMethods.contains(methodName)) {
+                                methodGenerator.generateByName(methodName, method)
+                                addedMethods.add(methodName)
+                            }
                         }
-                    }
                 } else {
                     log.warn("Failed to parse file: {}", interfaceFilePath)
                     parsedFile.problems.forEach { problem ->
@@ -366,6 +376,24 @@ internal class JooqRepositoryFeature : TezrokFeature {
 
             } else {
                 log.debug("Custom repository file not found, create it: {}", interfaceFilePath)
+            }
+        }
+    }
+
+    /**
+     * Add custom methods from [EntityElem.customMethods] into generated repository class.
+     */
+    private fun addCustomMethodsByNames(
+        entity: EntityElem,
+        repoClass: JavaClassNode,
+        entities: Map<String, EntityElem>,
+        baseMethods: Set<String>
+    ) {
+        val names = entity.customMethods ?: return
+        val methodGenerator = JooqMethodGenerator(entity, repoClass, entities)
+        names.forEach { methodName ->
+            if (!baseMethods.contains(methodName)) {
+                methodGenerator.generateByOnlyName(methodName)
             }
         }
     }

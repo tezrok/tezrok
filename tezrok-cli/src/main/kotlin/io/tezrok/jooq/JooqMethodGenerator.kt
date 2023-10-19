@@ -5,6 +5,7 @@ import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.stmt.ReturnStmt
 import com.github.javaparser.ast.stmt.Statement
 import io.tezrok.api.input.EntityElem
+import io.tezrok.api.input.EntityRelation
 import io.tezrok.api.input.FieldElem
 import io.tezrok.api.java.JavaClassNode
 import io.tezrok.util.addImportsByType
@@ -17,6 +18,7 @@ import io.tezrok.util.camelCaseToSnakeCase
 internal class JooqMethodGenerator(
     private val entity: EntityElem,
     private val repoClass: JavaClassNode,
+    private val entities: Map<String, EntityElem>,
 ) {
     fun generateByName(methodName: String, method: MethodDeclaration) {
         check(!repoClass.hasMethod(methodName)) { "Method already exists: $methodName" }
@@ -29,18 +31,18 @@ internal class JooqMethodGenerator(
             newMethod.setTypeParameters(method.typeParameters)
         }
         // TODO: use type as fully qualified name
-        val params = method.parameters.associate { it.nameAsString to it.typeAsString }
+        val params = method.parameters.associate { it.nameAsString to it.typeAsString }.toMutableMap()
         params.forEach { param -> newMethod.addParameter(param.value, param.key) }
 
         when {
             methodName.startsWith(PREFIX_FIND) ->
-                newMethod.setBody(generateFindByBody(entity, methodName, returnType, params))
+                newMethod.setBody(generateFindByBody(methodName, returnType, params))
 
             methodName.startsWith(PREFIX_GET) ->
-                newMethod.setBody(generateGetByBody(entity, methodName, returnType, params))
+                newMethod.setBody(generateGetByBody(methodName, returnType, params))
 
             methodName.startsWith(PREFIX_COUNT) ->
-                newMethod.setBody(generateCountByBody(entity, methodName, returnType, params))
+                newMethod.setBody(generateCountByBody(methodName, returnType, params))
 
             else -> error("Unsupported method name: $methodName")
         }
@@ -50,10 +52,55 @@ internal class JooqMethodGenerator(
     }
 
     /**
+     * Generates methods for repository classes by method name only without params.
+     */
+    fun generateByOnlyName(methodName: String) {
+        val dtoName = "${entity.name}Dto"
+        val returnType = getReturnTypeByOnlyName(methodName, dtoName)
+        val newMethod = repoClass.addMethod(methodName)
+            .withModifiers(Modifier.Keyword.PUBLIC)
+            .setReturnType(returnType)
+        val params = mutableMapOf<String, String>()
+        when {
+            methodName.startsWith(PREFIX_FIND) ->
+                newMethod.setBody(generateFindByBodyOnlyByName(methodName, returnType, params))
+
+            methodName.startsWith(PREFIX_GET) -> TODO("support get methods")
+
+            methodName.startsWith(PREFIX_COUNT) -> TODO("support count methods")
+
+            else -> error("Unsupported method name: $methodName")
+        }
+        params.forEach { param -> newMethod.addParameter(param.value, param.key) }
+
+        repoClass.addImportsByType(returnType)
+        params.values.toSet().forEach { type -> repoClass.addImportsByType(type) }
+    }
+
+    private fun getMethodPrefix(methodName: String): String {
+        val index = methodName.indexOf("By")
+
+        return if (index > 0) {
+            methodName.substring(0, index)
+        } else {
+            ""
+        }
+    }
+
+    private fun getReturnTypeByOnlyName(methodName: String, dtoName: String) = when {
+        methodName.startsWith(PREFIX_FIND) -> "List<$dtoName>"
+
+        methodName.startsWith(PREFIX_GET) -> dtoName
+
+        methodName.startsWith(PREFIX_COUNT) -> "int"
+
+        else -> error("Unsupported method name: $methodName")
+    }
+
+    /**
      * Generates body for List<DtoType> findBySomeFieldOrExpression() methods.
      */
     private fun generateFindByBody(
-        entity: EntityElem,
         methodName: String,
         returnType: String,
         params: Map<String, String>
@@ -76,7 +123,7 @@ internal class JooqMethodGenerator(
                 else -> params to ""
             }
             val expressionPart = removeFindByPrefix(methodName, "${entity.name}s")
-            val (where, orderBy, limit, distinct) = parseAsJooqExpression(entity, expressionPart, params, false)
+            val (where, orderBy, limit, distinct) = parseAsJooqExpression(expressionPart, params, false)
 
             check(limit.isEmpty() || !pageableRequest) { "Top and Pageable cannot be used together" }
             check(orderBy.isEmpty() || !pageableRequest) { "OrderBy and Pageable cannot be used together" }
@@ -96,10 +143,66 @@ internal class JooqMethodGenerator(
     }
 
     /**
+     * Generates body for method by expression like "findBySomeFieldOrExpression".
+     */
+    private fun generateFindByBodyOnlyByName(
+        methodName: String,
+        returnType: String,
+        params: MutableMap<String, String>
+    ): Statement {
+        try {
+            val methodName = methodName.removePrefix(PREFIX_FIND)
+            val dtoName = "${entity.name}Dto"
+            val dtoList = "List<$dtoName>"
+            val supportedTypes = setOf(dtoList)
+            check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
+
+            val methodPrefix = getMethodPrefix(methodName)
+            val relTables = getRelatedTables(methodPrefix)
+            val expressionPart = removeFindByPrefix(methodName, methodPrefix)
+            val (where, orderBy, limit, distinct, paramsOut) = parseAsJooqExpression(expressionPart, params, false, relTables)
+            paramsOut.forEach(params::put)
+
+            check(!distinct) { DISTINCT_CANNOT_BE_USED_WHOLE_TABLE }
+
+            if (relTables == null) {
+                return when (returnType) {
+                    dtoList -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchInto(${dtoName}.class)")
+                    else -> error("Unsupported return type: $returnType")
+                }
+            } else {
+                val tableName = entity.name.camelCaseToSnakeCase().uppercase()
+                val primaryField = entity.fields.first { it.primary == true }.name.camelCaseToSnakeCase().uppercase()
+
+                val from = if (relTables.relTable != null) {
+                    val relTableName = relTables.relTable.name.camelCaseToSnakeCase().uppercase()
+                    val targetTableName = relTables.target.name.camelCaseToSnakeCase().uppercase()
+                    val primaryTargetField = relTables.target.fields.first { it.primary == true }.name.camelCaseToSnakeCase().uppercase()
+                    val relField1 = relTables.relTable.fields[0].name.camelCaseToSnakeCase().uppercase()
+                    val relField2 = relTables.relTable.fields[1].name.camelCaseToSnakeCase().uppercase()
+
+                    """select(Tables.$tableName.fields()).from(Tables.$tableName)
+                    |                .join(Tables.$relTableName).on(Tables.$tableName.$primaryField.eq(Tables.$relTableName.$relField1))
+                    |                .join(Tables.$targetTableName).on(Tables.$targetTableName.$primaryTargetField.eq(Tables.$relTableName.$relField2))"""
+                    .trimMargin()
+                } else {
+                    "selectFrom(table)"
+                }
+
+                return when (returnType) {
+                    dtoList -> ReturnStmt("dsl.$from.where($where)$orderBy$limit.fetchInto(${dtoName}.class)")
+                    else -> error("Unsupported return type: $returnType")
+                }
+            }
+        } catch (ex: Exception) {
+            throw RuntimeException("Failed to generate body for method \"$methodName\": ${ex.message}", ex)
+        }
+    }
+
+    /**
      * Generates body for Optional<DtoType> getBySomeFieldOrExpression() methods.
      */
     private fun generateGetByBody(
-        entity: EntityElem,
         methodName: String,
         returnType: String,
         params: Map<String, String>
@@ -118,7 +221,7 @@ internal class JooqMethodGenerator(
                 else -> params to ""
             }
             val expressionPart = removeGetByPrefix(methodName, entity.name)
-            val (where, orderBy, limit, distinct) = parseAsJooqExpression(entity, expressionPart, params, true)
+            val (where, orderBy, limit, distinct) = parseAsJooqExpression(expressionPart, params, true)
 
             check(!distinct) { DISTINCT_CANNOT_BE_USED_WHOLE_TABLE }
 
@@ -135,8 +238,10 @@ internal class JooqMethodGenerator(
         }
     }
 
+    /**
+     * Generates body for int countBySomeFieldOrExpression() methods.
+     */
     private fun generateCountByBody(
-        entity: EntityElem,
         methodName: String,
         returnType: String,
         params: Map<String, String>
@@ -146,7 +251,7 @@ internal class JooqMethodGenerator(
             check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
 
             val expressionPart = removeCountByPrefix(methodName, entity.name)
-            val (where, orderBy, limit, distinct) = parseAsJooqExpression(entity, expressionPart, params, false)
+            val (where, orderBy, limit, distinct) = parseAsJooqExpression(expressionPart, params, false)
 
             check(orderBy.isEmpty()) { "OrderBy cannot be used with count methods" }
             check(limit.isEmpty()) { "Top cannot be used with count methods" }
@@ -159,6 +264,48 @@ internal class JooqMethodGenerator(
         }
     }
 
+    /**
+     * By method prefix like "OrderOtherItems" find target entity (Order), it's field (otherItems) and relation table (OrderItemOtherItems).
+     */
+    private fun getRelatedTables(methodPrefix: String): RelationTables? {
+        val parts = methodPrefix.camelCaseToSnakeCase().split("_")
+        if (parts.size < 2) {
+            return null
+        }
+
+        val (targetEntity, fieldName) = findTargetEntityAndField(parts)
+        val field = targetEntity.fields.find { it.name == fieldName }
+            ?: error("Field not found: $fieldName in entity: ${targetEntity.name}")
+        check(field.type == entity.name) { "Field type (${field.type}) and entity name (${entity.name}) mismatch" }
+
+        return when (field.relation) {
+            EntityRelation.ManyToMany -> {
+                val fullName = "${targetEntity.name}.${fieldName}"
+                val relTable = entities.values.find { it.syntheticTo == fullName }
+                    ?: error("Relation table not found: $fullName")
+
+                RelationTables(targetEntity, field, relTable)
+            }
+            EntityRelation.OneToMany -> RelationTables(targetEntity, field, null)
+            else -> error("Unsupported relation: ${field.relation}")
+        }
+    }
+
+    private fun findTargetEntityAndField(parts: List<String>): Pair<EntityElem, String> {
+        var index = -1
+        var entityName = ""
+
+        while (++index < parts.size) {
+            entityName += parts[index]
+            val entity = entities[entityName]
+            if (entity != null) {
+                return entity to parts.subList(index + 1, parts.size).joinToString(separator = "").decapitalize()
+            }
+        }
+
+        error("Entity not found: $entityName")
+    }
+
     private fun removeFindByPrefix(methodName: String, entityPrefix: String) =
         methodName.removePrefix(PREFIX_FIND).removePrefix(entityPrefix).removePrefix(PREFIX_BY)
 
@@ -169,21 +316,19 @@ internal class JooqMethodGenerator(
         methodName.removePrefix(PREFIX_COUNT).removePrefix(entityPrefix).removePrefix(PREFIX_BY)
 
     private fun parseAsJooqExpression(
-        entity: EntityElem,
         expressionPart: String,
         params: Map<String, String>,
-        singleResult: Boolean
+        singleResult: Boolean,
+        relTables: RelationTables? = null
     ): JooqExpression {
-        val name = entity.name
-        val tableName = name.camelCaseToSnakeCase().uppercase()
         val (names, distinct) = parseTokensAndDistinct(MethodExpressionParser.parse(expressionPart))
         val sb = StringBuilder()
-        val paramNames = params.keys.toList()
         var orderBy = ""
         var limit = ""
         var paramIndex = -1
         var namesCount = 0
-        var ignoreCaseIgnored = 0
+        var ignoreCaseSkipped = 0
+        val paramsOut = mutableMapOf<String, String>()
 
         names.forEachIndexed { index, token ->
             when (token) {
@@ -194,8 +339,10 @@ internal class JooqMethodGenerator(
                 }
 
                 is Token.Name -> {
-                    val field = getFieldByName(entity, token.name)
-                    val fieldName = token.name.camelCaseToSnakeCase().uppercase()
+                    val fieldFull = getFieldByName(token.name, relTables)
+                    val tableName = fieldFull.entity.name.camelCaseToSnakeCase().uppercase()
+                    val field = fieldFull.field
+                    val fieldName = field.name.camelCaseToSnakeCase().uppercase()
                     val nextOp = if (index + 1 < names.size) names[index + 1] else null
                     val nextNextOp = if (index + 2 < names.size) names[index + 2] else null
                     val isOp = nextOp is Token.Is || nextOp is Token.IsNot
@@ -209,18 +356,22 @@ internal class JooqMethodGenerator(
                             sb.append(".isNotNull()")
                         }
                     } else {
+                        val isCollection = nextOp is Token.In || nextOp is Token.Not && nextNextOp is Token.In
                         paramIndex++
-                        check(paramIndex < params.size) { "Parameter index of '${token.name}' out of bounds (${params.size})" }
-                        val paramName = paramNames[paramIndex]
-                        val paramType = params[paramName] ?: error("Parameter type not found: $paramName")
-                        val isCollection =
-                            nextOp is Token.In || nextOp is Token.Not && nextNextOp is Token.In
-                        check(typesEqual(field, paramType, isCollection))
-                        { "Field type (${field.asJavaType()}) and type ($paramType) of parameter \"$paramName\" mismatch" }
+                        val (paramName, paramType) = extractParam(
+                            token.name,
+                            paramIndex,
+                            isCollection,
+                            params,
+                            field,
+                            relTables != null
+                        )
+                        paramsOut[paramName] = paramType
+
                         val ignoreCase = token.ignoreCase && paramType == "String"
 
                         if (token.ignoreCase && !ignoreCase) {
-                            ignoreCaseIgnored++
+                            ignoreCaseSkipped++
                         }
 
                         when (nextOp) {
@@ -279,12 +430,17 @@ internal class JooqMethodGenerator(
                             }
 
                             is Token.Between -> {
-                                check(paramIndex + 1 < paramNames.size) { "Operator \"Between\" requires two parameters" }
                                 paramIndex++
-                                val paramName2 = paramNames[paramIndex]
-                                val paramType2 = params[paramName]!!
-                                check(typesEqual(field, paramType2))
-                                { "Field type (${field.asJavaType()}) and type ($paramType2) of parameter \"$paramName2\" mismatch" }
+                                val (paramName2, paramType2) = extractParam(
+                                    token.name,
+                                    paramIndex,
+                                    isCollection,
+                                    params,
+                                    field,
+                                    relTables != null,
+                                    "Operator \"Between\" requires two parameters"
+                                )
+                                paramsOut[paramName2] = paramType2
 
                                 sb.append("Tables.${tableName}.${fieldName}.between($paramName, $paramName2)")
                             }
@@ -297,12 +453,17 @@ internal class JooqMethodGenerator(
                                     }
 
                                     is Token.Between -> {
-                                        check(paramIndex + 1 < paramNames.size) { "Operator \"Between\" requires two parameters" }
                                         paramIndex++
-                                        val paramName2 = paramNames[paramIndex]
-                                        val paramType2 = params[paramName]!!
-                                        check(typesEqual(field, paramType2))
-                                        { "Field type (${field.asJavaType()}) and type ($paramType2) of parameter \"$paramName2\" mismatch" }
+                                        val (paramName2, paramType2) = extractParam(
+                                            token.name,
+                                            paramIndex,
+                                            isCollection,
+                                            params,
+                                            field,
+                                            relTables != null,
+                                            "Operator \"Between\" requires two parameters"
+                                        )
+                                        paramsOut[paramName2] = paramType2
 
                                         sb.append("Tables.${tableName}.${fieldName}.notBetween($paramName, $paramName2)")
                                     }
@@ -355,8 +516,10 @@ internal class JooqMethodGenerator(
                 is Token.OrderBy -> orderBy = ".orderBy("
                 is Token.SortName -> {
                     // TODO: support several fields in order by
-                    val field = getFieldByName(entity, token.name)
+                    val fieldFull = getFieldByName(token.name, relTables)
+                    val field = fieldFull.field
                     val fieldName = field.name.camelCaseToSnakeCase().uppercase()
+                    val tableName = fieldFull.entity.name.camelCaseToSnakeCase().uppercase()
                     orderBy += "Tables.${tableName}.${fieldName}"
 
                     if (token.sort == Token.Sort.Asc) {
@@ -375,20 +538,46 @@ internal class JooqMethodGenerator(
         }
 
         paramIndex++
-        if (paramIndex < params.size) {
-            val notUsedParams = paramNames.subList(paramIndex, params.size).joinToString(", ")
-            error("Not all parameters used in method: $notUsedParams")
+        if (params.isNotEmpty()) {
+            if (paramIndex < params.size) {
+                val paramNames = params.keys.toList()
+                val notUsedParams = paramNames.subList(paramIndex, params.size).joinToString(", ")
+                error("Not all parameters used in method: $notUsedParams")
+            }
         }
 
         if (singleResult && orderBy.isNotEmpty() && limit.isEmpty()) {
             error("Single result method with OrderBy should use top 1")
         }
 
-        if (paramIndex > 0 && paramIndex == ignoreCaseIgnored) {
+        if (paramIndex > 0 && paramIndex == ignoreCaseSkipped) {
             error("At least one parameter should be String to use AllIgnoreCase")
         }
 
-        return JooqExpression(where = sb.toString(), orderBy = orderBy, limit = limit, distinct = distinct)
+        return JooqExpression(where = sb.toString(), orderBy = orderBy, limit = limit, distinct = distinct, params = paramsOut)
+    }
+
+    private fun extractParam(
+        tokenName: String,
+        paramIndex: Int,
+        isCollection: Boolean,
+        params: Map<String, String>,
+        field: FieldElem,
+        hasRelation: Boolean,
+        customMessage: String? = null
+    ): Pair<String, String> {
+        if (params.isNotEmpty() || !hasRelation) {
+            check(paramIndex < params.size) { customMessage ?: "Parameter index of '$tokenName' out of bounds (${params.size})" }
+            val paramNames = params.keys.toList()
+            val paramName = paramNames[paramIndex]
+            val paramType = params[paramName] ?: error("Parameter type not found: $paramName")
+            check(typesEqual(field, paramType, isCollection))
+            { "Field type (${field.asJavaType()}) and type ($paramType) of parameter \"$paramName\" mismatch" }
+
+            return paramName to paramType
+        } else {
+            return tokenName to field.asJavaType()
+        }
     }
 
     private fun parseTokensAndDistinct(names: List<Token>): Pair<List<Token>, Boolean> {
@@ -423,7 +612,24 @@ internal class JooqMethodGenerator(
         return params.filterKeys { it != lastParam } to lastParam
     }
 
-    private fun getFieldByName(entity: EntityElem, name: String): FieldElem {
+    private fun getFieldByName(name: String, relTables: RelationTables?): EntityField {
+        if (relTables != null) {
+            val fieldName = name.capitalize()
+            val targetEntity = relTables.target.name
+            val targetField = relTables.target.fields.find { field -> "${targetEntity}${field.name.capitalize()}" == fieldName }
+
+            if (targetField != null) {
+                return EntityField(relTables.target, targetField)
+            }
+
+            val sourceField = entity.fields.find { field -> "${entity.name}${field.name.capitalize()}" == fieldName }
+            if (sourceField != null) {
+                return EntityField(entity, sourceField)
+            }
+
+            error("Field ($name) not found in entity (${entity.name}) or related entity (${relTables.target.name})")
+        }
+
         val field = entity.fields.find { fieldElem -> fieldElem.name == name }
             ?: error("Field ($name) not found in entity (${entity.name})")
         if (field.logicField == true) {
@@ -431,11 +637,14 @@ internal class JooqMethodGenerator(
             error("Logic field (${field.name}) cannot be used in method expression, use instead related real field")
         }
 
-        return field
+        return EntityField(entity, field)
     }
 
-    private data class JooqExpression(val where: String, val orderBy: String, val limit: String, val distinct: Boolean)
+    private data class JooqExpression(val where: String, val orderBy: String, val limit: String, val distinct: Boolean, val params: Map<String, String>)
 
+    private data class RelationTables(val target: EntityElem, val field: FieldElem, val relTable: EntityElem?)
+
+    private data class EntityField(val entity: EntityElem, val field: FieldElem)
 
     private companion object {
         const val PREFIX_FIND = "find"

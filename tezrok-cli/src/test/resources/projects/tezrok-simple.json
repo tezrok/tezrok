@@ -42,6 +42,11 @@
                 "name": "id",
                 "type": "long",
                 "primary": true
+              },
+              {
+                "name": "otherItems",
+                "type": "Item",
+                "relation": "ManyToMany"
               }
             ]
           }

@@ -85,8 +85,9 @@
             "name": "Item",
             "customRepository": true,
             "customMethods": [
-              "findOtherItemsByOrderId",
-              "findItemsByItemsOrderId"
+              "findOrderOtherItemsByOrderId",
+              "findOrderItemsByItemItemsOrderId",
+              "findItemOtherItemsByItemId"
             ],
             "fields": [
               {
@@ -104,6 +105,12 @@
                 "name": "price",
                 "type": "number",
                 "required": true
+              },
+              {
+                "name": "otherItems",
+                "type": "Item",
+                "logicField": true,
+                "relation": "ManyToMany"
               },
               {
                 "name": "itemsOrderId",
@@ -182,7 +189,7 @@
             "name": "Role",
             "description": "Role entity",
             "customMethods": [
-              "findRolesByUserId"
+              "findUserRolesByUserId"
             ],
             "fields": [
               {
@@ -226,7 +233,7 @@
             "name": "Permission",
             "description": "Permission entity",
             "customMethods": [
-              "findPermissionsByRoleId"
+              "findRolePermissionsByRoleId"
             ],
             "fields": [
               {
@@ -278,6 +285,27 @@
                 "foreignField": "Item.id",
                 "primary": true,
                 "syntheticTo": "Order.otherItems"
+              }
+            ]
+          },
+          {
+            "name": "ItemItemOtherItems",
+            "description": "Synthetic entity of many-to-many relation for field \"Item.otherItems\"",
+            "syntheticTo": "Item.otherItems",
+            "fields": [
+              {
+                "name": "itemId1",
+                "type": "long",
+                "foreignField": "Item.id",
+                "primary": true,
+                "syntheticTo": "Item.otherItems"
+              },
+              {
+                "name": "itemId2",
+                "type": "long",
+                "foreignField": "Item.id",
+                "primary": true,
+                "syntheticTo": "Item.otherItems"
               }
             ]
           },

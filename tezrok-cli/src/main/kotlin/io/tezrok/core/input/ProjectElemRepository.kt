@@ -33,6 +33,8 @@ internal class ProjectElemRepository {
         val processProject = projectModifier(preProjectFinal, ProcessModelPhase.Process)
         val postProcessProject = projectModifier(processProject, ProcessModelPhase.PostProcess)
 
+        validateProject(postProcessProject)
+
         return postProcessProject
     }
 
@@ -60,6 +62,20 @@ internal class ProjectElemRepository {
             } else schema
         } else
             null
+    }
+
+    private fun validateProject(project: ProjectElem) {
+        project.modules.forEach { module -> validateModule(module) }
+    }
+
+    private fun validateModule(module: ModuleElem) {
+        module.schema?.entities?.forEach { entity -> validateEntity(entity) }
+    }
+
+    private fun validateEntity(entity: EntityElem) {
+        entity.fields.groupBy { it.name }
+            .map { it.key to it.value.size }
+            .find { it.second > 1 } ?.let {  error("Found duplicate field '${it.first}' in entity '${entity.name}'") }
     }
 
     /**
@@ -185,6 +201,7 @@ internal class ProjectElemRepository {
                 EntityRelation.ManyToMany -> {
                     val entityName = "${sourceEntity.name}${targetEntity.name}" + sourceField.name.capitalize()
                     require(!entityMap.containsKey(entityName)) { "Entity with name \"$entityName\" already exists" }
+                    val (suffix1, suffix2) = if (sourceEntity.name == targetEntity.name) "1" to "2" else "" to ""
 
                     // add synthetic table with two fields
                     entityMap[entityName] = EntityElem(
@@ -193,14 +210,14 @@ internal class ProjectElemRepository {
                         description = "Synthetic entity of many-to-many relation for field \"$fullFieldName\"",
                         fields = listOf(
                             FieldElem(
-                                "${sourceEntity.name}Id".decapitalize(),
+                                "${sourceEntity.name}Id$suffix1".decapitalize(),
                                 sourcePrimaryField.type,
                                 primary = true,
                                 syntheticTo = fullFieldName,
                                 foreignField = "${sourceEntity.name}.${sourcePrimaryField.name}",
                             ),
                             FieldElem(
-                                "${targetEntity.name}Id".decapitalize(),
+                                "${targetEntity.name}Id$suffix2".decapitalize(),
                                 targetPrimaryField.type,
                                 primary = true,
                                 syntheticTo = fullFieldName,
