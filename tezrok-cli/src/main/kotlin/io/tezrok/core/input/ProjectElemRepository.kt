@@ -261,6 +261,7 @@ internal class ProjectElemRepository {
         return entity.copy(
             description = inheritEntity?.description ?: entity.description,
             customRepository = inheritEntity?.customRepository ?: entity.customRepository,
+            customMethods = inheritEntity?.customMethods ?: entity.customMethods,
             fields = processFields(entity, inheritEntity)
         )
     }

@@ -85,6 +85,8 @@
             "name": "Item",
             "customRepository": true,
             "customMethods": [
+              "findOrderOtherItemsByOrderIdAndItemTitle",
+              "findOrderItemsByItemItemsOrderIdAndItemTitle",
               "findOrderOtherItemsByOrderId",
               "findOrderItemsByItemItemsOrderId",
               "findItemOtherItemsByItemId"
