@@ -78,7 +78,7 @@ open class SpringSecurityFeature : TezrokFeature {
             name = NAME_PERMISSION,
             description = "Permission entity",
             customRepository = true,
-            customMethods = inheritEntity?.customMethods,
+            customMethods = (inheritEntity?.customMethods ?: emptySet()) + "findRolePermissionsByRoleIdIn",
             fields = createPermissionFields(inheritEntity)
         )
     }

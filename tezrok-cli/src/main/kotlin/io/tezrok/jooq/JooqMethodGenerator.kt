@@ -632,7 +632,11 @@ internal class JooqMethodGenerator(
 
             return paramName to paramType
         } else {
-            return tokenName to field.asJavaType()
+            return if (isCollection) {
+                tokenName + "s" to "Collection<${field.asJavaType()}>"
+            } else {
+                tokenName to field.asJavaType()
+            }
         }
     }
 

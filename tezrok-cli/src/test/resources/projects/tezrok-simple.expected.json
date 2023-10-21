@@ -128,6 +128,9 @@
             "name": "User",
             "description": "User entity",
             "customRepository": true,
+            "customMethods": [
+              "getByNameOrEmail"
+            ],
             "fields": [
               {
                 "name": "id",
@@ -238,6 +241,7 @@
             "description": "Permission entity",
             "customRepository": true,
             "customMethods": [
+              "findRolePermissionsByRoleIdIn",
               "findRolePermissionsByRoleId"
             ],
             "fields": [

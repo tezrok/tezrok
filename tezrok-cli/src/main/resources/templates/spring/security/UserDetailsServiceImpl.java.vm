@@ -4,7 +4,6 @@ import ${package}.dto.PermissionDto;
 import ${package}.dto.RoleDto;
 import ${package}.dto.UserDetailsImpl;
 import ${package}.dto.UserDto;
-import ${package}.jooq.tables.pojos.Role;
 import ${package}.repository.PermissionRepository;
 import ${package}.repository.RoleRepository;
 import ${package}.repository.UserRepository;
@@ -18,9 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
@@ -45,15 +42,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             throw new UsernameNotFoundException("User not found: " + username);
         }
         final List<RoleDto> roles = roleRepository.findUserRolesByUserId(user.getId());
-        final Set<PermissionDto> permissions = new HashSet<>(roles.size());
-        final List<GrantedAuthority> authorities = new ArrayList<>(roles.size());
-        // TODO: optimize - load all permissions in single query
-        roles.stream()
-                .peek(role -> permissions.addAll(permissionRepository.findRolePermissionsByRoleId(role.getId())))
-                .map(Role::getName)
-                .map(role -> "ROLE_" + role)
-                .map(SimpleGrantedAuthority::new)
-                .forEach(authorities::add);
+        final List<Long> roleIds = roles.stream().map(RoleDto::getId).toList();
+        final List<PermissionDto> permissions = permissionRepository.findRolePermissionsByRoleIdIn(roleIds);
+        final List<GrantedAuthority> authorities = new ArrayList<>(roles.size() + permissions.size());
+        roles.forEach(role -> authorities.add(new SimpleGrantedAuthority("ROLE_" + role)));
         permissions.forEach(permission -> authorities.add(new SimpleGrantedAuthority(permission.getName())));
 
         return new UserDetailsImpl(user, authorities);
