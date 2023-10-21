@@ -181,6 +181,7 @@ internal class JooqMethodGenerator(
                     val relField1 = relTables.relTable.fields[0].name.camelCaseToSnakeCase().uppercase()
                     val relField2 = relTables.relTable.fields[1].name.camelCaseToSnakeCase().uppercase()
 
+                    // TODO: optimize query when condition only by primary keys
                     """select(Tables.$tableName.fields()).from(Tables.$tableName)
                     |                .join(Tables.$relTableName).on(Tables.$tableName.$primaryField.eq(Tables.$relTableName.$relField1))
                     |                .join(Tables.$targetTableName).on(Tables.$targetTableName.$primaryTargetField.eq(Tables.$relTableName.$relField2))"""

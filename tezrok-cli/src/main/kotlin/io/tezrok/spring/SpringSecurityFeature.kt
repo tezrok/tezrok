@@ -57,6 +57,7 @@ open class SpringSecurityFeature : TezrokFeature {
         return EntityElem(
             name = NAME_USER,
             description = "User entity",
+            customRepository = true,
             fields = createUserFields(inheritEntity)
         )
     }
@@ -65,6 +66,7 @@ open class SpringSecurityFeature : TezrokFeature {
         return EntityElem(
             name = NAME_ROLE,
             description = "Role entity",
+            customRepository = true,
             fields = createRoleFields(inheritEntity)
         )
     }
@@ -73,6 +75,7 @@ open class SpringSecurityFeature : TezrokFeature {
         return EntityElem(
             name = NAME_PERMISSION,
             description = "Permission entity",
+            customRepository = true,
             fields = createPermissionFields(inheritEntity)
         )
     }

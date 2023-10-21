@@ -127,6 +127,7 @@
           {
             "name": "User",
             "description": "User entity",
+            "customRepository": true,
             "fields": [
               {
                 "name": "id",
@@ -190,6 +191,7 @@
           {
             "name": "Role",
             "description": "Role entity",
+            "customRepository": true,
             "customMethods": [
               "findUserRolesByUserId"
             ],
@@ -234,6 +236,7 @@
           {
             "name": "Permission",
             "description": "Permission entity",
+            "customRepository": true,
             "customMethods": [
               "findRolePermissionsByRoleId"
             ],
