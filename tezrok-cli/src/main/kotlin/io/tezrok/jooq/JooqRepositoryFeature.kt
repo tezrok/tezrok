@@ -6,8 +6,10 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.stmt.ReturnStmt
 import io.tezrok.api.GeneratorContext
+import io.tezrok.api.ProcessModelPhase
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.EntityElem
+import io.tezrok.api.input.ModuleElem
 import io.tezrok.api.input.ProjectElem
 import io.tezrok.api.java.JavaClassNode
 import io.tezrok.api.java.JavaDirectoryNode
@@ -18,7 +20,6 @@ import io.tezrok.util.getRootClass
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.nio.file.Path
-import java.util.*
 import java.util.stream.Collectors
 import java.util.stream.Stream
 import kotlin.io.path.exists
@@ -73,6 +74,14 @@ internal class JooqRepositoryFeature : TezrokFeature {
         }
 
         return true
+    }
+
+   override fun processModel(project: ProjectElem, phase: ProcessModelPhase): ProjectElem {
+        if (phase != ProcessModelPhase.Process) {
+            return project
+        }
+
+        return project.copy(modules = project.modules.map { processModule(it) })
     }
 
     /**
@@ -200,7 +209,6 @@ internal class JooqRepositoryFeature : TezrokFeature {
 
             context.writeTemplate(repoClassFile, "/templates/jooq/${templateName}.java.vm", values + fields)
             val repoClass = repoClassFile.getRootClass()
-            addMethodsByUniqueFields(entity, repoClass)
 
             if (custom) {
                 repoClass.getConstructors()
@@ -216,29 +224,6 @@ internal class JooqRepositoryFeature : TezrokFeature {
             addCustomMethodsByNames(entity, repoClass, entities, baseMethods)
         } else {
             log.warn(FILE_ALREADY_EXISTS, repoClassFileName)
-        }
-    }
-
-    /**
-     * Adds methods for getting entity by unique fields.
-     */
-    private fun addMethodsByUniqueFields(entity: EntityElem, repoClass: JavaClassNode) {
-        val fields = entity.fields.filter { it.unique == true }
-
-        if (fields.isNotEmpty()) {
-            repoClass.addImport(Optional::class.java)
-            val dtoName = "${entity.name}Dto"
-            val uName = entity.name.camelCaseToSnakeCase().uppercase()
-            fields.forEach { field ->
-                val fieldName = field.name
-                val uField = fieldName.camelCaseToSnakeCase().uppercase()
-                val methodName = "getBy${fieldName.capitalize()}"
-                repoClass.addMethod(methodName)
-                    .withModifiers(Modifier.Keyword.PUBLIC)
-                    .setReturnType("Optional<$dtoName>")
-                    .setBody(ReturnStmt("Optional.ofNullable(dsl.selectFrom(table).where(Tables.${uName}.${uField}.eq($fieldName)).fetchOneInto(${dtoName}.class))"))
-                    .addParameter(field.asJavaType(), fieldName)
-            }
         }
     }
 
@@ -405,6 +390,21 @@ internal class JooqRepositoryFeature : TezrokFeature {
             .map { it.camelCaseToSnakeCase() }
             .map { "field${counter++}" to it.uppercase() }
             .toMap()
+    }
+
+    private fun processModule(module: ModuleElem): ModuleElem {
+        return module.copy(schema = module.schema?.copy(entities = module.schema.entities?.map { entity -> processEntity(entity) }))
+    }
+
+    private fun processEntity(entity: EntityElem): EntityElem {
+        // add custom methods for unique fields
+        val uniqueFields = entity.fields.filter { it.unique == true }
+        if (uniqueFields.isNotEmpty()) {
+            val methods = uniqueFields.map { "getBy${it.name.capitalize()}" }.toTypedArray()
+            return entity.withCustomMethods(*methods)
+        }
+
+        return entity
     }
 
     private companion object {

@@ -53,13 +53,15 @@ data class EntityElem(
     val syntheticTo: String? = null,
     val fields: List<FieldElem>
 ) {
-    fun withCustomMethod(method: String): EntityElem {
-        check(method.isNotBlank()) { "Custom method cannot be blank" }
-        check(method.first().isLetterOrDigit() && method.last().isLetterOrDigit()) {
-            "Custom method should start and end with letter or digit"
+    fun withCustomMethods(vararg methods: String): EntityElem {
+        methods.forEach { method ->
+            check(method.isNotBlank()) { "Custom method cannot be blank" }
+            check(method.first().isLetterOrDigit() && method.last().isLetterOrDigit()) {
+                "Custom method should start and end with letter or digit"
+            }
         }
 
-        return this.copy(customMethods = (customMethods ?: emptySet()) + method)
+        return this.copy(customMethods = (customMethods ?: emptySet()) + methods)
     }
 
     /**

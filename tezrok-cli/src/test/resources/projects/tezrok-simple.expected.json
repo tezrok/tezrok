@@ -16,6 +16,9 @@
           {
             "name": "Order",
             "customRepository": true,
+            "customMethods": [
+              "getByName"
+            ],
             "fields": [
               {
                 "name": "id",
@@ -129,7 +132,9 @@
             "description": "User entity",
             "customRepository": true,
             "customMethods": [
-              "getByNameOrEmail"
+              "getByNameOrEmail",
+              "getByName",
+              "getByEmail"
             ],
             "fields": [
               {
@@ -196,6 +201,7 @@
             "description": "Role entity",
             "customRepository": true,
             "customMethods": [
+              "getByName",
               "findUserRolesByUserId"
             ],
             "fields": [
@@ -242,6 +248,7 @@
             "customRepository": true,
             "customMethods": [
               "findRolePermissionsByRoleIdIn",
+              "getByName",
               "findRolePermissionsByRoleId"
             ],
             "fields": [

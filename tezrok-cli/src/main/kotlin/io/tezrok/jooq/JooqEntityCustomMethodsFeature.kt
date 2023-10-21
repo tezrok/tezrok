@@ -51,7 +51,7 @@ internal class JooqEntityCustomMethodsFeature : TezrokFeature {
         for (field in entity.fields.filter { it.relation == EntityRelation.ManyToMany }) {
             val refEntity = entities[field.type] ?: error("Entity ${field.type} not found")
             val methodName = "find${entity.name}" + field.name.capitalize() + "By${primaryFieldName.value}"
-            entities[refEntity.name] = refEntity.withCustomMethod(methodName)
+            entities[refEntity.name] = refEntity.withCustomMethods(methodName)
         }
 
         for (field in entity.fields.filter { it.relation == EntityRelation.OneToMany }) {
@@ -59,7 +59,7 @@ internal class JooqEntityCustomMethodsFeature : TezrokFeature {
             val syntheticTo = entity.name + "." + field.name
             val syntheticField = refEntity.fields.find { it.syntheticTo == syntheticTo } ?: error("Synthetic field $syntheticTo not found")
             val methodName = "find${entity.name}${field.name.capitalize()}By${refEntity.name}${syntheticField.name.capitalize()}"
-            entities[refEntity.name] = refEntity.withCustomMethod(methodName)
+            entities[refEntity.name] = refEntity.withCustomMethods(methodName)
         }
     }
 
