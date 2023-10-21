@@ -3,16 +3,18 @@ package ${package}.service;
 
 import ${package}.dto.UserDetailsImpl;
 import ${package}.dto.UserDto;
+import ${package}.jooq.tables.pojos.Role;
 import ${package}.repository.RoleRepository;
 import ${package}.repository.UserRepository;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
+import java.util.List;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
@@ -31,8 +33,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         if (user == null) {
             throw new UsernameNotFoundException("User not found: " + username);
         }
-
-        // TODO: load roles and permissions
-        return new UserDetailsImpl(user, Collections.emptyList());
+        final List<SimpleGrantedAuthority> roles = roleRepository.findUserRolesByUserId(user.getId()).stream()
+                .map(Role::getName)
+                .map(SimpleGrantedAuthority::new)
+                .toList();
+        // TODO: load permissions
+        return new UserDetailsImpl(user, roles);
     }
 }
