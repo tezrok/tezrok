@@ -61,6 +61,12 @@ data class EntityElem(
 
         return this.copy(customMethods = (customMethods ?: emptySet()) + method)
     }
+
+    /**
+     * Returns field by name or throws an exception if field is not found
+     */
+    fun getField(name: String): FieldElem = fields.find { it.name == name }
+        ?: error("Field ($name) not found in entity (${this.name}). Expected fields: " + fields.map { it.name })
 }
 
 data class EnumElem(

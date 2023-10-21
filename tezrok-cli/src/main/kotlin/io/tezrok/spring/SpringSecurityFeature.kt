@@ -58,6 +58,7 @@ open class SpringSecurityFeature : TezrokFeature {
             name = NAME_USER,
             description = "User entity",
             customRepository = true,
+            customMethods = (inheritEntity?.customMethods ?: emptySet()) + "getByNameOrEmail",
             fields = createUserFields(inheritEntity)
         )
     }
@@ -67,6 +68,7 @@ open class SpringSecurityFeature : TezrokFeature {
             name = NAME_ROLE,
             description = "Role entity",
             customRepository = true,
+            customMethods = inheritEntity?.customMethods,
             fields = createRoleFields(inheritEntity)
         )
     }
@@ -76,6 +78,7 @@ open class SpringSecurityFeature : TezrokFeature {
             name = NAME_PERMISSION,
             description = "Permission entity",
             customRepository = true,
+            customMethods = inheritEntity?.customMethods,
             fields = createPermissionFields(inheritEntity)
         )
     }

@@ -38,6 +38,9 @@ internal class JooqEntityCustomMethodsFeature : TezrokFeature {
         return module.copy(schema = schema.copy(entities = entities.values.toList()))
     }
 
+    /**
+     * Add custom methods by entity relations.
+     */
     private fun processEntity(entity: EntityElem, entities: MutableMap<String, EntityElem>) {
         val primaryFieldName = lazy {
             val primaryFields = entity.fields.filter { it.primary == true }
@@ -61,6 +64,6 @@ internal class JooqEntityCustomMethodsFeature : TezrokFeature {
     }
 
     private companion object {
-        val log = LoggerFactory.getLogger(JooqEntityCustomMethodsFeature::class.java)
+        val log = LoggerFactory.getLogger(JooqEntityCustomMethodsFeature::class.java)!!
     }
 }

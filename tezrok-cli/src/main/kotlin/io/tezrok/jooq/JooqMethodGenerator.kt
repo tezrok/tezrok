@@ -65,7 +65,8 @@ internal class JooqMethodGenerator(
             methodName.startsWith(PREFIX_FIND) ->
                 newMethod.setBody(generateFindByBodyOnlyByName(methodName, returnType, params))
 
-            methodName.startsWith(PREFIX_GET) -> TODO("support get methods")
+            methodName.startsWith(PREFIX_GET) ->
+                newMethod.setBody(generateGetByBodyOnlyByName(methodName, returnType, params))
 
             methodName.startsWith(PREFIX_COUNT) -> TODO("support count methods")
 
@@ -143,7 +144,7 @@ internal class JooqMethodGenerator(
     }
 
     /**
-     * Generates body for method by expression like "findBySomeFieldOrExpression".
+     * Generates body for method by expression like "findBySomeFieldOrExpression" without params.
      */
     private fun generateFindByBodyOnlyByName(
         methodName: String,
@@ -160,7 +161,14 @@ internal class JooqMethodGenerator(
             val methodPrefix = getMethodPrefix(methodName)
             val relTables = getRelatedTables(methodPrefix)
             val expressionPart = removeFindByPrefix(methodName, methodPrefix)
-            val (where, orderBy, limit, distinct, paramsOut) = parseAsJooqExpression(expressionPart, params, false, relTables)
+            val (where, orderBy, limit, distinct, paramsOut) = parseAsJooqExpression(
+                expressionPart,
+                params,
+                singleResult = false,
+                relTables,
+                extractParams = true
+            )
+            // got params from expression
             paramsOut.forEach(params::put)
 
             check(!distinct) { DISTINCT_CANNOT_BE_USED_WHOLE_TABLE }
@@ -232,6 +240,44 @@ internal class JooqMethodGenerator(
                 recordResult -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchOne()")
                 optionalRecord -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchOptional()")
                 genericDto -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchOneInto($lastParam)")
+                else -> error("Unsupported return type: $returnType")
+            }
+        } catch (ex: Exception) {
+            throw RuntimeException("Failed to generate body for method \"$methodName\": ${ex.message}", ex)
+        }
+    }
+
+    /**
+     * Generates body for method by expression like "getBySomeFieldOrExpression" without params.
+     */
+    private fun generateGetByBodyOnlyByName(
+        methodName: String,
+        returnType: String,
+        params: MutableMap<String, String>
+    ): Statement {
+        try {
+            val methodName = methodName.removePrefix(PREFIX_GET)
+            val dtoName = "${entity.name}Dto"
+            val supportedTypes = setOf(dtoName)
+            check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
+
+            val methodPrefix = getMethodPrefix(methodName)
+            val relTables = getRelatedTables(methodPrefix)
+            val expressionPart = removeGetByPrefix(methodName, entity.name)
+            val (where, orderBy, limit, distinct, paramsOut) = parseAsJooqExpression(
+                expressionPart,
+                params,
+                singleResult = true,
+                relTables,
+                extractParams = true
+            )
+            // got params from expression
+            paramsOut.forEach(params::put)
+
+            check(!distinct) { DISTINCT_CANNOT_BE_USED_WHOLE_TABLE }
+
+            return when (returnType) {
+                dtoName -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchOneInto(${dtoName}.class)")
                 else -> error("Unsupported return type: $returnType")
             }
         } catch (ex: Exception) {
@@ -320,7 +366,8 @@ internal class JooqMethodGenerator(
         expressionPart: String,
         params: Map<String, String>,
         singleResult: Boolean,
-        relTables: RelationTables? = null
+        relTables: RelationTables? = null,
+        extractParams: Boolean = false
     ): JooqExpression {
         val (names, distinct) = parseTokensAndDistinct(MethodExpressionParser.parse(expressionPart))
         val sb = StringBuilder()
@@ -365,7 +412,7 @@ internal class JooqMethodGenerator(
                             isCollection,
                             params,
                             field,
-                            relTables != null
+                            extractParams
                         )
                         paramsOut[paramName] = paramType
 
@@ -438,7 +485,7 @@ internal class JooqMethodGenerator(
                                     isCollection,
                                     params,
                                     field,
-                                    relTables != null,
+                                    extractParams,
                                     "Operator \"Between\" requires two parameters"
                                 )
                                 paramsOut[paramName2] = paramType2
@@ -461,7 +508,7 @@ internal class JooqMethodGenerator(
                                             isCollection,
                                             params,
                                             field,
-                                            relTables != null,
+                                            extractParams,
                                             "Operator \"Between\" requires two parameters"
                                         )
                                         paramsOut[paramName2] = paramType2
@@ -555,7 +602,13 @@ internal class JooqMethodGenerator(
             error("At least one parameter should be String to use AllIgnoreCase")
         }
 
-        return JooqExpression(where = sb.toString(), orderBy = orderBy, limit = limit, distinct = distinct, params = paramsOut)
+        return JooqExpression(
+            where = sb.toString(),
+            orderBy = orderBy,
+            limit = limit,
+            distinct = distinct,
+            params = paramsOut
+        )
     }
 
     private fun extractParam(
@@ -564,11 +617,13 @@ internal class JooqMethodGenerator(
         isCollection: Boolean,
         params: Map<String, String>,
         field: FieldElem,
-        hasRelation: Boolean,
+        extractParam: Boolean,
         customMessage: String? = null
     ): Pair<String, String> {
-        if (params.isNotEmpty() || !hasRelation) {
-            check(paramIndex < params.size) { customMessage ?: "Parameter index of '$tokenName' out of bounds (${params.size})" }
+        if (params.isNotEmpty() || !extractParam) {
+            check(paramIndex < params.size) {
+                customMessage ?: "Parameter index of '$tokenName' out of bounds (${params.size})"
+            }
             val paramNames = params.keys.toList()
             val paramName = paramNames[paramIndex]
             val paramType = params[paramName] ?: error("Parameter type not found: $paramName")
@@ -613,11 +668,17 @@ internal class JooqMethodGenerator(
         return params.filterKeys { it != lastParam } to lastParam
     }
 
+    /**
+     * Get field by name from entity or related entity.
+     *
+     * Note: when we have related tables, we should refer to field with table prefix.
+     */
     private fun getFieldByName(name: String, relTables: RelationTables?): EntityField {
         if (relTables != null) {
             val fieldName = name.capitalize()
             val targetEntity = relTables.target.name
-            val targetField = relTables.target.fields.find { field -> "${targetEntity}${field.name.capitalize()}" == fieldName }
+            val targetField =
+                relTables.target.fields.find { field -> "${targetEntity}${field.name.capitalize()}" == fieldName }
 
             if (targetField != null) {
                 return EntityField(relTables.target, targetField)
@@ -631,8 +692,7 @@ internal class JooqMethodGenerator(
             error("Field ($name) not found in entity (${entity.name}) or related entity (${relTables.target.name})")
         }
 
-        val field = entity.fields.find { fieldElem -> fieldElem.name == name }
-            ?: error("Field ($name) not found in entity (${entity.name})")
+        val field = entity.getField(name)
         if (field.logicField == true) {
             // TODO: support logic fields in method name expressions
             error("Logic field (${field.name}) cannot be used in method expression, use instead related real field")
@@ -641,8 +701,17 @@ internal class JooqMethodGenerator(
         return EntityField(entity, field)
     }
 
-    private data class JooqExpression(val where: String, val orderBy: String, val limit: String, val distinct: Boolean, val params: Map<String, String>)
+    private data class JooqExpression(
+        val where: String,
+        val orderBy: String,
+        val limit: String,
+        val distinct: Boolean,
+        val params: Map<String, String>
+    )
 
+    /**
+     * Used when source table related with target table via relation table.
+     */
     private data class RelationTables(val target: EntityElem, val field: FieldElem, val relTable: EntityElem?)
 
     private data class EntityField(val entity: EntityElem, val field: FieldElem)
