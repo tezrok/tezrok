@@ -24,6 +24,8 @@ open class SpringSecurityFeature : TezrokFeature {
             context.writeTemplate(userDetails, "/templates/spring/security/UserDetailsImpl.java.vm", values)
             val userDetailsService = applicationPackageRoot.getOrAddJavaDirectory("service").addJavaFile("UserDetailsServiceImpl")
             context.writeTemplate(userDetailsService, "/templates/spring/security/UserDetailsServiceImpl.java.vm", values)
+            val securityConfig = applicationPackageRoot.getOrAddJavaDirectory("config").addJavaFile("SecurityConfig")
+            context.writeTemplate(securityConfig, "/templates/spring/security/SecurityConfig.java.vm", values)
         }
 
         return true

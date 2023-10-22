@@ -1,0 +1,30 @@
+package ${package}.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(final HttpSecurity httpSecurity) throws Exception {
+        httpSecurity.formLogin(Customizer.withDefaults());
+        httpSecurity.csrf(p -> p.disable());
+        // TODO: properly configure security from input model
+        httpSecurity.authorizeHttpRequests(req -> req.requestMatchers("/admin").hasAuthority("ADMIN")
+                .requestMatchers("/static/**").permitAll()
+                .anyRequest().authenticated());
+        return httpSecurity.build();
+    }
+}
