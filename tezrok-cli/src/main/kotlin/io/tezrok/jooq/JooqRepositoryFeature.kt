@@ -144,6 +144,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
                 dtoClass.addMethod("getId")
                     .withModifiers(Modifier.Keyword.PUBLIC)
                     .setReturnType(type1)
+                    .addAnnotation(Override::class.java)
                     .setBody(ReturnStmt("super.get$name1()"));
             } else {
                 val type2 = fields[1].asJavaType()
@@ -152,10 +153,12 @@ internal class JooqRepositoryFeature : TezrokFeature {
                 dtoClass.addMethod("getId1")
                     .withModifiers(Modifier.Keyword.PUBLIC)
                     .setReturnType(type1)
+                    .addAnnotation(Override::class.java)
                     .setBody(ReturnStmt("super.get$name1()"))
                 dtoClass.addMethod("getId2")
                     .withModifiers(Modifier.Keyword.PUBLIC)
                     .setReturnType(type2)
+                    .addAnnotation(Override::class.java)
                     .setBody(ReturnStmt("super.get$name2()"))
             }
         } else {
