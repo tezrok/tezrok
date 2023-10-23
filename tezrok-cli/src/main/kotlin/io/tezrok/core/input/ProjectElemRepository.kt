@@ -76,6 +76,12 @@ internal class ProjectElemRepository {
         entity.fields.groupBy { it.name }
             .map { it.key to it.value.size }
             .find { it.second > 1 } ?.let {  error("Found duplicate field '${it.first}' in entity '${entity.name}'") }
+
+        entity.fields.forEach { field -> validateField(field, entity) }
+    }
+
+    private fun validateField(field: FieldElem, entity: EntityElem) {
+        check(field.type?.isNotBlank() == true) { "Field '${entity.name}.${field.name}' type is not defined" }
     }
 
     /**
@@ -262,6 +268,7 @@ internal class ProjectElemRepository {
             description = inheritEntity?.description ?: entity.description,
             customRepository = inheritEntity?.customRepository ?: entity.customRepository,
             customMethods = inheritEntity?.customMethods ?: entity.customMethods,
+            activable = inheritEntity?.activable ?: entity.activable,
             fields = processFields(entity, inheritEntity)
         )
     }

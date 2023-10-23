@@ -37,6 +37,7 @@
           {
             "name": "Item",
             "customRepository": true,
+            "activable": true,
             "customMethods": [
               "findOrderItemsByItemItemsOrderIdAndItemTitle",
               "findOrderOtherItemsByOrderIdAndItemTitle"

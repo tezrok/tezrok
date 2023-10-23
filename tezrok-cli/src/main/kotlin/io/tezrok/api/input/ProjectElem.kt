@@ -51,6 +51,8 @@ data class EntityElem(
     val customRepository: Boolean? = null,
     val customMethods: Set<String>? = null,
     val syntheticTo: String? = null,
+    // if true, object won't be deleted from database, but will be marked as deleted
+    val activable: Boolean? = null,
     val fields: List<FieldElem>
 ) {
     fun withCustomMethods(vararg methods: String): EntityElem {

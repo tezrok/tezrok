@@ -8,6 +8,7 @@ import io.tezrok.api.maven.ProjectNode
 import io.tezrok.api.maven.UseMavenDependency
 import io.tezrok.db.DataSourceFeature
 import io.tezrok.docker.DockerFeature
+import io.tezrok.entity.EntityActivableFeature
 import io.tezrok.java.GitIgnoreFeature
 import io.tezrok.java.HelloWorldFeature
 import io.tezrok.jooq.JooqEntityCustomMethodsFeature
@@ -30,6 +31,7 @@ internal class FeatureManager {
 
     init {
         // TODO: load features from configuration
+        features.add(EntityActivableFeature())
         features.add(DataSourceFeature())
         features.add(MavenCoreFeature())
         features.add(GitIgnoreFeature())

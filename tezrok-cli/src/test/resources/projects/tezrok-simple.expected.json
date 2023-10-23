@@ -94,6 +94,7 @@
               "findOrderItemsByItemItemsOrderId",
               "findItemOtherItemsByItemId"
             ],
+            "activable": true,
             "fields": [
               {
                 "name": "id",
@@ -116,6 +117,13 @@
                 "type": "Item",
                 "logicField": true,
                 "relation": "ManyToMany"
+              },
+              {
+                "name": "active",
+                "type": "boolean",
+                "description": "Is entity active or deleted",
+                "required": true,
+                "defValue": "false"
               },
               {
                 "name": "itemsOrderId",
