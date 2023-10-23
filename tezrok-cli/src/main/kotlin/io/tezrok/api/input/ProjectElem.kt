@@ -53,6 +53,10 @@ data class EntityElem(
     val syntheticTo: String? = null,
     // if true, object won't be deleted from database, but will be marked as deleted
     val activable: Boolean? = null,
+    // if true, createdAt field will be added to entity
+    val createdAt: Boolean? = null,
+    // if true, updatedAt field will be added to entity
+    val updatedAt: Boolean? = null,
     val fields: List<FieldElem>
 ) {
     fun withCustomMethods(vararg methods: String): EntityElem {

@@ -70,6 +70,8 @@ open class SpringSecurityFeature : TezrokFeature {
             name = NAME_USER,
             description = "User entity",
             customRepository = true,
+            createdAt = true,
+            updatedAt = true,
             customMethods = (inheritEntity?.customMethods ?: emptySet()) + "getByNameOrEmail",
             fields = createUserFields(inheritEntity)
         )
@@ -80,6 +82,8 @@ open class SpringSecurityFeature : TezrokFeature {
             name = NAME_ROLE,
             description = "Role entity",
             customRepository = true,
+            createdAt = true,
+            updatedAt = true,
             customMethods = inheritEntity?.customMethods,
             fields = createRoleFields(inheritEntity)
         )
@@ -90,6 +94,8 @@ open class SpringSecurityFeature : TezrokFeature {
             name = NAME_PERMISSION,
             description = "Permission entity",
             customRepository = true,
+            createdAt = true,
+            updatedAt = true,
             customMethods = (inheritEntity?.customMethods ?: emptySet()) + "findRolePermissionsByRoleIdIn",
             fields = createPermissionFields(inheritEntity)
         )
@@ -118,8 +124,6 @@ open class SpringSecurityFeature : TezrokFeature {
                 FieldElem(name = "password", type = "string", maxLength = USER_PASSWORD_HASH_MAX, required = true),
                 FieldElem(name = "activated", type = "boolean", required = true, defValue = "false"),
                 FieldElem(name = "banned", type = "boolean", required = true, defValue = "false"),
-                FieldElem(name = "createdAt", type = "dateTime", required = true, defValue = "now()"),
-                FieldElem(name = "updatedAt", type = "dateTime", required = true, defValue = "now()"),
                 FieldElem(name = "roles", type = "Role", relation = EntityRelation.ManyToMany)
             )
         )
@@ -143,8 +147,6 @@ open class SpringSecurityFeature : TezrokFeature {
                     maxLength = DESCRIPTION_MAX,
                     minLength = DESCRIPTION_MIN
                 ),
-                FieldElem(name = "createdAt", type = "dateTime", required = true),
-                FieldElem(name = "updatedAt", type = "dateTime", required = true),
                 FieldElem(name = "permissions", type = "Permission", relation = EntityRelation.ManyToMany)
             )
         )
@@ -167,9 +169,7 @@ open class SpringSecurityFeature : TezrokFeature {
                     type = "string",
                     maxLength = DESCRIPTION_MAX,
                     minLength = DESCRIPTION_MIN
-                ),
-                FieldElem(name = "createdAt", type = "dateTime", required = true),
-                FieldElem(name = "updatedAt", type = "dateTime", required = true)
+                )
             )
         )
     }

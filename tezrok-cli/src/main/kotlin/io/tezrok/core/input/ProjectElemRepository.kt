@@ -269,6 +269,8 @@ internal class ProjectElemRepository {
             customRepository = inheritEntity?.customRepository ?: entity.customRepository,
             customMethods = inheritEntity?.customMethods ?: entity.customMethods,
             activable = inheritEntity?.activable ?: entity.activable,
+            createdAt = inheritEntity?.createdAt ?: entity.createdAt,
+            updatedAt = inheritEntity?.updatedAt ?: entity.updatedAt,
             fields = processFields(entity, inheritEntity)
         )
     }

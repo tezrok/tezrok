@@ -95,6 +95,8 @@
               "findItemOtherItemsByItemId"
             ],
             "activable": true,
+            "createdAt": true,
+            "updatedAt": true,
             "fields": [
               {
                 "name": "id",
@@ -119,6 +121,14 @@
                 "relation": "ManyToMany"
               },
               {
+                "name": "itemsOrderId",
+                "type": "long",
+                "foreignField": "Order.id",
+                "description": "Synthetic field for \"Order.items\"",
+                "required": false,
+                "syntheticTo": "Order.items"
+              },
+              {
                 "name": "active",
                 "type": "boolean",
                 "description": "Is entity active or deleted",
@@ -126,12 +136,18 @@
                 "defValue": "false"
               },
               {
-                "name": "itemsOrderId",
-                "type": "long",
-                "foreignField": "Order.id",
-                "description": "Synthetic field for \"Order.items\"",
-                "required": false,
-                "syntheticTo": "Order.items"
+                "name": "createdAt",
+                "type": "dateTime",
+                "description": "Date and time of entity creation",
+                "required": true,
+                "defValue": "now()"
+              },
+              {
+                "name": "updatedAt",
+                "type": "dateTime",
+                "description": "Date and time of entity update",
+                "required": true,
+                "defValue": "now()"
               }
             ]
           },
@@ -144,6 +160,8 @@
               "getByName",
               "getByEmail"
             ],
+            "createdAt": true,
+            "updatedAt": true,
             "fields": [
               {
                 "name": "id",
@@ -185,22 +203,24 @@
                 "defValue": "false"
               },
               {
+                "name": "roles",
+                "type": "Role",
+                "logicField": true,
+                "relation": "ManyToMany"
+              },
+              {
                 "name": "createdAt",
                 "type": "dateTime",
+                "description": "Date and time of entity creation",
                 "required": true,
                 "defValue": "now()"
               },
               {
                 "name": "updatedAt",
                 "type": "dateTime",
+                "description": "Date and time of entity update",
                 "required": true,
                 "defValue": "now()"
-              },
-              {
-                "name": "roles",
-                "type": "Role",
-                "logicField": true,
-                "relation": "ManyToMany"
               }
             ]
           },
@@ -212,6 +232,8 @@
               "getByName",
               "findUserRolesByUserId"
             ],
+            "createdAt": true,
+            "updatedAt": true,
             "fields": [
               {
                 "name": "id",
@@ -233,20 +255,24 @@
                 "maxLength": 150
               },
               {
-                "name": "createdAt",
-                "type": "dateTime",
-                "required": true
-              },
-              {
-                "name": "updatedAt",
-                "type": "dateTime",
-                "required": true
-              },
-              {
                 "name": "permissions",
                 "type": "Permission",
                 "logicField": true,
                 "relation": "ManyToMany"
+              },
+              {
+                "name": "createdAt",
+                "type": "dateTime",
+                "description": "Date and time of entity creation",
+                "required": true,
+                "defValue": "now()"
+              },
+              {
+                "name": "updatedAt",
+                "type": "dateTime",
+                "description": "Date and time of entity update",
+                "required": true,
+                "defValue": "now()"
               }
             ]
           },
@@ -259,6 +285,8 @@
               "getByName",
               "findRolePermissionsByRoleId"
             ],
+            "createdAt": true,
+            "updatedAt": true,
             "fields": [
               {
                 "name": "id",
@@ -282,12 +310,16 @@
               {
                 "name": "createdAt",
                 "type": "dateTime",
-                "required": true
+                "description": "Date and time of entity creation",
+                "required": true,
+                "defValue": "now()"
               },
               {
                 "name": "updatedAt",
                 "type": "dateTime",
-                "required": true
+                "description": "Date and time of entity update",
+                "required": true,
+                "defValue": "now()"
               }
             ]
           },

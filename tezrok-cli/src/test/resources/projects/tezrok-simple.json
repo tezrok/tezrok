@@ -38,6 +38,8 @@
             "name": "Item",
             "customRepository": true,
             "activable": true,
+            "createdAt": true,
+            "updatedAt": true,
             "customMethods": [
               "findOrderItemsByItemItemsOrderIdAndItemTitle",
               "findOrderOtherItemsByOrderIdAndItemTitle"

@@ -14,12 +14,11 @@ import io.tezrok.api.maven.ProjectNode
  */
 internal class EntityActivableFeature : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
-        // no-op
         return true
     }
 
     override fun processModel(project: ProjectElem, phase: ProcessModelPhase): ProjectElem {
-        if (phase != ProcessModelPhase.PreProcess) {
+        if (phase != ProcessModelPhase.Process) {
             return project
         }
 
@@ -53,9 +52,10 @@ internal class EntityActivableFeature : TezrokFeature {
             type = "boolean",
             required = true,
             defValue = inheritField.defValue ?: DEFAULT_ACTIVE_VALUE,
-            description = DEFAULT_ACTIVE_DESCRIPTION
+            description = inheritField.description ?: DEFAULT_ACTIVE_DESCRIPTION
         )
     }
+
     private companion object {
         const val DEFAULT_ACTIVE_DESCRIPTION = "Is entity active or deleted"
         const val DEFAULT_ACTIVE_VALUE = "false"

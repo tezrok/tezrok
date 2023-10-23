@@ -9,17 +9,18 @@ import io.tezrok.api.maven.UseMavenDependency
 import io.tezrok.db.DataSourceFeature
 import io.tezrok.docker.DockerFeature
 import io.tezrok.entity.EntityActivableFeature
+import io.tezrok.entity.EntityCreatedUpdatedFeature
 import io.tezrok.java.GitIgnoreFeature
 import io.tezrok.java.HelloWorldFeature
 import io.tezrok.jooq.JooqEntityCustomMethodsFeature
 import io.tezrok.jooq.JooqFeature
 import io.tezrok.jooq.JooqRepositoryFeature
-import io.tezrok.spring.ServiceFeature
 import io.tezrok.liquibase.LiquibaseFeature
 import io.tezrok.maven.MavenCoreFeature
 import io.tezrok.spring.ControllerFeature
-import io.tezrok.spring.SpringSecurityFeature
+import io.tezrok.spring.ServiceFeature
 import io.tezrok.spring.SpringFeature
+import io.tezrok.spring.SpringSecurityFeature
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -32,6 +33,7 @@ internal class FeatureManager {
     init {
         // TODO: load features from configuration
         features.add(EntityActivableFeature())
+        features.add(EntityCreatedUpdatedFeature())
         features.add(DataSourceFeature())
         features.add(MavenCoreFeature())
         features.add(GitIgnoreFeature())
