@@ -34,7 +34,7 @@ internal class EntityActivableFeature : TezrokFeature {
             val activeField = entity.fields.find { it.name == DEFAULT_ACTIVE_NAME }
 
             if (activeField == null) {
-                val newField = FieldElem(name = DEFAULT_ACTIVE_NAME, type = "boolean", required = true, defValue = DEFAULT_ACTIVE_VALUE, description = DEFAULT_ACTIVE_DESCRIPTION)
+                val newField = FieldElem(name = DEFAULT_ACTIVE_NAME, type = "Boolean", required = true, defValue = DEFAULT_ACTIVE_VALUE, description = DEFAULT_ACTIVE_DESCRIPTION)
                 return entity.copy(fields = entity.fields + newField)
             }
 

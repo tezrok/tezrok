@@ -22,29 +22,29 @@
             "fields": [
               {
                 "name": "id",
-                "type": "long",
+                "type": "Long",
                 "required": true,
                 "primary": true
               },
               {
                 "name": "name",
-                "type": "string",
+                "type": "String",
                 "required": true,
                 "unique": true
               },
               {
                 "name": "category",
-                "type": "string",
+                "type": "String",
                 "required": true
               },
               {
                 "name": "qty",
-                "type": "integer",
+                "type": "Integer",
                 "required": false
               },
               {
                 "name": "created",
-                "type": "dateTime",
+                "type": "DateTime",
                 "required": false
               },
               {
@@ -57,7 +57,7 @@
               },
               {
                 "name": "selectedItemId",
-                "type": "long",
+                "type": "Long",
                 "foreignField": "Item.id",
                 "description": "Synthetic field for \"Order.selectedItem\"",
                 "required": false,
@@ -79,7 +79,7 @@
               },
               {
                 "name": "active",
-                "type": "boolean",
+                "type": "Boolean",
                 "required": true
               }
             ]
@@ -100,18 +100,18 @@
             "fields": [
               {
                 "name": "id",
-                "type": "long",
+                "type": "Long",
                 "required": true,
                 "primary": true
               },
               {
                 "name": "title",
-                "type": "string",
+                "type": "String",
                 "required": false
               },
               {
                 "name": "price",
-                "type": "number",
+                "type": "Double",
                 "required": true
               },
               {
@@ -122,7 +122,7 @@
               },
               {
                 "name": "itemsOrderId",
-                "type": "long",
+                "type": "Long",
                 "foreignField": "Order.id",
                 "description": "Synthetic field for \"Order.items\"",
                 "required": false,
@@ -130,21 +130,21 @@
               },
               {
                 "name": "active",
-                "type": "boolean",
+                "type": "Boolean",
                 "description": "Is entity active or deleted",
                 "required": true,
                 "defValue": "false"
               },
               {
                 "name": "createdAt",
-                "type": "dateTime",
+                "type": "DateTime",
                 "description": "Date and time of entity creation",
                 "required": true,
                 "defValue": "now()"
               },
               {
                 "name": "updatedAt",
-                "type": "dateTime",
+                "type": "DateTime",
                 "description": "Date and time of entity update",
                 "required": true,
                 "defValue": "now()"
@@ -165,12 +165,12 @@
             "fields": [
               {
                 "name": "id",
-                "type": "long",
+                "type": "Long",
                 "primary": true
               },
               {
                 "name": "name",
-                "type": "string",
+                "type": "String",
                 "required": true,
                 "minLength": 3,
                 "maxLength": 20,
@@ -178,7 +178,7 @@
               },
               {
                 "name": "email",
-                "type": "string",
+                "type": "String",
                 "required": true,
                 "minLength": 4,
                 "maxLength": 40,
@@ -186,19 +186,19 @@
               },
               {
                 "name": "password",
-                "type": "string",
+                "type": "String",
                 "required": true,
                 "maxLength": 100
               },
               {
                 "name": "activated",
-                "type": "boolean",
+                "type": "Boolean",
                 "required": true,
                 "defValue": "false"
               },
               {
                 "name": "banned",
-                "type": "boolean",
+                "type": "Boolean",
                 "required": true,
                 "defValue": "false"
               },
@@ -210,14 +210,14 @@
               },
               {
                 "name": "createdAt",
-                "type": "dateTime",
+                "type": "DateTime",
                 "description": "Date and time of entity creation",
                 "required": true,
                 "defValue": "now()"
               },
               {
                 "name": "updatedAt",
-                "type": "dateTime",
+                "type": "DateTime",
                 "description": "Date and time of entity update",
                 "required": true,
                 "defValue": "now()"
@@ -237,12 +237,12 @@
             "fields": [
               {
                 "name": "id",
-                "type": "long",
+                "type": "Long",
                 "primary": true
               },
               {
                 "name": "name",
-                "type": "string",
+                "type": "String",
                 "required": true,
                 "minLength": 3,
                 "maxLength": 20,
@@ -250,7 +250,7 @@
               },
               {
                 "name": "description",
-                "type": "string",
+                "type": "String",
                 "minLength": 0,
                 "maxLength": 150
               },
@@ -262,14 +262,14 @@
               },
               {
                 "name": "createdAt",
-                "type": "dateTime",
+                "type": "DateTime",
                 "description": "Date and time of entity creation",
                 "required": true,
                 "defValue": "now()"
               },
               {
                 "name": "updatedAt",
-                "type": "dateTime",
+                "type": "DateTime",
                 "description": "Date and time of entity update",
                 "required": true,
                 "defValue": "now()"
@@ -290,12 +290,12 @@
             "fields": [
               {
                 "name": "id",
-                "type": "long",
+                "type": "Long",
                 "primary": true
               },
               {
                 "name": "name",
-                "type": "string",
+                "type": "String",
                 "required": true,
                 "minLength": 3,
                 "maxLength": 20,
@@ -303,20 +303,20 @@
               },
               {
                 "name": "description",
-                "type": "string",
+                "type": "String",
                 "minLength": 0,
                 "maxLength": 150
               },
               {
                 "name": "createdAt",
-                "type": "dateTime",
+                "type": "DateTime",
                 "description": "Date and time of entity creation",
                 "required": true,
                 "defValue": "now()"
               },
               {
                 "name": "updatedAt",
-                "type": "dateTime",
+                "type": "DateTime",
                 "description": "Date and time of entity update",
                 "required": true,
                 "defValue": "now()"
@@ -330,14 +330,14 @@
             "fields": [
               {
                 "name": "orderId",
-                "type": "long",
+                "type": "Long",
                 "foreignField": "Order.id",
                 "primary": true,
                 "syntheticTo": "Order.otherItems"
               },
               {
                 "name": "itemId",
-                "type": "long",
+                "type": "Long",
                 "foreignField": "Item.id",
                 "primary": true,
                 "syntheticTo": "Order.otherItems"
@@ -351,14 +351,14 @@
             "fields": [
               {
                 "name": "itemId1",
-                "type": "long",
+                "type": "Long",
                 "foreignField": "Item.id",
                 "primary": true,
                 "syntheticTo": "Item.otherItems"
               },
               {
                 "name": "itemId2",
-                "type": "long",
+                "type": "Long",
                 "foreignField": "Item.id",
                 "primary": true,
                 "syntheticTo": "Item.otherItems"
@@ -372,14 +372,14 @@
             "fields": [
               {
                 "name": "userId",
-                "type": "long",
+                "type": "Long",
                 "foreignField": "User.id",
                 "primary": true,
                 "syntheticTo": "User.roles"
               },
               {
                 "name": "roleId",
-                "type": "long",
+                "type": "Long",
                 "foreignField": "Role.id",
                 "primary": true,
                 "syntheticTo": "User.roles"
@@ -393,14 +393,14 @@
             "fields": [
               {
                 "name": "roleId",
-                "type": "long",
+                "type": "Long",
                 "foreignField": "Role.id",
                 "primary": true,
                 "syntheticTo": "Role.permissions"
               },
               {
                 "name": "permissionId",
-                "type": "long",
+                "type": "Long",
                 "foreignField": "Permission.id",
                 "primary": true,
                 "syntheticTo": "Role.permissions"

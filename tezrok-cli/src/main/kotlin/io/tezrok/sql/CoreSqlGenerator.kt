@@ -200,13 +200,15 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
 
     private fun getSqlType(field: FieldElem, singlePrimary: Boolean): String {
         return when (field.type) {
-            "string" -> getStringBasedType(field)
-            "date" -> "DATE"
-            "dateTime" -> "TIMESTAMP"
-            "integer" -> if (field.isSerialEffective(singlePrimary)) "SERIAL" else "INT"
-            "long" -> if (field.isSerialEffective(singlePrimary)) "BIGSERIAL" else "BIGINT"
-            "number" -> "FLOAT"
-            "boolean" -> "BOOLEAN"
+            "String" -> getStringBasedType(field)
+            "Date" -> "DATE"
+            "DateTime" -> "TIMESTAMP"
+            "Integer" -> if (field.isSerialEffective(singlePrimary)) "SERIAL" else "INT"
+            "Long" -> if (field.isSerialEffective(singlePrimary)) "BIGSERIAL" else "BIGINT"
+            "Double" -> "FLOAT8"
+            "Float" -> "FLOAT4"
+            "Decimal" -> "NUMERIC"
+            "Boolean" -> "BOOLEAN"
             // TODO: Create new ref column on target table, or new table with ref columns to both tables
             "array" -> throw IllegalArgumentException("Array type is implemented in another way")
             else -> throw IllegalArgumentException("Unsupported type: ${field.type}")
@@ -217,19 +219,25 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         val defValue = field.defValue ?: throw IllegalArgumentException("Default value is not set")
 
         return when (field.type) {
-            "string" -> "'$defValue'"
-            "date" -> if (defValue == "now()") "CURRENT_DATE" else defValue
-            "dateTime" -> if (defValue == "now()") "CURRENT_TIMESTAMP" else defValue
-            "integer" -> defValue.toIntOrNull()?.toString()
+            "String" -> "'$defValue'"
+            "Date" -> if (defValue == "now()") "CURRENT_DATE" else defValue
+            "DateTime" -> if (defValue == "now()") "CURRENT_TIMESTAMP" else defValue
+            "Integer" -> defValue.toIntOrNull()?.toString()
                 ?: throw IllegalArgumentException("Invalid default value: $defValue")
 
-            "long" -> defValue.toLongOrNull()?.toString()
+            "Long" -> defValue.toLongOrNull()?.toString()
                 ?: throw IllegalArgumentException("Invalid default value: $defValue")
 
-            "number" -> defValue.toFloatOrNull()?.toString()
+            "Float" -> defValue.toFloatOrNull()?.toString()
                 ?: throw IllegalArgumentException("Invalid default value: $defValue")
 
-            "boolean" -> defValue.toBooleanStrict().toString()
+            "Double" -> defValue.toDoubleOrNull()?.toString()
+                ?: throw IllegalArgumentException("Invalid default value: $defValue")
+
+            "Decimal" -> defValue.toDoubleOrNull()?.toString()
+                ?: throw IllegalArgumentException("Invalid default value: $defValue")
+
+            "Boolean" -> defValue.toBooleanStrict().toString()
             else -> throw IllegalArgumentException("Unsupported type: ${field.type}")
         }
     }

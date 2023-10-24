@@ -356,12 +356,20 @@ internal class ProjectElemRepository {
         }
 
         if (definition.format == "date-time") {
-            return "dateTime"
+            return "DateTime"
         } else if (definition.format == "date") {
-            return "date"
+            return "Date"
         }
 
-        return definition.type ?: parseRef(definition.ref, "Type must be defined")
+        return when (definition.type) {
+            "string" -> "String"
+            "integer" -> "Integer"
+            "long" -> "Long"
+            "number" -> "Double"
+            "boolean" -> "Boolean"
+            null -> parseRef(definition.ref, "Type must be defined")
+            else -> error("Unknown type: ${definition.type}")
+        }
     }
 
     /**

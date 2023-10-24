@@ -11,12 +11,15 @@ fun FieldElem.isSerialEffective(singlePrimary: Boolean) = this.serial ?: (single
 
 fun FieldElem.asJavaType(): String {
     return when (this.type) {
-        "string" -> "String"
-        "integer" -> "Integer"
-        "long" -> "Long"
-        "boolean" -> "Boolean"
-        "date" -> "LocalDate"
-        "dateTime" -> "LocalDateTime"
+        "String" -> "String"
+        "Integer" -> "Integer"
+        "Long" -> "Long"
+        "Boolean" -> "Boolean"
+        "Date" -> "LocalDate"
+        "DateTime" -> "LocalDateTime"
+        "Float" -> "Float"
+        "Double" -> "Double"
+        "Decimal" -> "BigDecimal"
         else -> error("Unknown type: ${this.type}")
     }
 }

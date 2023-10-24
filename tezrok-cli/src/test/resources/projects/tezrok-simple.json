@@ -16,7 +16,7 @@
             "fields": [
               {
                 "name": "id",
-                "type": "long",
+                "type": "Long",
                 "primary": true
               },
               {
@@ -29,7 +29,7 @@
               },
               {
                 "name": "active",
-                "type": "boolean",
+                "type": "Boolean",
                 "required": true
               }
             ]
@@ -47,7 +47,7 @@
             "fields": [
               {
                 "name": "id",
-                "type": "long",
+                "type": "Long",
                 "primary": true
               },
               {

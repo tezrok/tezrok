@@ -104,10 +104,10 @@ open class SpringSecurityFeature : TezrokFeature {
     private fun createUserFields(inheritEntity: EntityElem?): List<FieldElem> {
         return mergeFields(
             inheritEntity, listOf(
-                FieldElem(name = "id", type = "long", primary = true),
+                FieldElem(name = "id", type = "Long", primary = true),
                 FieldElem(
                     name = "name",
-                    type = "string",
+                    type = "String",
                     required = true,
                     unique = true,
                     maxLength = USER_NAME_MAX,
@@ -115,15 +115,15 @@ open class SpringSecurityFeature : TezrokFeature {
                 ),
                 FieldElem(
                     name = "email",
-                    type = "string",
+                    type = "String",
                     required = true,
                     unique = true,
                     maxLength = USER_EMAIL_MAX,
                     minLength = USER_EMAIL_MIN
                 ),
-                FieldElem(name = "password", type = "string", maxLength = USER_PASSWORD_HASH_MAX, required = true),
-                FieldElem(name = "activated", type = "boolean", required = true, defValue = "false"),
-                FieldElem(name = "banned", type = "boolean", required = true, defValue = "false"),
+                FieldElem(name = "password", type = "String", maxLength = USER_PASSWORD_HASH_MAX, required = true),
+                FieldElem(name = "activated", type = "Boolean", required = true, defValue = "false"),
+                FieldElem(name = "banned", type = "Boolean", required = true, defValue = "false"),
                 FieldElem(name = "roles", type = "Role", relation = EntityRelation.ManyToMany)
             )
         )
@@ -132,10 +132,10 @@ open class SpringSecurityFeature : TezrokFeature {
     private fun createRoleFields(inheritEntity: EntityElem?): List<FieldElem> {
         return mergeFields(
             inheritEntity, listOf(
-                FieldElem(name = "id", type = "long", primary = true),
+                FieldElem(name = "id", type = "Long", primary = true),
                 FieldElem(
                     name = "name",
-                    type = "string",
+                    type = "String",
                     required = true,
                     unique = true,
                     maxLength = USER_NAME_MAX,
@@ -143,7 +143,7 @@ open class SpringSecurityFeature : TezrokFeature {
                 ),
                 FieldElem(
                     name = "description",
-                    type = "string",
+                    type = "String",
                     maxLength = DESCRIPTION_MAX,
                     minLength = DESCRIPTION_MIN
                 ),
@@ -155,10 +155,10 @@ open class SpringSecurityFeature : TezrokFeature {
     private fun createPermissionFields(inheritEntity: EntityElem?): List<FieldElem> {
         return mergeFields(
             inheritEntity, listOf(
-                FieldElem(name = "id", type = "long", primary = true),
+                FieldElem(name = "id", type = "Long", primary = true),
                 FieldElem(
                     name = "name",
-                    type = "string",
+                    type = "String",
                     required = true,
                     unique = true,
                     maxLength = USER_NAME_MAX,
@@ -166,7 +166,7 @@ open class SpringSecurityFeature : TezrokFeature {
                 ),
                 FieldElem(
                     name = "description",
-                    type = "string",
+                    type = "String",
                     maxLength = DESCRIPTION_MAX,
                     minLength = DESCRIPTION_MIN
                 )
@@ -205,7 +205,7 @@ open class SpringSecurityFeature : TezrokFeature {
     }
 
     private companion object {
-        val log = LoggerFactory.getLogger(SpringSecurityFeature::class.java)
+        val log = LoggerFactory.getLogger(SpringSecurityFeature::class.java)!!
         const val NAME_USER = "User"
         const val NAME_ROLE = "Role"
         const val NAME_PERMISSION = "Permission"
