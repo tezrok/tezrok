@@ -6,6 +6,7 @@ import io.tezrok.json.schema.Definition
 import io.tezrok.json.schema.Schema
 import io.tezrok.json.schema.SchemaLoader
 import io.tezrok.util.JsonUtil
+import io.tezrok.util.ModelTypes
 import io.tezrok.util.toURL
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -256,7 +257,7 @@ internal class ProjectElemRepository {
                 fields[idx] = fields[idx].copy(primary = true)
             } else {
                 // add default primary key at the beginning
-                fields.add(0, FieldElem(PRIMARY_FIELD_NAME, "long", primary = true))
+                fields.add(0, FieldElem(PRIMARY_FIELD_NAME, ModelTypes.LONG, primary = true))
             }
         }
 
@@ -356,17 +357,17 @@ internal class ProjectElemRepository {
         }
 
         if (definition.format == "date-time") {
-            return "DateTime"
+            return ModelTypes.DATETIME
         } else if (definition.format == "date") {
-            return "Date"
+            return ModelTypes.DATE
         }
 
         return when (definition.type) {
-            "string" -> "String"
-            "integer" -> "Integer"
-            "long" -> "Long"
-            "number" -> "Double"
-            "boolean" -> "Boolean"
+            "string" -> ModelTypes.STRING
+            "integer" -> ModelTypes.INTEGER
+            "long" -> ModelTypes.LONG
+            "number" -> ModelTypes.DOUBLE
+            "boolean" -> ModelTypes.BOOLEAN
             null -> parseRef(definition.ref, "Type must be defined")
             else -> error("Unknown type: ${definition.type}")
         }
@@ -395,7 +396,7 @@ internal class ProjectElemRepository {
         else null
 
     private companion object {
-        val log: Logger = LoggerFactory.getLogger(ProjectElemRepository::class.java)
+        val log: Logger = LoggerFactory.getLogger(ProjectElemRepository::class.java)!!
         const val PRIMARY_FIELD_NAME = "id"
     }
 }

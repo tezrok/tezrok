@@ -6,6 +6,7 @@ import io.tezrok.api.input.FieldElem
 import io.tezrok.api.input.SchemaElem
 import io.tezrok.api.model.SqlScript
 import io.tezrok.api.sql.SqlGenerator
+import io.tezrok.util.ModelTypes
 import io.tezrok.util.camelCaseToSqlCase
 import io.tezrok.util.isSerialEffective
 import org.apache.commons.lang3.Validate
@@ -200,15 +201,15 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
 
     private fun getSqlType(field: FieldElem, singlePrimary: Boolean): String {
         return when (field.type) {
-            "String" -> getStringBasedType(field)
-            "Date" -> "DATE"
-            "DateTime" -> "TIMESTAMP"
-            "Integer" -> if (field.isSerialEffective(singlePrimary)) "SERIAL" else "INT"
-            "Long" -> if (field.isSerialEffective(singlePrimary)) "BIGSERIAL" else "BIGINT"
-            "Double" -> "FLOAT8"
-            "Float" -> "FLOAT4"
-            "Decimal" -> "NUMERIC"
-            "Boolean" -> "BOOLEAN"
+            ModelTypes.STRING -> getStringBasedType(field)
+            ModelTypes.DATE -> "DATE"
+            ModelTypes.DATETIME -> "TIMESTAMP"
+            ModelTypes.INTEGER -> if (field.isSerialEffective(singlePrimary)) "SERIAL" else "INT"
+            ModelTypes.LONG -> if (field.isSerialEffective(singlePrimary)) "BIGSERIAL" else "BIGINT"
+            ModelTypes.DOUBLE -> "FLOAT8"
+            ModelTypes.FLOAT -> "FLOAT4"
+            ModelTypes.DECIMAL -> "NUMERIC"
+            ModelTypes.BOOLEAN -> "BOOLEAN"
             // TODO: Create new ref column on target table, or new table with ref columns to both tables
             "array" -> throw IllegalArgumentException("Array type is implemented in another way")
             else -> throw IllegalArgumentException("Unsupported type: ${field.type}")
@@ -219,25 +220,25 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         val defValue = field.defValue ?: throw IllegalArgumentException("Default value is not set")
 
         return when (field.type) {
-            "String" -> "'$defValue'"
-            "Date" -> if (defValue == "now()") "CURRENT_DATE" else defValue
-            "DateTime" -> if (defValue == "now()") "CURRENT_TIMESTAMP" else defValue
-            "Integer" -> defValue.toIntOrNull()?.toString()
+            ModelTypes.STRING -> "'$defValue'"
+            ModelTypes.DATE -> if (defValue == "now()") "CURRENT_DATE" else defValue
+            ModelTypes.DATETIME -> if (defValue == "now()") "CURRENT_TIMESTAMP" else defValue
+            ModelTypes.INTEGER -> defValue.toIntOrNull()?.toString()
                 ?: throw IllegalArgumentException("Invalid default value: $defValue")
 
-            "Long" -> defValue.toLongOrNull()?.toString()
+            ModelTypes.LONG -> defValue.toLongOrNull()?.toString()
                 ?: throw IllegalArgumentException("Invalid default value: $defValue")
 
-            "Float" -> defValue.toFloatOrNull()?.toString()
+            ModelTypes.FLOAT -> defValue.toFloatOrNull()?.toString()
                 ?: throw IllegalArgumentException("Invalid default value: $defValue")
 
-            "Double" -> defValue.toDoubleOrNull()?.toString()
+            ModelTypes.DOUBLE -> defValue.toDoubleOrNull()?.toString()
                 ?: throw IllegalArgumentException("Invalid default value: $defValue")
 
-            "Decimal" -> defValue.toDoubleOrNull()?.toString()
+            ModelTypes.DECIMAL -> defValue.toDoubleOrNull()?.toString()
                 ?: throw IllegalArgumentException("Invalid default value: $defValue")
 
-            "Boolean" -> defValue.toBooleanStrict().toString()
+            ModelTypes.BOOLEAN -> defValue.toBooleanStrict().toString()
             else -> throw IllegalArgumentException("Unsupported type: ${field.type}")
         }
     }
