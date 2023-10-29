@@ -55,8 +55,8 @@ open class SpringSecurityFeature : TezrokFeature {
         if (auth != null) {
             val schema = module.schema ?: SchemaElem()
             val entities = schema.entities?.associate { it.name to it }?.toMutableMap() ?: mutableMapOf()
-            entities[NAME_USER] = createUser(entities[NAME_USER])
-            entities[NAME_ROLE] = createRole(entities[NAME_ROLE])
+            entities[NAME_USER] = createUser(entities[NAME_USER], auth.stdInit == true)
+            entities[NAME_ROLE] = createRole(entities[NAME_ROLE], auth.stdInit == true)
             entities[NAME_PERMISSION] = createPermission(entities[NAME_PERMISSION])
 
             return module.copy(schema = schema.copy(entities = entities.values.toList()))
@@ -65,7 +65,7 @@ open class SpringSecurityFeature : TezrokFeature {
         return module
     }
 
-    private fun createUser(inheritEntity: EntityElem?): EntityElem {
+    private fun createUser(inheritEntity: EntityElem?, stdUsers: Boolean): EntityElem {
         return EntityElem(
             name = NAME_USER,
             description = "User entity",
@@ -73,11 +73,12 @@ open class SpringSecurityFeature : TezrokFeature {
             createdAt = true,
             updatedAt = true,
             customMethods = (inheritEntity?.customMethods ?: emptySet()) + "getByNameOrEmail",
-            fields = createUserFields(inheritEntity)
+            fields = createUserFields(inheritEntity),
+            init = inheritEntity?.init ?: stdUsersInit(stdUsers)
         )
     }
 
-    private fun createRole(inheritEntity: EntityElem?): EntityElem {
+    private fun createRole(inheritEntity: EntityElem?, stdRoles: Boolean): EntityElem {
         return EntityElem(
             name = NAME_ROLE,
             description = "Role entity",
@@ -85,7 +86,8 @@ open class SpringSecurityFeature : TezrokFeature {
             createdAt = true,
             updatedAt = true,
             customMethods = inheritEntity?.customMethods,
-            fields = createRoleFields(inheritEntity)
+            fields = createRoleFields(inheritEntity),
+            init = inheritEntity?.init ?: stdRolesInit(stdRoles)
         )
     }
 
@@ -99,6 +101,30 @@ open class SpringSecurityFeature : TezrokFeature {
             customMethods = (inheritEntity?.customMethods ?: emptySet()) + "findRolePermissionsByRoleIdIn",
             fields = createPermissionFields(inheritEntity)
         )
+    }
+
+    /**
+     * Returns standard users in csv format.
+     */
+    private fun stdUsersInit(stdUsers: Boolean): String? {
+        if (!stdUsers) {
+            return null
+        }
+
+        // name, email, password
+        return "admin,admin@site.com,admin"
+    }
+
+    /**
+     * Returns standard roles in csv format.
+     */
+    private fun stdRolesInit(stdRoles: Boolean): String? {
+        if (!stdRoles) {
+            return null
+        }
+
+        // name, description
+        return "ADMIN,Administrator role\nUSER,Authenticated role"
     }
 
     private fun createUserFields(inheritEntity: EntityElem?): List<FieldElem> {

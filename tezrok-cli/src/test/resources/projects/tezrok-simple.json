@@ -60,7 +60,8 @@
         ]
       },
       "auth": {
-        "type": "simple"
+        "type": "simple",
+        "stdInit": true
       },
       "dependencies": [
         "commons-io:commons-io:2.13.0"

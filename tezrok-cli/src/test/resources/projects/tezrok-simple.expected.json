@@ -222,7 +222,8 @@
                 "required": true,
                 "defValue": "now()"
               }
-            ]
+            ],
+            "init": "admin,admin@site.com,admin"
           },
           {
             "name": "Role",
@@ -274,7 +275,8 @@
                 "required": true,
                 "defValue": "now()"
               }
-            ]
+            ],
+            "init": "ADMIN,Administrator role\nUSER,Authenticated role"
           },
           {
             "name": "Permission",
@@ -411,7 +413,8 @@
         "enums": []
       },
       "auth": {
-        "type": "simple"
+        "type": "simple",
+        "stdInit": true
       },
       "dependencies": [
         "commons-io:commons-io:2.13.0"

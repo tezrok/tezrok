@@ -6,9 +6,7 @@ import io.tezrok.api.input.FieldElem
 import io.tezrok.api.input.SchemaElem
 import io.tezrok.api.model.SqlScript
 import io.tezrok.api.sql.SqlGenerator
-import io.tezrok.util.ModelTypes
-import io.tezrok.util.camelCaseToSqlCase
-import io.tezrok.util.isSerialEffective
+import io.tezrok.util.*
 import org.apache.commons.lang3.Validate
 import org.slf4j.LoggerFactory
 
@@ -25,6 +23,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         val sb = StringBuilder()
         // TODO: generate enum tables
         val comments = mutableListOf<CommentOn>()
+        val inits = mutableListOf<SqlInitData>()
         val entities = schema.entities ?: emptyList()
         val schemaName = schema.schemaName
 
@@ -34,7 +33,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         }
 
         entities.forEachIndexed { index, entity ->
-            generateTable(entity, sb, schemaName, comments)
+            generateTable(entity, sb, schemaName, comments, inits)
             if (index < entities.size - 1) {
                 addNewline(sb)
             }
@@ -64,6 +63,22 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
             }
         }
 
+        if (inits.isNotEmpty()) {
+            addNewline(sb)
+            sb.append("-- data")
+            addNewline(sb)
+
+            inits.forEach { data ->
+                val fields = data.fields
+                val columns = fields.joinToString(", ") { toColumnName(it.name) }
+                data.values.forEach { record ->
+                    val values = record.joinToString(", ")
+                    sb.append("INSERT INTO ${data.tableName} ($columns) VALUES ($values);")
+                    addNewline(sb)
+                }
+            }
+        }
+
         return SqlScript("schema", sb.toString())
     }
 
@@ -74,7 +89,8 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         entity: EntityElem,
         sb: StringBuilder,
         schemaName: String,
-        comments: MutableList<CommentOn>
+        comments: MutableList<CommentOn>,
+        inits: MutableList<SqlInitData>
     ) {
         Validate.notBlank(entity.name, "Schema table is blank")
         val tableName = toTableName(entity.name, schemaName)
@@ -126,6 +142,12 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
             sb.append(")")
         }
 
+        if (entity.init?.isNotBlank() == true) {
+            val records = CsvUtil.fromString(entity.init)
+            val sqlInitData = SqlUtil.convertCsvDataAsSql(records, entity).copy(tableName = tableName)
+            inits.add(sqlInitData)
+        }
+
         fields.filter { it.uniqueGroup != null }
             .groupBy { it.uniqueGroup }
             .forEach { (_, fields) ->
@@ -145,6 +167,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         addNewline(sb)
         sb.append(");")
         addNewline(sb)
+
     }
 
     private fun toTableName(tableName: String, schemaName: String = ""): String {
@@ -218,29 +241,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
 
     private fun getSqlDefault(field: FieldElem): String {
         val defValue = field.defValue ?: throw IllegalArgumentException("Default value is not set")
-
-        return when (field.type) {
-            ModelTypes.STRING -> "'$defValue'"
-            ModelTypes.DATE -> if (defValue == "now()") "CURRENT_DATE" else defValue
-            ModelTypes.DATETIME -> if (defValue == "now()") "CURRENT_TIMESTAMP" else defValue
-            ModelTypes.INTEGER -> defValue.toIntOrNull()?.toString()
-                ?: throw IllegalArgumentException("Invalid default value: $defValue")
-
-            ModelTypes.LONG -> defValue.toLongOrNull()?.toString()
-                ?: throw IllegalArgumentException("Invalid default value: $defValue")
-
-            ModelTypes.FLOAT -> defValue.toFloatOrNull()?.toString()
-                ?: throw IllegalArgumentException("Invalid default value: $defValue")
-
-            ModelTypes.DOUBLE -> defValue.toDoubleOrNull()?.toString()
-                ?: throw IllegalArgumentException("Invalid default value: $defValue")
-
-            ModelTypes.DECIMAL -> defValue.toDoubleOrNull()?.toString()
-                ?: throw IllegalArgumentException("Invalid default value: $defValue")
-
-            ModelTypes.BOOLEAN -> defValue.toBooleanStrict().toString()
-            else -> throw IllegalArgumentException("Unsupported type: ${field.type}")
-        }
+        return SqlUtil.fieldValueToSql(field, defValue)
     }
 
     private fun getStringBasedType(definition: FieldElem) =

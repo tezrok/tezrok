@@ -36,7 +36,11 @@ data class ModuleElem(
     }
 }
 
-data class AuthElem(val type: String)
+data class AuthElem(
+    val type: String,
+    // if true, then standard user and roles will be created (user admin and ADMIN, USER roles)
+    val stdInit: Boolean? = null
+)
 
 data class SchemaElem(
     val schemaName: String = "public", // by default schema name is public
@@ -57,7 +61,9 @@ data class EntityElem(
     val createdAt: Boolean? = null,
     // if true, updatedAt field will be added to entity
     val updatedAt: Boolean? = null,
-    val fields: List<FieldElem>
+    val fields: List<FieldElem>,
+    // initial data for entity in csv format
+    val init: String? = null,
 ) {
     fun withCustomMethods(vararg methods: String): EntityElem {
         methods.forEach { method ->
