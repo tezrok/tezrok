@@ -9,18 +9,23 @@ import io.tezrok.api.input.FieldElem
  */
 fun FieldElem.isSerialEffective(singlePrimary: Boolean) = this.serial ?: (singlePrimary && (this.primary ?: false))
 
-fun FieldElem.asJavaType(): String {
+/**
+ * Return type of field as Java type
+ *
+ * @param tryPrimitive if true, then return int instead of Integer, long instead of Long, etc.
+ */
+fun FieldElem.asJavaType(tryPrimitive: Boolean = false): String {
     return when (this.type) {
         ModelTypes.STRING -> "String"
-        ModelTypes.INTEGER -> "Integer"
-        ModelTypes.LONG -> "Long"
-        ModelTypes.BOOLEAN -> "Boolean"
+        ModelTypes.INTEGER -> if (tryPrimitive) "int" else "Integer"
+        ModelTypes.LONG -> if (tryPrimitive) "long" else "Long"
+        ModelTypes.BOOLEAN -> if (tryPrimitive) "boolean" else "Boolean"
         ModelTypes.DATE -> "LocalDate"
         ModelTypes.DATETIME -> "LocalDateTime"
-        ModelTypes.FLOAT -> "Float"
-        ModelTypes.DOUBLE -> "Double"
+        ModelTypes.FLOAT -> if (tryPrimitive) "float" else "Float"
+        ModelTypes.DOUBLE -> if (tryPrimitive) "double" else "Double"
         ModelTypes.DECIMAL -> "BigDecimal"
-        else -> error("Unknown type: ${this.type}")
+        else -> error("Unknown type: " + this.type)
     }
 }
 

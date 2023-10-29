@@ -635,7 +635,7 @@ internal class JooqMethodGenerator(
             return if (isCollection) {
                 tokenName + "s" to "Collection<${field.asJavaType()}>"
             } else {
-                tokenName to field.asJavaType()
+                tokenName to field.asJavaType(tryPrimitive = true)
             }
         }
     }
