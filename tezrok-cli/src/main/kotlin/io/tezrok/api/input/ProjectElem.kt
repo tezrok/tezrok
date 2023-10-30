@@ -1,5 +1,6 @@
 package io.tezrok.api.input
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.util.*
 
@@ -81,6 +82,12 @@ data class EntityElem(
      */
     fun getField(name: String): FieldElem = fields.find { it.name == name }
         ?: error("Field ($name) not found in entity (${this.name}). Expected fields: " + fields.map { it.name })
+
+    @JsonIgnore
+    fun isSynthetic(): Boolean = syntheticTo?.isNotEmpty() == true
+
+    @JsonIgnore
+    fun isNotSynthetic(): Boolean = !isSynthetic()
 }
 
 data class EnumElem(
@@ -109,7 +116,13 @@ data class FieldElem(
     // true if field is synthetic and contains reference to another entity
     val syntheticTo: String? = null,
     val relation: EntityRelation? = null
-)
+) {
+    @JsonIgnore
+    fun isSynthetic(): Boolean = syntheticTo?.isNotEmpty() == true
+
+    @JsonIgnore
+    fun isNotSynthetic(): Boolean = !isSynthetic()
+}
 
 /**
  * Relation between entities

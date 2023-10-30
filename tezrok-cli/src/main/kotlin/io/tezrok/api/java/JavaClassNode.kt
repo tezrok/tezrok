@@ -4,7 +4,12 @@ import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
+import com.github.javaparser.ast.expr.*
+import com.github.javaparser.ast.stmt.BlockStmt
+import com.github.javaparser.ast.stmt.ExpressionStmt
+import com.github.javaparser.ast.stmt.ReturnStmt
 import com.github.javaparser.ast.type.TypeParameter
+import io.tezrok.util.addImportsByType
 import java.util.stream.Stream
 import kotlin.streams.asStream
 
@@ -17,11 +22,11 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration) {
     fun getFullName(): String = clazz.fullyQualifiedName.orElseGet { getName() }
 
     fun getParent(): CompilationUnit = clazz.findAncestor(CompilationUnit::class.java)
-            .orElseThrow { IllegalStateException("Compilation unit not found for class: " + getName()) }
+        .orElseThrow { IllegalStateException("Compilation unit not found for class: " + getName()) }
 
     fun getMethod(name: String): JavaMethodNode? = clazz.methods.filter { it.nameAsString == name }
-            .map { JavaMethodNode(it) }
-            .firstOrNull()
+        .map { JavaMethodNode(it) }
+        .firstOrNull()
 
     fun addMethod(name: String): JavaMethodNode = JavaMethodNode(clazz.addMethod(name))
 
@@ -114,5 +119,57 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration) {
         return this
     }
 
-    fun addField(typeName: String, name: String): JavaFieldNode = JavaFieldNode(clazz.addField(typeName, name, Modifier.Keyword.PRIVATE))
+    fun addField(typeName: String, name: String): JavaFieldNode {
+        addImportsByType(typeName)
+        return JavaFieldNode(clazz.addField(typeName, name, Modifier.Keyword.PRIVATE))
+    }
+
+    /**
+     * Adds a field with a getter and a setter.
+     */
+    fun addProperty(typeName: String, name: String): JavaFieldNode {
+        val field = addField(typeName, name)
+        addGetter(field)
+        addSetter(field)
+
+        return field
+    }
+
+    /***
+     * Add setter for field.
+     */
+    fun addSetter(field: JavaFieldNode): JavaMethodNode {
+        val name = field.getName()
+        val thisFieldExp = FieldAccessExpr(ThisExpr(), name)
+        val paramName = NameExpr(name)
+        val capitalizedName = name.capitalize()
+        return addMethod("set$capitalizedName")
+            .withModifiers(Modifier.Keyword.PUBLIC)
+            .addParameter(field.getType(), name)
+            .setBody(
+                BlockStmt(
+                    NodeList(
+                        ExpressionStmt(
+                            AssignExpr(
+                                thisFieldExp,
+                                paramName,
+                                AssignExpr.Operator.ASSIGN
+                            )
+                        )
+                    )
+                )
+            )
+    }
+
+    /**
+     * Add getter for field.
+     */
+    fun addGetter(field: JavaFieldNode): JavaMethodNode {
+        val name = field.getName()
+        val capitalizedName = name.capitalize()
+        return addMethod("get$capitalizedName")
+            .withModifiers(Modifier.Keyword.PUBLIC)
+            .setReturnType(field.getType())
+            .setBody(ReturnStmt("this.$name"))
+    }
 }

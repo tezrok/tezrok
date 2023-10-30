@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory
  */
 internal class JooqEntityCustomMethodsFeature : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
-        log.error("Not yet implemented")
         return true
     }
 

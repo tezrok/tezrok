@@ -29,6 +29,21 @@ fun FieldElem.asJavaType(tryPrimitive: Boolean = false): String {
     }
 }
 
+fun FieldElem.isBaseType(): Boolean {
+    return when (this.type) {
+        ModelTypes.STRING -> true
+        ModelTypes.INTEGER -> true
+        ModelTypes.LONG -> true
+        ModelTypes.BOOLEAN -> true
+        ModelTypes.DATE -> true
+        ModelTypes.DATETIME -> true
+        ModelTypes.FLOAT -> true
+        ModelTypes.DOUBLE -> true
+        ModelTypes.DECIMAL -> true
+        else -> false
+    }
+}
+
 object ModelTypes {
     const val STRING = "String"
     const val INTEGER = "Integer"

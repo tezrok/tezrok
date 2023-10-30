@@ -9,6 +9,8 @@ open class JavaFieldNode(private val field: FieldDeclaration) {
 
     fun getName(): String = field.variables.first().nameAsString
 
+    fun getType(): String = field.commonType.toString()
+
     fun addAnnotation(annotationClass: Class<out Annotation>): JavaFieldNode {
         field.addAnnotation(annotationClass)
         return this

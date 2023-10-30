@@ -9,16 +9,20 @@ import io.tezrok.api.GeneratorContext
 import io.tezrok.api.ProcessModelPhase
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.EntityElem
+import io.tezrok.api.input.EntityRelation
 import io.tezrok.api.input.ModuleElem
 import io.tezrok.api.input.ProjectElem
 import io.tezrok.api.java.JavaClassNode
 import io.tezrok.api.java.JavaDirectoryNode
+import io.tezrok.api.java.JavaFieldNode
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.asJavaType
 import io.tezrok.util.camelCaseToSnakeCase
 import io.tezrok.util.getRootClass
+import io.tezrok.util.isBaseType
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
+import java.io.Serializable
 import java.nio.file.Path
 import java.util.stream.Collectors
 import java.util.stream.Stream
@@ -56,6 +60,9 @@ internal class JooqRepositoryFeature : TezrokFeature {
                     val singlePrimary = primaryCount == 1
 
                     addDtoClass(dtoDir, entity, projectElem.packagePath, singlePrimary)
+                    if (entity.isNotSynthetic()) {
+                        addFullDtoClass(dtoDir, entity)
+                    }
                     val baseMethods = getRepoMethods(repositoryDir, singlePrimary)
                     addRepositoryClass(
                         repositoryDir,
@@ -76,7 +83,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
         return true
     }
 
-   override fun processModel(project: ProjectElem, phase: ProcessModelPhase): ProjectElem {
+    override fun processModel(project: ProjectElem, phase: ProcessModelPhase): ProjectElem {
         if (phase != ProcessModelPhase.Process) {
             return project
         }
@@ -124,6 +131,9 @@ internal class JooqRepositoryFeature : TezrokFeature {
             .setReturnType("ID2")
     }
 
+    /**
+     * Adds dto class for entity into "dto" directory.
+     */
     private fun addDtoClass(
         dtoDir: JavaDirectoryNode,
         entity: EntityElem,
@@ -160,6 +170,48 @@ internal class JooqRepositoryFeature : TezrokFeature {
                     .setReturnType(type2)
                     .addAnnotation(Override::class.java)
                     .setBody(ReturnStmt("super.get$name2()"))
+            }
+        } else {
+            log.warn(FILE_ALREADY_EXISTS, "$className.java")
+        }
+    }
+
+    /**
+     * Adds full dto class for entity into "dto.full" directory.
+     *
+     * Full dto class contains logical fields as well and doesn't contain synthetic fields.
+     */
+    private fun addFullDtoClass(
+        dtoDir: JavaDirectoryNode,
+        entity: EntityElem
+    ) {
+        val dtoDir = dtoDir.getOrAddJavaDirectory("full")
+        val name = entity.name
+        val className = "${name}FullDto"
+        if (!dtoDir.hasFile("$className.java")) {
+            val dtoClass = dtoDir.addClass(className)
+            dtoClass.implementInterface(Serializable::class.java)
+            val addedFields = mutableSetOf<JavaFieldNode>()
+            entity.fields.filter { it.isNotSynthetic() }.forEach { field ->
+                if (field.isBaseType()) {
+                    addedFields.add(dtoClass.addField(field.asJavaType(), field.name))
+                } else {
+                    val targetType = "${field.type}FullDto"
+                    when (field.relation) {
+                        EntityRelation.OneToMany, EntityRelation.ManyToMany -> {
+                            addedFields.add(dtoClass.addField("List<$targetType>", field.name))
+                        }
+                        EntityRelation.ManyToOne, EntityRelation.OneToOne -> {
+                            addedFields.add(dtoClass.addField(targetType, field.name))
+                        }
+                        else -> error("Unsupported relation: ${field.relation} in field: ${entity.name}.${field.name}")
+                    }
+                }
+            }
+            // add getters and setters for all fields
+            addedFields.forEach { field ->
+                dtoClass.addGetter(field)
+                dtoClass.addSetter(field)
             }
         } else {
             log.warn(FILE_ALREADY_EXISTS, "$className.java")
@@ -396,7 +448,11 @@ internal class JooqRepositoryFeature : TezrokFeature {
     }
 
     private fun processModule(module: ModuleElem): ModuleElem {
-        return module.copy(schema = module.schema?.copy(entities = module.schema.entities?.map { entity -> processEntity(entity) }))
+        return module.copy(schema = module.schema?.copy(entities = module.schema.entities?.map { entity ->
+            processEntity(
+                entity
+            )
+        }))
     }
 
     private fun processEntity(entity: EntityElem): EntityElem {
