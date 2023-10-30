@@ -10,6 +10,7 @@ import io.tezrok.db.DataSourceFeature
 import io.tezrok.docker.DockerFeature
 import io.tezrok.entity.EntityActivableFeature
 import io.tezrok.entity.EntityCreatedUpdatedFeature
+import io.tezrok.entity.MapperFeature
 import io.tezrok.java.GitIgnoreFeature
 import io.tezrok.java.HelloWorldFeature
 import io.tezrok.jooq.JooqEntityCustomMethodsFeature
@@ -36,6 +37,7 @@ internal class FeatureManager {
         features.add(EntityCreatedUpdatedFeature())
         features.add(DataSourceFeature())
         features.add(MavenCoreFeature())
+        features.add(MapperFeature())
         features.add(GitIgnoreFeature())
         features.add(HelloWorldFeature())
         features.add(SpringFeature())
