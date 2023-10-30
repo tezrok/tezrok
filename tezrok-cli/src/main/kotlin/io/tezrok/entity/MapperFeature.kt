@@ -1,6 +1,11 @@
 package io.tezrok.entity
 
 import com.github.javaparser.ast.Modifier
+import com.github.javaparser.ast.NodeList
+import com.github.javaparser.ast.expr.MemberValuePair
+import com.github.javaparser.ast.expr.Name
+import com.github.javaparser.ast.expr.NormalAnnotationExpr
+import com.github.javaparser.ast.expr.StringLiteralExpr
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.EntityElem
@@ -56,7 +61,8 @@ internal class MapperFeature : TezrokFeature {
             val mapperClass = mapperDir.addClass(className)
                 .withModifiers(Modifier.Keyword.PUBLIC)
                 .setInterface(true)
-                .addAnnotation(Mapper::class.java)
+                .addImport(Mapper::class.java)
+                .addAnnotation(NormalAnnotationExpr(Name("Mapper"), NodeList(MemberValuePair("componentModel", StringLiteralExpr("spring")))))
 
             val dtoType = "${name}Dto"
             val fullDtoType = "${name}FullDto"

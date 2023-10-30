@@ -1,8 +1,10 @@
 package ${package}.service;
 
 import ${package}.dto.${name}Dto;
+import ${package}.dto.full.${name}FullDto;
 import ${package}.jooq.tables.records.${name}Record;
 import ${package}.repository.${name}Repository;
+import ${package}.mapper.${name}Mapper;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
@@ -21,7 +23,11 @@ public class ${name}Service {
     @NotNull
     protected final ${name}Repository ${lname}Repository;
 
-    public ${name}Service(@NotNull ${name}Repository ${lname}Repository) {
+    @NotNull
+    protected final ${name}Mapper ${lname}Mapper;
+
+    public ${name}Service(@NotNull ${name}Repository ${lname}Repository, @NotNull ${name}Mapper ${lname}Mapper) {
         this.${lname}Repository = ${lname}Repository;
+        this.${lname}Mapper = ${lname}Mapper;
     }
 }

@@ -65,6 +65,11 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration) {
         return this
     }
 
+    fun addAnnotation(annotationExpr: NormalAnnotationExpr): JavaClassNode {
+        clazz.addAnnotation(annotationExpr)
+        return this
+    }
+
     fun removeAnnotation(annotationClass: Class<out Annotation>): JavaClassNode {
         clazz.annotations.removeIf { it.nameAsString == annotationClass.simpleName }
         return this
