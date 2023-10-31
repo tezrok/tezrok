@@ -191,8 +191,8 @@ internal class JooqMethodGenerator(
 
                     // TODO: optimize query when condition only by primary keys
                     """select(Tables.$tableName.fields()).from(Tables.$tableName)
-                    |                .join(Tables.$relTableName).on(Tables.$tableName.$primaryField.eq(Tables.$relTableName.$relField1))
-                    |                .join(Tables.$targetTableName).on(Tables.$targetTableName.$primaryTargetField.eq(Tables.$relTableName.$relField2))"""
+                    |                .join(Tables.$relTableName).on(Tables.$tableName.$primaryField.eq(Tables.$relTableName.$relField2))
+                    |                .join(Tables.$targetTableName).on(Tables.$targetTableName.$primaryTargetField.eq(Tables.$relTableName.$relField1))"""
                     .trimMargin()
                 } else {
                     "selectFrom(table)"
