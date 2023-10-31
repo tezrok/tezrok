@@ -9,7 +9,7 @@ import org.jooq.UpdatableRecord;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 
 /**
  * Base class for all Jooq repositories with single primary key.
@@ -27,7 +27,7 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
         this.idField = idField;
     }
 
-    public Optional<P> getById(ID id) {
+    public P getById(ID id) {
         return getRecordById(id).map(rec -> rec.into(pojoClass));
     }
 
@@ -39,7 +39,7 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
     @NotNull
     @Override
     public P update(@NotNull P pojo) {
-        R rec = getRecordById(pojo.getId()).orElseThrow(() -> new IllegalArgumentException("Record not found by id: " + pojo.getId()));
+        R rec = Objects.requireNonNull(getRecordById(pojo.getId()), () -> "Record not found by id: " + pojo.getId());
         rec.from(pojo);
         rec.store();
         return rec.into(pojoClass);
@@ -63,7 +63,7 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
         return dsl.fetchExists(table, idField.eq(id));
     }
 
-    public Optional<R> getRecordById(ID id) {
-        return Optional.ofNullable(dsl.selectFrom(table).where(idField.eq(id)).fetchOne());
+    public R getRecordById(ID id) {
+        return dsl.selectFrom(table).where(idField.eq(id)).fetchOne();
     }
 }
