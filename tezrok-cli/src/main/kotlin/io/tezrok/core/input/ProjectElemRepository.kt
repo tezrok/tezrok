@@ -210,21 +210,24 @@ internal class ProjectElemRepository {
                     require(!entityMap.containsKey(entityName)) { "Entity with name \"$entityName\" already exists" }
                     val (suffix1, suffix2) = if (sourceEntity.name == targetEntity.name) "1" to "2" else "" to ""
 
-                    // add synthetic table with two fields
+                    // add synthetic table with two primary fields
+                    val fieldName1 = "${sourceEntity.name}Id$suffix1"
+                    val fieldName2 = "${targetEntity.name}Id$suffix2"
                     entityMap[entityName] = EntityElem(
                         name = entityName,
                         syntheticTo = fullFieldName,
                         description = "Synthetic entity of many-to-many relation for field \"$fullFieldName\"",
+                        customMethods = setOf("findBy${fieldName1}In", "findBy${fieldName2}In"),
                         fields = listOf(
                             FieldElem(
-                                "${sourceEntity.name}Id$suffix1".decapitalize(),
+                                fieldName1.decapitalize(),
                                 sourcePrimaryField.type,
                                 primary = true,
                                 syntheticTo = fullFieldName,
                                 foreignField = "${sourceEntity.name}.${sourcePrimaryField.name}",
                             ),
                             FieldElem(
-                                "${targetEntity.name}Id$suffix2".decapitalize(),
+                                fieldName2.decapitalize(),
                                 targetPrimaryField.type,
                                 primary = true,
                                 syntheticTo = fullFieldName,

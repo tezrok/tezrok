@@ -328,6 +328,10 @@
           {
             "name": "OrderItemOtherItems",
             "description": "Synthetic entity of many-to-many relation for field \"Order.otherItems\"",
+            "customMethods": [
+              "findByOrderIdIn",
+              "findByItemIdIn"
+            ],
             "syntheticTo": "Order.otherItems",
             "fields": [
               {
@@ -349,6 +353,10 @@
           {
             "name": "ItemItemOtherItems",
             "description": "Synthetic entity of many-to-many relation for field \"Item.otherItems\"",
+            "customMethods": [
+              "findByItemId1In",
+              "findByItemId2In"
+            ],
             "syntheticTo": "Item.otherItems",
             "fields": [
               {
@@ -370,6 +378,10 @@
           {
             "name": "UserRoleRoles",
             "description": "Synthetic entity of many-to-many relation for field \"User.roles\"",
+            "customMethods": [
+              "findByUserIdIn",
+              "findByRoleIdIn"
+            ],
             "syntheticTo": "User.roles",
             "fields": [
               {
@@ -391,6 +403,10 @@
           {
             "name": "RolePermissionPermissions",
             "description": "Synthetic entity of many-to-many relation for field \"Role.permissions\"",
+            "customMethods": [
+              "findByRoleIdIn",
+              "findByPermissionIdIn"
+            ],
             "syntheticTo": "Role.permissions",
             "fields": [
               {
