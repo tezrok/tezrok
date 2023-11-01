@@ -329,6 +329,8 @@
             "name": "OrderItemOtherItems",
             "description": "Synthetic entity of many-to-many relation for field \"Order.otherItems\"",
             "customMethods": [
+              "findByOrderId",
+              "findByItemId",
               "findByOrderIdIn",
               "findByItemIdIn"
             ],
@@ -354,20 +356,22 @@
             "name": "ItemItemOtherItems",
             "description": "Synthetic entity of many-to-many relation for field \"Item.otherItems\"",
             "customMethods": [
-              "findByItemId1In",
-              "findByItemId2In"
+              "findByItemSourceId",
+              "findByItemTargetId",
+              "findByItemSourceIdIn",
+              "findByItemTargetIdIn"
             ],
             "syntheticTo": "Item.otherItems",
             "fields": [
               {
-                "name": "itemId1",
+                "name": "itemSourceId",
                 "type": "Long",
                 "foreignField": "Item.id",
                 "primary": true,
                 "syntheticTo": "Item.otherItems"
               },
               {
-                "name": "itemId2",
+                "name": "itemTargetId",
                 "type": "Long",
                 "foreignField": "Item.id",
                 "primary": true,
@@ -379,6 +383,8 @@
             "name": "UserRoleRoles",
             "description": "Synthetic entity of many-to-many relation for field \"User.roles\"",
             "customMethods": [
+              "findByUserId",
+              "findByRoleId",
               "findByUserIdIn",
               "findByRoleIdIn"
             ],
@@ -404,6 +410,8 @@
             "name": "RolePermissionPermissions",
             "description": "Synthetic entity of many-to-many relation for field \"Role.permissions\"",
             "customMethods": [
+              "findByRoleId",
+              "findByPermissionId",
               "findByRoleIdIn",
               "findByPermissionIdIn"
             ],

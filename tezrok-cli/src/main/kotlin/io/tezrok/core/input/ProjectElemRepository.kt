@@ -208,16 +208,16 @@ internal class ProjectElemRepository {
                 EntityRelation.ManyToMany -> {
                     val entityName = "${sourceEntity.name}${targetEntity.name}" + sourceField.name.capitalize()
                     require(!entityMap.containsKey(entityName)) { "Entity with name \"$entityName\" already exists" }
-                    val (suffix1, suffix2) = if (sourceEntity.name == targetEntity.name) "1" to "2" else "" to ""
+                    val (suffixSource, suffixTarget) = if (sourceEntity.name == targetEntity.name) "Source" to "Target" else "" to ""
 
                     // add synthetic table with two primary fields
-                    val fieldName1 = "${sourceEntity.name}Id$suffix1"
-                    val fieldName2 = "${targetEntity.name}Id$suffix2"
+                    val fieldName1 = "${sourceEntity.name}${suffixSource}Id"
+                    val fieldName2 = "${targetEntity.name}${suffixTarget}Id"
                     entityMap[entityName] = EntityElem(
                         name = entityName,
                         syntheticTo = fullFieldName,
                         description = "Synthetic entity of many-to-many relation for field \"$fullFieldName\"",
-                        customMethods = setOf("findBy${fieldName1}In", "findBy${fieldName2}In"),
+                        customMethods = setOf("findBy$fieldName1", "findBy$fieldName2", "findBy${fieldName1}In", "findBy${fieldName2}In"),
                         fields = listOf(
                             FieldElem(
                                 fieldName1.decapitalize(),
