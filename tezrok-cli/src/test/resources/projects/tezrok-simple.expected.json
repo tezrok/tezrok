@@ -92,6 +92,7 @@
               "findOrderItemsByItemItemsOrderIdAndItemTitle",
               "findOrderOtherItemsByOrderId",
               "findOrderItemsByItemItemsOrderId",
+              "findIdByItemsOrderId",
               "findItemOtherItemsByItemId"
             ],
             "activable": true,

@@ -94,6 +94,12 @@ data class EntityElem(
     fun getField(name: String): FieldElem = fields.find { it.name == name }
         ?: error("Field ($name) not found in entity (${this.name}). Expected fields: " + fields.map { it.name })
 
+    /**
+     * Returns first primary field or throws an exception if primary field is not found
+     */
+    @JsonIgnore
+    fun getPrimaryField(): FieldElem = fields.find { it.primary == true } ?: error("Primary field not found in entity $name")
+
     @JsonIgnore
     fun isSynthetic(): Boolean = syntheticTo?.isNotEmpty() == true
 

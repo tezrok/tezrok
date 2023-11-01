@@ -61,9 +61,10 @@ internal class JooqMethodGenerator(
             .withModifiers(Modifier.Keyword.PUBLIC)
             .setReturnType(returnType)
         val params = mutableMapOf<String, String>()
+        val needToEditReturnType = mutableListOf<String>()
         when {
             methodName.startsWith(PREFIX_FIND) ->
-                newMethod.setBody(generateFindByBodyOnlyByName(methodName, returnType, params))
+                newMethod.setBody(generateFindByBodyOnlyByName(methodName, returnType, params, needToEditReturnType))
 
             methodName.startsWith(PREFIX_GET) ->
                 newMethod.setBody(generateGetByBodyOnlyByName(methodName, returnType, params))
@@ -73,6 +74,10 @@ internal class JooqMethodGenerator(
             else -> error("Unsupported method name: $methodName")
         }
         params.forEach { param -> newMethod.addParameter(param.value, param.key) }
+
+        if (needToEditReturnType.isNotEmpty()) {
+            newMethod.setReturnType(needToEditReturnType[0])
+        }
 
         repoClass.addImportsByType(returnType)
         params.values.toSet().forEach { type -> repoClass.addImportsByType(type) }
@@ -148,18 +153,22 @@ internal class JooqMethodGenerator(
      */
     private fun generateFindByBodyOnlyByName(
         methodName: String,
-        returnType: String,
-        params: MutableMap<String, String>
+        returnTypeInitial: String,
+        params: MutableMap<String, String>,
+        needToEditReturnType: MutableList<String>
     ): Statement {
         try {
             val methodName = methodName.removePrefix(PREFIX_FIND)
             val dtoName = "${entity.name}Dto"
-            val dtoList = "List<$dtoName>"
-            val supportedTypes = setOf(dtoList)
-            check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
-
             val methodPrefix = getMethodPrefix(methodName)
             val relTables = getRelatedTables(methodPrefix)
+            val singleColumn = if (relTables == null && methodPrefix.isNotEmpty()) getFieldByName(methodPrefix.decapitalize(), null) else null
+            val returnType = if (singleColumn != null) "List<${singleColumn.field.asJavaType()}>" else returnTypeInitial
+            val dtoList = "List<$dtoName>"
+            if (singleColumn == null) {
+                val supportedTypes = setOf(dtoList)
+                check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
+            }
             val expressionPart = removeFindByPrefix(methodName, methodPrefix)
             val (where, orderBy, limit, distinct, paramsOut) = parseAsJooqExpression(
                 expressionPart,
@@ -174,6 +183,14 @@ internal class JooqMethodGenerator(
             check(!distinct) { DISTINCT_CANNOT_BE_USED_WHOLE_TABLE }
 
             if (relTables == null) {
+                if (singleColumn != null) {
+                    needToEditReturnType.add(returnType)
+                    val tableName = entity.name.camelCaseToSnakeCase().uppercase()
+                    val fieldName = singleColumn.field.name.camelCaseToSnakeCase().uppercase()
+                    val fieldJavaType = singleColumn.field.asJavaType()
+                    return ReturnStmt("dsl.select(Tables.${tableName}.${fieldName}).where($where)$orderBy$limit.fetch(0, ${fieldJavaType}.class)")
+                }
+
                 return when (returnType) {
                     dtoList -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchInto(${dtoName}.class)")
                     else -> error("Unsupported return type: $returnType")

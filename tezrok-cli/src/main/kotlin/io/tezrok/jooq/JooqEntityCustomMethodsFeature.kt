@@ -58,7 +58,9 @@ internal class JooqEntityCustomMethodsFeature : TezrokFeature {
             val syntheticTo = entity.name + "." + field.name
             val syntheticField = refEntity.fields.find { it.syntheticTo == syntheticTo } ?: error("Synthetic field $syntheticTo not found")
             val methodName = "find${entity.name}${field.name.capitalize()}By${refEntity.name}${syntheticField.name.capitalize()}"
-            entities[refEntity.name] = refEntity.withCustomMethods(methodName)
+            val refPrimaryField = refEntity.getPrimaryField()
+            val methodName2 = "find${refPrimaryField.name.capitalize()}By${syntheticField.name.capitalize()}"
+            entities[refEntity.name] = refEntity.withCustomMethods(methodName, methodName2)
         }
     }
 
