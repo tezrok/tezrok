@@ -66,6 +66,17 @@ data class EntityElem(
     // initial data for entity in csv format
     val init: String? = null,
 ) {
+    init {
+        check(name.isNotBlank()) { "Entity name cannot be blank" }
+        val firstChar = name.first()
+        check(firstChar.isLetter()) {
+            "Entity name should start with letter. Entity name: $name"
+        }
+        check(firstChar.isUpperCase()) {
+            "Entity name should start with upper case letter. Entity name: $name"
+        }
+    }
+
     fun withCustomMethods(vararg methods: String): EntityElem {
         methods.forEach { method ->
             check(method.isNotBlank()) { "Custom method cannot be blank" }
@@ -117,6 +128,17 @@ data class FieldElem(
     val syntheticTo: String? = null,
     val relation: EntityRelation? = null
 ) {
+    init {
+        check(name.isNotBlank()) { "Field name cannot be blank" }
+        val firstChar = name.first()
+        check(firstChar.isLetter()) {
+            "Field name should start with letter. Field name: $name"
+        }
+        check(firstChar.isLowerCase()) {
+            "Field name should start with lower case letter. Field name: $name"
+        }
+    }
+
     @JsonIgnore
     fun isSynthetic(): Boolean = syntheticTo?.isNotEmpty() == true
 
