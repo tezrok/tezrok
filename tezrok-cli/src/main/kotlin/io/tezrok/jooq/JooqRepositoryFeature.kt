@@ -61,7 +61,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
 
                     addDtoClass(dtoDir, entity, projectElem.packagePath, singlePrimary)
                     if (entity.isNotSynthetic()) {
-                        addFullDtoClass(dtoDir, entity)
+                        addFullDtoClass(dtoDir, entity, projectElem.packagePath)
                     }
                     val baseMethods = getRepoMethods(repositoryDir, singlePrimary)
                     addRepositoryClass(
@@ -183,7 +183,8 @@ internal class JooqRepositoryFeature : TezrokFeature {
      */
     private fun addFullDtoClass(
         dtoDir: JavaDirectoryNode,
-        entity: EntityElem
+        entity: EntityElem,
+        rootPackage: String
     ) {
         val dtoDir = dtoDir.getOrAddJavaDirectory("full")
         val name = entity.name
@@ -201,9 +202,11 @@ internal class JooqRepositoryFeature : TezrokFeature {
                         EntityRelation.OneToMany, EntityRelation.ManyToMany -> {
                             addedFields.add(dtoClass.addField("List<$targetType>", field.name))
                         }
+
                         EntityRelation.ManyToOne, EntityRelation.OneToOne -> {
                             addedFields.add(dtoClass.addField(targetType, field.name))
                         }
+
                         else -> error("Unsupported relation: ${field.relation} in field: ${entity.name}.${field.name}")
                     }
                 }
@@ -213,8 +216,31 @@ internal class JooqRepositoryFeature : TezrokFeature {
                 dtoClass.addGetter(field)
                 dtoClass.addSetter(field)
             }
+
+            // implement WithId<$primaryFieldType> interface
+            addWithIdImplementation(dtoClass, entity, rootPackage)
         } else {
             log.warn(FILE_ALREADY_EXISTS, "$className.java")
+        }
+    }
+
+    private fun addWithIdImplementation(dtoClass: JavaClassNode, entity: EntityElem, rootPackage: String) {
+        val fields = entity.fields.filter { it.primary == true }
+        check(fields.size == 1) { "Entity ${entity.name} has unsupported count of primary keys: ${fields.size}" }
+
+        val primaryFieldType = fields[0].asJavaType()
+
+        dtoClass.implementInterface("WithId<$primaryFieldType>")
+        dtoClass.addImport("${rootPackage}.dto.WithId")
+
+        // if primary key is "id" no need to add getId() method
+        if (!dtoClass.hasMethod("getId")) {
+            val primaryFieldName = fields[0].name
+            dtoClass.addMethod("getId")
+                .withModifiers(Modifier.Keyword.PUBLIC)
+                .setReturnType(primaryFieldType)
+                .addAnnotation(Override::class.java)
+                .setBody(ReturnStmt("this.$primaryFieldName"))
         }
     }
 
