@@ -48,6 +48,8 @@ internal class ProjectElemRepository {
     }
 
     private fun tryLoadModuleFromJson(module: ModuleElem, projectPath: Path): ModuleElem {
+        validateDuplicateEntities(module)
+
         return module.copy(schema = tryLoadSchemaFromJson(module.schema, projectPath))
     }
 
@@ -70,15 +72,23 @@ internal class ProjectElemRepository {
     }
 
     private fun validateModule(module: ModuleElem) {
+        validateDuplicateEntities(module)
+
         module.schema?.entities?.forEach { entity -> validateEntity(entity) }
     }
 
     private fun validateEntity(entity: EntityElem) {
         entity.fields.groupBy { it.name }
             .map { it.key to it.value.size }
-            .find { it.second > 1 } ?.let {  error("Found duplicate field '${it.first}' in entity '${entity.name}'") }
+            .find { it.second > 1 }?.let { error("Found duplicate field '${it.first}' in entity '${entity.name}'") }
 
         entity.fields.forEach { field -> validateField(field, entity) }
+    }
+
+    private fun validateDuplicateEntities(module: ModuleElem) {
+        module.schema?.entities?.groupBy { it.name }
+            ?.map { it.key to it.value.size }
+            ?.find { it.second > 1 }?.let { error("Found duplicate entity '${it.first}' in module '${module.name}'") }
     }
 
     private fun validateField(field: FieldElem, entity: EntityElem) {
@@ -94,7 +104,10 @@ internal class ProjectElemRepository {
      * @param inheritSchema schema inherited from parent module
      */
     fun schemaFromJson(jsonSchema: Schema, inheritSchema: SchemaElem? = null, normalize: Boolean = true): SchemaElem {
-        val entities = entitiesFromSchema(jsonSchema)
+        val entitiesFromJson = entitiesFromSchema(jsonSchema)
+        val jsonEntitiesNames = entitiesFromJson.map { it.name }.toSet()
+        // add entities from custom defined schema
+        val entities = entitiesFromJson + (inheritSchema?.entities ?: emptyList()).filter { !jsonEntitiesNames.contains(it.name) }
         val enums = enumsFromSchema(jsonSchema)
         val schema = SchemaElem(
             schemaName = inheritSchema?.schemaName ?: "public",
@@ -217,7 +230,12 @@ internal class ProjectElemRepository {
                         name = entityName,
                         syntheticTo = fullFieldName,
                         description = "Synthetic entity of many-to-many relation for field \"$fullFieldName\"",
-                        customMethods = setOf("findBy$fieldName1", "findBy$fieldName2", "findBy${fieldName1}In", "findBy${fieldName2}In"),
+                        customMethods = setOf(
+                            "findBy$fieldName1",
+                            "findBy$fieldName2",
+                            "findBy${fieldName1}In",
+                            "findBy${fieldName2}In"
+                        ),
                         fields = listOf(
                             FieldElem(
                                 fieldName1.decapitalize(),

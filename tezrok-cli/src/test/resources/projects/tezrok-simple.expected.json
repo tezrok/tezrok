@@ -152,6 +152,22 @@
             ]
           },
           {
+            "name": "Info",
+            "fields": [
+              {
+                "name": "infoId",
+                "type": "Long",
+                "description": "Entity with \"infoId\" as \"id\" (not default)",
+                "primary": true
+              },
+              {
+                "name": "name",
+                "type": "String",
+                "maxLength": 100
+              }
+            ]
+          },
+          {
             "name": "User",
             "description": "User entity",
             "customRepository": true,

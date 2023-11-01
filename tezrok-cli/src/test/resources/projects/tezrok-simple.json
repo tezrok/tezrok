@@ -56,6 +56,22 @@
                 "relation": "ManyToMany"
               }
             ]
+          },
+          {
+            "name": "Info",
+            "fields": [
+              {
+                "name": "infoId",
+                "description": "Entity with \"infoId\" as \"id\" (not default)",
+                "type": "Long",
+                "primary": true
+              },
+              {
+                "name": "name",
+                "type": "String",
+                "maxLength": 100
+              }
+            ]
           }
         ]
       },
