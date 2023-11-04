@@ -55,8 +55,6 @@ data class EntityElem(
     val name: String,
     val description: String? = null,
     val customRepository: Boolean? = null,
-    val customMethods: Set<String>? = null,
-    val customMethodComments: Map<String, String>? = null,
     val syntheticTo: String? = null,
     // if true, object won't be deleted from database, but will be marked as deleted
     val activable: Boolean? = null,
@@ -65,6 +63,8 @@ data class EntityElem(
     // if true, updatedAt field will be added to entity
     val updatedAt: Boolean? = null,
     val fields: List<FieldElem>,
+    val customMethods: Set<String>? = null,
+    val customMethodComments: Map<String, String>? = null,
     // initial data for entity in csv format
     val init: String? = null,
 ) {

@@ -16,18 +16,6 @@
           {
             "name": "Order",
             "customRepository": true,
-            "customMethods": [
-              "getByName",
-              "getByNextOrderId",
-              "findOrderLinkedOrdersByOrderId",
-              "findIdSelectedItemIdNextOrderIdByIdIn",
-              "findItemRelatedOrdersByItemId"
-            ],
-            "customMethodComments": {
-              "findOrderLinkedOrdersByOrderId": "Returns list of {@link OrderDto} to support ManyToMany relation for field {@link OrderFullDto#linkedOrders}.",
-              "findIdSelectedItemIdNextOrderIdByIdIn": "Returns specified fields (id, selectedItemId, nextOrderId) of {@link OrderDto} into custom class.",
-              "findItemRelatedOrdersByItemId": "Returns list of {@link OrderDto} to support ManyToMany relation for field {@link ItemFullDto#relatedOrders}."
-            },
             "fields": [
               {
                 "name": "id",
@@ -111,26 +99,23 @@
                 "logicField": true,
                 "relation": "ManyToMany"
               }
-            ]
+            ],
+            "customMethods": [
+              "getByName",
+              "getByNextOrderId",
+              "findOrderLinkedOrdersByOrderId",
+              "findIdSelectedItemIdNextOrderIdByIdIn",
+              "findItemRelatedOrdersByItemId"
+            ],
+            "customMethodComments": {
+              "findOrderLinkedOrdersByOrderId": "Returns list of {@link OrderDto} to support ManyToMany relation for field {@link OrderFullDto#linkedOrders}.",
+              "findIdSelectedItemIdNextOrderIdByIdIn": "Returns specified fields (id, selectedItemId, nextOrderId) of {@link OrderDto} into custom class.",
+              "findItemRelatedOrdersByItemId": "Returns list of {@link OrderDto} to support ManyToMany relation for field {@link ItemFullDto#relatedOrders}."
+            }
           },
           {
             "name": "Item",
             "customRepository": true,
-            "customMethods": [
-              "findOrderOtherItemsByOrderIdAndItemTitle",
-              "findOrderItemsByItemItemsOrderIdAndItemTitle",
-              "findOrderOtherItemsByOrderId",
-              "findOrderItemsByItemItemsOrderId",
-              "findIdByItemsOrderId",
-              "findItemOtherItemsByItemId",
-              "findIdItemsOrderIdByIdIn"
-            ],
-            "customMethodComments": {
-              "findOrderOtherItemsByOrderId": "Returns list of {@link ItemDto} to support ManyToMany relation for field {@link OrderFullDto#otherItems}.",
-              "findOrderItemsByItemItemsOrderId": "Returns list of {@link ItemDto} to support OneToMany relation for field {@link OrderFullDto#items}.",
-              "findItemOtherItemsByItemId": "Returns list of {@link ItemDto} to support ManyToMany relation for field {@link ItemFullDto#otherItems}.",
-              "findIdItemsOrderIdByIdIn": "Returns specified fields (id, itemsOrderId) of {@link ItemDto} into custom class."
-            },
             "activable": true,
             "createdAt": true,
             "updatedAt": true,
@@ -193,7 +178,22 @@
                 "required": true,
                 "defValue": "now()"
               }
-            ]
+            ],
+            "customMethods": [
+              "findOrderOtherItemsByOrderIdAndItemTitle",
+              "findOrderItemsByItemItemsOrderIdAndItemTitle",
+              "findOrderOtherItemsByOrderId",
+              "findOrderItemsByItemItemsOrderId",
+              "findIdByItemsOrderId",
+              "findItemOtherItemsByItemId",
+              "findIdItemsOrderIdByIdIn"
+            ],
+            "customMethodComments": {
+              "findOrderOtherItemsByOrderId": "Returns list of {@link ItemDto} to support ManyToMany relation for field {@link OrderFullDto#otherItems}.",
+              "findOrderItemsByItemItemsOrderId": "Returns list of {@link ItemDto} to support OneToMany relation for field {@link OrderFullDto#items}.",
+              "findItemOtherItemsByItemId": "Returns list of {@link ItemDto} to support ManyToMany relation for field {@link ItemFullDto#otherItems}.",
+              "findIdItemsOrderIdByIdIn": "Returns specified fields (id, itemsOrderId) of {@link ItemDto} into custom class."
+            }
           },
           {
             "name": "Info",
@@ -215,11 +215,6 @@
             "name": "User",
             "description": "User entity",
             "customRepository": true,
-            "customMethods": [
-              "getByNameOrEmail",
-              "getByName",
-              "getByEmail"
-            ],
             "createdAt": true,
             "updatedAt": true,
             "fields": [
@@ -283,19 +278,17 @@
                 "defValue": "now()"
               }
             ],
+            "customMethods": [
+              "getByNameOrEmail",
+              "getByName",
+              "getByEmail"
+            ],
             "init": "admin,admin@site.com,admin"
           },
           {
             "name": "Role",
             "description": "Role entity",
             "customRepository": true,
-            "customMethods": [
-              "getByName",
-              "findUserRolesByUserId"
-            ],
-            "customMethodComments": {
-              "findUserRolesByUserId": "Returns list of {@link RoleDto} to support ManyToMany relation for field {@link UserFullDto#roles}."
-            },
             "createdAt": true,
             "updatedAt": true,
             "fields": [
@@ -339,20 +332,19 @@
                 "defValue": "now()"
               }
             ],
+            "customMethods": [
+              "getByName",
+              "findUserRolesByUserId"
+            ],
+            "customMethodComments": {
+              "findUserRolesByUserId": "Returns list of {@link RoleDto} to support ManyToMany relation for field {@link UserFullDto#roles}."
+            },
             "init": "ADMIN,Administrator role\nUSER,Authenticated role"
           },
           {
             "name": "Permission",
             "description": "Permission entity",
             "customRepository": true,
-            "customMethods": [
-              "findRolePermissionsByRoleIdIn",
-              "getByName",
-              "findRolePermissionsByRoleId"
-            ],
-            "customMethodComments": {
-              "findRolePermissionsByRoleId": "Returns list of {@link PermissionDto} to support ManyToMany relation for field {@link RoleFullDto#permissions}."
-            },
             "createdAt": true,
             "updatedAt": true,
             "fields": [
@@ -389,17 +381,19 @@
                 "required": true,
                 "defValue": "now()"
               }
-            ]
+            ],
+            "customMethods": [
+              "findRolePermissionsByRoleIdIn",
+              "getByName",
+              "findRolePermissionsByRoleId"
+            ],
+            "customMethodComments": {
+              "findRolePermissionsByRoleId": "Returns list of {@link PermissionDto} to support ManyToMany relation for field {@link RoleFullDto#permissions}."
+            }
           },
           {
             "name": "OrderItemOtherItems",
             "description": "Synthetic entity of many-to-many relation for field \"Order.otherItems\"",
-            "customMethods": [
-              "findByOrderId",
-              "findByItemId",
-              "findByOrderIdIn",
-              "findByItemIdIn"
-            ],
             "syntheticTo": "Order.otherItems",
             "fields": [
               {
@@ -416,17 +410,17 @@
                 "primary": true,
                 "syntheticTo": "Order.otherItems"
               }
+            ],
+            "customMethods": [
+              "findByOrderId",
+              "findByItemId",
+              "findByOrderIdIn",
+              "findByItemIdIn"
             ]
           },
           {
             "name": "OrderOrderLinkedOrders",
             "description": "Synthetic entity of many-to-many relation for field \"Order.linkedOrders\"",
-            "customMethods": [
-              "findByOrderSourceId",
-              "findByOrderTargetId",
-              "findByOrderSourceIdIn",
-              "findByOrderTargetIdIn"
-            ],
             "syntheticTo": "Order.linkedOrders",
             "fields": [
               {
@@ -443,17 +437,17 @@
                 "primary": true,
                 "syntheticTo": "Order.linkedOrders"
               }
+            ],
+            "customMethods": [
+              "findByOrderSourceId",
+              "findByOrderTargetId",
+              "findByOrderSourceIdIn",
+              "findByOrderTargetIdIn"
             ]
           },
           {
             "name": "ItemItemOtherItems",
             "description": "Synthetic entity of many-to-many relation for field \"Item.otherItems\"",
-            "customMethods": [
-              "findByItemSourceId",
-              "findByItemTargetId",
-              "findByItemSourceIdIn",
-              "findByItemTargetIdIn"
-            ],
             "syntheticTo": "Item.otherItems",
             "fields": [
               {
@@ -470,17 +464,17 @@
                 "primary": true,
                 "syntheticTo": "Item.otherItems"
               }
+            ],
+            "customMethods": [
+              "findByItemSourceId",
+              "findByItemTargetId",
+              "findByItemSourceIdIn",
+              "findByItemTargetIdIn"
             ]
           },
           {
             "name": "ItemOrderRelatedOrders",
             "description": "Synthetic entity of many-to-many relation for field \"Item.relatedOrders\"",
-            "customMethods": [
-              "findByItemId",
-              "findByOrderId",
-              "findByItemIdIn",
-              "findByOrderIdIn"
-            ],
             "syntheticTo": "Item.relatedOrders",
             "fields": [
               {
@@ -497,17 +491,17 @@
                 "primary": true,
                 "syntheticTo": "Item.relatedOrders"
               }
+            ],
+            "customMethods": [
+              "findByItemId",
+              "findByOrderId",
+              "findByItemIdIn",
+              "findByOrderIdIn"
             ]
           },
           {
             "name": "UserRoleRoles",
             "description": "Synthetic entity of many-to-many relation for field \"User.roles\"",
-            "customMethods": [
-              "findByUserId",
-              "findByRoleId",
-              "findByUserIdIn",
-              "findByRoleIdIn"
-            ],
             "syntheticTo": "User.roles",
             "fields": [
               {
@@ -524,17 +518,17 @@
                 "primary": true,
                 "syntheticTo": "User.roles"
               }
+            ],
+            "customMethods": [
+              "findByUserId",
+              "findByRoleId",
+              "findByUserIdIn",
+              "findByRoleIdIn"
             ]
           },
           {
             "name": "RolePermissionPermissions",
             "description": "Synthetic entity of many-to-many relation for field \"Role.permissions\"",
-            "customMethods": [
-              "findByRoleId",
-              "findByPermissionId",
-              "findByRoleIdIn",
-              "findByPermissionIdIn"
-            ],
             "syntheticTo": "Role.permissions",
             "fields": [
               {
@@ -551,6 +545,12 @@
                 "primary": true,
                 "syntheticTo": "Role.permissions"
               }
+            ],
+            "customMethods": [
+              "findByRoleId",
+              "findByPermissionId",
+              "findByRoleIdIn",
+              "findByPermissionIdIn"
             ]
           }
         ],
