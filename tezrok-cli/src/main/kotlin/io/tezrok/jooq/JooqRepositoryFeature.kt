@@ -16,10 +16,7 @@ import io.tezrok.api.java.JavaClassNode
 import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.java.JavaFieldNode
 import io.tezrok.api.maven.ProjectNode
-import io.tezrok.util.asJavaType
-import io.tezrok.util.camelCaseToSnakeCase
-import io.tezrok.util.getRootClass
-import io.tezrok.util.isBaseType
+import io.tezrok.util.*
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.io.Serializable
@@ -284,7 +281,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
         if (!repositoryDir.hasFile(repoClassFileName)) {
             val repoClassFile = repositoryDir.addJavaFile(repoClassFileName)
             val values =
-                mapOf("package" to rootPackage, "name" to name, "uname" to name.camelCaseToSnakeCase().uppercase())
+                mapOf("package" to rootPackage, "name" to name, "uname" to name.camelCaseToSqlUppercase())
             val fields = generateFields(entity)
             val templateName = if (singlePrimary) "JooqTargetRepository" else "JooqTargetRepository2"
 

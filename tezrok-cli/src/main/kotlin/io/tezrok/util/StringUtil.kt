@@ -28,6 +28,6 @@ fun String.camelCaseToSqlCase(): String = camelCaseToSnakeCase().lowercase()
  *
  * Example: "FooBar" -> "FOO_BAR"
  */
-fun String.camelCaseToSqlUpCase(): String = camelCaseToSnakeCase().uppercase()
+fun String.camelCaseToSqlUppercase(): String = camelCaseToSnakeCase().uppercase()
 
 private val camelCaseRegex = Regex("([a-z\\d])([A-Z]+)")

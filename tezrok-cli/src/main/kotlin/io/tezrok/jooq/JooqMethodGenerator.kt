@@ -12,7 +12,7 @@ import io.tezrok.api.java.JavaClassNode
 import io.tezrok.util.addImportsByType
 import io.tezrok.util.asJavaType
 import io.tezrok.util.camelCaseToSnakeCase
-import io.tezrok.util.camelCaseToSqlUpCase
+import io.tezrok.util.camelCaseToSqlUppercase
 
 /**
  * Generates jooq methods for repository classes.
@@ -177,8 +177,8 @@ internal class JooqMethodGenerator(
 
             if (relTables == null) {
                 if (selectedColumns.isNotEmpty()) {
-                    val tableName = entity.name.camelCaseToSnakeCase().uppercase()
-                    val selectFields = selectedColumns.map { field -> field.name.camelCaseToSqlUpCase() }
+                    val tableName = entity.name.camelCaseToSqlUppercase()
+                    val selectFields = selectedColumns.map { field -> field.name.camelCaseToSqlUppercase() }
                         .map { fieldName -> "Tables.${tableName}.${fieldName}" }
                         .joinToString(separator = ", ")
 
@@ -211,16 +211,16 @@ internal class JooqMethodGenerator(
                     else -> error("Unsupported return type: $returnType")
                 }
             } else {
-                val tableName = entity.name.camelCaseToSnakeCase().uppercase()
-                val primaryField = entity.fields.first { it.primary == true }.name.camelCaseToSnakeCase().uppercase()
+                val tableName = entity.name.camelCaseToSqlUppercase()
+                val primaryField = entity.fields.first { it.primary == true }.name.camelCaseToSqlUppercase()
 
                 val from = if (relTables.relTable != null) {
-                    val relTableName = relTables.relTable.name.camelCaseToSnakeCase().uppercase()
-                    val targetTableName = relTables.target.name.camelCaseToSnakeCase().uppercase()
+                    val relTableName = relTables.relTable.name.camelCaseToSqlUppercase()
+                    val targetTableName = relTables.target.name.camelCaseToSqlUppercase()
                     val primaryTargetField =
-                        relTables.target.fields.first { it.primary == true }.name.camelCaseToSnakeCase().uppercase()
-                    val relField1 = relTables.relTable.fields[0].name.camelCaseToSnakeCase().uppercase()
-                    val relField2 = relTables.relTable.fields[1].name.camelCaseToSnakeCase().uppercase()
+                        relTables.target.fields.first { it.primary == true }.name.camelCaseToSqlUppercase()
+                    val relField1 = relTables.relTable.fields[0].name.camelCaseToSqlUppercase()
+                    val relField2 = relTables.relTable.fields[1].name.camelCaseToSqlUppercase()
 
                     // TODO: optimize query when condition only by primary keys
                     """select(Tables.$tableName.fields()).from(Tables.$tableName)
@@ -502,9 +502,9 @@ internal class JooqMethodGenerator(
 
                 is Token.Name -> {
                     val fieldFull = getFieldByName(token.name, relTables)
-                    val tableName = fieldFull.entity.name.camelCaseToSnakeCase().uppercase()
+                    val tableName = fieldFull.entity.name.camelCaseToSqlUppercase()
                     val field = fieldFull.field
-                    val fieldName = field.name.camelCaseToSnakeCase().uppercase()
+                    val fieldName = field.name.camelCaseToSqlUppercase()
                     val nextOp = if (index + 1 < names.size) names[index + 1] else null
                     val nextNextOp = if (index + 2 < names.size) names[index + 2] else null
                     val isOp = nextOp is Token.Is || nextOp is Token.IsNot
@@ -680,8 +680,8 @@ internal class JooqMethodGenerator(
                     // TODO: support several fields in order by
                     val fieldFull = getFieldByName(token.name, relTables)
                     val field = fieldFull.field
-                    val fieldName = field.name.camelCaseToSnakeCase().uppercase()
-                    val tableName = fieldFull.entity.name.camelCaseToSnakeCase().uppercase()
+                    val fieldName = field.name.camelCaseToSqlUppercase()
+                    val tableName = fieldFull.entity.name.camelCaseToSqlUppercase()
                     orderBy += "Tables.${tableName}.${fieldName}"
 
                     if (token.sort == Token.Sort.Asc) {
