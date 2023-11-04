@@ -17,7 +17,10 @@
             "name": "Order",
             "customRepository": true,
             "customMethods": [
-              "getByName"
+              "getByName",
+              "getByNextOrderId",
+              "findOrderLinkedOrdersByOrderId",
+              "findItemRelatedOrdersByItemId"
             ],
             "fields": [
               {
@@ -81,6 +84,26 @@
                 "name": "active",
                 "type": "Boolean",
                 "required": true
+              },
+              {
+                "name": "nextOrder",
+                "type": "Order",
+                "logicField": true,
+                "relation": "OneToOne"
+              },
+              {
+                "name": "nextOrderId",
+                "type": "Long",
+                "foreignField": "Order.id",
+                "description": "Synthetic field for \"Order.nextOrder\"",
+                "unique": true,
+                "syntheticTo": "Order.nextOrder"
+              },
+              {
+                "name": "linkedOrders",
+                "type": "Order",
+                "logicField": true,
+                "relation": "ManyToMany"
               }
             ]
           },
@@ -118,6 +141,13 @@
               {
                 "name": "otherItems",
                 "type": "Item",
+                "logicField": true,
+                "relation": "ManyToMany"
+              },
+              {
+                "name": "relatedOrders",
+                "type": "Order",
+                "description": "Related by this item orders",
                 "logicField": true,
                 "relation": "ManyToMany"
               },
@@ -370,6 +400,33 @@
             ]
           },
           {
+            "name": "OrderOrderLinkedOrders",
+            "description": "Synthetic entity of many-to-many relation for field \"Order.linkedOrders\"",
+            "customMethods": [
+              "findByOrderSourceId",
+              "findByOrderTargetId",
+              "findByOrderSourceIdIn",
+              "findByOrderTargetIdIn"
+            ],
+            "syntheticTo": "Order.linkedOrders",
+            "fields": [
+              {
+                "name": "orderSourceId",
+                "type": "Long",
+                "foreignField": "Order.id",
+                "primary": true,
+                "syntheticTo": "Order.linkedOrders"
+              },
+              {
+                "name": "orderTargetId",
+                "type": "Long",
+                "foreignField": "Order.id",
+                "primary": true,
+                "syntheticTo": "Order.linkedOrders"
+              }
+            ]
+          },
+          {
             "name": "ItemItemOtherItems",
             "description": "Synthetic entity of many-to-many relation for field \"Item.otherItems\"",
             "customMethods": [
@@ -393,6 +450,33 @@
                 "foreignField": "Item.id",
                 "primary": true,
                 "syntheticTo": "Item.otherItems"
+              }
+            ]
+          },
+          {
+            "name": "ItemOrderRelatedOrders",
+            "description": "Synthetic entity of many-to-many relation for field \"Item.relatedOrders\"",
+            "customMethods": [
+              "findByItemId",
+              "findByOrderId",
+              "findByItemIdIn",
+              "findByOrderIdIn"
+            ],
+            "syntheticTo": "Item.relatedOrders",
+            "fields": [
+              {
+                "name": "itemId",
+                "type": "Long",
+                "foreignField": "Item.id",
+                "primary": true,
+                "syntheticTo": "Item.relatedOrders"
+              },
+              {
+                "name": "orderId",
+                "type": "Long",
+                "foreignField": "Order.id",
+                "primary": true,
+                "syntheticTo": "Item.relatedOrders"
               }
             ]
           },

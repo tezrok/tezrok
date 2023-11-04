@@ -31,6 +31,16 @@
                 "name": "active",
                 "type": "Boolean",
                 "required": true
+              },
+              {
+                "name": "nextOrder",
+                "type": "Order",
+                "relation": "OneToOne"
+              },
+              {
+                "name": "linkedOrders",
+                "type": "Order",
+                "relation": "ManyToMany"
               }
             ]
           },
@@ -53,6 +63,12 @@
               {
                 "name": "otherItems",
                 "type": "Item",
+                "relation": "ManyToMany"
+              },
+              {
+                "name": "relatedOrders",
+                "description": "Related by this item orders",
+                "type": "Order",
                 "relation": "ManyToMany"
               }
             ]

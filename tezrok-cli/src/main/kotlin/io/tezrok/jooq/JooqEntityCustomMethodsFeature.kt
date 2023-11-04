@@ -54,6 +54,7 @@ internal class JooqEntityCustomMethodsFeature : TezrokFeature {
         }
 
         for (field in entity.fields.filter { it.relation == EntityRelation.OneToMany }) {
+            // TODO: add index for foreign key!!!
             val refEntity = entities[field.type] ?: error("Entity ${field.type} not found")
             val syntheticTo = entity.name + "." + field.name
             val syntheticField = refEntity.fields.find { it.syntheticTo == syntheticTo } ?: error("Synthetic field $syntheticTo not found")
