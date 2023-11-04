@@ -3,6 +3,7 @@ package io.tezrok.api.input
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.util.*
+import kotlin.collections.LinkedHashMap
 
 /**
  * Represents a model of a project loaded from a tezrok.json file.
@@ -55,6 +56,7 @@ data class EntityElem(
     val description: String? = null,
     val customRepository: Boolean? = null,
     val customMethods: Set<String>? = null,
+    val customMethodComments: Map<String, String>? = null,
     val syntheticTo: String? = null,
     // if true, object won't be deleted from database, but will be marked as deleted
     val activable: Boolean? = null,
@@ -86,6 +88,12 @@ data class EntityElem(
         }
 
         return this.copy(customMethods = (customMethods ?: emptySet()) + methods)
+    }
+
+    fun withCustomMethodComments(vararg methodComments: Pair<String, String>): EntityElem {
+        val newComments = LinkedHashMap<String, String>(customMethodComments ?: emptyMap())
+        newComments.putAll(methodComments)
+        return this.copy(customMethodComments = newComments)
     }
 
     /**
