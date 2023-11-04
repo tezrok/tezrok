@@ -9,6 +9,7 @@ import io.tezrok.api.input.EntityElem
 import io.tezrok.api.input.EntityRelation
 import io.tezrok.api.input.FieldElem
 import io.tezrok.api.java.JavaClassNode
+import io.tezrok.api.java.JavaMethodNode
 import io.tezrok.util.addImportsByType
 import io.tezrok.util.asJavaType
 import io.tezrok.util.camelCaseToSnakeCase
@@ -51,6 +52,7 @@ internal class JooqMethodGenerator(
 
         repoClass.addImportsByType(returnType)
         params.values.toSet().forEach { type -> repoClass.addImportsByType(type) }
+        addCustomMethodsComments(newMethod)
     }
 
     /**
@@ -76,6 +78,15 @@ internal class JooqMethodGenerator(
         }
         repoClass.addImportsByType(bodyGen.returnType)
         bodyGen.params.values.toSet().forEach { type -> repoClass.addImportsByType(type) }
+        addCustomMethodsComments(newMethod)
+    }
+
+    private fun addCustomMethodsComments(method: JavaMethodNode) {
+        entity.customMethodComments?.get(method.getName())?.let { comment ->
+            val packagePath = repoClass.getJavaFile().getJavaRoot()?.applicationPackageRoot?.getPackage() ?: error("Package not found")
+            method.setJavadocComment(comment)
+            repoClass.addImportsByType(comment, entities, packagePath)
+        }
     }
 
     private fun getMethodPrefix(methodName: String): String {

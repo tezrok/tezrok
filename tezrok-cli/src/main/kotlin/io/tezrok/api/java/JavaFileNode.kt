@@ -11,7 +11,7 @@ import java.io.InputStream
 /**
  * Node that represents a Java file
  */
-open class JavaFileNode(name: String, parent: Node? = null) : FileNode(if (name.contains('.')) name else "$name.java", parent) {
+open class JavaFileNode(name: String, parent: Node? = null) : FileNode(if (name.contains('.')) name else "$name.java", parent), JavaClassOrPackage {
     private var compilationUnit: CompilationUnit = CompilationUnit()
 
     // TODO: support package declaration
@@ -22,25 +22,14 @@ open class JavaFileNode(name: String, parent: Node? = null) : FileNode(if (name.
         updatePackage()
     }
 
-    fun getParentDirectory(): JavaDirectoryNode? = getParent() as? JavaDirectoryNode
-
     /**
      * Returns root class/interface of the file
      */
-    fun getRootClass(): JavaClassNode = JavaClassNode(compilationUnit.getRootClass())
+    fun getRootClass(): JavaClassNode = JavaClassNode(compilationUnit.getRootClass(), this)
 
-    fun addClass(name: String): JavaClassNode = JavaClassNode(compilationUnit.addClass(name))
+    fun addClass(name: String): JavaClassNode = JavaClassNode(compilationUnit.addClass(name), this)
 
     override fun getInputStream(): InputStream = compilationUnit.toString().byteInputStream()
-
-    /**
-     * Returns the path of the file relative to the Java root
-     */
-    fun getPackagePath(): String {
-        return getParentDirectory()?.getPathTo(getJavaRoot()) ?: "/"
-    }
-
-    fun getJavaRoot(): JavaRootNode? = getFirstAncestor { it is JavaRootNode } as? JavaRootNode
 
     override fun setContent(content: ByteArray) {
         val content = String(content, Charsets.UTF_8)
@@ -60,7 +49,7 @@ open class JavaFileNode(name: String, parent: Node? = null) : FileNode(if (name.
     }
 
     private fun updatePackage() {
-        val packagePath = getPackagePath().substring(1).replace("/", ".")
+        val packagePath = getParentPackage()
         if (packagePath.isNotBlank())
             compilationUnit.setPackageDeclaration(packagePath)
         else

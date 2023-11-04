@@ -8,11 +8,9 @@ import java.util.*
 /**
  * Represents any directory with java files
  */
-open class JavaDirectoryNode(name: String, parent: BaseNode? = null) : DirectoryNode(name, parent), JavaDirectory {
+open class JavaDirectoryNode(name: String, parent: BaseNode? = null) : DirectoryNode(name, parent), JavaDirectory, JavaClassOrPackage {
     private val javaFiles = mutableListOf<JavaFileNode>()
     private val javaDirs = mutableListOf<JavaDirectoryNode>()
-
-    fun getParentDirectory(): JavaDirectoryNode? = getParent() as? JavaDirectoryNode
 
     override fun getFiles(): List<BaseFileNode> = Collections.unmodifiableList(javaFiles + javaDirs + super.getFiles())
 

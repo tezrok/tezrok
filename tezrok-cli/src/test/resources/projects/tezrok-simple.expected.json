@@ -23,6 +23,11 @@
               "findIdSelectedItemIdNextOrderIdByIdIn",
               "findItemRelatedOrdersByItemId"
             ],
+            "customMethodComments": {
+              "findOrderLinkedOrdersByOrderId": "Returns list of {@link OrderDto} to support ManyToMany relation for field {@link OrderFullDto#linkedOrders}.",
+              "findIdSelectedItemIdNextOrderIdByIdIn": "Returns specified fields (id, selectedItemId, nextOrderId) of {@link OrderDto} into custom class.",
+              "findItemRelatedOrdersByItemId": "Returns list of {@link OrderDto} to support ManyToMany relation for field {@link ItemFullDto#relatedOrders}."
+            },
             "fields": [
               {
                 "name": "id",
@@ -120,6 +125,12 @@
               "findItemOtherItemsByItemId",
               "findIdItemsOrderIdByIdIn"
             ],
+            "customMethodComments": {
+              "findOrderOtherItemsByOrderId": "Returns list of {@link ItemDto} to support ManyToMany relation for field {@link OrderFullDto#otherItems}.",
+              "findOrderItemsByItemItemsOrderId": "Returns list of {@link ItemDto} to support OneToMany relation for field {@link OrderFullDto#items}.",
+              "findItemOtherItemsByItemId": "Returns list of {@link ItemDto} to support ManyToMany relation for field {@link ItemFullDto#otherItems}.",
+              "findIdItemsOrderIdByIdIn": "Returns specified fields (id, itemsOrderId) of {@link ItemDto} into custom class."
+            },
             "activable": true,
             "createdAt": true,
             "updatedAt": true,
@@ -282,6 +293,9 @@
               "getByName",
               "findUserRolesByUserId"
             ],
+            "customMethodComments": {
+              "findUserRolesByUserId": "Returns list of {@link RoleDto} to support ManyToMany relation for field {@link UserFullDto#roles}."
+            },
             "createdAt": true,
             "updatedAt": true,
             "fields": [
@@ -336,6 +350,9 @@
               "getByName",
               "findRolePermissionsByRoleId"
             ],
+            "customMethodComments": {
+              "findRolePermissionsByRoleId": "Returns list of {@link PermissionDto} to support ManyToMany relation for field {@link RoleFullDto#permissions}."
+            },
             "createdAt": true,
             "updatedAt": true,
             "fields": [

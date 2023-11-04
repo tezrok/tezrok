@@ -16,7 +16,7 @@ import kotlin.streams.asStream
 /**
  * Node that represents a Java class or interface
  */
-open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration) {
+open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration, private val javaFile: JavaFileNode) {
     fun getName(): String = clazz.nameAsString
 
     fun getFullName(): String = clazz.fullyQualifiedName.orElseGet { getName() }
@@ -37,6 +37,8 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration) {
     fun getMethods(): Stream<JavaMethodNode> = clazz.methods.asSequence().map { JavaMethodNode(it) }.asStream()
 
     fun getConstructors(): Stream<JavaConstructorNode> = clazz.constructors.asSequence().map { JavaConstructorNode(it) }.asStream()
+
+    fun getJavaFile(): JavaFileNode = javaFile
 
     /**
      * Adds new modifiers to the class
