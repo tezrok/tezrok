@@ -48,7 +48,7 @@ internal class MavenCoreFeature : TezrokFeature {
         // add dependencies from project
         projectElem.modules.find { it.name == module.getName() }?.dependencies?.forEach(pomFile::addDependency)
 
-        addMavenCoplierPlugin(pomFile)
+        addMavenCompillerPlugin(pomFile)
 
         val javaRoot = module.source.main.java
         if (javaRoot.applicationPackageRoot == null) {
@@ -67,7 +67,7 @@ internal class MavenCoreFeature : TezrokFeature {
                 .withGroupId(projectElem.packagePath)
                 .withVersion(projectElem.version)
         }
-        addMavenCoplierPlugin(pomFile)
+        addMavenCompillerPlugin(pomFile)
 
         return project.pom
     }
@@ -75,7 +75,7 @@ internal class MavenCoreFeature : TezrokFeature {
     /**
      * Add maven-compiler-plugin to pom.xml
      */
-    private fun addMavenCoplierPlugin(pomFile: PomNode) {
+    private fun addMavenCompillerPlugin(pomFile: PomNode) {
         val pluginNode = pomFile.addPluginDependency("org.apache.maven.plugins:maven-compiler-plugin:3.11.0")
         val configuration = pluginNode.getConfiguration().node
         // TODO: get java version from context
