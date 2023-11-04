@@ -91,8 +91,13 @@ data class EntityElem(
     /**
      * Returns field by name or throws an exception if field is not found
      */
-    fun getField(name: String): FieldElem = fields.find { it.name == name }
+    fun getField(name: String): FieldElem = tryGetField(name)
         ?: error("Field ($name) not found in entity (${this.name}). Expected fields: " + fields.map { it.name })
+
+    /**
+     * Returns field by name or null if field is not found
+     */
+    fun tryGetField(name: String): FieldElem? = fields.find { it.name == name }
 
     /**
      * Returns first primary field or throws an exception if primary field is not found

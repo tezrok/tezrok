@@ -23,4 +23,11 @@ fun String.camelCaseToSnakeCase(): String = camelCaseRegex.replace(this, "$1_$2"
  */
 fun String.camelCaseToSqlCase(): String = camelCaseToSnakeCase().lowercase()
 
+/**
+ * Convert camel case string to sql upper case
+ *
+ * Example: "FooBar" -> "FOO_BAR"
+ */
+fun String.camelCaseToSqlUpCase(): String = camelCaseToSnakeCase().uppercase()
+
 private val camelCaseRegex = Regex("([a-z\\d])([A-Z]+)")
