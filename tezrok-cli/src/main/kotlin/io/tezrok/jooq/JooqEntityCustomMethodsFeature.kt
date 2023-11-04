@@ -41,15 +41,16 @@ internal class JooqEntityCustomMethodsFeature : TezrokFeature {
      * Add custom methods by entity relations.
      */
     private fun processEntity(entity: EntityElem, entities: MutableMap<String, EntityElem>) {
-        val primaryFieldName = lazy {
+        val primaryField = lazy {
             val primaryFields = entity.fields.filter { it.primary == true }
             check(primaryFields.size == 1) { "Entity ${entity.name} expected have exactly one primary field" }
-            entity.name.capitalize() + primaryFields.first().name.capitalize()
+            primaryFields[0]
         }
 
         for (field in entity.fields.filter { it.relation == EntityRelation.ManyToMany }) {
             val refEntity = entities[field.type] ?: error("Entity ${field.type} not found")
-            val methodName = "find${entity.name}" + field.name.capitalize() + "By${primaryFieldName.value}"
+            val primaryFieldName = entity.name.capitalize() + primaryField.value.name.capitalize()
+            val methodName = "find${entity.name}" + field.name.capitalize() + "By${primaryFieldName}"
             entities[refEntity.name] = refEntity.withCustomMethods(methodName)
         }
 
@@ -57,11 +58,25 @@ internal class JooqEntityCustomMethodsFeature : TezrokFeature {
             // TODO: add index for foreign key!!!
             val refEntity = entities[field.type] ?: error("Entity ${field.type} not found")
             val syntheticTo = entity.name + "." + field.name
-            val syntheticField = refEntity.fields.find { it.syntheticTo == syntheticTo } ?: error("Synthetic field $syntheticTo not found")
-            val methodName = "find${entity.name}${field.name.capitalize()}By${refEntity.name}${syntheticField.name.capitalize()}"
+            val syntheticFieldName = refEntity.fields.find { it.syntheticTo == syntheticTo }?.name?.capitalize()
+                ?: error("Synthetic field $syntheticTo not found")
+            val methodName = "find${entity.name}${field.name.capitalize()}By${refEntity.name}${syntheticFieldName}"
             val refPrimaryField = refEntity.getPrimaryField()
-            val methodName2 = "find${refPrimaryField.name.capitalize()}By${syntheticField.name.capitalize()}"
+            val methodName2 = "find${refPrimaryField.name.capitalize()}By$syntheticFieldName"
             entities[refEntity.name] = refEntity.withCustomMethods(methodName, methodName2)
+        }
+
+        if (entity.isNotSynthetic()) {
+            // make helper methods for EntityGraphLoader
+            // findAllIdsByPrimaryIdIn(Collection<ID> ids, Class<T> type)
+            val idFields = entity.fields
+                .filter { field -> field.primary == true || field.logicField != true && field.isSynthetic() }
+            if (idFields.size > 1) {
+                val entity = entities[entity.name] ?: error("Entity ${entity.name} not found")
+                val allIds = idFields.joinToString("") { it.name.capitalize() }
+                val methodName = "find${allIds}By${primaryField.value.name.capitalize()}In"
+                entities[entity.name] = entity.withCustomMethods(methodName)
+            }
         }
     }
 

@@ -20,6 +20,7 @@
               "getByName",
               "getByNextOrderId",
               "findOrderLinkedOrdersByOrderId",
+              "findIdSelectedItemIdNextOrderIdByIdIn",
               "findItemRelatedOrdersByItemId"
             ],
             "fields": [
@@ -116,7 +117,8 @@
               "findOrderOtherItemsByOrderId",
               "findOrderItemsByItemItemsOrderId",
               "findIdByItemsOrderId",
-              "findItemOtherItemsByItemId"
+              "findItemOtherItemsByItemId",
+              "findIdItemsOrderIdByIdIn"
             ],
             "activable": true,
             "createdAt": true,
