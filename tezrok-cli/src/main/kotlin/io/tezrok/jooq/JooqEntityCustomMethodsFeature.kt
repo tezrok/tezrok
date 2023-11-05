@@ -52,7 +52,7 @@ internal class JooqEntityCustomMethodsFeature : TezrokFeature {
             val primaryFieldName = entity.name.capitalize() + primaryField.value.name.capitalize()
             val methodName = "find${entity.name}" + field.name.capitalize() + "By${primaryFieldName}"
             entities[refEntity.name] = refEntity.withCustomMethods(methodName)
-                .withCustomMethodComments(methodName to "Returns list of {@link ${refEntity.name}Dto} to support ManyToMany relation for field {@link ${entity.name}FullDto#${field.name}}.")
+                .withCustomComments(methodName to "Returns list of {@link ${refEntity.name}Dto} to support ManyToMany relation for field {@link ${entity.name}FullDto#${field.name}}.")
         }
 
         for (field in entity.fields.filter { it.relation == EntityRelation.OneToMany }) {
@@ -66,7 +66,7 @@ internal class JooqEntityCustomMethodsFeature : TezrokFeature {
             val refPrimaryField = refEntity.getPrimaryField()
             val methodName2 = "find${refPrimaryField.name.capitalize()}By$syntheticFieldName"
             entities[refEntity.name] = refEntity.withCustomMethods(methodName, methodName2)
-                .withCustomMethodComments(methodName to "Returns list of {@link ${refEntity.name}Dto} to support OneToMany relation for field {@link ${entity.name}FullDto#${field.name}}.")
+                .withCustomComments(methodName to "Returns list of {@link ${refEntity.name}Dto} to support OneToMany relation for field {@link ${entity.name}FullDto#${field.name}}.")
         }
 
         if (entity.isNotSynthetic()) {
@@ -80,7 +80,7 @@ internal class JooqEntityCustomMethodsFeature : TezrokFeature {
                 val allIdsJavaDoc = idFields.joinToString(", ") { it.name }
                 val methodName = "find${allIds}By${primaryField.value.name.capitalize()}In"
                 entities[entity.name] = entity.withCustomMethods(methodName)
-                    .withCustomMethodComments(methodName to "Returns specified fields ($allIdsJavaDoc) of {@link ${entity.name}Dto} into custom class.")
+                    .withCustomComments(methodName to "Returns specified fields ($allIdsJavaDoc) of {@link ${entity.name}Dto} into custom class.")
             }
         }
     }

@@ -64,7 +64,7 @@ data class EntityElem(
     val updatedAt: Boolean? = null,
     val fields: List<FieldElem>,
     val customMethods: Set<String>? = null,
-    val customMethodComments: Map<String, String>? = null,
+    val customComments: Map<String, String>? = null,
     // initial data for entity in csv format
     val init: String? = null,
 ) {
@@ -90,10 +90,10 @@ data class EntityElem(
         return this.copy(customMethods = (customMethods ?: emptySet()) + methods)
     }
 
-    fun withCustomMethodComments(vararg methodComments: Pair<String, String>): EntityElem {
-        val newComments = LinkedHashMap<String, String>(customMethodComments ?: emptyMap())
-        newComments.putAll(methodComments)
-        return this.copy(customMethodComments = newComments)
+    fun withCustomComments(vararg comments: Pair<String, String>): EntityElem {
+        val newComments = LinkedHashMap<String, String>(customComments ?: emptyMap())
+        newComments.putAll(comments)
+        return this.copy(customComments = newComments)
     }
 
     /**

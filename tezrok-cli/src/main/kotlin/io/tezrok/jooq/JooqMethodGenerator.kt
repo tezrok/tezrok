@@ -82,7 +82,7 @@ internal class JooqMethodGenerator(
     }
 
     private fun addCustomMethodsComments(method: JavaMethodNode) {
-        entity.customMethodComments?.get(method.getName())?.let { comment ->
+        entity.customComments?.get(method.getName())?.let { comment ->
             val packagePath = repoClass.getJavaFile().getJavaRoot()?.applicationPackageRoot?.getPackage() ?: error("Package not found")
             method.setJavadocComment(comment)
             repoClass.addImportsByType(comment, entities, packagePath)

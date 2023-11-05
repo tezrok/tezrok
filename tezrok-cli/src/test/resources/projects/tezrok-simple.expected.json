@@ -107,7 +107,7 @@
               "findIdSelectedItemIdNextOrderIdByIdIn",
               "findItemRelatedOrdersByItemId"
             ],
-            "customMethodComments": {
+            "customComments": {
               "findOrderLinkedOrdersByOrderId": "Returns list of {@link OrderDto} to support ManyToMany relation for field {@link OrderFullDto#linkedOrders}.",
               "findIdSelectedItemIdNextOrderIdByIdIn": "Returns specified fields (id, selectedItemId, nextOrderId) of {@link OrderDto} into custom class.",
               "findItemRelatedOrdersByItemId": "Returns list of {@link OrderDto} to support ManyToMany relation for field {@link ItemFullDto#relatedOrders}."
@@ -188,7 +188,7 @@
               "findItemOtherItemsByItemId",
               "findIdItemsOrderIdByIdIn"
             ],
-            "customMethodComments": {
+            "customComments": {
               "findOrderOtherItemsByOrderId": "Returns list of {@link ItemDto} to support ManyToMany relation for field {@link OrderFullDto#otherItems}.",
               "findOrderItemsByItemItemsOrderId": "Returns list of {@link ItemDto} to support OneToMany relation for field {@link OrderFullDto#items}.",
               "findItemOtherItemsByItemId": "Returns list of {@link ItemDto} to support ManyToMany relation for field {@link ItemFullDto#otherItems}.",
@@ -336,7 +336,7 @@
               "getByName",
               "findUserRolesByUserId"
             ],
-            "customMethodComments": {
+            "customComments": {
               "findUserRolesByUserId": "Returns list of {@link RoleDto} to support ManyToMany relation for field {@link UserFullDto#roles}."
             },
             "init": "ADMIN,Administrator role\nUSER,Authenticated role"
@@ -387,7 +387,7 @@
               "getByName",
               "findRolePermissionsByRoleId"
             ],
-            "customMethodComments": {
+            "customComments": {
               "findRolePermissionsByRoleId": "Returns list of {@link PermissionDto} to support ManyToMany relation for field {@link RoleFullDto#permissions}."
             }
           },
