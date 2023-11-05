@@ -52,8 +52,10 @@ internal class JooqEntityCustomMethodsFeature : TezrokFeature {
             val refEntity = entities[field.type] ?: error("Entity ${field.type} not found")
             val primaryFieldName = entity.name.capitalize() + primaryField.value.name.capitalize()
             val methodName = "find${entity.name}" + field.name.capitalize() + "By${primaryFieldName}"
-            entities[refEntity.name] = refEntity.withCustomMethods(methodName)
-                .withCustomComments(methodName to "Returns list of {@link ${refEntity.name}Dto} to support ManyToMany relation for field {@link ${entity.name}FullDto#${field.name}}.")
+            val methodName2 = "find${entity.name}" + field.name.capitalize() + "By${primaryFieldName}In"
+            entities[refEntity.name] = refEntity.withCustomMethods(methodName, methodName2)
+                .withCustomComments(methodName to "Returns list of {@link ${refEntity.name}Dto} to support ManyToMany relation for field {@link ${entity.name}FullDto#${field.name}}.",
+                    methodName2 to "Returns list of primary field of {@link ${refEntity.name}Dto} to support ManyToMany relation for field {@link ${entity.name}FullDto#${field.name}}.")
         }
 
         for (field in entity.fields.filter { it.relation == EntityRelation.OneToMany }) {

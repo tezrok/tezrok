@@ -104,13 +104,17 @@
               "getByName",
               "getByNextOrderId",
               "findOrderLinkedOrdersByOrderId",
+              "findOrderLinkedOrdersByOrderIdIn",
               "findIdSelectedItemIdNextOrderIdByIdIn",
-              "findItemRelatedOrdersByItemId"
+              "findItemRelatedOrdersByItemId",
+              "findItemRelatedOrdersByItemIdIn"
             ],
             "customComments": {
               "findIdSelectedItemIdNextOrderIdByIdIn": "Returns specified fields (id, selectedItemId, nextOrderId) of {@link OrderDto} into custom class.",
               "findItemRelatedOrdersByItemId": "Returns list of {@link OrderDto} to support ManyToMany relation for field {@link ItemFullDto#relatedOrders}.",
+              "findItemRelatedOrdersByItemIdIn": "Returns list of primary field of {@link OrderDto} to support ManyToMany relation for field {@link ItemFullDto#relatedOrders}.",
               "findOrderLinkedOrdersByOrderId": "Returns list of {@link OrderDto} to support ManyToMany relation for field {@link OrderFullDto#linkedOrders}.",
+              "findOrderLinkedOrdersByOrderIdIn": "Returns list of primary field of {@link OrderDto} to support ManyToMany relation for field {@link OrderFullDto#linkedOrders}.",
               "getByName": "Returns {@link OrderDto} by unique field {@link OrderDto#name}.",
               "getByNextOrderId": "Returns {@link OrderDto} by unique field {@link OrderDto#nextOrderId}."
             }
@@ -185,10 +189,12 @@
               "findOrderOtherItemsByOrderIdAndItemTitle",
               "findOrderItemsByItemItemsOrderIdAndItemTitle",
               "findOrderOtherItemsByOrderId",
+              "findOrderOtherItemsByOrderIdIn",
               "findOrderItemsByItemItemsOrderId",
               "findIdByItemsOrderId",
               "findIdItemsOrderIdByItemsOrderIdIn",
               "findItemOtherItemsByItemId",
+              "findItemOtherItemsByItemIdIn",
               "findIdItemsOrderIdByIdIn"
             ],
             "customComments": {
@@ -196,8 +202,10 @@
               "findIdItemsOrderIdByIdIn": "Returns specified fields (id, itemsOrderId) of {@link ItemDto} into custom class.",
               "findIdItemsOrderIdByItemsOrderIdIn": "Returns specified fields (id, itemsOrderId) of {@link ItemDto} into custom class to support OneToMany relation.",
               "findItemOtherItemsByItemId": "Returns list of {@link ItemDto} to support ManyToMany relation for field {@link ItemFullDto#otherItems}.",
+              "findItemOtherItemsByItemIdIn": "Returns list of primary field of {@link ItemDto} to support ManyToMany relation for field {@link ItemFullDto#otherItems}.",
               "findOrderItemsByItemItemsOrderId": "Returns list of {@link ItemDto} to support OneToMany relation for field {@link OrderFullDto#items}.",
-              "findOrderOtherItemsByOrderId": "Returns list of {@link ItemDto} to support ManyToMany relation for field {@link OrderFullDto#otherItems}."
+              "findOrderOtherItemsByOrderId": "Returns list of {@link ItemDto} to support ManyToMany relation for field {@link OrderFullDto#otherItems}.",
+              "findOrderOtherItemsByOrderIdIn": "Returns list of primary field of {@link ItemDto} to support ManyToMany relation for field {@link OrderFullDto#otherItems}."
             }
           },
           {
@@ -344,10 +352,12 @@
             ],
             "customMethods": [
               "getByName",
-              "findUserRolesByUserId"
+              "findUserRolesByUserId",
+              "findUserRolesByUserIdIn"
             ],
             "customComments": {
               "findUserRolesByUserId": "Returns list of {@link RoleDto} to support ManyToMany relation for field {@link UserFullDto#roles}.",
+              "findUserRolesByUserIdIn": "Returns list of primary field of {@link RoleDto} to support ManyToMany relation for field {@link UserFullDto#roles}.",
               "getByName": "Returns {@link RoleDto} by unique field {@link RoleDto#name}."
             },
             "init": "ADMIN,Administrator role\nUSER,Authenticated role"
@@ -395,10 +405,12 @@
             ],
             "customMethods": [
               "getByName",
-              "findRolePermissionsByRoleId"
+              "findRolePermissionsByRoleId",
+              "findRolePermissionsByRoleIdIn"
             ],
             "customComments": {
               "findRolePermissionsByRoleId": "Returns list of {@link PermissionDto} to support ManyToMany relation for field {@link RoleFullDto#permissions}.",
+              "findRolePermissionsByRoleIdIn": "Returns list of primary field of {@link PermissionDto} to support ManyToMany relation for field {@link RoleFullDto#permissions}.",
               "getByName": "Returns {@link PermissionDto} by unique field {@link PermissionDto#name}."
             }
           },
