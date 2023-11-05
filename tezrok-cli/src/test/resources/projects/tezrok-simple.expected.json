@@ -108,6 +108,8 @@
               "findItemRelatedOrdersByItemId"
             ],
             "customComments": {
+              "getByName": "Returns {@link OrderDto} by unique field {@link OrderDto#name}.",
+              "getByNextOrderId": "Returns {@link OrderDto} by unique field {@link OrderDto#nextOrderId}.",
               "findOrderLinkedOrdersByOrderId": "Returns list of {@link OrderDto} to support ManyToMany relation for field {@link OrderFullDto#linkedOrders}.",
               "findIdSelectedItemIdNextOrderIdByIdIn": "Returns specified fields (id, selectedItemId, nextOrderId) of {@link OrderDto} into custom class.",
               "findItemRelatedOrdersByItemId": "Returns list of {@link OrderDto} to support ManyToMany relation for field {@link ItemFullDto#relatedOrders}."
@@ -191,6 +193,7 @@
             "customComments": {
               "findOrderOtherItemsByOrderId": "Returns list of {@link ItemDto} to support ManyToMany relation for field {@link OrderFullDto#otherItems}.",
               "findOrderItemsByItemItemsOrderId": "Returns list of {@link ItemDto} to support OneToMany relation for field {@link OrderFullDto#items}.",
+              "findIdByItemsOrderId": "Returns list of primary fields of {@link ItemDto} to support OneToMany relation for field {@link OrderFullDto#items}.",
               "findItemOtherItemsByItemId": "Returns list of {@link ItemDto} to support ManyToMany relation for field {@link ItemFullDto#otherItems}.",
               "findIdItemsOrderIdByIdIn": "Returns specified fields (id, itemsOrderId) of {@link ItemDto} into custom class."
             }
@@ -283,6 +286,11 @@
               "getByName",
               "getByEmail"
             ],
+            "customComments": {
+              "getByNameOrEmail": "Returns {@link UserDto} by name or email.",
+              "getByName": "Returns {@link UserDto} by unique field {@link UserDto#name}.",
+              "getByEmail": "Returns {@link UserDto} by unique field {@link UserDto#email}."
+            },
             "init": "admin,admin@site.com,admin"
           },
           {
@@ -337,6 +345,7 @@
               "findUserRolesByUserId"
             ],
             "customComments": {
+              "getByName": "Returns {@link RoleDto} by unique field {@link RoleDto#name}.",
               "findUserRolesByUserId": "Returns list of {@link RoleDto} to support ManyToMany relation for field {@link UserFullDto#roles}."
             },
             "init": "ADMIN,Administrator role\nUSER,Authenticated role"
@@ -388,6 +397,7 @@
               "findRolePermissionsByRoleId"
             ],
             "customComments": {
+              "getByName": "Returns {@link PermissionDto} by unique field {@link PermissionDto#name}.",
               "findRolePermissionsByRoleId": "Returns list of {@link PermissionDto} to support ManyToMany relation for field {@link RoleFullDto#permissions}."
             }
           },

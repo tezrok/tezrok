@@ -482,8 +482,9 @@ internal class JooqRepositoryFeature : TezrokFeature {
         // add custom methods for unique fields
         val uniqueFields = entity.fields.filter { it.unique == true }
         if (uniqueFields.isNotEmpty()) {
-            val methods = uniqueFields.map { "getBy${it.name.capitalize()}" }.toTypedArray()
-            return entity.withCustomMethods(*methods)
+            val methodComments = uniqueFields.map { "getBy${it.name.capitalize()}" to "Returns {@link ${entity.name}Dto} by unique field {@link ${entity.name}Dto#${it.name}}." }.toTypedArray()
+            val methods = methodComments.map { it.first }.toTypedArray()
+            return entity.withCustomMethods(*methods).withCustomComments(*methodComments)
         }
 
         return entity

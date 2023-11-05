@@ -73,6 +73,7 @@ open class SpringSecurityFeature : TezrokFeature {
             createdAt = true,
             updatedAt = true,
             customMethods = (inheritEntity?.customMethods ?: emptySet()) + "getByNameOrEmail",
+            customComments = (inheritEntity?.customComments ?: emptyMap()) + ("getByNameOrEmail" to "Returns {@link ${NAME_USER}Dto} by name or email."),
             fields = createUserFields(inheritEntity),
             init = inheritEntity?.init ?: stdUsersInit(stdUsers)
         )
