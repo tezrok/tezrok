@@ -87,6 +87,7 @@ open class SpringSecurityFeature : TezrokFeature {
             createdAt = true,
             updatedAt = true,
             customMethods = inheritEntity?.customMethods,
+            customComments = inheritEntity?.customComments,
             fields = createRoleFields(inheritEntity),
             init = inheritEntity?.init ?: stdRolesInit(stdRoles)
         )
@@ -99,7 +100,8 @@ open class SpringSecurityFeature : TezrokFeature {
             customRepository = true,
             createdAt = true,
             updatedAt = true,
-            customMethods = (inheritEntity?.customMethods ?: emptySet()) + "findRolePermissionsByRoleIdIn",
+            customMethods = inheritEntity?.customMethods,
+            customComments = inheritEntity?.customComments,
             fields = createPermissionFields(inheritEntity)
         )
     }

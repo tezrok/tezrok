@@ -46,6 +46,7 @@ internal class JooqEntityCustomMethodsFeature : TezrokFeature {
             check(primaryFields.size == 1) { "Entity ${entity.name} expected have exactly one primary field" }
             primaryFields[0]
         }
+        val idFields = lazy { entity.getAllIdFields() }
 
         for (field in entity.fields.filter { it.relation == EntityRelation.ManyToMany }) {
             val refEntity = entities[field.type] ?: error("Entity ${field.type} not found")
@@ -73,18 +74,22 @@ internal class JooqEntityCustomMethodsFeature : TezrokFeature {
         if (entity.isNotSynthetic()) {
             // make helper methods for EntityGraphLoader
             // findAllIdsByPrimaryIdIn(Collection<ID> ids, Class<T> type)
-            val idFields = entity.fields
-                .filter { field -> field.primary == true || field.logicField != true && field.isSynthetic() }
-            if (idFields.size > 1) {
+            if (idFields.value.size > 1) {
                 val entity = entities[entity.name] ?: error("Entity ${entity.name} not found")
-                val allIds = idFields.joinToString("") { it.name.capitalize() }
-                val allIdsJavaDoc = idFields.joinToString(", ") { it.name }
+                val allIds = idFields.value.joinToString("") { it.name.capitalize() }
+                val allIdsJavaDoc = idFields.value.joinToString(", ") { it.name }
                 val methodName = "find${allIds}By${primaryField.value.name.capitalize()}In"
                 entities[entity.name] = entity.withCustomMethods(methodName)
                     .withCustomComments(methodName to "Returns specified fields ($allIdsJavaDoc) of {@link ${entity.name}Dto} into custom class.")
             }
         }
     }
+
+    /**
+     * Returns all primary and synthetic fields (but not logic ones)
+     */
+    private fun EntityElem.getAllIdFields(): List<FieldElem> =
+        fields.filter { field -> field.primary == true || field.logicField != true && field.isSynthetic() }
 
     private companion object {
         val log = LoggerFactory.getLogger(JooqEntityCustomMethodsFeature::class.java)!!
