@@ -91,7 +91,7 @@ data class EntityElem(
     }
 
     fun withCustomComments(vararg comments: Pair<String, String>): EntityElem {
-        val newComments = LinkedHashMap<String, String>(customComments ?: emptyMap())
+        val newComments = TreeMap(customComments ?: emptyMap())
         newComments.putAll(comments)
         return this.copy(customComments = newComments)
     }
