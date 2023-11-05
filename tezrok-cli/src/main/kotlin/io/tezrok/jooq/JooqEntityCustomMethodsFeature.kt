@@ -65,10 +65,15 @@ internal class JooqEntityCustomMethodsFeature : TezrokFeature {
             val syntheticFieldName = syntheticField.name?.capitalize()
             val methodName = "find${entity.name}${field.name.capitalize()}By${refEntity.name}${syntheticFieldName}"
             val refPrimaryField = refEntity.getPrimaryField()
+            val refEntityIdFields = refEntity.getAllIdFields()
+            val allIds = refEntityIdFields.joinToString("") { it.name.capitalize() }
+            val allIdsJavaDoc = refEntityIdFields.joinToString(", ") { it.name }
             val methodName2 = "find${refPrimaryField.name.capitalize()}By$syntheticFieldName"
-            entities[refEntity.name] = refEntity.withCustomMethods(methodName, methodName2)
+            val methodName3 = "find${allIds}By${syntheticFieldName}In"
+            entities[refEntity.name] = refEntity.withCustomMethods(methodName, methodName2, methodName3)
                 .withCustomComments(methodName to "Returns list of {@link ${refEntity.name}Dto} to support OneToMany relation for field {@link ${entity.name}FullDto#${field.name}}.",
-                    methodName2 to "Returns list of primary fields of {@link ${refEntity.name}Dto} to support OneToMany relation for field {@link ${entity.name}FullDto#${field.name}}.")
+                    methodName2 to "Returns list of primary field of {@link ${refEntity.name}Dto} to support OneToMany relation for field {@link ${entity.name}FullDto#${field.name}}.",
+                    methodName3 to "Returns specified fields ($allIdsJavaDoc) of {@link ${refEntity.name}Dto} into custom class to support OneToMany relation.")
         }
 
         if (entity.isNotSynthetic()) {
