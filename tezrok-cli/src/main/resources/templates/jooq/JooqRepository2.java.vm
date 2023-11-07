@@ -49,7 +49,9 @@ abstract class JooqRepository2<R extends UpdatableRecord<R>, ID1, ID2, P extends
     @NotNull
     @Override
     public P save(@NotNull P pojo) {
-        return pojo.getId1() == null || pojo.getId2() == null ? create(pojo) : update(pojo);
+        // TODO: update for multiple primary keys
+        // return pojo.getId1() == null || pojo.getId2() == null ? create(pojo) : update(pojo);
+        return create(pojo);
     }
 
     public int deleteById(ID1 id1, ID2 id2) {

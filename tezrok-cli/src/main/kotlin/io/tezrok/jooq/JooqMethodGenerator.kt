@@ -198,7 +198,7 @@ internal class JooqMethodGenerator(
                         return MethodGen(
                             params = params,
                             returnType = returnType,
-                            ReturnStmt("dsl.select($selectFields).where($where)$orderBy$limit.fetch(0, ${fieldJavaType}.class)")
+                            ReturnStmt("dsl.select($selectFields).from(table).where($where)$orderBy$limit.fetch(0, ${fieldJavaType}.class)")
                         )
                     }
 
@@ -208,7 +208,7 @@ internal class JooqMethodGenerator(
                     return MethodGen(
                         params = params,
                         returnType = returnType,
-                        ReturnStmt("dsl.select($selectFields).where($where)$orderBy$limit.fetchInto($lastParamName)")
+                        ReturnStmt("dsl.select($selectFields).from(table).where($where)$orderBy$limit.fetchInto($lastParamName)")
                     )
                 }
 

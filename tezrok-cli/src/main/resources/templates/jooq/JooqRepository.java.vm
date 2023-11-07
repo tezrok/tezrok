@@ -33,6 +33,10 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
 
     @NotNull
     public List<P> findAllById(Collection<ID> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+
         return dsl.selectFrom(table).where(idField.in(ids)).fetchInto(pojoClass);
     }
 
