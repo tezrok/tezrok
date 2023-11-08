@@ -6,6 +6,7 @@ import com.github.javaparser.ast.expr.MemberValuePair
 import com.github.javaparser.ast.expr.Name
 import com.github.javaparser.ast.expr.NormalAnnotationExpr
 import com.github.javaparser.ast.expr.StringLiteralExpr
+import com.github.javaparser.ast.stmt.ReturnStmt
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.EntityElem
@@ -66,17 +67,27 @@ internal class MapperFeature : TezrokFeature {
 
             val dtoType = "${name}Dto"
             val fullDtoType = "${name}FullDto"
-            mapperClass.addMethod("to$dtoType")
+            val toDtoName = "to$dtoType"
+            mapperClass.addMethod(toDtoName)
                 .setReturnType(dtoType)
+                .setJavadocComment("Map instance of {@link $fullDtoType} to {@link $dtoType}.")
                 .addParameter(fullDtoType, "fullDto")
                 .removeBody()
-            mapperClass.addMethod("to$fullDtoType")
+            val toFullDtoName = "to$fullDtoType"
+            mapperClass.addMethod(toFullDtoName)
                 .setReturnType(fullDtoType)
+                .setJavadocComment("Map instance of {@link $dtoType} to {@link $fullDtoType}.")
                 .addParameter(dtoType, "dto")
                 .removeBody()
+            mapperClass.addMethod("toSimpleFullDto")
+                .setDefault(true)
+                .setJavadocComment("Clear relation fields to avoid infinite recursion.")
+                .setReturnType(fullDtoType)
+                .addParameter(fullDtoType, "fullDto")
+                .setBody(ReturnStmt("$toFullDtoName($toDtoName(fullDto))"))
 
-            mapperClass.addImport("$packagePath.dto.$dtoType");
-            mapperClass.addImport("$packagePath.dto.full.$fullDtoType");
+            mapperClass.addImport("$packagePath.dto.$dtoType")
+            mapperClass.addImport("$packagePath.dto.full.$fullDtoType")
         } else {
             log.warn("Mapper class {} already exists", className)
         }

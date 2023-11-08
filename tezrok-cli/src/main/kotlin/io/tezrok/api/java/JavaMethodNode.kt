@@ -120,8 +120,9 @@ open class JavaMethodNode(private val method: MethodDeclaration) {
         return this
     }
 
-    fun setJavadocComment(comment: String) {
+    fun setJavadocComment(comment: String): JavaMethodNode {
         method.setComment(JavadocComment(comment))
+        return this
     }
 
     fun isPublic(): Boolean = method.isPublic
@@ -161,5 +162,10 @@ open class JavaMethodNode(private val method: MethodDeclaration) {
     }
 
     fun getTypeParameters(): List<TypeParameter> = method.typeParameters
+
+    fun setDefault(isDefault: Boolean): JavaMethodNode {
+        method.setDefault(isDefault)
+        return this
+    }
 }
 
