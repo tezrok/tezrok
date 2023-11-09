@@ -200,7 +200,7 @@
             "customComments": {
               "findIdByItemsOrderId": "Returns list of primary field of {@link ItemDto} to support OneToMany relation for field {@link OrderFullDto#items}.",
               "findIdItemsOrderIdByIdIn": "Returns specified fields (id, itemsOrderId) of {@link ItemDto} into custom class.",
-              "findIdItemsOrderIdByItemsOrderIdIn": "Returns specified fields (id, itemsOrderId) of {@link ItemDto} into custom class to support OneToMany relation.",
+              "findIdItemsOrderIdByItemsOrderIdIn": "Returns specified fields (id, itemsOrderId) of {@link ItemDto} into custom class to support OneToMany relation for field {@link OrderFullDto#items}",
               "findItemOtherItemsByItemId": "Returns list of {@link ItemDto} to support ManyToMany relation for field {@link ItemFullDto#otherItems}.",
               "findItemOtherItemsByItemIdIn": "Returns list of primary field of {@link ItemDto} to support ManyToMany relation for field {@link ItemFullDto#otherItems}.",
               "findOrderItemsByItemItemsOrderId": "Returns list of {@link ItemDto} to support OneToMany relation for field {@link OrderFullDto#items}.",
