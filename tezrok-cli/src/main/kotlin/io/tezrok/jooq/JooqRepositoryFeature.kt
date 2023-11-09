@@ -1,6 +1,5 @@
 package io.tezrok.jooq
 
-import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import com.github.javaparser.ast.body.MethodDeclaration
@@ -334,7 +333,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
                     return
                 }
                 log.debug("Found custom repository file: {}", customFilePath)
-                val javaParser = JavaParser()
+                val javaParser = JavaParserFactory.create()
                 val parsedFile = javaParser.parse(customFilePath)
 
                 if (parsedFile.isSuccessful) {
@@ -414,7 +413,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
                 log.debug("Found custom repository interface file: {}", interfaceFilePath)
 
                 val methodGenerator = JooqMethodGenerator(entity, repoClass, entities)
-                val javaParser = JavaParser()
+                val javaParser = JavaParserFactory.create()
                 val parsedFile = javaParser.parse(interfaceFilePath)
 
                 if (parsedFile.isSuccessful) {

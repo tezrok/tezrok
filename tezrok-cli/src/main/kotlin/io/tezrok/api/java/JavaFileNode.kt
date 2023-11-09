@@ -1,10 +1,10 @@
 package io.tezrok.api.java
 
-import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.PackageDeclaration
 import io.tezrok.api.node.FileNode
 import io.tezrok.api.node.Node
+import io.tezrok.util.JavaParserFactory
 import io.tezrok.util.getRootClass
 import java.io.InputStream
 
@@ -33,7 +33,7 @@ open class JavaFileNode(name: String, parent: Node? = null) : FileNode(if (name.
 
     override fun setContent(content: ByteArray) {
         val content = String(content, Charsets.UTF_8)
-        val parsed = JavaParser().parse(content)
+        val parsed = JavaParserFactory.create().parse(content)
 
         if (parsed.isSuccessful) {
             compilationUnit = parsed.result.get()

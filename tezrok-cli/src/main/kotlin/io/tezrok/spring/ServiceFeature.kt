@@ -1,6 +1,5 @@
 package io.tezrok.spring
 
-import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.BooleanLiteralExpr
@@ -10,6 +9,7 @@ import io.tezrok.api.input.EntityElem
 import io.tezrok.api.java.JavaClassNode
 import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.maven.ProjectNode
+import io.tezrok.util.JavaParserFactory
 import io.tezrok.util.addImportsByType
 import io.tezrok.util.asJavaType
 import io.tezrok.util.getRootClass
@@ -161,7 +161,7 @@ open class ServiceFeature : TezrokFeature {
                 }
 
                 log.debug("Found custom repository file: {}", customFilePath)
-                val javaParser = JavaParser()
+                val javaParser = JavaParserFactory.create()
                 val parsedFile = javaParser.parse(customFilePath)
 
                 if (parsedFile.isSuccessful) {
