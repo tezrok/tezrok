@@ -1,0 +1,299 @@
+package ${package}.repository;
+
+import com.tezrok.simple.dto.WithId;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
+
+/**
+ * Trace used unique object by id and its properties.
+ */
+class IdTracer {
+    private final Object id;
+
+    private final Class<?> type;
+
+    private WithId<?> instance;
+
+    // map of properties by name where value is IdTracer or List<IdTracer>
+    private final Map<String, Object> properties = new HashMap<>(1);
+
+    // all tracer by key (global)
+    private final Map<String, IdTracer> storage;
+
+    // ids by type (global)
+    private final Map<Class<?>, Set<Object>> newIdsByType;
+
+    // ids by type which already loaded (global)
+    private final Map<Class<?>, Set<Object>> alreadyLoaded;
+
+    // map of already built or building objects with stubs (global)
+    private final Map<String, WithId<?>> alreadyBuilt;
+
+    /**
+     * Set of currently building objects (global)
+     */
+    private final Set<String> buildingNow;
+
+    /**
+     * Supplier of getting stub object to suppress cyclic dependencies (global)
+     */
+    private final UnaryOperator<WithId<?>> stubSupplier;
+
+    /**
+     * Creates instance {@link IdTracer} for root object.
+     *
+     * @param root         root root
+     * @param stubSupplier supplier of getting stub object to suppress cyclic dependencies
+     */
+    public <T extends WithId<ID>, ID> IdTracer(T root, UnaryOperator<WithId<?>> stubSupplier) {
+        this(root.getId(), root.getClass(), new HashMap<>(1), new HashMap<>(1), new HashMap<>(1), new HashMap<>(1), new HashSet<>(), stubSupplier);
+        this.storage.put(makeKey(root), this);
+        this.instance = root;
+    }
+
+    public <T extends WithId<ID>, ID> IdTracer(Object id,
+                                               Class<T> type,
+                                               Map<String, IdTracer> storage,
+                                               Map<Class<?>, Set<Object>> newIdsByType,
+                                               Map<Class<?>, Set<Object>> alreadyLoaded,
+                                               Map<String, WithId<?>> alreadyBuilt,
+                                               Set<String> buildingNow,
+                                               UnaryOperator<WithId<?>> stubSupplier) {
+        this.id = id;
+        this.type = type;
+        this.storage = storage;
+        this.newIdsByType = newIdsByType;
+        this.alreadyLoaded = alreadyLoaded;
+        this.alreadyBuilt = alreadyBuilt;
+        this.buildingNow = buildingNow;
+        this.stubSupplier = stubSupplier;
+    }
+
+    public <T extends WithId<ID>, ID> void setProperty(String name, Class<T> propertyType, ID id) {
+        if (id == null) {
+            return;
+        }
+
+        final String key = makeKey(propertyType, id);
+        final IdTracer oldProperty = storage.get(key);
+        if (oldProperty != null) {
+            properties.put(name, oldProperty);
+        } else {
+            IdTracer property = new IdTracer(id, propertyType, storage, newIdsByType, alreadyLoaded, alreadyBuilt, buildingNow, stubSupplier);
+            storage.put(key, property);
+            properties.put(name, property);
+        }
+        addNewIdByType(propertyType, id);
+    }
+
+    public <T extends WithId<ID>, ID> void setListProperty(String name, Class<T> propertyType, List<ID> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+
+        List<IdTracer> listProperty = new ArrayList<>(ids.size());
+        ids.forEach(objId -> {
+            String key = makeKey(propertyType, objId);
+            final IdTracer oldProperty = storage.get(key);
+            if (oldProperty != null) {
+                listProperty.add(oldProperty);
+            } else {
+                IdTracer listElem = new IdTracer(objId, propertyType, storage, newIdsByType, alreadyLoaded, alreadyBuilt, buildingNow, stubSupplier);
+                listProperty.add(listElem);
+                storage.put(key, listElem);
+            }
+            addNewIdByType(propertyType, objId);
+        });
+        properties.put(name, listProperty);
+    }
+
+    public <T extends WithId<ID>, ID> void setObjectInstance(@NotNull T object) {
+        String key = makeKey(object);
+        IdTracer tracer = getTracer(key);
+        if (tracer.instance == null) {
+            tracer.instance = object;
+        }
+    }
+
+    public <T extends WithId<ID>, K extends WithId<ID>, ID> void getObjectProperty(T parent, String propertyName, Class<K> propertyType, Consumer<K> consumer) {
+        Object propInstance = getPropertyInstance(parent, propertyName, propertyType, false);
+        consumer.accept((K) propInstance);
+    }
+
+    public <T extends WithId<ID>, K extends WithId<ID>, ID> void getObjectListProperty(T parent, String propertyName, Class<K> propertyType, Consumer<List<K>> consumer) {
+        Object objectList = getPropertyInstance(parent, propertyName, propertyType, true);
+        consumer.accept((List<K>) objectList);
+    }
+
+    @Nullable
+    private <T extends WithId<ID>, K extends WithId<ID>, ID> Object getPropertyInstance(T parent, String propertyName, Class<K> propertyType, boolean isList) {
+        final String parentKey = makeKey(parent);
+        final IdTracer parentTracer = getTracer(parentKey);
+        final Object property = parentTracer.properties.get(propertyName);
+
+        if (property != null) {
+            if (isList) {
+                if (property instanceof List) {
+                    List<IdTracer> props = (List<IdTracer>) property;
+                    final List<Object> result = new ArrayList<>(props.size());
+                    props.forEach(childTracer -> {
+                        final WithId<?> propInstance = checkAndGetInstance(childTracer, propertyName, propertyType, parentKey);
+                        result.add(propInstance);
+                    });
+
+                    return result;
+                }
+            } else if (property instanceof IdTracer tracer) {
+                return checkAndGetInstance(tracer, propertyName, propertyType, parentKey);
+            }
+            throw new IllegalStateException("Expected value is not instance of " + (isList ? "List<IdTracer>" : "IdTracer") + ", but found " + property.getClass().getName());
+        }
+
+        return null;
+    }
+
+    @NotNull
+    private <K extends WithId<ID>, ID> WithId<?> checkAndGetInstance(IdTracer childTracer, String propertyName, Class<K> propertyType, String parentKey) {
+        final WithId<?> propInstance = Objects.requireNonNull(childTracer.instance,
+                () -> String.format("Property (%s) instance not found: %s (parent: %s)",
+                        propertyName, makeKey(childTracer.getType(), childTracer.getId()), parentKey));
+
+        if (propInstance.getClass() != propertyType) {
+            throw new IllegalStateException(String.format("Property (%s) instance (id: %s) type expected: %s, but actual: %s (parent: %s)", propertyName,
+                    propInstance.getId(), propertyType.getName(), propInstance.getClass().getName(), parentKey));
+        }
+
+        final String key = makeKey(propInstance);
+        if (buildingNow.contains(key)) {
+            // cyclic dependency detected, we should return stub object
+            // first time we should get it from stubSupplier and next times return the same stub object
+            return alreadyBuilt.computeIfAbsent(key, k -> stubSupplier.apply(propInstance));
+        }
+
+        return propInstance;
+    }
+
+    @NotNull
+    private IdTracer getTracer(String key) {
+        return Objects.requireNonNull(storage.get(key), () -> String.format("IdTracer not found: %s", key));
+    }
+
+    /**
+     * Returns child property by type and id.
+     */
+    @NotNull
+    public <T extends WithId<ID>, ID> IdTracer lookup(Class<T> type, ID id) {
+        return Objects.requireNonNull(storage.get(makeKey(type, id)), () -> String.format("IdTracer not found: %s", makeKey(type, id)));
+    }
+
+    @NotNull
+    public <T extends WithId<ID>, ID> Set<ID> getNewIdsByType(Class<T> type) {
+        final Set<Object> ids = newIdsByType.get(type);
+        return ids != null ? new HashSet<>((Set<ID>) ids) : Collections.emptySet();
+    }
+
+    @NotNull
+    public <T extends WithId<ID>, ID> Set<ID> getAllIds(Class<T> type) {
+        final Set<Object> ids = alreadyLoaded.get(type);
+        return ids != null ? new HashSet<>((Set<ID>) ids) : Collections.emptySet();
+    }
+
+    public <T extends WithId<ID>, ID> void markIdsAsLoaded(Class<T> type, Collection<ID> ids) {
+        addAlreadyLoaded(type, ids);
+        final Set<Object> newIds = newIdsByType.get(type);
+        if (newIds != null) {
+            newIds.removeAll(ids);
+        }
+    }
+
+    /**
+     * Returns true if object is started to build.
+     *
+     * @param object object to check
+     * @return true if object is started to build, false otherwise
+     */
+    public <T extends WithId<ID>, ID> boolean startBuild(T object) {
+        final String key = makeKey(object);
+        if (alreadyBuilt.containsKey(key) || buildingNow.contains(key)) {
+            // object is already started to build or already built
+            return false;
+        }
+
+        buildingNow.add(key);
+        alreadyBuilt.put(key, null);
+        return true;
+    }
+
+    public <T extends WithId<ID>, ID> void endBuild(T object) {
+        buildingNow.remove(makeKey(object));
+    }
+
+    private <T extends WithId<ID>, ID> void addNewIdByType(Class<T> type, ID id) {
+        if (alreadyLoaded.getOrDefault(type, Collections.emptySet()).contains(id)) {
+            // this id already loaded, thus it cannot be new
+            return;
+        }
+
+        newIdsByType.computeIfAbsent(type, k -> new HashSet<>(1)).add(id);
+    }
+
+    private <T extends WithId<ID>, ID> void addAlreadyLoaded(Class<T> type, Collection<ID> ids) {
+        alreadyLoaded.computeIfAbsent(type, k -> new HashSet<>(1)).addAll(ids);
+    }
+
+    /**
+     * Should be called only for root object.
+     */
+    public void clearAll() {
+        List<IdTracer> collected = new ArrayList<>(storage.values());
+        storage.clear();
+        newIdsByType.clear();
+        alreadyLoaded.clear();
+        alreadyBuilt.clear();
+        buildingNow.clear();
+        collected.forEach(IdTracer::clear);
+    }
+
+    public void clear() {
+        List<IdTracer> collected = new ArrayList<>(properties.size());
+        properties.values().forEach(value -> {
+            if (value instanceof IdTracer tracer) {
+                collected.add(tracer);
+            } else if (value instanceof List list) {
+                collected.addAll(list);
+            }
+        });
+        properties.clear();
+        instance = null;
+        collected.forEach(IdTracer::clear);
+    }
+
+    public Object getId() {
+        return id;
+    }
+
+    public Class<?> getType() {
+        return type;
+    }
+
+    private static <T extends WithId<ID>, ID> String makeKey(T obj) {
+        return makeKey(obj.getClass(), obj.getId());
+    }
+
+    private static String makeKey(Class<?> type, Object id) {
+        return String.format("%s:%s", type.getName(), id);
+    }
+
+    @Override
+    public String toString() {
+        return "IdTracer{" +
+                "id=" + id +
+                ", type=" + type +
+                ", instance=" + (instance != null ? "yes" : "no") +
+                '}';
+    }
+}

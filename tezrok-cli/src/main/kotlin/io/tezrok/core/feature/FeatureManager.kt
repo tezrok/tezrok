@@ -13,6 +13,7 @@ import io.tezrok.entity.EntityCreatedUpdatedFeature
 import io.tezrok.entity.MapperFeature
 import io.tezrok.java.GitIgnoreFeature
 import io.tezrok.java.HelloWorldFeature
+import io.tezrok.jooq.EntityGraphLoaderFeature
 import io.tezrok.jooq.JooqEntityCustomMethodsFeature
 import io.tezrok.jooq.JooqFeature
 import io.tezrok.jooq.JooqRepositoryFeature
@@ -45,6 +46,7 @@ internal class FeatureManager {
         features.add(LiquibaseFeature())
         features.add(JooqFeature())
         features.add(JooqRepositoryFeature())
+        features.add(EntityGraphLoaderFeature())
         features.add(JooqEntityCustomMethodsFeature())
         features.add(ServiceFeature())
         features.add(ControllerFeature())

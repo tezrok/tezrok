@@ -8,6 +8,7 @@ import com.github.javaparser.ast.expr.*
 import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.ast.stmt.ExpressionStmt
 import com.github.javaparser.ast.stmt.ReturnStmt
+import com.github.javaparser.ast.stmt.Statement
 import com.github.javaparser.ast.type.TypeParameter
 import io.tezrok.util.addImportsByType
 import java.util.stream.Stream
@@ -121,14 +122,42 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration, private
 
     fun isInterface(): Boolean = clazz.isInterface
 
+    /**
+     * Init field in constructor.
+     */
+    fun initInConstructor(field: JavaFieldNode): JavaClassNode {
+        val constructor = getConstructors().findFirst().orElseGet(this::addConstructor)
+            .withModifiers(Modifier.Keyword.PUBLIC)
+            .addParameter(field.getType(), field.getName())
+
+        val name = field.getName()
+        val thisFieldExp = FieldAccessExpr(ThisExpr(), name)
+        val paramName = NameExpr(name)
+        val statement = ExpressionStmt(
+            AssignExpr(
+                thisFieldExp,
+                paramName,
+                AssignExpr.Operator.ASSIGN
+            )
+        )
+        val allStatements = ArrayList<Statement>(constructor.getBody().childNodes.map { it as Statement })
+        constructor.setBody(BlockStmt(NodeList(allStatements + statement)))
+
+        return this
+    }
+
     fun setInterface(isInterface: Boolean): JavaClassNode {
         clazz.isInterface = isInterface
         return this
     }
 
-    fun addField(typeName: String, name: String): JavaFieldNode {
+    fun addField(typeName: String, name: String, initInConstructor: Boolean = false): JavaFieldNode {
         addImportsByType(typeName)
-        return JavaFieldNode(clazz.addField(typeName, name, Modifier.Keyword.PRIVATE))
+        val field = JavaFieldNode(clazz.addField(typeName, name, Modifier.Keyword.PRIVATE))
+        if (initInConstructor) {
+            initInConstructor(field)
+        }
+        return field
     }
 
     /**

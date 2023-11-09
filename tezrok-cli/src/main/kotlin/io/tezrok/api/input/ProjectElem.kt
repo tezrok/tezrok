@@ -114,6 +114,9 @@ data class EntityElem(
     fun getPrimaryField(): FieldElem = fields.find { it.primary == true } ?: error("Primary field not found in entity $name")
 
     @JsonIgnore
+    fun getPrimaryFieldCount(): Int = fields.count { it.primary == true }
+
+    @JsonIgnore
     fun isSynthetic(): Boolean = syntheticTo?.isNotEmpty() == true
 
     @JsonIgnore

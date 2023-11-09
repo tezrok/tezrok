@@ -12,6 +12,8 @@ open class JavaConstructorNode(private val constructor: ConstructorDeclaration) 
         return this
     }
 
+    fun getBody(): BlockStmt = constructor.body
+
     fun addParameter(typeName: String, name: String): JavaConstructorNode {
         constructor.addParameter(typeName, name)
         return this
