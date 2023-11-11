@@ -51,6 +51,10 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
         val clazz = repositoryDir.addClass("EntityGraphLoader")
             .addAnnotation(Service::class.java)
             .setModifiers(Modifier.Keyword.PUBLIC)
+            .addImport(Collection::class.java)
+            .addImport(List::class.java)
+            .addImport(Set::class.java)
+
         // add fields which are initialized in constructor
         val fields = mutableListOf<JavaFieldNode>()
         entities.forEach { entity ->
@@ -71,6 +75,16 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
         // implement public load methods
         methods.forEach { (entity, method) ->
             implementPublicLoadMethod(method, entity, entitiesMap)
+        }
+
+        // add loadIdsByEntityIds methods
+        entities.filter { it.isNotSynthetic() }.forEach { entity ->
+            addLoadIdsByEntityIdsMethod(clazz, entity, entitiesMap)
+        }
+
+        // add loadEntitiesByIds methods
+        entities.filter { it.isNotSynthetic() }.forEach { entity ->
+            addLoadEntitiesByIdsMethod(clazz, entity, entitiesMap)
         }
     }
 
@@ -109,6 +123,7 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
         entitiesMap: Map<String, EntityElem>
     ) {
         val statements = NodeList<Statement>()
+        val paramName = method.getParameters().map { it.getName() }.first()
         val dtoName = entity.getDtoName()
         val dtoFieldName = entity.getDtoName().lowerFirst()
         val dtoField = VariableDeclarationExpr(ClassOrInterfaceType(dtoName), dtoFieldName, Modifier.finalModifier())
@@ -121,9 +136,20 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
         // code: EntityDto entityDto = entityRepository.getById(id);
         statements.add(
             JavaCallExpressionNode.ofMethodCall("$repositoryFieldName.getById")
-                .addNameArgument("id")
+                .addNameArgument(paramName)
                 .assignToAsStatement(dtoField)
-                .apply { setLineComment("get root dto") }
+                .apply { setLineComment("phase 1: collect only ids by root id") }
+        )
+
+        // code: if (entityDto == null) {
+        //     return null;
+        // }
+        statements.add(
+            IfStmt(
+                BinaryExpr(dtoFieldName.asNameExpr(), NullLiteralExpr(), BinaryExpr.Operator.EQUALS),
+                ReturnStmt(NullLiteralExpr()).asBlock(),
+                null
+            )
         )
 
         // code: EntityFullDto entityFullDto = entityMapper.toEntityFullDto(entityDto);
@@ -148,10 +174,27 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
             ).assignToAsStatement(tracerField)
         )
 
-        // code: return itemFullDto
-        statements.add(ReturnStmt(dtoFullFieldName))
+        // code: loadIdsByEntityIds(List.of(id), tracer);
+        statements.add(
+            JavaCallExpressionNode.ofMethodCall(entity.getLoadIdsByEntityIdsMethodName())
+                .addNameArgument("List.of($paramName)")
+                .addNameArgument(tracerFieldName)
+                .asStatement()
+        )
+
+        // code: loadEntitiesByIds(tracer, id);
+        statements.add(
+            JavaCallExpressionNode.ofMethodCall(entity.getLoadEntitiesByIdsMethodName())
+                .addNameArgument(tracerFieldName)
+                .addNameArgument(paramName)
+                .asStatement()
+                .apply { setLineComment("phase 2: load all entities by ids collected during phase 1") }
+        )
 
         // TODO: add the rest of the code
+
+        // code: return itemFullDto
+        statements.add(ReturnStmt(dtoFullFieldName))
         method.setBody(statements)
     }
 
@@ -229,11 +272,74 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
                         )
                     )
                 )
-            ))
+            )
+        )
 
         method.setBody(statements)
     }
 
+    private fun addLoadIdsByEntityIdsMethod(
+        clazz: JavaClassNode,
+        entity: EntityElem,
+        entitiesMap: Map<String, EntityElem>
+    ) {
+        val idsParamName = entity.name.lowerFirst() + "Ids"
+        val method = clazz.addMethod(entity.getLoadIdsByEntityIdsMethodName())
+            .withModifiers(Modifier.Keyword.PROTECTED)
+            .addParameter("Collection<Long>", idsParamName)
+            .addParameter("IdTracer", "tracer")
+            .setJavadocComment("Load inner ids by ids of {@link ${entity.name}Dto}.")
+    }
+
+    private fun addLoadEntitiesByIdsMethod(
+        clazz: JavaClassNode,
+        entity: EntityElem,
+        entitiesMap: Map<String, EntityElem>
+    ) {
+        val name = entity.name
+        val fullDtoName = "${name}FullDto"
+        val paramName = "id"
+        val tracerFieldName = "tracer"
+        val statements = NodeList<Statement>()
+        val method = clazz.addMethod(entity.getLoadEntitiesByIdsMethodName())
+            .withModifiers(Modifier.Keyword.PROTECTED)
+            .addParameter("IdTracer", tracerFieldName)
+            .addParameter(entity.getPrimaryField().asJavaType(), paramName)
+            .setJavadocComment("Load {@link $fullDtoName}s by ids collected by {@link IdTracer}.")
+
+        // code: Set<Long> allEntityIds = tracer.getAllIds(EntityFullDto.class);
+        val allEntityIdsFieldName = "all${entity.name}Ids"
+        val allEntityIdsField = VariableDeclarationExpr(
+            ClassOrInterfaceType("Set<Long>"),
+            allEntityIdsFieldName,
+            Modifier.finalModifier()
+        )
+        statements.add(
+            JavaCallExpressionNode.ofMethodCall("$tracerFieldName.getAllIds")
+                .addNameArgument("$fullDtoName.class")
+                .assignToAsStatement(allEntityIdsField)
+        )
+
+        // code: if (id != null) { allOrderIds.remove(id);}
+        statements.add(
+            IfStmt(
+                BinaryExpr(paramName.asNameExpr(), NullLiteralExpr(), BinaryExpr.Operator.NOT_EQUALS),
+                JavaCallExpressionNode.ofMethodCall("$allEntityIdsFieldName.remove")
+                    .addNameArgument(paramName)
+                    .asStatement()
+                    .asBlock(),
+                null
+            )
+        )
+
+        // TODO: load entities by ids
+
+        method.setBody(statements)
+    }
+
+    private fun EntityElem.getLoadIdsByEntityIdsMethodName(): String = "loadIdsBy${name}Ids"
+
+    private fun EntityElem.getLoadEntitiesByIdsMethodName(): String = "load${name}sByIds"
 
     private companion object {
         val log = LoggerFactory.getLogger(EntityGraphLoaderFeature::class.java)!!

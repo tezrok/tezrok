@@ -36,6 +36,8 @@ fun Expression.assignToAsStatement(variable: Expression, operator: AssignExpr.Op
 fun Expression.assignToAsStatement(name: String, operator: AssignExpr.Operator = AssignExpr.Operator.ASSIGN): Statement =
     NameExpr(name).assignStatement(this, operator)
 
+fun Expression.asStatement(): Statement = ExpressionStmt(this)
+
 fun Statement.asBlock(): BlockStmt = BlockStmt(NodeList(this))
 
 fun String.asNameExpr(): NameExpr = NameExpr(this)

@@ -4,16 +4,19 @@ import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.expr.*
 import com.github.javaparser.ast.nodeTypes.NodeWithArguments
 import com.github.javaparser.ast.stmt.Statement
+import io.tezrok.util.asStatement
 import io.tezrok.util.assignToAsStatement
 
 /**
  * Represents a call of a method or constructor.
  */
-open class JavaCallExpressionNode<N>(private val methodCallExpr: NodeWithArguments<N>) where N : Node {
-    fun asMethodCallExpr(): MethodCallExpr = methodCallExpr as MethodCallExpr
+open class JavaCallExpressionNode<N>(private val callExpression: NodeWithArguments<N>) where N : Node {
+    fun asMethodCallExpr(): MethodCallExpr = callExpression as MethodCallExpr
+
+    fun asStatement(): Statement = (callExpression as Expression).asStatement()
 
     fun addStringArgument(argument: String): JavaCallExpressionNode<N> {
-        methodCallExpr.addArgument(StringLiteralExpr(argument))
+        callExpression.addArgument(StringLiteralExpr(argument))
         return this
     }
 
@@ -21,7 +24,7 @@ open class JavaCallExpressionNode<N>(private val methodCallExpr: NodeWithArgumen
         return addNameArgument(NameExpr(name))
     }
     fun addNameArgument(name: NameExpr): JavaCallExpressionNode<N> {
-        methodCallExpr.addArgument(name)
+        callExpression.addArgument(name)
         return this
     }
 

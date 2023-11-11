@@ -11,7 +11,7 @@ import java.util.function.UnaryOperator;
 /**
  * Trace used unique object by id and its properties.
  */
-class IdTracer {
+public class IdTracer {
     private final Object id;
 
     private final Class<?> type;
