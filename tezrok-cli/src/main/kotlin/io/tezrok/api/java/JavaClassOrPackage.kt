@@ -19,6 +19,13 @@ interface JavaClassOrPackage : Node {
     fun getPackage(): String = getPackagePath().substring(1).replace("/", ".")
 
     /**
+     * Returns the package of class/package itself with suffix
+     *
+     * Example: "com.example" -> "com.example."
+     */
+    fun getPackageWithSuffix(): String = getPackage().let { if (it.isBlank()) "" else "$it." }
+
+    /**
      * Returns the path of the parent relative to the Java root
      */
     fun getParentPackagePath(): String = getParentDirectory()?.getPathTo(getJavaRoot()) ?: "/"
@@ -27,6 +34,13 @@ interface JavaClassOrPackage : Node {
      * Returns the package whe file is located in
      */
     fun getParentPackage(): String = getParentPackagePath().substring(1).replace("/", ".")
+
+    /**
+     * Returns the package where class/package is located in with suffix
+     *
+     * Example: "com.example" -> "com.example."
+     */
+    fun getParentPackageWithSuffix(): String = getParentPackage().let { if (it.isBlank()) "" else "$it." }
 
     fun getJavaRoot(): JavaRootNode? = getFirstAncestor { it is JavaRootNode } as? JavaRootNode
 }

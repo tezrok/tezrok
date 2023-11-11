@@ -98,6 +98,37 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration, private
         return this
     }
 
+    /**
+     * Find class by simple name and add import into this file.
+     */
+    fun addImportBySimpleName(simpleTypeName: String): JavaClassNode {
+        // first check this type
+        if (getName() == simpleTypeName) {
+            addImport(javaFile.getPackageWithSuffix() + simpleTypeName)
+            return this
+        }
+        // search in all classes by simple name
+        addImportBySimpleName(javaFile.getJavaRoot()!!, simpleTypeName)
+        return this
+    }
+
+    private fun addImportBySimpleName(javaDir: JavaDirectoryNode, simpleTypeName: String): Boolean {
+        javaDir.getJavaFiles().forEach { javaFile ->
+            if (javaFile.getRootClass().getName() == simpleTypeName) {
+                addImport(javaFile.getParentPackageWithSuffix() + simpleTypeName)
+                return true
+            }
+        }
+
+        javaDir.getJavaDirectories().forEach {
+            if (addImportBySimpleName(it, simpleTypeName)) {
+                return true
+            }
+        }
+
+        return false
+    }
+
     fun setTypeParameters(vararg params: String): JavaClassNode {
         clazz.setTypeParameters(NodeList(params.map { TypeParameter(it) }))
         return this

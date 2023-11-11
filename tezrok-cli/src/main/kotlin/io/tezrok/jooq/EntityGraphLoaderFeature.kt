@@ -2,18 +2,18 @@ package io.tezrok.jooq
 
 import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.NodeList
-import com.github.javaparser.ast.expr.VariableDeclarationExpr
-import com.github.javaparser.ast.stmt.BlockStmt
+import com.github.javaparser.ast.expr.*
+import com.github.javaparser.ast.stmt.IfStmt
 import com.github.javaparser.ast.stmt.ReturnStmt
 import com.github.javaparser.ast.stmt.Statement
+import com.github.javaparser.ast.stmt.ThrowStmt
 import com.github.javaparser.ast.type.ClassOrInterfaceType
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.EntityElem
 import io.tezrok.api.java.*
 import io.tezrok.api.maven.ProjectNode
-import io.tezrok.util.asJavaType
-import io.tezrok.util.lowerFirst
+import io.tezrok.util.*
 import org.jetbrains.annotations.Nullable
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -64,8 +64,11 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
             methods[entity] = addPublicLoadMethod(clazz, entity, packagePath)
         }
 
-        // implement public load methods
+        // add getStub method
         val entitiesMap = entities.associateBy { it.name }
+        addGetStubMethod(clazz, entitiesMap)
+
+        // implement public load methods
         methods.forEach { (entity, method) ->
             implementPublicLoadMethod(method, entity, entitiesMap)
         }
@@ -113,25 +116,43 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
         val dtoFullFieldName = fullDtoName.lowerFirst()
         val fullDtoField =
             VariableDeclarationExpr(ClassOrInterfaceType(fullDtoName), dtoFullFieldName, Modifier.finalModifier())
-        val repositoryName = entity.getRepositoryName()
         val repositoryFieldName = entity.getRepositoryName().lowerFirst()
-        val mapperName = entity.getMapperName()
-        val mapperFieldName = entity.getMapperName().lowerFirst()
 
+        // code: EntityDto entityDto = entityRepository.getById(id);
         statements.add(
             JavaCallExpressionNode.ofMethodCall("$repositoryFieldName.getById")
                 .addNameArgument("id")
                 .assignToAsStatement(dtoField)
+                .apply { setLineComment("get root dto") }
         )
 
+        // code: EntityFullDto entityFullDto = entityMapper.toEntityFullDto(entityDto);
+        val mapperFieldName = entity.getMapperName().lowerFirst()
         statements.add(
             JavaCallExpressionNode.ofMethodCall("$mapperFieldName.to$fullDtoName")
                 .addNameArgument(dtoFieldName)
                 .assignToAsStatement(fullDtoField)
+                .apply { setLineComment("convert to full dto") }
         )
 
+        // code: IdTracer tracer = new IdTracer(itemFullDto, this::getStub);
+        val tracerName = "IdTracer"
+        val tracerFieldName = "tracer"
+        val tracerType = ClassOrInterfaceType(tracerName)
+        val tracerField = VariableDeclarationExpr(tracerType, tracerFieldName, Modifier.finalModifier())
+        val thisGetStubRef = NameExpr("this::getStub")
+        statements.add(
+            ObjectCreationExpr(
+                null, tracerType,
+                NodeList(dtoFullFieldName.asNameExpr(), thisGetStubRef)
+            ).assignToAsStatement(tracerField)
+        )
+
+        // code: return itemFullDto
         statements.add(ReturnStmt(dtoFullFieldName))
-        method.setBody(BlockStmt(statements))
+
+        // TODO: add the rest of the code
+        method.setBody(statements)
     }
 
     private fun addFields(
@@ -161,14 +182,58 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
         context.writeTemplate(idTracerFile, "/templates/jooq/IdTracer.java.vm", values)
     }
 
-    private fun EntityElem.getRepositoryName(): String = "${name}Repository"
+    private fun addGetStubMethod(clazz: JavaClassNode, entitiesMap: Map<String, EntityElem>) {
+        val withIdType = "WithId<?>"
+        val argName = NameExpr("object")
+        val method = clazz.addImportBySimpleName("WithId")
+            .addMethod("getStub")
+            .withModifiers(Modifier.Keyword.PROTECTED)
+            .setReturnType(withIdType)
+            .setJavadocComment("Returns stub for full dto - it's a full dto without any relation fields.")
+            .addParameter(withIdType, argName.nameAsString)
+        val statements = NodeList<Statement>()
 
+        // for each entity add if statement
+        // if (object instanceof EntityFullDto entity) {
+        //     return entityMapper.toSimpleFullDto(entity);
+        // }
+        entitiesMap.values.filter { it.isNotSynthetic() }
+            .forEach { entity ->
+                val entityNameField = entity.name.lowerFirst()
+                val entityType = entity.asType()
+                val condition = InstanceOfExpr(
+                    argName,
+                    entityType,
+                    PatternExpr(NodeList(), entityType, entityNameField.asSimpleName())
+                )
+                val mapperFieldName = entity.getMapperName().lowerFirst()
+                val thenStmt = ReturnStmt(
+                    JavaCallExpressionNode.ofMethodCall("$mapperFieldName.toSimpleFullDto")
+                        .addNameArgument(entityNameField)
+                        .asMethodCallExpr()
+                ).asBlock()
+                statements.add(IfStmt(condition, thenStmt, null))
+            }
 
-    private fun EntityElem.getMapperName(): String = "${name}Mapper"
+        // throw new IllegalArgumentException("Unknown type: " + object.getClass());
+        statements.add(
+            ThrowStmt(
+                ObjectCreationExpr(
+                    null,
+                    ClassOrInterfaceType("IllegalArgumentException"),
+                    NodeList(
+                        BinaryExpr(
+                            StringLiteralExpr("Unknown type: "),
+                            MethodCallExpr(argName, "getClass"),
+                            BinaryExpr.Operator.PLUS
+                        )
+                    )
+                )
+            ))
 
-    private fun EntityElem.getDtoName(): String = "${name}Dto"
+        method.setBody(statements)
+    }
 
-    private fun EntityElem.getFullDtoName(): String = "${name}FullDto"
 
     private companion object {
         val log = LoggerFactory.getLogger(EntityGraphLoaderFeature::class.java)!!

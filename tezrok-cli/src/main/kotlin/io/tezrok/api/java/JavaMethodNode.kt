@@ -27,7 +27,11 @@ open class JavaMethodNode(private val method: MethodDeclaration) {
     }
 
     fun setBody(body: Statement): JavaMethodNode {
-        return setBody(BlockStmt(NodeList(body)))
+        return setBody(NodeList(body))
+    }
+
+    fun setBody(statements: NodeList<Statement>): JavaMethodNode {
+        return setBody(BlockStmt(statements))
     }
 
     fun addParameter(typeName: String, name: String): JavaMethodNode {

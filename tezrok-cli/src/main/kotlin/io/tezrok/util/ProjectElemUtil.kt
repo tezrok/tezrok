@@ -1,5 +1,7 @@
 package io.tezrok.util
 
+import com.github.javaparser.ast.type.ClassOrInterfaceType
+import io.tezrok.api.input.EntityElem
 import io.tezrok.api.input.FieldElem
 
 /**
@@ -55,3 +57,13 @@ object ModelTypes {
     const val DOUBLE = "Double"
     const val DECIMAL = "Decimal"
 }
+
+fun EntityElem.getRepositoryName(): String = "${name}Repository"
+
+fun EntityElem.getMapperName(): String = "${name}Mapper"
+
+fun EntityElem.getDtoName(): String = "${name}Dto"
+
+fun EntityElem.getFullDtoName(): String = "${name}FullDto"
+
+fun EntityElem.asType(): ClassOrInterfaceType = ClassOrInterfaceType(getFullDtoName())

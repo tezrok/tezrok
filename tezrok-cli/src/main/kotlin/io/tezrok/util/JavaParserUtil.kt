@@ -3,10 +3,13 @@ package io.tezrok.util
 import com.github.javaparser.JavaParser
 import com.github.javaparser.ParserConfiguration
 import com.github.javaparser.ast.CompilationUnit
+import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import com.github.javaparser.ast.expr.AssignExpr
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.expr.NameExpr
+import com.github.javaparser.ast.expr.SimpleName
+import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.ast.stmt.ExpressionStmt
 import com.github.javaparser.ast.stmt.Statement
 
@@ -27,11 +30,19 @@ fun Expression.assignStatement(value: Expression, operator: AssignExpr.Operator)
         )
     )
 
-fun Expression.assignToStatement(variable: Expression, operator: AssignExpr.Operator): Statement =
+fun Expression.assignToAsStatement(variable: Expression, operator: AssignExpr.Operator = AssignExpr.Operator.ASSIGN): Statement =
     variable.assignStatement(this, operator)
 
-fun Expression.assignToStatement(name: String, operator: AssignExpr.Operator): Statement =
+fun Expression.assignToAsStatement(name: String, operator: AssignExpr.Operator = AssignExpr.Operator.ASSIGN): Statement =
     NameExpr(name).assignStatement(this, operator)
+
+fun Statement.asBlock(): BlockStmt = BlockStmt(NodeList(this))
+
+fun String.asNameExpr(): NameExpr = NameExpr(this)
+
+fun String.asNameExprList(): NodeList<Expression> = NodeList(NameExpr(this))
+
+fun String.asSimpleName(): SimpleName = SimpleName(this)
 
 object JavaParserFactory {
     fun create(): JavaParser {
