@@ -34,13 +34,13 @@ open class JavaMethodNode(private val method: MethodDeclaration) {
         return setBody(BlockStmt(statements))
     }
 
-    fun addParameter(typeName: String, name: String): JavaMethodNode {
-        method.addParameter(typeName, name)
+    fun addParameter(typeName: String, name: String, isFinal: Boolean = true): JavaMethodNode {
+        method.addAndGetParameter(typeName, name).setFinal(isFinal)
         return this
     }
 
-    fun addParameter(paramClass: Class<*>, name: String): JavaMethodNode {
-        method.addParameter(paramClass, name)
+    fun addParameter(paramClass: Class<*>, name: String, isFinal: Boolean = true): JavaMethodNode {
+        method.addParameter(paramClass, name).setFinal(isFinal)
         return this
     }
 

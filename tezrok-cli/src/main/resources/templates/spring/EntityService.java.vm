@@ -26,7 +26,7 @@ public class ${name}Service {
     @NotNull
     protected final ${name}Mapper ${lname}Mapper;
 
-    public ${name}Service(@NotNull ${name}Repository ${lname}Repository, @NotNull ${name}Mapper ${lname}Mapper) {
+    public ${name}Service(final @NotNull ${name}Repository ${lname}Repository, final @NotNull ${name}Mapper ${lname}Mapper) {
         this.${lname}Repository = ${lname}Repository;
         this.${lname}Mapper = ${lname}Mapper;
     }

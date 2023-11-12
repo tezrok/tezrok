@@ -10,7 +10,7 @@ import org.jooq.DSLContext;
  */
 public class ${name}Repository extends JooqRepository<${name}Record, Long, ${name}Dto> {
 
-    public ${name}Repository(DSLContext dsl) {
+    public ${name}Repository(final DSLContext dsl) {
         super(dsl, Tables.${uname}, Tables.${uname}.${field1}, ${name}Dto.class);
     }
 }

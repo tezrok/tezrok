@@ -14,13 +14,13 @@ open class JavaConstructorNode(private val constructor: ConstructorDeclaration) 
 
     fun getBody(): BlockStmt = constructor.body
 
-    fun addParameter(typeName: String, name: String): JavaConstructorNode {
-        constructor.addParameter(typeName, name)
+    fun addParameter(typeName: String, name: String, isFinal: Boolean = true): JavaConstructorNode {
+        constructor.addAndGetParameter(typeName, name).setFinal(isFinal)
         return this
     }
 
-    fun addParameter(paramClass: Class<*>, name: String): JavaConstructorNode {
-        constructor.addParameter(paramClass, name)
+    fun addParameter(paramClass: Class<*>, name: String, isFinal: Boolean = true): JavaConstructorNode {
+        constructor.addAndGetParameter(paramClass, name).setFinal(isFinal)
         return this
     }
 
