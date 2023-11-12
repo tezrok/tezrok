@@ -46,6 +46,17 @@ fun String.asNameExprList(): NodeList<Expression> = NodeList(NameExpr(this))
 
 fun String.asSimpleName(): SimpleName = SimpleName(this)
 
+fun String.parseAsStatement(): Statement {
+    val parser = JavaParserFactory.create()
+    val result = parser.parseStatement(this)
+
+    if (result.isSuccessful) {
+        return result.result.get()
+    } else {
+        error("Failed to parse statement: $this")
+    }
+}
+
 object JavaParserFactory {
     fun create(): JavaParser {
         val config = ParserConfiguration().setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17)

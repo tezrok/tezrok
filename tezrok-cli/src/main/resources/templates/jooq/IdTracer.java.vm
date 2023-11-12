@@ -1,9 +1,9 @@
 package ${package}.repository;
 
 import com.tezrok.simple.dto.WithId;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
@@ -11,7 +11,9 @@ import java.util.function.UnaryOperator;
 /**
  * Trace used unique object by id and its properties.
  */
+@Slf4j
 public class IdTracer {
+
     private final Object id;
 
     private final Class<?> type;
@@ -107,6 +109,8 @@ public class IdTracer {
         IdTracer tracer = getTracer(key);
         if (tracer.instance == null) {
             tracer.instance = object;
+        } else {
+            log.warn("Object instance already set: {}", key);
         }
     }
 
@@ -292,10 +296,6 @@ public class IdTracer {
 
     @Override
     public String toString() {
-        return "IdTracer{" +
-                "id=" + id +
-                ", type=" + type +
-                ", instance=" + (instance != null ? "yes" : "no") +
-                '}';
+        return "IdTracer{" + "id=" + id + ", type=" + type + ", instance=" + (instance != null ? "yes" : "no") + '}';
     }
 }
