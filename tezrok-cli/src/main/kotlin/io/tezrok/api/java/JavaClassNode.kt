@@ -4,6 +4,7 @@ import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
+import com.github.javaparser.ast.comments.JavadocComment
 import com.github.javaparser.ast.expr.*
 import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.ast.stmt.ExpressionStmt
@@ -238,5 +239,13 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration, private
             .withModifiers(Modifier.Keyword.PUBLIC)
             .setReturnType(field.getType())
             .setBody(ReturnStmt("this.$name"))
+    }
+
+    /**
+     * Adds comment to the class.
+     */
+    fun setJavadocComment(comment: String): JavaClassNode {
+        clazz.setComment(JavadocComment(comment))
+        return this
     }
 }

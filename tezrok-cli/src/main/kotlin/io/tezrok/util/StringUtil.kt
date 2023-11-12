@@ -35,4 +35,9 @@ fun String.camelCaseToSqlUppercase(): String = camelCaseToSnakeCase().uppercase(
  */
 fun String.lowerFirst(): String = replaceFirstChar { it.lowercase() }
 
+/**
+ * Convert first char to upper case
+ */
+fun String.upperFirst(): String = replaceFirstChar { it.uppercase() }
+
 private val camelCaseRegex = Regex("([a-z\\d])([A-Z]+)")

@@ -3,7 +3,6 @@ package io.tezrok.api.input
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.util.*
-import kotlin.collections.LinkedHashMap
 
 /**
  * Represents a model of a project loaded from a tezrok.json file.
@@ -112,6 +111,13 @@ data class EntityElem(
      */
     @JsonIgnore
     fun getPrimaryField(): FieldElem = fields.find { it.primary == true } ?: error("Primary field not found in entity $name")
+
+    /**
+     * Returns all primary and synthetic fields (but not logic ones)
+     */
+    @JsonIgnore
+    fun getIdFields(): List<FieldElem> =
+        fields.filter { field -> field.primary == true || field.logicField != true && field.isSynthetic() }
 
     @JsonIgnore
     fun getPrimaryFieldCount(): Int = fields.count { it.primary == true }

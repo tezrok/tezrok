@@ -74,7 +74,7 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
 
         // implement public load methods
         methods.forEach { (entity, method) ->
-            implementGetFullEntityByIdMethod(method, entity, entitiesMap)
+            implementGetFullEntityByIdMethod(method, entity)
         }
 
         // add loadIdsByEntityIds methods
@@ -84,6 +84,10 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
 
         // add loadAllEntitiesByIds methods
         addLoadAllEntitiesByIdsMethod(clazz, entitiesMap)
+
+        entities.filter { it.isNotSynthetic() }.forEach { entity ->
+            addBuildEntityFullTreeMethod(clazz, entity, entitiesMap)
+        }
     }
 
     /**
@@ -118,8 +122,7 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
 
     private fun implementGetFullEntityByIdMethod(
         method: JavaMethodNode,
-        entity: EntityElem,
-        entitiesMap: Map<String, EntityElem>
+        entity: EntityElem
     ) {
         val statements = NodeList<Statement>()
         val paramName = method.getParameters().map { it.getName() }.first()
@@ -198,9 +201,20 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
                 .apply { setLineComment(" phase 2: load all entities by ids collected during phase 1") }
         )
 
-        // code: buildFullTree(orderFullDto, tracer);
+        // code: buildEntityFullTree(entityFullDto, tracer);
+        statements.add(
+            JavaCallExpressionNode.ofMethodCall(entity.getBuildEntityFullTree())
+                .addNameArgument(dtoFullFieldName)
+                .addNameArgument(tracerFieldName)
+                .asStatement()
+                .apply { setLineComment(" fill entity's fields by already loaded entities") }
+        )
 
-        // TODO: add the rest of the code
+        // code: tracer.clearAll()
+        statements.add(
+            JavaCallExpressionNode.ofMethodCall("$tracerFieldName.clearAll")
+                .asStatement()
+        )
 
         // code: return itemFullDto
         statements.add(ReturnStmt(dtoFullFieldName))
@@ -292,12 +306,42 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
         entity: EntityElem,
         entitiesMap: Map<String, EntityElem>
     ) {
+        val statements = NodeList<Statement>()
         val idsParamName = entity.name.lowerFirst() + "Ids"
         val method = clazz.addMethod(entity.getLoadIdsByEntityIdsMethodName())
             .withModifiers(Modifier.Keyword.PROTECTED)
             .addParameter("Collection<Long>", idsParamName)
             .addParameter("IdTracer", "tracer")
             .setJavadocComment("Load inner ids by ids of {@link ${entity.name}Dto}.")
+
+        // code:  if (entityIds.isEmpty()) { return; }
+        statements.add(
+            IfStmt(
+                UnaryExpr(
+                    JavaCallExpressionNode.ofMethodCall("$idsParamName.isEmpty")
+                        .asMethodCallExpr(), UnaryExpr.Operator.LOGICAL_COMPLEMENT
+                ),
+                ReturnStmt().asBlock(),
+                null
+            )
+        )
+
+        // code: tracer.markIdsAsLoaded(EntityFullDto.class, entityIds);
+        val fullDtoName = entity.getFullDtoName()
+        statements.add(
+            JavaCallExpressionNode.ofMethodCall("tracer.markIdsAsLoaded")
+                .addNameArgument("$fullDtoName.class")
+                .addNameArgument(idsParamName)
+                .asStatement()
+        )
+
+        val idFields = entity.getIdFields()
+        if (idFields.size > 1) {
+            // TODO: !!!!
+        }
+
+
+        method.setBody(statements)
     }
 
     private fun addLoadAllEntitiesByIdsMethod(
@@ -327,9 +371,9 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
                     .addNameArgument("$fullDtoName.class")
                     .assignToAsStatement(allEntityIdsField)
             )
-            // code:   if (!allOrderIds.isEmpty()) {
-            //            orderRepository.findAllById(allOrderIds).stream()
-            //                    .map(orderMapper::toOrderFullDto)
+            // code:   if (!allEntityIds.isEmpty()) {
+            //            entityRepository.findAllById(allEntityIds).stream()
+            //                    .map(entityMapper::toEntityFullDto)
             //                    .forEach(tracer::setObjectInstance);
             //        }
             val repositoryFieldName = entity.getRepositoryName().lowerFirst()
@@ -346,11 +390,29 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
         method.setBody(statements)
     }
 
+    private fun addBuildEntityFullTreeMethod(
+        clazz: JavaClassNode,
+        entity: EntityElem,
+        entitiesMap: Map<String, EntityElem>
+    ) {
+        val fullDtoName = entity.getFullDtoName()
+        val tracerFieldName = "tracer"
+        val method = clazz.addMethod(entity.getBuildEntityFullTree())
+            .withModifiers(Modifier.Keyword.PROTECTED)
+            .addParameter(fullDtoName, fullDtoName.lowerFirst())
+            .addParameter("IdTracer", tracerFieldName)
+            .setJavadocComment("Fill {@link $fullDtoName}'s fields by already loaded entities.")
+
+        // TODO: !!!!
+    }
+
     private fun validateSinglePrimary(entity: EntityElem) {
         check(entity.getPrimaryFieldCount() == 1) { "Entity ${entity.name} expected have exactly one primary field" }
     }
 
     private fun EntityElem.getLoadIdsByEntityIdsMethodName(): String = "loadIdsBy${name}Ids"
+
+    private fun EntityElem.getBuildEntityFullTree(): String = "build${name}FullTree"
 
     private companion object {
         val log = LoggerFactory.getLogger(EntityGraphLoaderFeature::class.java)!!

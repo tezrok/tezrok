@@ -67,3 +67,12 @@ fun EntityElem.getDtoName(): String = "${name}Dto"
 fun EntityElem.getFullDtoName(): String = "${name}FullDto"
 
 fun EntityElem.asType(): ClassOrInterfaceType = ClassOrInterfaceType(getFullDtoName())
+
+/**
+ * Make method name to `findAllIdFieldsByPrimaryIdIn(Collection<ID> ids, Class<T> type)`
+ */
+fun EntityElem.getFindAllIdFieldsByPrimaryIdInMethodName(): String {
+    val allIds = getIdFields().joinToString("") { it.name.upperFirst() }
+
+    return "find${allIds}By${getPrimaryField().name.upperFirst()}In"
+}

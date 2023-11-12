@@ -187,6 +187,8 @@ internal class JooqRepositoryFeature : TezrokFeature {
         val className = "${name}FullDto"
         if (!dtoDir.hasFile("$className.java")) {
             val dtoClass = dtoDir.addClass(className)
+                .setJavadocComment("Full dto (with all logic fields) for {@link ${name}Dto} entity.")
+                .addImportBySimpleName("${name}Dto")
             dtoClass.implementInterface(Serializable::class.java)
             val addedFields = mutableSetOf<JavaFieldNode>()
             entity.fields.filter { it.isNotSynthetic() }.forEach { field ->
