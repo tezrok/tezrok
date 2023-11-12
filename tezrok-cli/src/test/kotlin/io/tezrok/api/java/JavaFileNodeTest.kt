@@ -30,7 +30,7 @@ class JavaFileNodeTest {
         assertEquals(
             """public class MainApp {
 
-    protected int main(String[] args) {
+    protected int main(final String[] args) {
     }
 }
 """, javaFile.asString()

@@ -154,7 +154,9 @@ data class FieldElem(
     val logicField: Boolean? = null,
     // true if field is synthetic and contains reference to another entity
     val syntheticTo: String? = null,
-    val relation: EntityRelation? = null
+    val relation: EntityRelation? = null,
+    // if true, then this field is synthetic and needed by other entity (field is added by user)
+    val external: Boolean? = null
 ) {
     init {
         check(name.isNotBlank()) { "Field name cannot be blank" }

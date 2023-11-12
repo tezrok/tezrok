@@ -10,7 +10,9 @@ import com.github.javaparser.ast.stmt.ThrowStmt
 import com.github.javaparser.ast.type.ClassOrInterfaceType
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
+import io.tezrok.api.input.EntitiesMap
 import io.tezrok.api.input.EntityElem
+import io.tezrok.api.input.EntityRelation
 import io.tezrok.api.java.*
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.*
@@ -69,7 +71,7 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
         }
 
         // add getStub method
-        val entitiesMap = entities.associateBy { it.name }
+        val entitiesMap = EntitiesMap.from(entities)
         addGetStubMethod(clazz, entitiesMap)
 
         // implement public load methods
@@ -248,7 +250,7 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
         context.writeTemplate(idTracerFile, "/templates/jooq/IdTracer.java.vm", values)
     }
 
-    private fun addGetStubMethod(clazz: JavaClassNode, entitiesMap: Map<String, EntityElem>) {
+    private fun addGetStubMethod(clazz: JavaClassNode, entitiesMap: EntitiesMap) {
         val withIdType = "WithId<?>"
         val argName = NameExpr("object")
         val method = clazz.addImportBySimpleName("WithId")
@@ -263,7 +265,7 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
         // if (object instanceof EntityFullDto entity) {
         //     return entityMapper.toSimpleFullDto(entity);
         // }
-        entitiesMap.values.filter { it.isNotSynthetic() }
+        entitiesMap.entities.filter { it.isNotSynthetic() }
             .forEach { entity ->
                 val entityNameField = entity.name.lowerFirst()
                 val entityType = entity.asType()
@@ -304,13 +306,13 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
     private fun addLoadIdsByEntityIdsMethod(
         clazz: JavaClassNode,
         entity: EntityElem,
-        entitiesMap: Map<String, EntityElem>
+        entitiesMap: EntitiesMap
     ) {
         val statements = NodeList<Statement>()
-        val idsParamName = entity.name.lowerFirst() + "Ids"
+        val entityIdsParam = entity.name.lowerFirst() + "Ids"
         val method = clazz.addMethod(entity.getLoadIdsByEntityIdsMethodName())
             .withModifiers(Modifier.Keyword.PROTECTED)
-            .addParameter("Collection<Long>", idsParamName)
+            .addParameter("Collection<Long>", entityIdsParam)
             .addParameter("IdTracer", "tracer")
             .setJavadocComment("Load inner ids by ids of {@link ${entity.name}Dto}.")
 
@@ -318,7 +320,7 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
         statements.add(
             IfStmt(
                 UnaryExpr(
-                    JavaCallExpressionNode.ofMethodCall("$idsParamName.isEmpty")
+                    JavaCallExpressionNode.ofMethodCall("$entityIdsParam.isEmpty")
                         .asMethodCallExpr(), UnaryExpr.Operator.LOGICAL_COMPLEMENT
                 ),
                 ReturnStmt().asBlock(),
@@ -331,22 +333,76 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
         statements.add(
             JavaCallExpressionNode.ofMethodCall("tracer.markIdsAsLoaded")
                 .addNameArgument("$fullDtoName.class")
-                .addNameArgument(idsParamName)
+                .addNameArgument(entityIdsParam)
                 .asStatement()
         )
 
-        val idFields = entity.getIdFields()
+        //  code: entityRepository.findAllIdFieldsByPrimaryIdIn(entityIds, EntityDto.class)
+        //         .forEach(entity -> {
+        //            IdTracer entityObject = tracer.lookup(EntityFullDto.class, entity.getId());
+        //            entityObject.setProperty("selectedItem", ItemFullDto.class, entity.getSelectedItemId());
+        //            entityObject.setProperty("nextEntity", EntityFullDto.class, entity.getNextEntityId());
+        //         });
+        val entityFieldName = entity.name.lowerFirst()
+        // if entity referred by OneToMany relation (field.external == true) we should skip such field
+        val idFields = entity.getIdFields().filter { field -> field.external != true }
         if (idFields.size > 1) {
-            // TODO: !!!!
+            val entityDtoName = entity.getDtoName()
+            val repositoryFieldName = entity.getRepositoryName().lowerFirst()
+            val builder =
+                StringBuilder("// TODO: use special dto for this purpose instead of $entityDtoName")
+            builder.append(NEWLINE)
+            builder.append("IdTracer ${entityFieldName}Object = tracer.lookup(${fullDtoName}.class, ${entityFieldName}.getId());")
+            idFields.filter { it.primary != true }.forEach { field ->
+                builder.append(NEWLINE)
+                val getterName = field.getGetterName()
+                val refField = entitiesMap.getRefField(field)
+                val refEntity = entitiesMap.getEntity(refField.type!!)
+                builder.append("${entityFieldName}Object.setProperty(\"${refField.name}\", ${refEntity.name}FullDto.class, ${entityFieldName}.$getterName());")
+            }
+            val methodName = entity.getFindAllIdFieldsByPrimaryIdIn()
+            statements.add(
+                """${repositoryFieldName}.$methodName($entityIdsParam, ${entityDtoName}.class)
+                    .forEach(${entityFieldName} -> {
+                        $builder
+                    });
+                """.parseAsStatement()
+                    .apply { setLineComment(" load all inner ids inside Order by order ids") }
+            )
         }
 
+        // OneToMany relation fields
+        entity.fields.filter { field -> field.relation == EntityRelation.OneToMany }
+            .forEach { field ->
+                // code: itemRepository.findIdItemsOrderIdByItemsOrderIdIn(orderIds, ItemDto.class).stream()
+                //       .collect(groupingBy(ItemDto::getItemsOrderId))
+                //       .forEach((itemsOrderId, list) -> {
+                //           IdTracer orderObject = tracer.lookup(OrderFullDto.class, itemsOrderId);
+                //           List<Long> ids = list.stream().map(ItemDto::getId).toList();
+                //           orderObject.setListProperty("items", ItemFullDto.class, ids);
+                //       });
+                val refEntity = entitiesMap.getEntity(field.type!!)
+                val refEntityRepository = refEntity.getRepositoryName().lowerFirst()
+                val refFullDtoName = refEntity.getFullDtoName()
+                val refDtoName = refEntity.getDtoName()
+                statements.add(
+                    """$refEntityRepository.findIdItemsOrderIdByItemsOrderIdIn($entityIdsParam, $refDtoName.class).stream()
+                        .collect(groupingBy($refDtoName::getItemsOrderId))
+                        .forEach((itemsOrderId, list) -> {
+                            IdTracer orderObject = tracer.lookup(OrderFullDto.class, itemsOrderId);
+                            List<Long> ids = list.stream().map(ItemDto::getId).toList();
+                            orderObject.setListProperty("items", ItemFullDto.class, ids);
+                        });""".parseAsStatement()
+                        .apply { setLineComment(" property \"${field.name}\" - with OneToMany relation refers to list of $refFullDtoName") }
+                )
+            }
 
         method.setBody(statements)
     }
 
     private fun addLoadAllEntitiesByIdsMethod(
         clazz: JavaClassNode,
-        entitiesMap: Map<String, EntityElem>
+        entitiesMap: EntitiesMap
     ) {
         val statements = NodeList<Statement>()
         val tracerFieldName = "tracer"
@@ -355,7 +411,7 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
             .addParameter("IdTracer", tracerFieldName)
             .setJavadocComment("Loads all entities by ids collected by {@link IdTracer}.")
 
-        entitiesMap.values.filter { it.isNotSynthetic() }.forEach { entity ->
+        entitiesMap.entities.filter { it.isNotSynthetic() }.forEach { entity ->
             val name = entity.name
             val fullDtoName = "${name}FullDto"
 
@@ -373,8 +429,8 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
             )
             // code:   if (!allEntityIds.isEmpty()) {
             //            entityRepository.findAllById(allEntityIds).stream()
-            //                    .map(entityMapper::toEntityFullDto)
-            //                    .forEach(tracer::setObjectInstance);
+            //                .map(entityMapper::toEntityFullDto)
+            //                .forEach(tracer::setObjectInstance);
             //        }
             val repositoryFieldName = entity.getRepositoryName().lowerFirst()
             val mapperFieldName = entity.getMapperName().lowerFirst()
@@ -393,7 +449,7 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
     private fun addBuildEntityFullTreeMethod(
         clazz: JavaClassNode,
         entity: EntityElem,
-        entitiesMap: Map<String, EntityElem>
+        entitiesMap: EntitiesMap
     ) {
         val fullDtoName = entity.getFullDtoName()
         val tracerFieldName = "tracer"
@@ -416,6 +472,7 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
 
     private companion object {
         val log = LoggerFactory.getLogger(EntityGraphLoaderFeature::class.java)!!
+        val NEWLINE = System.lineSeparator()
         const val LOAD_ALL_ENTITIES_BY_IDS = "loadAllEntitiesByIds"
     }
 }

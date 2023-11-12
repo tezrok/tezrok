@@ -211,6 +211,7 @@ internal class ProjectElemRepository {
                         syntheticTo = fullFieldName,
                         foreignField = "${sourceEntity.name}.${sourcePrimaryField.name}",
                         description = "Synthetic field for \"$fullFieldName\"",
+                        external = true,
                         relation = null
                     )
                     syntheticFields.add(targetEntity.name to syntheticField)

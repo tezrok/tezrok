@@ -46,6 +46,8 @@ fun FieldElem.isBaseType(): Boolean {
     }
 }
 
+fun FieldElem.getGetterName() = "get${name.upperFirst()}"
+
 object ModelTypes {
     const val STRING = "String"
     const val INTEGER = "Integer"
@@ -71,7 +73,7 @@ fun EntityElem.asType(): ClassOrInterfaceType = ClassOrInterfaceType(getFullDtoN
 /**
  * Make method name to `findAllIdFieldsByPrimaryIdIn(Collection<ID> ids, Class<T> type)`
  */
-fun EntityElem.getFindAllIdFieldsByPrimaryIdInMethodName(): String {
+fun EntityElem.getFindAllIdFieldsByPrimaryIdIn(): String {
     val allIds = getIdFields().joinToString("") { it.name.upperFirst() }
 
     return "find${allIds}By${getPrimaryField().name.upperFirst()}In"

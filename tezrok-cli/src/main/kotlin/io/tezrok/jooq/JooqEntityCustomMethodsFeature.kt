@@ -5,7 +5,7 @@ import io.tezrok.api.ProcessModelPhase
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.*
 import io.tezrok.api.maven.ProjectNode
-import io.tezrok.util.getFindAllIdFieldsByPrimaryIdInMethodName
+import io.tezrok.util.getFindAllIdFieldsByPrimaryIdIn
 import org.slf4j.LoggerFactory
 
 /**
@@ -86,7 +86,7 @@ internal class JooqEntityCustomMethodsFeature : TezrokFeature {
             if (idFields.value.size > 1) {
                 val entity = entities[entity.name] ?: error("Entity ${entity.name} not found")
                 val allIdsJavaDoc = entity.getIdFields().joinToString(", ") { it.name }
-                val methodName = entity.getFindAllIdFieldsByPrimaryIdInMethodName()
+                val methodName = entity.getFindAllIdFieldsByPrimaryIdIn()
                 entities[entity.name] = entity.withCustomMethods(methodName)
                     .withCustomComments(methodName to "Returns ID fields ($allIdsJavaDoc) of {@link ${entity.name}Dto} into custom class.")
             }
