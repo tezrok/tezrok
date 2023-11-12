@@ -1,7 +1,14 @@
 package io.tezrok.api.input
 
-data class EntitiesMap(val entities: List<EntityElem>) {
-    private val entitiesMap = entities.associateBy { it.name }
+import io.tezrok.util.upperFirst
+
+/**
+ * Encapsulates entities list and provides convenient access and modification methods.
+ */
+data class EntitiesMap(private val entitiesIn: List<EntityElem>) {
+    private val entitiesMap = entitiesIn.associateBy { it.name }.toMutableMap()
+
+    val entities: List<EntityElem> get() = entitiesMap.values.toList()
 
     fun getRefField(field: FieldElem): FieldElem {
         if (field.logicField == true) {
@@ -18,9 +25,97 @@ data class EntitiesMap(val entities: List<EntityElem>) {
         return refEntity.getField(parts[1])
     }
 
-    fun getEntity(name: String): EntityElem = entitiesMap[name] ?: error("Entity not found: $name")
+    fun getSyntheticField(entity: EntityElem, field: FieldElem): FieldElem {
+        val refEntity = this[field.type!!]
+        val syntheticTo = entity.name + "." + field.name
+        return refEntity.fields.find { it.syntheticTo == syntheticTo }
+            ?: error("Synthetic field $syntheticTo not found")
+    }
+
+    fun getMethodByField(entity: EntityElem, field: FieldElem, vararg types: ManyToManyMethod): Map<String, String> {
+        check(entity.getPrimaryFieldCount() == 1) { "Entity ${entity.name} expected have exactly one primary field" }
+
+        val primaryField = entity.getPrimaryField()
+        val refEntity = this[field.type!!]
+        val primaryFieldName = entity.name.upperFirst() + primaryField.name.upperFirst()
+        val result = mutableMapOf<String, String>()
+        val methodName = "find${entity.name}" + field.name.upperFirst() + "By${primaryFieldName}"
+
+        types.forEach { type ->
+            when (type) {
+                ManyToManyMethod.FindRefEntitiesByPrimaryField -> {
+                    result[methodName] =
+                        "Returns list of {@link ${refEntity.name}Dto} by primary field to support ManyToMany relation for field {@link ${entity.name}FullDto#${field.name}}."
+                }
+
+                ManyToManyMethod.FindRefEntitiesByPrimaryFieldIn -> {
+                    result[methodName + "In"] =
+                        "Returns list of {@link ${refEntity.name}Dto} by primary fields to support ManyToMany relation for field {@link ${entity.name}FullDto#${field.name}}."
+                }
+            }
+        }
+
+        return result
+    }
+
+    /**
+     * Returns map of method name to JavaDoc related to OneToMany relation.
+     */
+    fun getMethodByField(entity: EntityElem, field: FieldElem, vararg types: OneToManyMethod): Map<String, String> {
+        val refEntity = this[field.type!!]
+        val syntheticFieldName = getSyntheticField(entity, field).name.upperFirst()
+        val toSupport = "to support OneToMany relation for field {@link ${entity.name}FullDto#${field.name}}"
+        val result = mutableMapOf<String, String>()
+
+        types.forEach { type ->
+            when (type) {
+                OneToManyMethod.FindEntitiesByRefSyntheticField -> {
+                    val methodName =
+                        "find${entity.name}${field.name.upperFirst()}By${refEntity.name}${syntheticFieldName}"
+                    result[methodName] = "Returns list of {@link ${refEntity.name}Dto} $toSupport."
+                }
+
+                OneToManyMethod.FindRefPrimaryFieldByRefSyntheticField -> {
+                    val refPrimaryField = refEntity.getPrimaryField()
+                    val methodName = "find${refPrimaryField.name.upperFirst()}By$syntheticFieldName"
+                    result[methodName] = "Returns list of primary field of {@link ${refEntity.name}Dto} $toSupport."
+                }
+
+                OneToManyMethod.FindRefIdFieldsByRefSyntheticField -> {
+                    val refEntityIdFields = refEntity.getIdFields()
+                    val allIds = refEntityIdFields.joinToString("") { it.name.upperFirst() }
+                    val allIdsJavaDoc = refEntityIdFields.joinToString(", ") { it.name }
+                    val methodName = "find${allIds}By${syntheticFieldName}In"
+                    result[methodName] =
+                        "Returns specified fields ($allIdsJavaDoc) of {@link ${refEntity.name}Dto} into custom class $toSupport"
+                }
+            }
+        }
+
+        return result
+    }
+
+    operator fun get(name: String): EntityElem = entitiesMap[name] ?: error("Entity not found: $name")
+
+    operator fun set(name: String, value: EntityElem) {
+        entitiesMap[name] = value
+    }
 
     companion object {
         fun from(entities: List<EntityElem>) = EntitiesMap(entities)
     }
+}
+
+enum class OneToManyMethod {
+    FindEntitiesByRefSyntheticField,
+
+    FindRefPrimaryFieldByRefSyntheticField,
+
+    FindRefIdFieldsByRefSyntheticField
+}
+
+enum class ManyToManyMethod {
+    FindRefEntitiesByPrimaryField,
+
+    FindRefEntitiesByPrimaryFieldIn
 }

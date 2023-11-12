@@ -357,7 +357,7 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
                 builder.append(NEWLINE)
                 val getterName = field.getGetterName()
                 val refField = entitiesMap.getRefField(field)
-                val refEntity = entitiesMap.getEntity(refField.type!!)
+                val refEntity = entitiesMap[refField.type!!]
                 builder.append("${entityFieldName}Object.setProperty(\"${refField.name}\", ${refEntity.name}FullDto.class, ${entityFieldName}.$getterName());")
             }
             val methodName = entity.getFindAllIdFieldsByPrimaryIdIn()
@@ -381,7 +381,7 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
                 //           List<Long> ids = list.stream().map(ItemDto::getId).toList();
                 //           orderObject.setListProperty("items", ItemFullDto.class, ids);
                 //       });
-                val refEntity = entitiesMap.getEntity(field.type!!)
+                val refEntity = entitiesMap[field.type!!]
                 val refEntityRepository = refEntity.getRepositoryName().lowerFirst()
                 val refFullDtoName = refEntity.getFullDtoName()
                 val refDtoName = refEntity.getDtoName()

@@ -32,60 +32,51 @@ internal class JooqEntityCustomMethodsFeature : TezrokFeature {
 
     private fun processModule(module: ModuleElem): ModuleElem {
         val schema = module.schema ?: SchemaElem()
-        val entities = (schema.entities ?: emptyList()).associateBy { it.name }.toMutableMap()
-        entities.values.forEach { entity -> processEntity(entity, entities) }
+        val entities = EntitiesMap.from(schema.entities ?: emptyList())
+        entities.entities.forEach { entity -> processEntity(entity, entities) }
 
-        return module.copy(schema = schema.copy(entities = entities.values.toList()))
+        return module.copy(schema = schema.copy(entities = entities.entities))
     }
 
     /**
      * Add custom methods by entity relations.
      */
-    private fun processEntity(entity: EntityElem, entities: MutableMap<String, EntityElem>) {
-        val primaryField = lazy {
-            val primaryFields = entity.fields.filter { it.primary == true }
-            check(primaryFields.size == 1) { "Entity ${entity.name} expected have exactly one primary field" }
-            primaryFields[0]
-        }
-        val idFields = lazy { entity.getIdFields() }
-
+    private fun processEntity(entity: EntityElem, entities: EntitiesMap) {
         for (field in entity.fields.filter { it.relation == EntityRelation.ManyToMany }) {
-            val refEntity = entities[field.type] ?: error("Entity ${field.type} not found")
-            val primaryFieldName = entity.name.capitalize() + primaryField.value.name.capitalize()
-            val methodName = "find${entity.name}" + field.name.capitalize() + "By${primaryFieldName}"
-            val methodName2 = "find${entity.name}" + field.name.capitalize() + "By${primaryFieldName}In"
-            entities[refEntity.name] = refEntity.withCustomMethods(methodName, methodName2)
-                .withCustomComments(methodName to "Returns list of {@link ${refEntity.name}Dto} to support ManyToMany relation for field {@link ${entity.name}FullDto#${field.name}}.",
-                    methodName2 to "Returns list of primary field of {@link ${refEntity.name}Dto} to support ManyToMany relation for field {@link ${entity.name}FullDto#${field.name}}.")
+            val refEntity = entities[field.type!!]
+            val methods = entities.getMethodByField(
+                entity,
+                field,
+                ManyToManyMethod.FindRefEntitiesByPrimaryField,
+                ManyToManyMethod.FindRefEntitiesByPrimaryFieldIn
+            )
+            entities[refEntity.name] = refEntity
+                .withCustomMethods(*methods.keys.toTypedArray())
+                .withCustomComments(*methods.map { it.key to it.value }.toTypedArray())
         }
 
         for (field in entity.fields.filter { it.relation == EntityRelation.OneToMany }) {
             // TODO: add index for foreign key!!!
-            val refEntity = entities[field.type] ?: error("Entity ${field.type} not found")
-            val syntheticTo = entity.name + "." + field.name
-            val syntheticField = refEntity.fields.find { it.syntheticTo == syntheticTo }
-                ?: error("Synthetic field $syntheticTo not found")
-            val syntheticFieldName = syntheticField.name?.capitalize()
-            val methodName = "find${entity.name}${field.name.capitalize()}By${refEntity.name}${syntheticFieldName}"
-            val refPrimaryField = refEntity.getPrimaryField()
-            val refEntityIdFields = refEntity.getIdFields()
-            val allIds = refEntityIdFields.joinToString("") { it.name.capitalize() }
-            val allIdsJavaDoc = refEntityIdFields.joinToString(", ") { it.name }
-            val methodName2 = "find${refPrimaryField.name.capitalize()}By$syntheticFieldName"
-            val methodName3 = "find${allIds}By${syntheticFieldName}In"
-            val toSupport = "to support OneToMany relation for field {@link ${entity.name}FullDto#${field.name}}"
-            entities[refEntity.name] = refEntity.withCustomMethods(methodName, methodName2, methodName3)
-                .withCustomComments(methodName to "Returns list of {@link ${refEntity.name}Dto} $toSupport.",
-                    methodName2 to "Returns list of primary field of {@link ${refEntity.name}Dto} $toSupport.",
-                    methodName3 to "Returns specified fields ($allIdsJavaDoc) of {@link ${refEntity.name}Dto} into custom class $toSupport")
+            val refEntity = entities[field.type!!]
+            val methods = entities.getMethodByField(
+                entity,
+                field,
+                OneToManyMethod.FindEntitiesByRefSyntheticField,
+                OneToManyMethod.FindRefPrimaryFieldByRefSyntheticField,
+                OneToManyMethod.FindRefIdFieldsByRefSyntheticField
+            )
+            entities[refEntity.name] = refEntity
+                .withCustomMethods(*methods.keys.toTypedArray())
+                .withCustomComments(*methods.map { it.key to it.value }.toTypedArray())
         }
 
         if (entity.isNotSynthetic()) {
             // make helper methods for EntityGraphLoader
             // findAllIdsByPrimaryIdIn(Collection<ID> ids, Class<T> type)
-            if (idFields.value.size > 1) {
-                val entity = entities[entity.name] ?: error("Entity ${entity.name} not found")
-                val allIdsJavaDoc = entity.getIdFields().joinToString(", ") { it.name }
+            val idFields = entity.getIdFields()
+            if (idFields.size > 1) {
+                val entity = entities[entity.name]
+                val allIdsJavaDoc = idFields.joinToString(", ") { it.name }
                 val methodName = entity.getFindAllIdFieldsByPrimaryIdIn()
                 entities[entity.name] = entity.withCustomMethods(methodName)
                     .withCustomComments(methodName to "Returns ID fields ($allIdsJavaDoc) of {@link ${entity.name}Dto} into custom class.")
