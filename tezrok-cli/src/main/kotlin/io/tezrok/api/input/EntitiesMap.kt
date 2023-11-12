@@ -81,7 +81,7 @@ data class EntitiesMap(private val entitiesIn: List<EntityElem>) {
                     result[methodName] = "Returns list of primary field of {@link ${refEntity.name}Dto} $toSupport."
                 }
 
-                OneToManyMethod.FindRefIdFieldsByRefSyntheticField -> {
+                OneToManyMethod.FindRefIdFieldsByRefSyntheticFields -> {
                     val refEntityIdFields = refEntity.getIdFields()
                     val allIds = refEntityIdFields.joinToString("") { it.name.upperFirst() }
                     val allIdsJavaDoc = refEntityIdFields.joinToString(", ") { it.name }
@@ -111,7 +111,7 @@ enum class OneToManyMethod {
 
     FindRefPrimaryFieldByRefSyntheticField,
 
-    FindRefIdFieldsByRefSyntheticField
+    FindRefIdFieldsByRefSyntheticFields
 }
 
 enum class ManyToManyMethod {

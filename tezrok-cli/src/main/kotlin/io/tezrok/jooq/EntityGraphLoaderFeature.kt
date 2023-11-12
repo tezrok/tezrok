@@ -13,6 +13,7 @@ import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.EntitiesMap
 import io.tezrok.api.input.EntityElem
 import io.tezrok.api.input.EntityRelation
+import io.tezrok.api.input.OneToManyMethod
 import io.tezrok.api.java.*
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.*
@@ -385,13 +386,21 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
                 val refEntityRepository = refEntity.getRepositoryName().lowerFirst()
                 val refFullDtoName = refEntity.getFullDtoName()
                 val refDtoName = refEntity.getDtoName()
+                val refPrimaryFieldType = refEntity.getPrimaryField().type!!
+                val refFieldName = entitiesMap.getSyntheticField(entity, field).getGetterName()
+                val methodName = entitiesMap.getMethodByField(
+                    entity,
+                    field,
+                    OneToManyMethod.FindRefIdFieldsByRefSyntheticFields
+                ).keys.first()
                 statements.add(
-                    """$refEntityRepository.findIdItemsOrderIdByItemsOrderIdIn($entityIdsParam, $refDtoName.class).stream()
-                        .collect(groupingBy($refDtoName::getItemsOrderId))
+                    """$refEntityRepository.$methodName($entityIdsParam, $refDtoName.class).stream()
+                        .collect(groupingBy($refDtoName::$refFieldName))
                         .forEach((itemsOrderId, list) -> {
-                            IdTracer orderObject = tracer.lookup(OrderFullDto.class, itemsOrderId);
-                            List<Long> ids = list.stream().map(ItemDto::getId).toList();
-                            orderObject.setListProperty("items", ItemFullDto.class, ids);
+                            // TODO: replace with special dto for this purpose instead of $refDtoName
+                            IdTracer ${entityFieldName}Object = tracer.lookup($fullDtoName.class, itemsOrderId);
+                            List<$refPrimaryFieldType> ids = list.stream().map($refDtoName::getId).toList();
+                            orderObject.setListProperty("items", $refFullDtoName.class, ids);
                         });""".parseAsStatement()
                         .apply { setLineComment(" property \"${field.name}\" - with OneToMany relation refers to list of $refFullDtoName") }
                 )

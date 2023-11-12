@@ -63,7 +63,7 @@ internal class JooqEntityCustomMethodsFeature : TezrokFeature {
                 field,
                 OneToManyMethod.FindEntitiesByRefSyntheticField,
                 OneToManyMethod.FindRefPrimaryFieldByRefSyntheticField,
-                OneToManyMethod.FindRefIdFieldsByRefSyntheticField
+                OneToManyMethod.FindRefIdFieldsByRefSyntheticFields
             )
             entities[refEntity.name] = refEntity
                 .withCustomMethods(*methods.keys.toTypedArray())
