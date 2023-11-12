@@ -95,6 +95,15 @@ data class EntitiesMap(private val entitiesIn: List<EntityElem>) {
         return result
     }
 
+    fun getRelationRepository(entity: EntityElem, field: FieldElem): String =
+        getRelationEntity(entity, field).name + "Repository"
+
+    fun getRelationEntity(entity: EntityElem, field: FieldElem): EntityElem {
+        val fieldRefName = "${entity.name}.${field.name}"
+        return entitiesMap.values.find { it.syntheticTo == fieldRefName }
+            ?: error("Relation entity not found for field $fieldRefName")
+    }
+
     operator fun get(name: String): EntityElem = entitiesMap[name] ?: error("Entity not found: $name")
 
     operator fun set(name: String, value: EntityElem) {

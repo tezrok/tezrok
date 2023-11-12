@@ -20,6 +20,7 @@ import io.tezrok.util.*
 import org.jetbrains.annotations.Nullable
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.util.stream.Collectors
 
 /**
  * Create IdTracer and EntityGraphLoader classes.
@@ -57,6 +58,7 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
             .addImport(Collection::class.java)
             .addImport(List::class.java)
             .addImport(Set::class.java)
+            .addImport(Collectors::class.java)
 
         // add fields which are initialized in constructor
         val fields = mutableListOf<JavaFieldNode>()
@@ -310,12 +312,16 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
         entitiesMap: EntitiesMap
     ) {
         val statements = NodeList<Statement>()
-        val entityIdsParam = entity.name.lowerFirst() + "Ids"
+        val entityDtoName = entity.getDtoName()
+        val entityName = entity.name
+        val entityFieldName = entityName.lowerFirst()
+        val entityIdsParam = entityName.lowerFirst() + "Ids"
+        val primaryFieldType = entity.getPrimaryField().asJavaType()
         val method = clazz.addMethod(entity.getLoadIdsByEntityIdsMethodName())
             .withModifiers(Modifier.Keyword.PROTECTED)
-            .addParameter("Collection<Long>", entityIdsParam)
+            .addParameter("Collection<$primaryFieldType>", entityIdsParam)
             .addParameter("IdTracer", "tracer")
-            .setJavadocComment("Load inner ids by ids of {@link ${entity.name}Dto}.")
+            .setJavadocComment("Load inner ids by ids of {@link ${entityDtoName}}.")
 
         // code:  if (entityIds.isEmpty()) { return; }
         statements.add(
@@ -344,11 +350,9 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
         //            entityObject.setProperty("selectedItem", ItemFullDto.class, entity.getSelectedItemId());
         //            entityObject.setProperty("nextEntity", EntityFullDto.class, entity.getNextEntityId());
         //         });
-        val entityFieldName = entity.name.lowerFirst()
         // if entity referred by OneToMany relation (field.external == true) we should skip such field
         val idFields = entity.getIdFields().filter { field -> field.external != true }
         if (idFields.size > 1) {
-            val entityDtoName = entity.getDtoName()
             val repositoryFieldName = entity.getRepositoryName().lowerFirst()
             val builder =
                 StringBuilder("// TODO: use special dto for this purpose instead of $entityDtoName")
@@ -375,10 +379,10 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
         // OneToMany relation fields
         entity.fields.filter { field -> field.relation == EntityRelation.OneToMany }
             .forEach { field ->
-                // code: itemRepository.findIdItemsOrderIdByItemsOrderIdIn(orderIds, ItemDto.class).stream()
-                //       .collect(groupingBy(ItemDto::getItemsOrderId))
-                //       .forEach((itemsOrderId, list) -> {
-                //           IdTracer orderObject = tracer.lookup(OrderFullDto.class, itemsOrderId);
+                // code: itemRepository.findIdItemsEntityIdByItemsEntityIdIn(orderIds, ItemDto.class).stream()
+                //       .collect(groupingBy(ItemDto::getItemsEntityId))
+                //       .forEach((itemsEntityId, list) -> {
+                //           IdTracer orderObject = tracer.lookup(EntityFullDto.class, itemsEntityId);
                 //           List<Long> ids = list.stream().map(ItemDto::getId).toList();
                 //           orderObject.setListProperty("items", ItemFullDto.class, ids);
                 //       });
@@ -387,7 +391,9 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
                 val refFullDtoName = refEntity.getFullDtoName()
                 val refDtoName = refEntity.getDtoName()
                 val refPrimaryFieldType = refEntity.getPrimaryField().type!!
-                val refFieldName = entitiesMap.getSyntheticField(entity, field).getGetterName()
+                val syntheticField = entitiesMap.getSyntheticField(entity, field)
+                val syntheticFieldName = syntheticField.name
+                val refFieldNameGetter = syntheticField.getGetterName()
                 val methodName = entitiesMap.getMethodByField(
                     entity,
                     field,
@@ -395,14 +401,43 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
                 ).keys.first()
                 statements.add(
                     """$refEntityRepository.$methodName($entityIdsParam, $refDtoName.class).stream()
-                        .collect(groupingBy($refDtoName::$refFieldName))
-                        .forEach((itemsOrderId, list) -> {
+                        .collect(Collectors.groupingBy($refDtoName::$refFieldNameGetter))
+                        .forEach(($syntheticFieldName, list) -> {
                             // TODO: replace with special dto for this purpose instead of $refDtoName
-                            IdTracer ${entityFieldName}Object = tracer.lookup($fullDtoName.class, itemsOrderId);
+                            IdTracer ${entityFieldName}Object = tracer.lookup($fullDtoName.class, $syntheticFieldName);
                             List<$refPrimaryFieldType> ids = list.stream().map($refDtoName::getId).toList();
-                            orderObject.setListProperty("items", $refFullDtoName.class, ids);
+                            orderObject.setListProperty("${field.name}", $refFullDtoName.class, ids);
                         });""".parseAsStatement()
-                        .apply { setLineComment(" property \"${field.name}\" - with OneToMany relation refers to list of $refFullDtoName") }
+                        .apply { setLineComment(" property \"${field.name}\" of type List<$refFullDtoName> with OneToMany relation to $refFullDtoName") }
+                )
+            }
+
+        // ManyToMany relation fields
+        entity.fields.filter { field -> field.relation == EntityRelation.ManyToMany }
+            .forEach { field ->
+                // code: entityItemOtherItemsRepository.findByEntityIdIn(entityIds).stream()
+                //      .collect(groupingBy(EntityItemOtherItems::getEntityId))
+                //      .forEach((entityId, list) -> {
+                //          IdTracer entityObject = tracer.lookup(EntityFullDto.class, entityId);
+                //          List<Long> ids = list.stream().map(EntityItemOtherItems::getItemId).toList();
+                //          entityObject.setListProperty("otherItems", ItemFullDto.class, ids);
+                // });
+                val refEntity = entitiesMap[field.type!!]
+                val refFullDtoName = refEntity.getFullDtoName()
+                val relationEntity = entitiesMap.getRelationEntity(entity, field)
+                val relationEntityName = relationEntity.name
+                val sourceField = relationEntity.fields[0]
+                val targetField = relationEntity.fields[1]
+                val relationRepository = entitiesMap.getRelationRepository(entity, field).lowerFirst()
+
+                statements.add("""$relationRepository.findBy${sourceField.name.upperFirst()}In($entityIdsParam).stream()
+                .collect(groupingBy($relationEntityName::getOrderId))
+                .forEach((orderId, list) -> {
+                    IdTracer orderObject = tracer.lookup(OrderFullDto.class, orderId);
+                    List<Long> ids = list.stream().map(OrderItemOtherItems::getItemId).toList();
+                    orderObject.setListProperty("otherItems", ItemFullDto.class, ids);
+                });""".parseAsStatement()
+                    .apply { setLineComment(" property \"${field.name}\" of type List<$refFullDtoName> with ManyToMany relation to $refFullDtoName") }
                 )
             }
 

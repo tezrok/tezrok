@@ -53,7 +53,8 @@ fun String.parseAsStatement(): Statement {
     if (result.isSuccessful) {
         return result.result.get()
     } else {
-        error("Failed to parse statement: $this")
+        val problems = result.problems.map { it.message }.joinToString("\n\n") { it.toString() }
+        error("Failed to parse statement: $this\n$problems")
     }
 }
 
