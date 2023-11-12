@@ -31,11 +31,12 @@ internal class MavenCoreFeature : TezrokFeature {
         pomFile.addProperty("logback.version", "1.4.6")
         pomFile.addProperty("slf4j-api.version", "2.0.5")
         pomFile.addProperty("junit.version", "5.8.1")
+        pomFile.addProperty("lombok.version", "1.18.28")
 
         // add default dependencies
         pomFile.addDependency("org.apache.commons:commons-lang3:${'$'}{commons-lang3.version}")
         pomFile.addDependency("org.jetbrains:annotations:24.0.1")
-        pomFile.addDependency("org.projectlombok:lombok:1.18.28")
+        pomFile.addDependency("org.projectlombok:lombok:${'$'}{lombok.version}")
         // add logging dependencies
         pomFile.addDependency("ch.qos.logback:logback-classic:${'$'}{logback.version}")
         pomFile.addDependency("org.slf4j:slf4j-api:${'$'}{slf4j-api.version}")
@@ -48,7 +49,7 @@ internal class MavenCoreFeature : TezrokFeature {
         // add dependencies from project
         projectElem.modules.find { it.name == module.getName() }?.dependencies?.forEach(pomFile::addDependency)
 
-        addMavenCompillerPlugin(pomFile)
+        addMavenCompilerPlugin(pomFile, true)
 
         val javaRoot = module.source.main.java
         if (javaRoot.applicationPackageRoot == null) {
@@ -67,7 +68,7 @@ internal class MavenCoreFeature : TezrokFeature {
                 .withGroupId(projectElem.packagePath)
                 .withVersion(projectElem.version)
         }
-        addMavenCompillerPlugin(pomFile)
+        addMavenCompilerPlugin(pomFile)
 
         return project.pom
     }
@@ -75,11 +76,19 @@ internal class MavenCoreFeature : TezrokFeature {
     /**
      * Add maven-compiler-plugin to pom.xml
      */
-    private fun addMavenCompillerPlugin(pomFile: PomNode) {
+    private fun addMavenCompilerPlugin(pomFile: PomNode, configPath: Boolean = false) {
         val pluginNode = pomFile.addPluginDependency("org.apache.maven.plugins:maven-compiler-plugin:3.11.0")
         val configuration = pluginNode.getConfiguration().node
         // TODO: get java version from context
         configuration.getOrAdd("source", "17")
         configuration.getOrAdd("target", "17")
+
+        if (configPath) {
+            configuration.getOrAdd("annotationProcessorPaths")
+                .add("path")
+                .getOrAdd("groupId", "org.projectlombok").and()
+                .getOrAdd("artifactId", "lombok").and()
+                .getOrAdd("version", "${'$'}{lombok.version}")
+        }
     }
 }
