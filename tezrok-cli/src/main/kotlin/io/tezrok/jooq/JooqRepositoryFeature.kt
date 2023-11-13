@@ -142,6 +142,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
         if (!dtoDir.hasFile("$className.java")) {
             val dtoClass = dtoDir.addClass(className)
             dtoClass.extendClass("$jooqPackageRoot.tables.pojos.$name")
+            entity.description?.let { dtoClass.setJavadocComment(it) }
             val fields = entity.fields.filter { it.primary == true }
             val type1 = fields[0].asJavaType()
             val name1 = fields[0].name.capitalize()
@@ -187,7 +188,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
         val className = "${name}FullDto"
         if (!dtoDir.hasFile("$className.java")) {
             val dtoClass = dtoDir.addClass(className)
-                .setJavadocComment("Full dto (with all logic fields) for {@link ${name}Dto} entity.")
+                .setJavadocComment("Full dto (with logic and without synthetic fields) for {@link ${name}Dto} entity.")
                 .addImportBySimpleName("${name}Dto")
             dtoClass.implementInterface(Serializable::class.java)
             val addedFields = mutableSetOf<JavaFieldNode>()
@@ -483,7 +484,9 @@ internal class JooqRepositoryFeature : TezrokFeature {
         // add custom methods for unique fields
         val uniqueFields = entity.fields.filter { it.unique == true }
         if (uniqueFields.isNotEmpty()) {
-            val methodComments = uniqueFields.map { "getBy${it.name.capitalize()}" to "Returns {@link ${entity.name}Dto} by unique field {@link ${entity.name}Dto#${it.name}}." }.toTypedArray()
+            val methodComments =
+                uniqueFields.map { "getBy${it.name.capitalize()}" to "Returns {@link ${entity.name}Dto} by unique field {@link ${entity.name}Dto#${it.name}}." }
+                    .toTypedArray()
             val methods = methodComments.map { it.first }.toTypedArray()
             return entity.withCustomMethods(*methods).withCustomComments(*methodComments)
         }
