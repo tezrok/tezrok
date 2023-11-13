@@ -27,4 +27,12 @@ open class JavaFieldNode(private val field: FieldDeclaration) {
         field.setModifiers(*oldModifiers.distinct().toTypedArray())
         return this
     }
+
+    /**
+     * Sets new modifiers to the class
+     */
+    fun setModifiers(vararg modifiers: Modifier.Keyword): JavaFieldNode {
+        field.setModifiers(*modifiers)
+        return this
+    }
 }

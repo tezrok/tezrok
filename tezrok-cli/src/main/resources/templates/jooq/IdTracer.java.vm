@@ -196,7 +196,7 @@ public class IdTracer {
         buildingNow.remove(makeKey(object));
     }
 
-    public <T extends WithId<ID>, ID> void removeAlreadyLoaded(Class<T> type, ID id) {
+    public <T extends WithId<ID>, ID> void removeFromAllIds(Class<T> type, ID id) {
         allIdsByType.computeIfAbsent(type, k -> Collections.emptySet()).remove(id);
     }
 
