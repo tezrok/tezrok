@@ -3,10 +3,7 @@ package io.tezrok.jooq
 import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.expr.*
-import com.github.javaparser.ast.stmt.IfStmt
-import com.github.javaparser.ast.stmt.ReturnStmt
-import com.github.javaparser.ast.stmt.Statement
-import com.github.javaparser.ast.stmt.ThrowStmt
+import com.github.javaparser.ast.stmt.*
 import com.github.javaparser.ast.type.ClassOrInterfaceType
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
@@ -78,7 +75,7 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
 
         // implement public load methods
         methods.forEach { (entity, method) ->
-            implementGetFullEntityByIdMethod(method, entity)
+            implementGetFullEntityByIdMethod(method, entity, entitiesMap)
         }
 
         // add loadIdsByEntityIds methods
@@ -126,7 +123,8 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
 
     private fun implementGetFullEntityByIdMethod(
         method: JavaMethodNode,
-        entity: EntityElem
+        entity: EntityElem,
+        entitiesMap: EntitiesMap
     ) {
         val statements = NodeList<Statement>()
         val paramName = method.getParameters().map { it.getName() }.first()
@@ -178,11 +176,28 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
             ).assignToAsStatement(tracerField)
         )
 
+        // code: tracer.setProperty("selectedItem", ItemFullDto.class, entityDto.getSelectedItemId());
+        var commentAdded = false
+        entity.getIdFields().filter { field -> field.external != true && field.primary != true }
+            .forEach { field ->
+                val getterName = field.getGetterName()
+                val refField = entitiesMap.getRefField(field)
+                val refEntity = entitiesMap[refField.type!!]
+                val refFullDto = refEntity.getFullDtoName()
+                statements.add("$TRACER_FIELD.setProperty(\"${refField.name}\", $refFullDto.class, ${dtoFieldName}.$getterName());".parseAsStatement())
+
+                if (!commentAdded) {
+                    statements.last.get().setLineComment(" set all inner property ids inside $fullDtoName")
+                    commentAdded = true
+                }
+            }
+
         // code: loadIdsByEntityIds(List.of(id), tracer);
         statements.add(
             JavaCallExpressionNode.ofMethodCall(entity.getLoadIdsByEntityIdsMethodName())
                 .addNameArgument("List.of($paramName)")
                 .addNameArgument(TRACER_FIELD)
+                .addNameArgument("true")
                 .asStatement()
         )
 
@@ -316,19 +331,18 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
         val entityFieldName = entityName.lowerFirst()
         val entityIdsParam = "${entityFieldName}Ids"
         val primaryFieldType = entity.getPrimaryField().asJavaType()
+        val isRootParam = "isRoot"
         val method = clazz.addMethod(entity.getLoadIdsByEntityIdsMethodName())
             .withModifiers(Modifier.Keyword.PROTECTED)
             .addParameter("Collection<$primaryFieldType>", entityIdsParam)
             .addParameter(TRACER, TRACER_FIELD)
+            .addParameter("boolean", isRootParam)
             .setJavadocComment("Load inner ids by ids of {@link ${entityDtoName}}.")
 
         // code:  if (entityIds.isEmpty()) { return; }
         statements.add(
             IfStmt(
-                UnaryExpr(
-                    JavaCallExpressionNode.ofMethodCall("$entityIdsParam.isEmpty")
-                        .asMethodCallExpr(), UnaryExpr.Operator.LOGICAL_COMPLEMENT
-                ),
+                JavaCallExpressionNode.ofMethodCall("$entityIdsParam.isEmpty").asMethodCallExpr(),
                 ReturnStmt().asBlock(),
                 null
             )
@@ -351,14 +365,14 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
         //            entityObject.setProperty("nextEntity", EntityFullDto.class, entity.getNextEntityId());
         //         });
         // if entity referred by OneToMany relation (field.external == true) we should skip such field
-        val idFields = entity.getIdFields().filter { field -> field.external != true }
-        if (idFields.size > 1) {
+        val idFields = entity.getIdFields().filter { field -> field.external != true && field.primary != true }
+        if (idFields.isNotEmpty()) {
             val repositoryFieldName = entity.getRepositoryName().lowerFirst()
             val builder =
                 StringBuilder("// TODO: use special dto for this purpose instead of $entityDtoName")
             builder.append(NEWLINE)
             builder.append("$TRACER object = $TRACER_FIELD.lookup(${fullDtoName}.class, ${entityFieldName}.getId());")
-            idFields.filter { it.primary != true }.forEach { field ->
+            idFields.forEach { field ->
                 builder.append(NEWLINE)
                 val getterName = field.getGetterName()
                 val refField = entitiesMap.getRefField(field)
@@ -369,19 +383,23 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
             }
             val methodName = entity.getFindAllIdFieldsByPrimaryIdIn()
             statements.add(
-                """${repositoryFieldName}.$methodName($entityIdsParam, ${entityDtoName}.class)
+                IfStmt(
+                    UnaryExpr(isRootParam.asNameExpr(), UnaryExpr.Operator.LOGICAL_COMPLEMENT),
+                    """${repositoryFieldName}.$methodName($entityIdsParam, ${entityDtoName}.class)
                     .forEach(${entityFieldName} -> {
                         $builder
-                    });
-                """.parseAsStatement()
-                    .apply { setLineComment(" load all inner property ids inside $entityName by $entityName ids") }
+                    });""".parseAsStatement()
+                        .apply { setLineComment(" load all inner property ids inside $entityName by $entityName ids") }
+                        .asBlock(),
+                    null
+                )
             )
         }
 
         // OneToMany relation fields
         entity.fields.filter { field -> field.relation == EntityRelation.OneToMany }
             .forEach { field ->
-                // code: itemRepository.findIdItemsEntityIdByItemsEntityIdIn(orderIds, ItemDto.class).stream()
+                // code: itemRepository.findIdItemsEntityIdByItemsEntityIdIn(entityIds, ItemDto.class).stream()
                 //       .collect(groupingBy(ItemDto::getItemsEntityId))
                 //       .forEach((itemsEntityId, list) -> {
                 //           IdTracer object = tracer.lookup(EntityFullDto.class, itemsEntityId);
@@ -458,7 +476,7 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
                 statements.last.get().setLineComment(" load ids of the next level")
                 commentAdded = true
             }
-            statements.add("loadIdsBy${entityName}Ids(next${entityName}Ids, tracer);".parseAsStatement())
+            statements.add("loadIdsBy${entityName}Ids(next${entityName}Ids, tracer, false);".parseAsStatement())
         }
 
         method.setBody(statements)
@@ -516,13 +534,84 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
         entitiesMap: EntitiesMap
     ) {
         val fullDtoName = entity.getFullDtoName()
+        val paramName = fullDtoName.lowerFirst()
         val method = clazz.addMethod(entity.getBuildEntityFullTree())
             .withModifiers(Modifier.Keyword.PROTECTED)
-            .addParameter(fullDtoName, fullDtoName.lowerFirst())
+            .addParameter(fullDtoName, paramName)
             .addParameter(TRACER, TRACER_FIELD)
             .setJavadocComment("Fill {@link $fullDtoName}'s fields by already loaded entities.")
 
-        // TODO: !!!!
+        val logicFields = entity.fields.filter { it.logicField == true }
+        if (logicFields.isEmpty()) return
+
+        val statements = NodeList<Statement>()
+        val entityName = entity.name
+        val entityFieldName = entityName.lowerFirst()
+        logicFields.forEach { field ->
+            val propertyType = entitiesMap[field.type!!].name
+            val propertyClass = "${propertyType}FullDto.class"
+            val entityFullTreeMethod = "build${propertyType}FullTree"
+            val fieldSetter = field.getSetterName()
+            val fieldGetter = field.getGetterName()
+            // if property is list
+            if (field.relation == EntityRelation.OneToMany || field.relation == EntityRelation.ManyToMany) {
+                // code: tracer.getObjectListProperty(entityFullDto, "items", ItemFullDto.class, entityFullDto::setItems);
+                statements.add("$TRACER_FIELD.getObjectListProperty($paramName, \"${field.name}\", $propertyClass, $paramName::$fieldSetter);".parseAsStatement())
+                // code: if (entityFullDto.getItems() != null) {
+                //         entityFullDto.getItems().forEach(item -> buildItemFullTree(item, tracer));
+                statements.add(
+                    IfStmt(
+                        BinaryExpr(
+                            JavaCallExpressionNode.ofMethodCall("$paramName.$fieldGetter")
+                                .asMethodCallExpr(),
+                            NullLiteralExpr(),
+                            BinaryExpr.Operator.NOT_EQUALS
+                        ),
+                        "$paramName.$fieldGetter().forEach($entityFieldName -> $entityFullTreeMethod($entityFieldName, $TRACER_FIELD));"
+                            .parseAsStatement().asBlock(),
+                        null
+                    )
+                )
+            } else {
+                // code : tracer.getObjectProperty(entityFullDto, "selectedItem", ItemFullDto.class, entityFullDto::setSelectedItem);
+                statements.add("$TRACER_FIELD.getObjectProperty($paramName, \"${field.name}\", $propertyClass, $paramName::$fieldSetter);".parseAsStatement())
+                // code:  if (entityFullDto.getSelectedItem() != null) {
+                //          buildEntityFullTree(entityFullDto.getSelectedItem(), tracer);
+                statements.add(
+                    IfStmt(
+                        BinaryExpr(
+                            JavaCallExpressionNode.ofMethodCall("$paramName.$fieldGetter")
+                                .asMethodCallExpr(),
+                            NullLiteralExpr(),
+                            BinaryExpr.Operator.NOT_EQUALS
+                        ),
+                        JavaCallExpressionNode.ofMethodCall(entityFullTreeMethod)
+                            .addNameArgument("$paramName.$fieldGetter()")
+                            .addNameArgument(TRACER_FIELD)
+                            .asBlock(),
+                        null
+                    )
+                )
+            }
+        }
+
+        // code: tracer.endBuild(entityFullDto);
+        statements.add(
+            JavaCallExpressionNode.ofMethodCall("$TRACER_FIELD.endBuild")
+                .addNameArgument(paramName)
+                .asStatement()
+        )
+
+        // code  if (tracer.startBuild(entityFullDto)) {
+        method.setBody(
+            IfStmt(
+                JavaCallExpressionNode.ofMethodCall("tracer.startBuild")
+                    .addNameArgument(paramName)
+                    .asMethodCallExpr(),
+                BlockStmt(statements),
+                null
+            )
+        )
     }
 
     private fun validateSinglePrimary(entity: EntityElem) {

@@ -3,7 +3,9 @@ package io.tezrok.api.java
 import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.expr.*
 import com.github.javaparser.ast.nodeTypes.NodeWithArguments
+import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.ast.stmt.Statement
+import io.tezrok.util.asBlock
 import io.tezrok.util.asStatement
 import io.tezrok.util.assignToAsStatement
 
@@ -14,6 +16,8 @@ open class JavaCallExpressionNode<N>(private val callExpression: NodeWithArgumen
     fun asMethodCallExpr(): MethodCallExpr = callExpression as MethodCallExpr
 
     fun asStatement(): Statement = (callExpression as Expression).asStatement()
+
+    fun asBlock(): BlockStmt = asStatement().asBlock()
 
     fun addStringArgument(argument: String): JavaCallExpressionNode<N> {
         callExpression.addArgument(StringLiteralExpr(argument))

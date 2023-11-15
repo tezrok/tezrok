@@ -48,6 +48,8 @@ fun FieldElem.isBaseType(): Boolean {
 
 fun FieldElem.getGetterName() = "get${name.upperFirst()}"
 
+fun FieldElem.getSetterName() = "set${name.upperFirst()}"
+
 object ModelTypes {
     const val STRING = "String"
     const val INTEGER = "Integer"
