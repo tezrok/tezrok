@@ -1,5 +1,6 @@
 package ${package}.dto;
 
+import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,8 +10,11 @@ import java.util.Collection;
 /**
  * Implementation of {@link UserDetails} for {@link UserDto}.
  */
+@Data
 public class UserDetailsImpl implements UserDetails {
+
     private final UserDto user;
+
     private final Collection<? extends GrantedAuthority> roles;
 
     public UserDetailsImpl(@NotNull final UserDto user, @NotNull final Collection<? extends GrantedAuthority> roles) {

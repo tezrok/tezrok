@@ -1,13 +1,14 @@
 package ${package}.service;
 
-import ${package}.dto.PermissionDto;
-import ${package}.dto.RoleDto;
+
 import ${package}.dto.UserDetailsImpl;
 import ${package}.dto.UserDto;
-import ${package}.repository.PermissionRepository;
-import ${package}.repository.RoleRepository;
+import ${package}.dto.full.PermissionFullDto;
+import ${package}.dto.full.RoleFullDto;
+import ${package}.dto.full.UserFullDto;
+import ${package}.repository.EntityGraphLoader;
 import ${package}.repository.UserRepository;
-import org.jetbrains.annotations.NotNull;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,40 +18,39 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-
+import java.util.Objects;
 /**
  * Implementation of {@link UserDetailsService}.
  */
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-    private final PermissionRepository permissionRepository;
 
-    public UserDetailsServiceImpl(@NotNull final UserRepository userRepository,
-                                  @NotNull final RoleRepository roleRepository,
-                                  @NotNull final PermissionRepository permissionRepository) {
-        this.permissionRepository = permissionRepository;
+    private final EntityGraphLoader entityGraphLoader;
+
+    public UserDetailsServiceImpl(UserRepository userRepository,
+                                  EntityGraphLoader entityGraphLoader) {
         this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
+        this.entityGraphLoader = entityGraphLoader;
     }
 
     @Transactional(readOnly = true)
     @Override
     public UserDetails loadUserByUsername(final String username) throws UsernameNotFoundException {
         // add config to deny login by email
-        final UserDto user = userRepository.getByNameOrEmail(username, username);
-        if (user == null) {
+        final UserDto userDto = userRepository.getByNameOrEmail(username, username);
+        if (userDto == null) {
             throw new UsernameNotFoundException("User not found: " + username);
         }
-        final List<RoleDto> roles = roleRepository.findUserRolesByUserId(user.getId());
-        final List<Long> roleIds = roles.stream().map(RoleDto::getId).toList();
-        final List<PermissionDto> permissions = permissionRepository.findRolePermissionsByRoleIdIn(roleIds);
+        final UserFullDto user = entityGraphLoader.getFullUserById(userDto.getId());
+        Collection<RoleFullDto> roles = CollectionUtils.emptyIfNull(user.getRoles());
+        final List<PermissionFullDto> permissions = roles.stream().map(RoleFullDto::getPermissions)
+                .filter(Objects::nonNull).flatMap(Collection::stream).toList();
         final List<GrantedAuthority> authorities = new ArrayList<>(roles.size() + permissions.size());
         roles.forEach(role -> authorities.add(new SimpleGrantedAuthority("ROLE_" + role)));
         permissions.forEach(permission -> authorities.add(new SimpleGrantedAuthority(permission.getName())));
-
-        return new UserDetailsImpl(user, authorities);
+        return new UserDetailsImpl(userDto, authorities);
     }
 }

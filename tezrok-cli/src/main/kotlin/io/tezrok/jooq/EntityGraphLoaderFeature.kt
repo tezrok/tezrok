@@ -51,6 +51,9 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
         val clazz = repositoryDir.addClass("EntityGraphLoader")
             .addAnnotation(Service::class.java)
             .setModifiers(Modifier.Keyword.PUBLIC)
+            .setJavadocComment("""Loads whole entity by id with all relations.
+ 
+@see IdTracer""")
             .addImport(Collection::class.java)
             .addImport(List::class.java)
             .addImport(Set::class.java)
