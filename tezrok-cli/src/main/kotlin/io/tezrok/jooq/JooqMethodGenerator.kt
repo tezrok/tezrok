@@ -10,10 +10,7 @@ import io.tezrok.api.input.EntityRelation
 import io.tezrok.api.input.FieldElem
 import io.tezrok.api.java.JavaClassNode
 import io.tezrok.api.java.JavaMethodNode
-import io.tezrok.util.addImportsByType
-import io.tezrok.util.asJavaType
-import io.tezrok.util.camelCaseToSnakeCase
-import io.tezrok.util.camelCaseToSqlUppercase
+import io.tezrok.util.*
 
 /**
  * Generates jooq methods for repository classes.
@@ -444,14 +441,12 @@ internal class JooqMethodGenerator(
             return null
         }
 
-        val (targetEntity, fieldName) = findTargetEntityAndField(parts) ?: return null
-        val field = targetEntity.fields.find { it.name == fieldName }
-            ?: error("Field not found: $fieldName in entity: ${targetEntity.name}")
+        val (targetEntity, field) = findTargetEntityAndField(parts) ?: return null
         check(field.type == entity.name) { "Field type (${field.type}) and entity name (${entity.name}) mismatch" }
 
         return when (field.relation) {
             EntityRelation.ManyToMany -> {
-                val fullName = "${targetEntity.name}.${fieldName}"
+                val fullName = "${targetEntity.name}.${field.name}"
                 val relTable = entities.values.find { it.syntheticTo == fullName }
                     ?: error("Relation table not found: $fullName")
 
@@ -463,7 +458,7 @@ internal class JooqMethodGenerator(
         }
     }
 
-    private fun findTargetEntityAndField(parts: List<String>): Pair<EntityElem, String>? {
+    private fun findTargetEntityAndField(parts: List<String>): Pair<EntityElem, FieldElem>? {
         var index = -1
         var entityName = ""
 
@@ -471,7 +466,11 @@ internal class JooqMethodGenerator(
             entityName += parts[index]
             val entity = entities[entityName]
             if (entity != null) {
-                return entity to parts.subList(index + 1, parts.size).joinToString(separator = "").decapitalize()
+                val fieldName = parts.subList(index + 1, parts.size).joinToString(separator = "").lowerFirst()
+                val field = entity.tryGetField(fieldName)
+                if (field != null) {
+                    return entity to field
+                }
             }
         }
 

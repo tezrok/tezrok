@@ -1,6 +1,6 @@
 package ${package}.repository;
 
-import com.tezrok.simple.dto.WithId;
+import ${package}.dto.WithId;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
