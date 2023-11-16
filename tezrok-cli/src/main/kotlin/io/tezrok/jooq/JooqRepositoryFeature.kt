@@ -16,6 +16,7 @@ import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.java.JavaFieldNode
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.*
+import lombok.Data
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.io.Serializable
@@ -189,6 +190,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
         if (!dtoDir.hasFile("$className.java")) {
             val dtoClass = dtoDir.addClass(className)
                 .setJavadocComment("Full dto (with logic and without synthetic fields) for {@link ${name}Dto} entity.")
+                .addAnnotation(Data::class.java)
                 .addImportBySimpleName("${name}Dto")
             dtoClass.implementInterface(Serializable::class.java)
             val addedFields = mutableSetOf<JavaFieldNode>()
@@ -209,11 +211,6 @@ internal class JooqRepositoryFeature : TezrokFeature {
                         else -> error("Unsupported relation: ${field.relation} in field: ${entity.name}.${field.name}")
                     }
                 }
-            }
-            // add getters and setters for all fields
-            addedFields.forEach { field ->
-                dtoClass.addGetter(field)
-                dtoClass.addSetter(field)
             }
 
             // implement WithId<$primaryFieldType> interface
