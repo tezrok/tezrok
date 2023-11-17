@@ -11,6 +11,7 @@ data class ProjectElem(
     val name: String = "",
     val version: String = "",
     val description: String = "",
+    val frontend: Boolean? = null,
 
     @JsonProperty("package")
     val packagePath: String = "",

@@ -11,6 +11,7 @@ import io.tezrok.docker.DockerFeature
 import io.tezrok.entity.EntityActivableFeature
 import io.tezrok.entity.EntityCreatedUpdatedFeature
 import io.tezrok.entity.MapperFeature
+import io.tezrok.frontend.FrontendFeature
 import io.tezrok.java.GitIgnoreFeature
 import io.tezrok.java.HelloWorldFeature
 import io.tezrok.jooq.EntityGraphLoaderFeature
@@ -51,6 +52,7 @@ internal class FeatureManager {
         features.add(ServiceFeature())
         features.add(ControllerFeature())
         features.add(DockerFeature())
+        features.add(FrontendFeature())
     }
 
     fun applyAll(project: ProjectNode, context: GeneratorContext) {

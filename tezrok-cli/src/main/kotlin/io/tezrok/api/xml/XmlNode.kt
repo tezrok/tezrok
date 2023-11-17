@@ -53,6 +53,10 @@ open class XmlNode private constructor(private val element: Element) {
         return XmlNode(childElem)
     }
 
+    fun add(node: XmlNode): XmlNode {
+        return XmlNode(element.appendChild(node.element) as Element)
+    }
+
     fun add(name: String, value: String): XmlNode = add(name).setValue(value)
 
     fun get(name: String): XmlNode? = itemsStream().find { it.getName() == name }

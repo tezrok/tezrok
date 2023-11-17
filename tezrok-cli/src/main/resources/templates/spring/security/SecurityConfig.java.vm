@@ -12,6 +12,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -22,8 +23,14 @@ public class SecurityConfig {
         httpSecurity.formLogin(Customizer.withDefaults());
         httpSecurity.csrf(p -> p.disable());
         // TODO: properly configure security from input model
-        httpSecurity.authorizeHttpRequests(req -> req.requestMatchers("/admin").hasAuthority("ADMIN")
-                .requestMatchers("/static/**").permitAll()
+        httpSecurity.authorizeHttpRequests(req -> req
+                .requestMatchers("/admin").hasAuthority("ADMIN")
+                .requestMatchers("/public/**")
+                .permitAll()
+                .requestMatchers("/favicon.ico")
+                .permitAll()
+                .requestMatchers("/**")
+                .permitAll()
                 .anyRequest().authenticated());
         return httpSecurity.build();
     }

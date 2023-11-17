@@ -10,7 +10,7 @@ import java.util.stream.Stream
 open class ModulesRefNode(private val node: XmlNode) {
     fun addModule(name: String) {
         if (!hasModule(name)) {
-            node.getOrAdd("module", name)
+            node.add("module", name)
         }
     }
 
@@ -20,11 +20,18 @@ open class ModulesRefNode(private val node: XmlNode) {
             .orElseGet(::emptyList))
     }
 
+    fun getModules(): List<XmlNode> = moduleNodes().toList()
+
+    fun setModules(modules: List<XmlNode>) {
+        node.remove(moduleNodes().toList())
+        modules.forEach { node.add(it) }
+    }
+
     fun hasModule(name: String) = getModuleByName(name).isPresent
 
     private fun getModuleByName(name: String): Optional<XmlNode> = moduleNodes()
         .filter { !it.hasChildren() && it.getValue() == name }
         .findFirst()
 
-    private fun moduleNodes(): Stream<XmlNode> = node.nodesByPath("module/*")
+    private fun moduleNodes(): Stream<XmlNode> = node.nodesByPath("module")
 }

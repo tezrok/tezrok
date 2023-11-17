@@ -10,10 +10,10 @@ import io.tezrok.util.ResourceUtil
  */
 internal class GitIgnoreFeature : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
-        val module = project.getOrAddFile(".gitignore")
+        val gitignoreFile = project.getOrAddFile(".gitignore")
 
-        if (module.isEmpty()) {
-            module.setString(ResourceUtil.getResourceAsString("/templates/java.gitignore.txt"))
+        if (gitignoreFile.isEmpty()) {
+            gitignoreFile.setString(ResourceUtil.getResourceAsString("/templates/java.gitignore.txt"))
         }
 
         return true
