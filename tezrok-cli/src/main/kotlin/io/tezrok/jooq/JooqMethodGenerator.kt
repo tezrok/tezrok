@@ -70,8 +70,8 @@ internal class JooqMethodGenerator(
         newMethod.setBody(bodyGen.body)
         bodyGen.params.forEach { param -> newMethod.addParameter(param.value, param.key) }
         newMethod.setReturnType(bodyGen.returnType)
-        if (bodyGen.returnType == GENERIC_LIST) {
-            newMethod.setTypeParameters(listOf(TypeParameter("T")))
+        if (bodyGen.returnType == GENERIC_LIST || bodyGen.returnType == GENERIC_T) {
+            newMethod.setTypeParameters(listOf(TypeParameter(GENERIC_T)))
         }
         repoClass.addImportsByType(bodyGen.returnType)
         bodyGen.params.values.toSet().forEach { type -> repoClass.addImportsByType(type) }
@@ -164,7 +164,7 @@ internal class JooqMethodGenerator(
             val methodPrefix = getMethodPrefix(methodName)
             val relTables = getRelatedTables(methodPrefix)
             val selectedColumns = parseFields(methodPrefix, relTables)
-            val returnType = getReturnTypeBySelectedColumns(selectedColumns, defaultReturnType)
+            val returnType = getReturnTypeBySelectedColumnsAsList(selectedColumns, defaultReturnType)
             val dtoList = "List<$dtoName>"
             if (selectedColumns.isEmpty()) {
                 val supportedTypes = setOf(dtoList)
@@ -267,7 +267,7 @@ internal class JooqMethodGenerator(
             val optionalDto = "Optional<$dtoName>"
             val recordResult = "${entity.name}Record"
             val optionalRecord = "Optional<$recordResult>"
-            val genericDto = "T"
+            val genericDto = GENERIC_T
             val supportedTypes = setOf(dtoName, optionalDto, recordResult, optionalRecord, genericDto)
             check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
 
@@ -301,15 +301,18 @@ internal class JooqMethodGenerator(
     ): MethodGen {
         try {
             val dtoName = "${entity.name}Dto"
-            val returnType = getReturnTypeByOnlyName(methodName, dtoName)
+            val defaultReturnType = getReturnTypeByOnlyName(methodName, dtoName)
             val params = mutableMapOf<String, String>()
             val methodName = methodName.removePrefix(PREFIX_GET)
-            val supportedTypes = setOf(dtoName)
-            check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
-
             val methodPrefix = getMethodPrefix(methodName)
             val relTables = getRelatedTables(methodPrefix)
-            val expressionPart = removeGetByPrefix(methodName, entity.name)
+            val selectedColumns = parseFields(methodPrefix, relTables)
+            val returnType = getReturnTypeBySelectedColumnsAsSingle(selectedColumns, defaultReturnType)
+            if (selectedColumns.isEmpty()) {
+                val supportedTypes = setOf(dtoName)
+                check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
+            }
+            val expressionPart = removeGetByPrefix(methodName, methodPrefix)
             val (where, orderBy, limit, distinct, paramsOut) = parseAsJooqExpression(
                 expressionPart,
                 params,
@@ -322,14 +325,43 @@ internal class JooqMethodGenerator(
 
             check(!distinct) { DISTINCT_CANNOT_BE_USED_WHOLE_TABLE }
 
-            return when (returnType) {
-                dtoName -> return MethodGen(
-                    params = params,
-                    returnType = returnType,
-                    ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchOneInto(${dtoName}.class)")
-                )
+            if (relTables == null) {
+                if (selectedColumns.isNotEmpty()) {
+                    val tableName = entity.name.camelCaseToSqlUppercase()
+                    val selectFields = selectedColumns.map { field -> field.name.camelCaseToSqlUppercase() }
+                        .map { fieldName -> "Tables.${tableName}.${fieldName}" }
+                        .joinToString(separator = ", ")
 
-                else -> error("Unsupported return type: $returnType")
+                    if (selectedColumns.size == 1) {
+                        val fieldJavaType = selectedColumns.first().asJavaType()
+                        return MethodGen(
+                            params = params,
+                            returnType = returnType,
+                            ReturnStmt("dsl.select($selectFields).from(table).where($where)$orderBy$limit.fetchOne(0, ${fieldJavaType}.class)")
+                        )
+                    }
+
+                    // if selected columns more than one, we return custom dto and need to pass Class<T> as last param
+                    val lastParamName = makeSafeParamName(params)
+                    params[lastParamName] = GENERIC_CLASS
+                    return MethodGen(
+                        params = params,
+                        returnType = returnType,
+                        ReturnStmt("dsl.select($selectFields).from(table).where($where)$orderBy$limit.fetchOneInto($lastParamName)")
+                    )
+                }
+
+                return when (returnType) {
+                    dtoName -> return MethodGen(
+                        params = params,
+                        returnType = returnType,
+                        ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchOneInto(${dtoName}.class)")
+                    )
+
+                    else -> error("Unsupported return type: $returnType")
+                }
+            } else {
+                error("TODO: $relTables")
             }
         } catch (ex: Exception) {
             throw RuntimeException("Failed to generate body for method \"$methodName\": ${ex.message}", ex)
@@ -345,7 +377,7 @@ internal class JooqMethodGenerator(
         return paramName
     }
 
-    private fun getReturnTypeBySelectedColumns(
+    private fun getReturnTypeBySelectedColumnsAsList(
         selectedColumns: List<FieldElem>,
         defaultReturnType: String
     ): String {
@@ -356,6 +388,20 @@ internal class JooqMethodGenerator(
         } else {
             // when we have several columns, we return custom dto
             GENERIC_LIST
+        }
+    }
+
+    private fun getReturnTypeBySelectedColumnsAsSingle(
+        selectedColumns: List<FieldElem>,
+        defaultReturnType: String
+    ): String {
+        return if (selectedColumns.isEmpty()) {
+            defaultReturnType
+        } else if (selectedColumns.size == 1) {
+            "${selectedColumns.first().asJavaType()}"
+        } else {
+            // when we have several columns, we return custom dto
+            GENERIC_T
         }
     }
 
@@ -863,6 +909,7 @@ internal class JooqMethodGenerator(
         const val PREFIX_BY = "By"
         const val DISTINCT_CANNOT_BE_USED_WHOLE_TABLE = "Distinct cannot be used whole table select"
         const val GENERIC_LIST = "List<T>"
+        const val GENERIC_T = "T"
         const val GENERIC_CLASS = "Class<T>"
     }
 }

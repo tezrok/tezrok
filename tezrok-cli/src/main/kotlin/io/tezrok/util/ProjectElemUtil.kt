@@ -80,3 +80,12 @@ fun EntityElem.getFindAllIdFieldsByPrimaryIdIn(): String {
 
     return "find${allIds}By${getPrimaryField().name.upperFirst()}In"
 }
+
+/**
+ * Make method name to `getAllIdFieldsByPrimaryId(ID id, Class<T> type)`
+ */
+fun EntityElem.getGetAllIdFieldsByPrimaryId(): String {
+    val allIds = getIdFields().joinToString("") { it.name.upperFirst() }
+
+    return "get${allIds}By${getPrimaryField().name.upperFirst()}"
+}

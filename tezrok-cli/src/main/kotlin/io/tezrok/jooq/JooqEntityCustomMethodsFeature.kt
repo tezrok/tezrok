@@ -6,6 +6,7 @@ import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.*
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.getFindAllIdFieldsByPrimaryIdIn
+import io.tezrok.util.getGetAllIdFieldsByPrimaryId
 import org.slf4j.LoggerFactory
 
 /**
@@ -77,9 +78,11 @@ internal class JooqEntityCustomMethodsFeature : TezrokFeature {
             if (idFields.size > 1) {
                 val entity = entities[entity.name]
                 val allIdsJavaDoc = idFields.joinToString(", ") { it.name }
-                val methodName = entity.getFindAllIdFieldsByPrimaryIdIn()
-                entities[entity.name] = entity.withCustomMethods(methodName)
+                val methodName = entity.getGetAllIdFieldsByPrimaryId()
+                val methodName2 = entity.getFindAllIdFieldsByPrimaryIdIn()
+                entities[entity.name] = entity.withCustomMethods(methodName, methodName2)
                     .withCustomComments(methodName to "Returns ID fields ($allIdsJavaDoc) of {@link ${entity.name}Dto} into custom class.")
+                    .withCustomComments(methodName2 to "Returns list of ID fields ($allIdsJavaDoc) of {@link ${entity.name}Dto} into custom class.")
             }
         }
     }
