@@ -1,6 +1,6 @@
 package io.tezrok.api.input
 
-import io.tezrok.util.upperFirst
+import io.tezrok.util.*
 
 /**
  * Encapsulates entities list and provides convenient access and modification methods.
@@ -90,6 +90,21 @@ data class EntitiesMap(private val entitiesIn: List<EntityElem>) {
                         "Returns specified fields ($allIdsJavaDoc) of {@link ${refEntity.name}Dto} into custom class $toSupport"
                 }
             }
+        }
+
+        return result
+    }
+
+    fun getIdFieldsMethods(entity: EntityElem): Map<String, String> {
+        val result = mutableMapOf<String, String>()
+        val idFields = entity.getIdFields()
+        if (idFields.size > 1) {
+            val allIdsJavaDoc = idFields.joinToString(", ") { it.name }
+            result[entity.getGetAllIdFieldsByPrimaryId()] = "Returns ID fields ($allIdsJavaDoc) of {@link ${entity.name}Dto} into custom class."
+            if (entity.getUniqueStringFields().any()) {
+                result[entity.getGetAllIdFieldsByUniqueName()] = "Returns ID fields ($allIdsJavaDoc) of {@link ${entity.name}Dto} by unique field into custom class."
+            }
+            result[entity.getFindAllIdFieldsByPrimaryIdIn()] = "Returns list of ID fields ($allIdsJavaDoc) of {@link ${entity.name}Dto} into custom class."
         }
 
         return result

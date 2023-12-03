@@ -105,18 +105,22 @@
               "getByNextOrderId",
               "findOrderLinkedOrdersByOrderId",
               "findOrderLinkedOrdersByOrderIdIn",
+              "getIdSelectedItemIdNextOrderIdById",
+              "getIdSelectedItemIdNextOrderIdByName",
               "findIdSelectedItemIdNextOrderIdByIdIn",
               "findItemRelatedOrdersByItemId",
               "findItemRelatedOrdersByItemIdIn"
             ],
             "customComments": {
-              "findIdSelectedItemIdNextOrderIdByIdIn": "Returns ID fields (id, selectedItemId, nextOrderId) of {@link OrderDto} into custom class.",
+              "findIdSelectedItemIdNextOrderIdByIdIn": "Returns list of ID fields (id, selectedItemId, nextOrderId) of {@link OrderDto} into custom class.",
               "findItemRelatedOrdersByItemId": "Returns list of {@link OrderDto} by primary field to support ManyToMany relation for field {@link ItemFullDto#relatedOrders}.",
               "findItemRelatedOrdersByItemIdIn": "Returns list of {@link OrderDto} by primary fields to support ManyToMany relation for field {@link ItemFullDto#relatedOrders}.",
               "findOrderLinkedOrdersByOrderId": "Returns list of {@link OrderDto} by primary field to support ManyToMany relation for field {@link OrderFullDto#linkedOrders}.",
               "findOrderLinkedOrdersByOrderIdIn": "Returns list of {@link OrderDto} by primary fields to support ManyToMany relation for field {@link OrderFullDto#linkedOrders}.",
               "getByName": "Returns {@link OrderDto} by unique field {@link OrderDto#name}.",
-              "getByNextOrderId": "Returns {@link OrderDto} by unique field {@link OrderDto#nextOrderId}."
+              "getByNextOrderId": "Returns {@link OrderDto} by unique field {@link OrderDto#nextOrderId}.",
+              "getIdSelectedItemIdNextOrderIdById": "Returns ID fields (id, selectedItemId, nextOrderId) of {@link OrderDto} into custom class.",
+              "getIdSelectedItemIdNextOrderIdByName": "Returns ID fields (id, selectedItemId, nextOrderId) of {@link OrderDto} by unique field into custom class."
             }
           },
           {
@@ -196,17 +200,19 @@
               "findIdItemsOrderIdByItemsOrderIdIn",
               "findItemOtherItemsByItemId",
               "findItemOtherItemsByItemIdIn",
+              "getIdItemsOrderIdById",
               "findIdItemsOrderIdByIdIn"
             ],
             "customComments": {
               "findIdByItemsOrderId": "Returns list of primary field of {@link ItemDto} to support OneToMany relation for field {@link OrderFullDto#items}.",
-              "findIdItemsOrderIdByIdIn": "Returns ID fields (id, itemsOrderId) of {@link ItemDto} into custom class.",
+              "findIdItemsOrderIdByIdIn": "Returns list of ID fields (id, itemsOrderId) of {@link ItemDto} into custom class.",
               "findIdItemsOrderIdByItemsOrderIdIn": "Returns specified fields (id, itemsOrderId) of {@link ItemDto} into custom class to support OneToMany relation for field {@link OrderFullDto#items}",
               "findItemOtherItemsByItemId": "Returns list of {@link ItemDto} by primary field to support ManyToMany relation for field {@link ItemFullDto#otherItems}.",
               "findItemOtherItemsByItemIdIn": "Returns list of {@link ItemDto} by primary fields to support ManyToMany relation for field {@link ItemFullDto#otherItems}.",
               "findOrderItemsByItemItemsOrderId": "Returns list of {@link ItemDto} to support OneToMany relation for field {@link OrderFullDto#items}.",
               "findOrderOtherItemsByOrderId": "Returns list of {@link ItemDto} by primary field to support ManyToMany relation for field {@link OrderFullDto#otherItems}.",
-              "findOrderOtherItemsByOrderIdIn": "Returns list of {@link ItemDto} by primary fields to support ManyToMany relation for field {@link OrderFullDto#otherItems}."
+              "findOrderOtherItemsByOrderIdIn": "Returns list of {@link ItemDto} by primary fields to support ManyToMany relation for field {@link OrderFullDto#otherItems}.",
+              "getIdItemsOrderIdById": "Returns ID fields (id, itemsOrderId) of {@link ItemDto} into custom class."
             }
           },
           {
@@ -223,7 +229,9 @@
                 "type": "String",
                 "maxLength": 100
               }
-            ]
+            ],
+            "customMethods": [],
+            "customComments": {}
           },
           {
             "name": "User",

@@ -5,8 +5,6 @@ import io.tezrok.api.ProcessModelPhase
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.*
 import io.tezrok.api.maven.ProjectNode
-import io.tezrok.util.getFindAllIdFieldsByPrimaryIdIn
-import io.tezrok.util.getGetAllIdFieldsByPrimaryId
 import org.slf4j.LoggerFactory
 
 /**
@@ -73,17 +71,10 @@ internal class JooqEntityCustomMethodsFeature : TezrokFeature {
 
         if (entity.isNotSynthetic()) {
             // make helper methods for EntityGraphLoader
-            // findAllIdsByPrimaryIdIn(Collection<ID> ids, Class<T> type)
-            val idFields = entity.getIdFields()
-            if (idFields.size > 1) {
-                val entity = entities[entity.name]
-                val allIdsJavaDoc = idFields.joinToString(", ") { it.name }
-                val methodName = entity.getGetAllIdFieldsByPrimaryId()
-                val methodName2 = entity.getFindAllIdFieldsByPrimaryIdIn()
-                entities[entity.name] = entity.withCustomMethods(methodName, methodName2)
-                    .withCustomComments(methodName to "Returns ID fields ($allIdsJavaDoc) of {@link ${entity.name}Dto} into custom class.")
-                    .withCustomComments(methodName2 to "Returns list of ID fields ($allIdsJavaDoc) of {@link ${entity.name}Dto} into custom class.")
-            }
+            val methods = entities.getIdFieldsMethods(entity)
+            entities[entity.name] = entities[entity.name]
+                .withCustomMethods(*methods.keys.toTypedArray())
+                .withCustomComments(*methods.map { it.key to it.value }.toTypedArray())
         }
     }
 

@@ -2,6 +2,7 @@ package io.tezrok.api.input
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.tezrok.util.ModelTypes
 import java.util.*
 
 /**
@@ -122,6 +123,9 @@ data class EntityElem(
 
     @JsonIgnore
     fun getPrimaryFieldCount(): Int = fields.count { it.primary == true }
+
+    @JsonIgnore
+    fun getUniqueStringFields(): List<FieldElem> = fields.filter { it.unique == true && it.type == ModelTypes.STRING }
 
     @JsonIgnore
     fun isSynthetic(): Boolean = syntheticTo?.isNotEmpty() == true
