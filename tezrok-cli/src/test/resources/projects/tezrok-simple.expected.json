@@ -107,6 +107,7 @@
               "findOrderLinkedOrdersByOrderIdIn",
               "getIdSelectedItemIdNextOrderIdById",
               "getIdSelectedItemIdNextOrderIdByName",
+              "getIdByName",
               "findIdSelectedItemIdNextOrderIdByIdIn",
               "findItemRelatedOrdersByItemId",
               "findItemRelatedOrdersByItemIdIn"
@@ -119,6 +120,7 @@
               "findOrderLinkedOrdersByOrderIdIn": "Returns list of {@link OrderDto} by primary fields to support ManyToMany relation for field {@link OrderFullDto#linkedOrders}.",
               "getByName": "Returns {@link OrderDto} by unique field {@link OrderDto#name}.",
               "getByNextOrderId": "Returns {@link OrderDto} by unique field {@link OrderDto#nextOrderId}.",
+              "getIdByName": "Returns primary ID of {@link OrderDto} by unique field.",
               "getIdSelectedItemIdNextOrderIdById": "Returns ID fields (id, selectedItemId, nextOrderId) of {@link OrderDto} into custom class.",
               "getIdSelectedItemIdNextOrderIdByName": "Returns ID fields (id, selectedItemId, nextOrderId) of {@link OrderDto} by unique field into custom class."
             }

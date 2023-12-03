@@ -93,7 +93,7 @@ fun EntityElem.getGetAllIdFieldsByPrimaryId(): String {
 /**
  * Make method name to `getAllIdFieldsByUniqueName(String name, Class<T> type)`
  */
-fun EntityElem.getGetAllIdFieldsByUniqueName(): String {
+fun EntityElem.getGetAllIdFieldsByUniqueField(): String {
     val allIds = getIdFields().joinToString("") { it.name.upperFirst() }
     val uniqueFields = getUniqueStringFields()
 
@@ -101,4 +101,16 @@ fun EntityElem.getGetAllIdFieldsByUniqueName(): String {
     check(uniqueFields.size == 1) { "Multiple unique fields found in entity $name. Not supported yet" }
 
     return "get${allIds}By${uniqueFields.first().name.upperFirst()}"
+}
+
+/**
+ * Make method name to `getPrimaryIdFieldByUniqueName(String name)`
+ */
+fun EntityElem.getGetPrimaryIdFieldByUniqueField(): String {
+    val uniqueFields = getUniqueStringFields()
+
+    check(uniqueFields.isNotEmpty()) { "Unique field not found in entity $name" }
+    check(uniqueFields.size == 1) { "Multiple unique fields found in entity $name. Not supported yet" }
+
+    return "get${getPrimaryField().name.upperFirst()}By${uniqueFields.first().name.upperFirst()}"
 }
