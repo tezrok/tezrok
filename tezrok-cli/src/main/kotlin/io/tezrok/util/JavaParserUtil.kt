@@ -58,6 +58,18 @@ fun String.parseAsStatement(): Statement {
     }
 }
 
+fun String.parseAsBlock(): BlockStmt {
+    val parser = JavaParserFactory.create()
+    val result = parser.parseBlock(if (this.startsWith("{")) this else "{$this}")
+
+    if (result.isSuccessful) {
+        return result.result.get()
+    } else {
+        val problems = result.problems.map { it.message }.joinToString("\n\n") { it.toString() }
+        error("Failed to parse block: $this\n$problems")
+    }
+}
+
 object JavaParserFactory {
     fun create(): JavaParser {
         val config = ParserConfiguration().setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17)

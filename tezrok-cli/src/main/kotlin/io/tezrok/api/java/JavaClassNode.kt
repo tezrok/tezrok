@@ -103,14 +103,18 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration, private
      * Find class by simple name and add import into this file.
      */
     fun addImportBySimpleName(simpleTypeName: String): JavaClassNode {
-        // first check this type
-        if (getName() == simpleTypeName) {
-            addImport(javaFile.getPackageWithSuffix() + simpleTypeName)
+        try {
+            // first check this type
+            if (getName() == simpleTypeName) {
+                addImport(javaFile.getPackageWithSuffix() + simpleTypeName)
+                return this
+            }
+            // search in all classes by simple name
+            addImportBySimpleName(javaFile.getJavaRoot()!!, simpleTypeName)
             return this
+        } catch (e: Exception) {
+            throw IllegalStateException("Failed to add import for simple name: $simpleTypeName", e)
         }
-        // search in all classes by simple name
-        addImportBySimpleName(javaFile.getJavaRoot()!!, simpleTypeName)
-        return this
     }
 
     private fun addImportBySimpleName(javaDir: JavaDirectoryNode, simpleTypeName: String): Boolean {
@@ -247,5 +251,12 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration, private
     fun setJavadocComment(comment: String): JavaClassNode {
         clazz.setComment(JavadocComment(comment))
         return this
+    }
+
+    fun addInnerClass(className: String): JavaClassNode {
+        val innerClass = ClassOrInterfaceDeclaration().setName("InnerContext")
+        // Create a new inner class
+        clazz.addMember(innerClass)
+        return JavaClassNode(innerClass, javaFile)
     }
 }

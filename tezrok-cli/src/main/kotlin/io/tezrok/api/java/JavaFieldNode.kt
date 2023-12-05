@@ -35,4 +35,9 @@ open class JavaFieldNode(private val field: FieldDeclaration) {
         field.setModifiers(*modifiers)
         return this
     }
+
+    fun setInitializer(initializer: String): JavaFieldNode {
+        field.getVariable(0).setInitializer(initializer)
+        return this
+    }
 }
