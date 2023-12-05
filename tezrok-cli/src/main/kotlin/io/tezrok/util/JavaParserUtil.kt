@@ -40,6 +40,8 @@ fun Expression.asStatement(): Statement = ExpressionStmt(this)
 
 fun Statement.asBlock(): BlockStmt = BlockStmt(NodeList(this))
 
+fun Statement.withLineComment(comment: String): Statement = this.apply { setLineComment(comment) }
+
 fun String.asNameExpr(): NameExpr = NameExpr(this)
 
 fun String.asNameExprList(): NodeList<Expression> = NodeList(NameExpr(this))

@@ -101,9 +101,29 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         val fullDtoParam = fullDtoName.lowerFirst()
         statements.add("if ($fullDtoParam == null) {return null;}".parseAsStatement())
 
+        val entityName = entity.name
         val dtoName = entity.getDtoName()
         val dtoParam = dtoName.lowerFirst()
+        val idType = entity.getPrimaryField().asJavaType()
         // Pair<Long, OrderDto> returnOrIds = loadOrderIdFieldsOrReturn(orderFullDto);
+        val loadMethod = entity.getLoadEntityIdFieldsOrReturnMethod()
+        statements.add(
+            "final Pair<$idType, $dtoName> returnOrIds = $loadMethod($fullDtoParam);".parseAsStatement()
+                .withLineComment("old $entityName ids fields")
+        )
+
+        // if (returnOrIds.getLeft() != null) { return returnOrIds.getLeft(); }
+        statements.add("if (returnOrIds.getLeft() != null) { return returnOrIds.getLeft(); }".parseAsStatement())
+        // final OrderDto oldIdFields = returnOrIds.getRight();
+        statements.add("final $dtoName oldIdFields = returnOrIds.getRight();".parseAsStatement())
+
+        // generates save OneToOne and ManyToOne fields
+        val idFields = entity.getIdFields().filter { field -> field.external != true && field.primary != true }
+        if (idFields.isNotEmpty()) {
+            idFields.forEach { field ->
+                // TODO: add support for ManyToOne and OneToOne fields
+            }
+        }
 
         method.setBody(statements)
     }
@@ -207,6 +227,8 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         val idTracerFile = repositoryDir.addJavaFile("EntityUpdateType.java")
         context.writeTemplate(idTracerFile, "/templates/jooq/EntityUpdateType.java.vm", values)
     }
+
+    private fun EntityElem.getLoadEntityIdFieldsOrReturnMethod(): String = "load${this.name}IdFieldsOrReturn"
 
     private companion object {
         val log = LoggerFactory.getLogger(EntityGraphStoreFeature::class.java)!!
