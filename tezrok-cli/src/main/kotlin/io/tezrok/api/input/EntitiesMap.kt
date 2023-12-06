@@ -25,11 +25,28 @@ data class EntitiesMap(private val entitiesIn: List<EntityElem>) {
         return refEntity.getField(parts[1])
     }
 
+    /**
+     * Returns synthetic field by entity and logic field.
+     */
     fun getSyntheticField(entity: EntityElem, field: FieldElem): FieldElem {
-        val refEntity = this[field.type!!]
-        val syntheticTo = entity.name + "." + field.name
-        return refEntity.fields.find { it.syntheticTo == syntheticTo }
-            ?: error("Synthetic field $syntheticTo not found")
+        check(field.logicField == true) { "Field ${field.name} expected to be logic field" }
+
+        when (field.relation) {
+            EntityRelation.OneToMany -> {
+                val refEntity = this[field.type!!]
+                val syntheticTo = entity.name + "." + field.name
+                return refEntity.fields.find { it.syntheticTo == syntheticTo }
+                    ?: error("Synthetic field $syntheticTo not found")
+            }
+
+            EntityRelation.OneToOne, EntityRelation.ManyToOne -> {
+                val syntheticTo = entity.name + "." + field.name
+                return entity.fields.find { it.syntheticTo == syntheticTo }
+                    ?: error("Synthetic field $syntheticTo not found")
+            }
+
+            else -> error("Unsupported relation: ${field.relation}")
+        }
     }
 
     fun getMethodByField(entity: EntityElem, field: FieldElem, vararg types: ManyToManyMethod): Map<String, String> {
@@ -100,12 +117,16 @@ data class EntitiesMap(private val entitiesIn: List<EntityElem>) {
         val idFields = entity.getIdFields()
         if (idFields.size > 1) {
             val allIdsJavaDoc = idFields.joinToString(", ") { it.name }
-            result[entity.getGetAllIdFieldsByPrimaryId()] = "Returns ID fields ($allIdsJavaDoc) of {@link ${entity.name}Dto} into custom class."
+            result[entity.getGetAllIdFieldsByPrimaryId()] =
+                "Returns ID fields ($allIdsJavaDoc) of {@link ${entity.name}Dto} into custom class."
             if (entity.getUniqueStringFields().any()) {
-                result[entity.getGetAllIdFieldsByUniqueField()] = "Returns ID fields ($allIdsJavaDoc) of {@link ${entity.name}Dto} by unique field into custom class."
-                result[entity.getGetPrimaryIdFieldByUniqueField()] = "Returns primary ID of {@link ${entity.name}Dto} by unique field."
+                result[entity.getGetAllIdFieldsByUniqueField()] =
+                    "Returns ID fields ($allIdsJavaDoc) of {@link ${entity.name}Dto} by unique field into custom class."
+                result[entity.getGetPrimaryIdFieldByUniqueField()] =
+                    "Returns primary ID of {@link ${entity.name}Dto} by unique field."
             }
-            result[entity.getFindAllIdFieldsByPrimaryIdIn()] = "Returns list of ID fields ($allIdsJavaDoc) of {@link ${entity.name}Dto} into custom class."
+            result[entity.getFindAllIdFieldsByPrimaryIdIn()] =
+                "Returns list of ID fields ($allIdsJavaDoc) of {@link ${entity.name}Dto} into custom class."
         }
 
         return result
@@ -118,6 +139,12 @@ data class EntitiesMap(private val entitiesIn: List<EntityElem>) {
         val fieldRefName = "${entity.name}.${field.name}"
         return entitiesMap.values.find { it.syntheticTo == fieldRefName }
             ?: error("Relation entity not found for field $fieldRefName")
+    }
+
+    fun getRefEntity(field: FieldElem): EntityElem {
+        check(field.logicField == true) { "Field ${field.name} expected to be logic field" }
+
+        return this[field.type!!]
     }
 
     operator fun get(name: String): EntityElem = entitiesMap[name] ?: error("Entity not found: $name")

@@ -5,13 +5,16 @@ import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.stmt.Statement
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
+import io.tezrok.api.input.EntitiesMap
 import io.tezrok.api.input.EntityElem
+import io.tezrok.api.input.EntityRelation
 import io.tezrok.api.java.JavaClassNode
 import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.java.JavaFieldNode
 import io.tezrok.api.java.JavaMethodNode
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.*
+import org.jetbrains.annotations.NotNull
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.function.UnaryOperator
@@ -88,23 +91,22 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         }
 
         // implement saveFullEntity methods
+        val entitiesMap = EntitiesMap.from(entities)
         methods.forEach { (entity, method) ->
-            implementSaveFullEntityMethod(method, entity)
+            implementSaveFullEntityMethod(method, entity, entitiesMap)
         }
     }
 
-    private fun implementSaveFullEntityMethod(method: JavaMethodNode, entity: EntityElem) {
+    private fun implementSaveFullEntityMethod(method: JavaMethodNode, entity: EntityElem, entitiesMap: EntitiesMap) {
         val statements = NodeList<Statement>()
 
-        // if (orderFullDto == null) {return null;}
         val fullDtoName = entity.getFullDtoName()
         val fullDtoParam = fullDtoName.lowerFirst()
-        statements.add("if ($fullDtoParam == null) {return null;}".parseAsStatement())
-
         val entityName = entity.name
         val dtoName = entity.getDtoName()
-        val dtoParam = dtoName.lowerFirst()
-        val idType = entity.getPrimaryField().asJavaType()
+        val dtoField = dtoName.lowerFirst()
+        val primaryField = entity.getPrimaryField()
+        val idType = primaryField.asJavaType()
         // Pair<Long, OrderDto> returnOrIds = loadOrderIdFieldsOrReturn(orderFullDto);
         val loadMethod = entity.getLoadEntityIdFieldsOrReturnMethod()
         statements.add(
@@ -117,13 +119,46 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         // final OrderDto oldIdFields = returnOrIds.getRight();
         statements.add("final $dtoName oldIdFields = returnOrIds.getRight();".parseAsStatement())
 
+        // final OrderDto orderDtoPre = updater.apply(orderMapper.toOrderDto(orderFullDto));
+        val mapperField = entity.getMapperName().lowerFirst()
+        val dtoPreField = "${dtoField}Pre"
+        statements.add("final $dtoName $dtoPreField = updater.apply($mapperField.to${dtoName}($fullDtoParam));".parseAsStatement())
+
         // generates save OneToOne and ManyToOne fields
-        val idFields = entity.getIdFields().filter { field -> field.external != true && field.primary != true }
-        if (idFields.isNotEmpty()) {
-            idFields.forEach { field ->
-                // TODO: add support for ManyToOne and OneToOne fields
+        val singleFields = entity.fields
+            .filter { field -> field.relation == EntityRelation.ManyToOne || field.relation == EntityRelation.OneToOne }
+        if (singleFields.isNotEmpty()) {
+            singleFields.forEach { field ->
+                val syntheticField = entitiesMap.getSyntheticField(entity, field)
+                val fieldGetter = syntheticField.getGetterName()
+                val refEntity = entitiesMap.getRefEntity(field)
+                val fieldSetter = syntheticField.getSetterName()
+
+                if (field.relation == EntityRelation.OneToOne) {
+                    // orderDtoPre.setSelectedItemId(saveOneToOneOrder(orderFullDto.getNextOrder(), oldIdFields != null ? oldIdFields.getNextOrderId() : null));
+                    val methodName = "saveOneToOne${refEntity.name}"
+                    statements.add(
+                        "$dtoPreField.$fieldSetter($methodName($fullDtoParam.${field.getGetterName()}(), oldIdFields != null ? oldIdFields.$fieldGetter() : null));"
+                            .parseAsStatement().withLineComment("save property \"${field.name}\" - OneToOne relation")
+                    )
+                } else if (field.relation == EntityRelation.ManyToOne) {
+                    // orderDtoPre.setSelectedItemId(saveManyToOneItem(orderFullDto.getSelectedItem()));
+                    val methodName = "saveManyToOne${refEntity.name}"
+                    statements.add(
+                        "$dtoPreField.$fieldSetter($methodName($fullDtoParam.${field.getGetterName()}()));"
+                            .parseAsStatement().withLineComment("save property \"${field.name}\" - ManyToOne relation")
+                    )
+                }
             }
         }
+
+        // final OrderDto orderDto = orderRepository.save(orderDtoPre);
+        val entityRepositoryName = entity.getRepositoryName().lowerFirst()
+        statements.add("final $dtoName $dtoField = $entityRepositoryName.save($dtoPreField);"
+            .parseAsStatement().withLineComment("save $entityName"))
+
+        // return orderDto.getId();
+        statements.add("return $dtoField.${primaryField.getGetterName()}();".parseAsStatement())
 
         method.setBody(statements)
     }
@@ -138,14 +173,17 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         val fullDtoName = entity.getFullDtoName()
         val fullDtoParam = fullDtoName.lowerFirst()
         clazz.addMethod(methodName)
+            .addAnnotation(NotNull::class.java)
             .addParameter(fullDtoName, fullDtoParam)
+            .setReturnType(entity.getPrimaryField().asJavaType())
             .setBody("return $methodName($fullDtoParam, UnaryOperator.identity());".parseAsStatement())
 
         // Long saveFullOrder(final OrderFullDto orderFullDto, final UnaryOperator<OrderDto> updater) {}
         val updaterParam = "updater"
         return clazz.addMethod(methodName)
+            .addAnnotation(NotNull::class.java)
             .addParameter(fullDtoName, fullDtoParam)
-            .addParameter("UnaryOperator<$fullDtoName>", updaterParam)
+            .addParameter("UnaryOperator<${entity.getDtoName()}>", updaterParam)
             .setReturnType(entity.getPrimaryField().asJavaType())
     }
 
