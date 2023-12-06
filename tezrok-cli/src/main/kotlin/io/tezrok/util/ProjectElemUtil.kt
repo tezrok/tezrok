@@ -62,6 +62,10 @@ object ModelTypes {
     const val DECIMAL = "Decimal"
 }
 
+fun EntityElem.getPrimaryFieldType(tryPrimitive: Boolean = false): String = getPrimaryField().asJavaType(tryPrimitive)
+
+fun EntityElem.getUniqueStringFields(): List<FieldElem> = fields.filter { it.unique == true && it.type == ModelTypes.STRING }
+
 fun EntityElem.getRepositoryName(): String = "${name}Repository"
 
 fun EntityElem.getMapperName(): String = "${name}Mapper"

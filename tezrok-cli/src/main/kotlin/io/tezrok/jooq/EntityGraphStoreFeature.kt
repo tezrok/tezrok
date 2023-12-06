@@ -95,6 +95,20 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         methods.forEach { (entity, method) ->
             implementSaveFullEntityMethod(method, entity, entitiesMap)
         }
+
+        entities.filter { it.isNotSynthetic() && it.fields.any { field -> field.relation == EntityRelation.OneToOne } }
+            .forEach { entity ->
+                addLoadOrderIdFieldsOrReturnMethod(contextClass, entity)
+            }
+    }
+
+    private fun addLoadOrderIdFieldsOrReturnMethod(clazz: JavaClassNode, entity: EntityElem) {
+        val fullDtoName = entity.getFullDtoName()
+        val entityIdType = entity.getPrimaryFieldType()
+        val fullDtoField = fullDtoName.lowerFirst()
+        clazz.addMethod(entity.getLoadEntityIdFieldsOrReturnMethod())
+            .addParameter(fullDtoName, fullDtoField)
+            .setReturnType("Pair<$entityIdType, $fullDtoName>")
     }
 
     private fun implementSaveFullEntityMethod(method: JavaMethodNode, entity: EntityElem, entitiesMap: EntitiesMap) {
@@ -111,13 +125,15 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         val loadMethod = entity.getLoadEntityIdFieldsOrReturnMethod()
         statements.add(
             "final Pair<$idType, $dtoName> returnOrIds = $loadMethod($fullDtoParam);".parseAsStatement()
-                .withLineComment("old $entityName ids fields")
+                .withLineComment(" old $entityName ids fields")
         )
 
         // if (returnOrIds.getLeft() != null) { return returnOrIds.getLeft(); }
         statements.add("if (returnOrIds.getLeft() != null) { return returnOrIds.getLeft(); }".parseAsStatement())
-        // final OrderDto oldIdFields = returnOrIds.getRight();
-        statements.add("final $dtoName oldIdFields = returnOrIds.getRight();".parseAsStatement())
+        if (entity.fields.any { it.relation == EntityRelation.OneToOne }) {
+            // final OrderDto oldIdFields = returnOrIds.getRight();
+            statements.add("final $dtoName oldIdFields = returnOrIds.getRight();".parseAsStatement())
+        }
 
         // final OrderDto orderDtoPre = updater.apply(orderMapper.toOrderDto(orderFullDto));
         val mapperField = entity.getMapperName().lowerFirst()
@@ -125,10 +141,8 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         statements.add("final $dtoName $dtoPreField = updater.apply($mapperField.to${dtoName}($fullDtoParam));".parseAsStatement())
 
         // generates save OneToOne and ManyToOne fields
-        val singleFields = entity.fields
-            .filter { field -> field.relation == EntityRelation.ManyToOne || field.relation == EntityRelation.OneToOne }
-        if (singleFields.isNotEmpty()) {
-            singleFields.forEach { field ->
+        entity.fields.filter { field -> field.relation == EntityRelation.ManyToOne || field.relation == EntityRelation.OneToOne }
+            .forEach { field ->
                 val syntheticField = entitiesMap.getSyntheticField(entity, field)
                 val fieldGetter = syntheticField.getGetterName()
                 val refEntity = entitiesMap.getRefEntity(field)
@@ -139,26 +153,47 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
                     val methodName = "saveOneToOne${refEntity.name}"
                     statements.add(
                         "$dtoPreField.$fieldSetter($methodName($fullDtoParam.${field.getGetterName()}(), oldIdFields != null ? oldIdFields.$fieldGetter() : null));"
-                            .parseAsStatement().withLineComment("save property \"${field.name}\" - OneToOne relation")
+                            .parseAsStatement().withLineComment(" save property \"${field.name}\" - OneToOne relation")
                     )
                 } else if (field.relation == EntityRelation.ManyToOne) {
                     // orderDtoPre.setSelectedItemId(saveManyToOneItem(orderFullDto.getSelectedItem()));
                     val methodName = "saveManyToOne${refEntity.name}"
                     statements.add(
                         "$dtoPreField.$fieldSetter($methodName($fullDtoParam.${field.getGetterName()}()));"
-                            .parseAsStatement().withLineComment("save property \"${field.name}\" - ManyToOne relation")
+                            .parseAsStatement().withLineComment(" save property \"${field.name}\" - ManyToOne relation")
                     )
                 }
             }
-        }
 
         // final OrderDto orderDto = orderRepository.save(orderDtoPre);
         val entityRepositoryName = entity.getRepositoryName().lowerFirst()
-        statements.add("final $dtoName $dtoField = $entityRepositoryName.save($dtoPreField);"
-            .parseAsStatement().withLineComment("save $entityName"))
+        statements.add(
+            "final $dtoName $dtoField = $entityRepositoryName.save($dtoPreField);"
+                .parseAsStatement().withLineComment(" save $entityName")
+        )
+
+        // orderIdsSaved.add(orderDto.getId());
+        val entityField = entity.name.lowerFirst()
+        val primaryFieldCall = "$dtoField.${primaryField.getGetterName()}()"
+        statements.add(
+            "${entityField}IdsSaved.add($primaryFieldCall);"
+                .parseAsStatement()
+                .withLineComment(" preserve $entityName from deletion and to avoid infinite recursion")
+        )
+
+        entity.fields.filter { field -> field.relation == EntityRelation.OneToMany || field.relation == EntityRelation.ManyToMany }
+            .forEach { field ->
+                // saveOrderItems(orderFullDto, orderDto.getId());
+                val methodName = "save${entity.name}${field.name.upperFirst()}"
+                statements.add(
+                    "$methodName($fullDtoParam, $primaryFieldCall);"
+                        .parseAsStatement()
+                        .withLineComment(" save property \"${field.name}\" - ${field.relation} relation")
+                )
+            }
 
         // return orderDto.getId();
-        statements.add("return $dtoField.${primaryField.getGetterName()}();".parseAsStatement())
+        statements.add("return $primaryFieldCall;".parseAsStatement())
 
         method.setBody(statements)
     }
@@ -188,7 +223,7 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
     }
 
     private fun addInnerContextClass(clazz: JavaClassNode, entities: List<EntityElem>): JavaClassNode {
-        val contextClass = clazz.addInnerClass("InnerContext")
+        val contextClass = clazz.addInnerClass("InnerContext").implementInterface(AutoCloseable::class.java)
 
         entities.forEach { entity ->
             // private final Set<Long> itemIdsToDelete = new HashSet<>(0);
@@ -208,34 +243,39 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
 
     private fun addPublicSaveFullEntityMethods(clazz: JavaClassNode, entity: EntityElem) {
         /*
-        public void saveFullOrder(final OrderFullDto orderFullDto) {
-            saveFullOrder(orderFullDto, EntityUpdateType.DEFAULT);
+        public Long saveFullOrder(final OrderFullDto orderFullDto) {
+            return saveFullOrder(orderFullDto, EntityUpdateType.DEFAULT);
         }
         */
         val methodName = "saveFull${entity.name}"
         val fullDtoName = entity.getFullDtoName()
         val fullDtoParam = fullDtoName.lowerFirst()
+        val entityIdType = entity.getPrimaryFieldType()
         clazz.addMethod(methodName)
+            .addAnnotation(NotNull::class.java)
             .withModifiers(Modifier.Keyword.PUBLIC)
             .addParameter(fullDtoName, fullDtoParam)
+            .setReturnType(entityIdType)
             .setBody("saveFull${entity.name}($fullDtoParam, EntityUpdateType.DEFAULT);".parseAsStatement())
 
         /*
-        public void saveFullOrder(final OrderFullDto orderFullDto, EntityUpdateType updateType) {
-            final InnerContext ctx = new InnerContext(updateType);
-            ctx.saveFullOrder(orderFullDto);
-            ctx.close();
+        public Long saveFullOrder(final OrderFullDto orderFullDto, EntityUpdateType updateType) {
+            try (final InnerContext ctx = new InnerContext(updateType)) {
+                return ctx.saveFullOrder(orderFullDto);
+            }
         }
         */
         val updateTypeParam = "updateType"
         clazz.addMethod(methodName)
+            .addAnnotation(NotNull::class.java)
             .withModifiers(Modifier.Keyword.PUBLIC)
             .addParameter(fullDtoName, fullDtoParam)
             .addParameter("EntityUpdateType", updateTypeParam)
+            .setReturnType(entityIdType)
             .setBody(
-                """final InnerContext ctx = new InnerContext($updateTypeParam);
-            ctx.$methodName($fullDtoParam);
-            ctx.close();""".parseAsBlock()
+                """try (final InnerContext ctx = new InnerContext($updateTypeParam)) {
+            return ctx.$methodName($fullDtoParam);
+            }""".parseAsBlock()
             )
     }
 
