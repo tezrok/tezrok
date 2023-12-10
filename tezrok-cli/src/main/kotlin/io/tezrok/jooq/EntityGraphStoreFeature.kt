@@ -96,19 +96,93 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
             implementSaveFullEntityMethod(method, entity, entitiesMap)
         }
 
-        entities.filter { it.isNotSynthetic() && it.fields.any { field -> field.relation == EntityRelation.OneToOne } }
+        entities.filter { it.isNotSynthetic() }
             .forEach { entity ->
-                addLoadOrderIdFieldsOrReturnMethod(contextClass, entity)
+                addLoadEntityIdFieldsOrReturnMethod(contextClass, entity)
             }
     }
 
-    private fun addLoadOrderIdFieldsOrReturnMethod(clazz: JavaClassNode, entity: EntityElem) {
+    private fun addLoadEntityIdFieldsOrReturnMethod(clazz: JavaClassNode, entity: EntityElem) {
         val fullDtoName = entity.getFullDtoName()
         val entityIdType = entity.getPrimaryFieldType()
-        val fullDtoField = fullDtoName.lowerFirst()
-        clazz.addMethod(entity.getLoadEntityIdFieldsOrReturnMethod())
-            .addParameter(fullDtoName, fullDtoField)
-            .setReturnType("Pair<$entityIdType, $fullDtoName>")
+        val dtoName = entity.getDtoName()
+        val statements = NodeList<Statement>()
+        val method = clazz.addMethod(entity.getLoadEntityIdFieldsOrReturnMethod())
+            .addParameter(fullDtoName, "newFullDto")
+            .setReturnType("Pair<$entityIdType, $dtoName>")
+            .setJavadocComment("Return left value (ID) if we need to return, otherwise id fields of {@link $dtoName}.")
+
+        val entityField = entity.name.lowerFirst()
+        val entityIdsSaved = """${entityField}IdsSaved"""
+        val entityRepository = entity.getRepositoryName().lowerFirst()
+        if (entity.getIdFields().size > 1) {
+            statements.addAll(
+                """if (newFullDto.getId() != null) {
+                if ($entityIdsSaved.contains(newFullDto.getId())) {
+                    return Pair.of(newFullDto.getId(), null);
+                }
+                $entityIdsSaved.add(newFullDto.getId());
+
+                return Pair.of(null, $entityRepository.getIdFieldsById(newFullDto.getId(), $dtoName.class));
+            }""".parseAsStatements()
+            )
+        } else {
+            statements.addAll(
+                """if (newFullDto.getId() != null) {
+                if ($entityIdsSaved.contains(newFullDto.getId())) {
+                    return Pair.of(newFullDto.getId(), null);
+                }
+                $entityIdsSaved.add(newFullDto.getId());
+
+                return Pair.of(null, null);
+            }""".parseAsStatements()
+            )
+        }
+
+        val uniqueFields = entity.getUniqueStringFields()
+
+        if (uniqueFields.isNotEmpty()) {
+            var second = false
+            var code = "// check unique fields\n"
+            uniqueFields.forEach { field ->
+                val idFieldsByUniqField = entity.getGetIdFieldsByUniqueField(field)
+                val primaryFieldByUniqField = entity.getGetPrimaryIdFieldByUniqueField(field)
+                val fieldGetter = field.getGetterName()
+                val primaryIdGetter = entity.getPrimaryField().getGetterName()
+                val elsePrefix = if (second) " else " else ""
+                code += """${elsePrefix}if (newFullDto.$fieldGetter() != null) {
+                if (updateType == EntityUpdateType.UPDATE_RELATION_BY_NAME) {
+                    // if we don't have id, have unique field and need update only relation, return only id
+                    final Long idByName = $entityRepository.$primaryFieldByUniqField(newFullDto.$fieldGetter());
+                    if (idByName != null) {
+                        return Pair.of(idByName, null);
+                    }
+                }
+
+                final $dtoName oldIdFields;
+                if (updateType == EntityUpdateType.UPDATE_BY_NAME) {
+                    // if we have unique field, we can load id fields by it
+                    oldIdFields = $entityRepository.$idFieldsByUniqField(newFullDto.$fieldGetter(), $dtoName.class);
+                } else {
+                    oldIdFields = null;
+                }
+
+                if (oldIdFields != null) {
+                    if ($entityIdsSaved.contains(oldIdFields.$primaryIdGetter())) {
+                        return Pair.of(oldIdFields.$primaryIdGetter(), null);
+                    }
+                    $entityIdsSaved.add(oldIdFields.$primaryIdGetter());
+                    return Pair.of(null, oldIdFields);
+                }
+            }"""
+                second = true
+            }
+
+            statements.addAll(code.parseAsStatements())
+        }
+
+        statements.add("return Pair.of(null, null);".parseAsStatement())
+        method.setBody(statements)
     }
 
     private fun implementSaveFullEntityMethod(method: JavaMethodNode, entity: EntityElem, entitiesMap: EntitiesMap) {
@@ -256,7 +330,7 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
             .withModifiers(Modifier.Keyword.PUBLIC)
             .addParameter(fullDtoName, fullDtoParam)
             .setReturnType(entityIdType)
-            .setBody("saveFull${entity.name}($fullDtoParam, EntityUpdateType.DEFAULT);".parseAsStatement())
+            .setBody("return saveFull${entity.name}($fullDtoParam, EntityUpdateType.DEFAULT);".parseAsStatement())
 
         /*
         public Long saveFullOrder(final OrderFullDto orderFullDto, EntityUpdateType updateType) {

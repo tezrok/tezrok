@@ -119,11 +119,11 @@ data class EntitiesMap(private val entitiesIn: List<EntityElem>) {
             val allIdsJavaDoc = idFields.joinToString(", ") { it.name }
             result[entity.getGetIdFieldsByPrimaryId()] =
                 "Returns ID fields ($allIdsJavaDoc) of {@link ${entity.name}Dto} into custom class."
-            if (entity.getUniqueStringFields().any()) {
-                result[entity.getGetIdFieldsByUniqueField()] =
-                    "Returns ID fields ($allIdsJavaDoc) of {@link ${entity.name}Dto} by unique field into custom class."
-                result[entity.getGetPrimaryIdFieldByUniqueField()] =
-                    "Returns primary ID of {@link ${entity.name}Dto} by unique field."
+            entity.getUniqueStringFields().forEach { field ->
+                result[entity.getGetIdFieldsByUniqueField(field)] =
+                    "Returns ID fields ($allIdsJavaDoc) of {@link ${entity.name}Dto} by unique field (${field.name}) into custom class."
+                result[entity.getGetPrimaryIdFieldByUniqueField(field)] =
+                    "Returns primary ID of {@link ${entity.name}Dto} by unique field (${field.name})."
             }
             result[entity.getFindIdFieldsByPrimaryIdIn()] =
                 "Returns list of ID fields ($allIdsJavaDoc) of {@link ${entity.name}Dto} into custom class."

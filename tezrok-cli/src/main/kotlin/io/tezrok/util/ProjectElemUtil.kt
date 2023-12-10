@@ -93,23 +93,19 @@ fun EntityElem.getGetIdFieldsByPrimaryId(): String {
 /**
  * Make method name to `getIdFieldsByUniqueName(String name, Class<T> type)`
  */
-fun EntityElem.getGetIdFieldsByUniqueField(): String {
-    val uniqueFields = getUniqueStringFields()
+fun EntityElem.getGetIdFieldsByUniqueField(field: FieldElem): String {
+    check(field.unique == true) { "Field ${field.name} is not unique" }
+    check(getUniqueStringFields().contains(field)) { "Field ${field.name} is not found in entity $name" }
 
-    check(uniqueFields.isNotEmpty()) { "Unique field not found in entity $name" }
-    check(uniqueFields.size == 1) { "Multiple unique fields found in entity $name. Not supported yet" }
-
-    return "getIdFieldsBy${uniqueFields.first().name.upperFirst()}"
+    return "getIdFieldsBy${field.name.upperFirst()}"
 }
 
 /**
  * Make method name to `getPrimaryIdFieldByUniqueName(String name)`
  */
-fun EntityElem.getGetPrimaryIdFieldByUniqueField(): String {
-    val uniqueFields = getUniqueStringFields()
+fun EntityElem.getGetPrimaryIdFieldByUniqueField(field: FieldElem): String {
+    check(field.unique == true) { "Field ${field.name} is not unique" }
+    check(getUniqueStringFields().contains(field)) { "Field ${field.name} is not found in entity $name" }
 
-    check(uniqueFields.isNotEmpty()) { "Unique field not found in entity $name" }
-    check(uniqueFields.size == 1) { "Multiple unique fields found in entity $name. Not supported yet" }
-
-    return "get${getPrimaryField().name.upperFirst()}By${uniqueFields.first().name.upperFirst()}"
+    return "get${getPrimaryField().name.upperFirst()}By${field.name.upperFirst()}"
 }

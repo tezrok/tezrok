@@ -60,6 +60,13 @@ fun String.parseAsStatement(): Statement {
     }
 }
 
+fun String.parseAsStatements(): List<Statement> {
+    val isBlock = this.startsWith("{")
+    val fixedCode = if (isBlock) this else "{$this}"
+    val block = fixedCode.parseAsBlock()
+    return if (isBlock) listOf(block) else block.statements
+}
+
 fun String.parseAsBlock(): BlockStmt {
     val parser = JavaParserFactory.create()
     val result = parser.parseBlock(if (this.startsWith("{")) this else "{$this}")
