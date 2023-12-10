@@ -413,6 +413,10 @@ internal class JooqMethodGenerator(
             return emptyList()
         }
 
+        if (methodPrefix == PREFIX_ID_FIELDS) {
+            return entity.getIdFields()
+        }
+
         val singleField = tryGetFieldByName(methodPrefix.decapitalize())
         if (singleField != null) {
             return listOf(singleField)
@@ -907,6 +911,7 @@ internal class JooqMethodGenerator(
         const val PREFIX_GET = "get"
         const val PREFIX_COUNT = "count"
         const val PREFIX_BY = "By"
+        const val PREFIX_ID_FIELDS = "IdFields"
         const val DISTINCT_CANNOT_BE_USED_WHOLE_TABLE = "Distinct cannot be used whole table select"
         const val GENERIC_LIST = "List<T>"
         const val GENERIC_T = "T"

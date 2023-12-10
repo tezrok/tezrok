@@ -384,7 +384,7 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
                 builder.append("object.setProperty(\"${refField.name}\", $refFullDto.class, ${entityFieldName}.$getterName());")
                 allRelatedEntities[refEntity.name] = refEntity.getPrimaryField().asJavaType()
             }
-            val methodName = entity.getFindAllIdFieldsByPrimaryIdIn()
+            val methodName = entity.getFindIdFieldsByPrimaryIdIn()
             statements.add(
                 IfStmt(
                     UnaryExpr(isRootParam.asNameExpr(), UnaryExpr.Operator.LOGICAL_COMPLEMENT),

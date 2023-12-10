@@ -79,32 +79,27 @@ fun EntityElem.asType(): ClassOrInterfaceType = ClassOrInterfaceType(getFullDtoN
 /**
  * Make method name to `findAllIdFieldsByPrimaryIdIn(Collection<ID> ids, Class<T> type)`
  */
-fun EntityElem.getFindAllIdFieldsByPrimaryIdIn(): String {
-    val allIds = getIdFields().joinToString("") { it.name.upperFirst() }
-
-    return "find${allIds}By${getPrimaryField().name.upperFirst()}In"
+fun EntityElem.getFindIdFieldsByPrimaryIdIn(): String {
+    return "findIdFieldsBy${getPrimaryField().name.upperFirst()}In"
 }
 
 /**
- * Make method name to `getAllIdFieldsByPrimaryId(ID id, Class<T> type)`
+ * Make method name to `getIdFieldsByPrimaryId(ID id, Class<T> type)`
  */
-fun EntityElem.getGetAllIdFieldsByPrimaryId(): String {
-    val allIds = getIdFields().joinToString("") { it.name.upperFirst() }
-
-    return "get${allIds}By${getPrimaryField().name.upperFirst()}"
+fun EntityElem.getGetIdFieldsByPrimaryId(): String {
+    return "getIdFieldsBy${getPrimaryField().name.upperFirst()}"
 }
 
 /**
- * Make method name to `getAllIdFieldsByUniqueName(String name, Class<T> type)`
+ * Make method name to `getIdFieldsByUniqueName(String name, Class<T> type)`
  */
-fun EntityElem.getGetAllIdFieldsByUniqueField(): String {
-    val allIds = getIdFields().joinToString("") { it.name.upperFirst() }
+fun EntityElem.getGetIdFieldsByUniqueField(): String {
     val uniqueFields = getUniqueStringFields()
 
     check(uniqueFields.isNotEmpty()) { "Unique field not found in entity $name" }
     check(uniqueFields.size == 1) { "Multiple unique fields found in entity $name. Not supported yet" }
 
-    return "get${allIds}By${uniqueFields.first().name.upperFirst()}"
+    return "getIdFieldsBy${uniqueFields.first().name.upperFirst()}"
 }
 
 /**
