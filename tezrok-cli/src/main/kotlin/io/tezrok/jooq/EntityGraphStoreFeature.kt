@@ -5,18 +5,19 @@ import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.stmt.Statement
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
-import io.tezrok.api.input.EntitiesMap
-import io.tezrok.api.input.EntityElem
-import io.tezrok.api.input.EntityRelation
+import io.tezrok.api.input.*
 import io.tezrok.api.java.JavaClassNode
 import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.java.JavaFieldNode
 import io.tezrok.api.java.JavaMethodNode
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.*
+import org.apache.commons.collections4.CollectionUtils
 import org.jetbrains.annotations.NotNull
+import org.jetbrains.annotations.Nullable
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.util.*
 import java.util.function.UnaryOperator
 import java.util.stream.Collectors
 
@@ -61,9 +62,12 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
             )
             .addImport(Collection::class.java)
             .addImport(List::class.java)
+            .addImport(ArrayList::class.java)
             .addImport(Set::class.java)
             .addImport(HashSet::class.java)
             .addImport(Collectors::class.java)
+            .addImport(Collections::class.java)
+            .addImport(CollectionUtils::class.java)
             .addImport(UnaryOperator::class.java)
             .addImport(org.apache.commons.lang3.tuple.Pair::class.java)
 
@@ -115,7 +119,8 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         val entityField = entity.name.lowerFirst()
         val entityIdsSaved = """${entityField}IdsSaved"""
         val entityRepository = entity.getRepositoryName().lowerFirst()
-        if (entity.getIdFields().size > 1) {
+        val hasIdFields = entity.getIdFields().size > 1
+        if (hasIdFields) {
             statements.addAll(
                 """if (newFullDto.getId() != null) {
                 if ($entityIdsSaved.contains(newFullDto.getId())) {
@@ -158,8 +163,10 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
                         return Pair.of(idByName, null);
                     }
                 }
-
-                final $dtoName oldIdFields;
+            }"""
+                // case when we have uniqfield and id fields
+                if (hasIdFields) {
+                    code += """final $dtoName oldIdFields;
                 if (updateType == EntityUpdateType.UPDATE_BY_NAME) {
                     // if we have unique field, we can load id fields by it
                     oldIdFields = $entityRepository.$idFieldsByUniqField(newFullDto.$fieldGetter(), $dtoName.class);
@@ -173,8 +180,8 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
                     }
                     $entityIdsSaved.add(oldIdFields.$primaryIdGetter());
                     return Pair.of(null, oldIdFields);
+                }"""
                 }
-            }"""
                 second = true
             }
 
@@ -224,14 +231,14 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
 
                 if (field.relation == EntityRelation.OneToOne) {
                     // orderDtoPre.setSelectedItemId(saveOneToOneOrder(orderFullDto.getNextOrder(), oldIdFields != null ? oldIdFields.getNextOrderId() : null));
-                    val methodName = "saveOneToOne${refEntity.name}"
+                    val methodName = getOrAddOneToOneMethod(refEntity, method.getOwner()).getName()
                     statements.add(
                         "$dtoPreField.$fieldSetter($methodName($fullDtoParam.${field.getGetterName()}(), oldIdFields != null ? oldIdFields.$fieldGetter() : null));"
                             .parseAsStatement().withLineComment(" save property \"${field.name}\" - OneToOne relation")
                     )
                 } else if (field.relation == EntityRelation.ManyToOne) {
                     // orderDtoPre.setSelectedItemId(saveManyToOneItem(orderFullDto.getSelectedItem()));
-                    val methodName = "saveManyToOne${refEntity.name}"
+                    val methodName = getOrAddManyToOneMethod(refEntity, method.getOwner()).getName()
                     statements.add(
                         "$dtoPreField.$fieldSetter($methodName($fullDtoParam.${field.getGetterName()}()));"
                             .parseAsStatement().withLineComment(" save property \"${field.name}\" - ManyToOne relation")
@@ -258,7 +265,7 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         entity.fields.filter { field -> field.relation == EntityRelation.OneToMany || field.relation == EntityRelation.ManyToMany }
             .forEach { field ->
                 // saveOrderItems(orderFullDto, orderDto.getId());
-                val methodName = "save${entity.name}${field.name.upperFirst()}"
+                val methodName = addToManyMethod(field, entity, entitiesMap, method.getOwner()).getName()
                 statements.add(
                     "$methodName($fullDtoParam, $primaryFieldCall);"
                         .parseAsStatement()
@@ -270,6 +277,189 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         statements.add("return $primaryFieldCall;".parseAsStatement())
 
         method.setBody(statements)
+    }
+
+    private fun getOrAddManyToOneMethod(entity: EntityElem, clazz: JavaClassNode): JavaMethodNode {
+        val methodName = "saveManyToOne${entity.name}"
+        clazz.getMethod(methodName)?.let { return it }
+
+        val entityName = entity.name
+        val paramName = "new$entityName"
+        val paramType = entity.getFullDtoName()
+        return clazz.addMethod(methodName)
+            .addAnnotation(Nullable::class.java)
+            .addParameter(paramType, paramName)
+            .setReturnType(entity.getPrimaryFieldType())
+            .setBody("return $paramName != null ? saveFullItem($paramName) : null;".parseAsStatement())
+            .setJavadocComment(
+                """Save property of type {@link $paramType} and ManyToOne relation.
+
+@param $paramName item to save
+@return id of saved $entityName"""
+            )
+    }
+
+    private fun getOrAddOneToOneMethod(entity: EntityElem, clazz: JavaClassNode): JavaMethodNode {
+        val methodName = "saveOneToOne${entity.name}"
+        clazz.getMethod(methodName)?.let { return it }
+
+        val entityName = entity.name
+        val entityField = entityName.lowerFirst()
+        val paramName = "new$entityName"
+        val paramType = entity.getFullDtoName()
+        val primaryIdType = entity.getPrimaryFieldType()
+        return clazz.addMethod(methodName)
+            .addAnnotation(Nullable::class.java)
+            .addParameter(paramType, paramName)
+            .addParameter(primaryIdType, "oldId")
+            .setReturnType(primaryIdType)
+            .setBody(
+                """final Long nextId = $paramName != null ? saveFullOrder($paramName) : null;
+            if (oldId != null && !oldId.equals(nextId)) {
+                // delete old $entityName as it's not used anymore and it's OneToOne relation
+                ${entityField}IdsToDelete.add(oldId);
+            }
+            return nextId;""".parseAsBlock()
+            )
+            .setJavadocComment(
+                """Save property of type {@link $paramType} and OneToOne relation.
+
+ @param newOrder new order to save
+ @param oldId    old order dto
+ @return id of saved order"""
+            )
+    }
+
+    private fun addToManyMethod(
+        field: FieldElem,
+        entity: EntityElem,
+        entities: EntitiesMap,
+        clazz: JavaClassNode
+    ): JavaMethodNode {
+        return when (field.relation) {
+            EntityRelation.OneToMany -> addOneToManyMethod(field, entity, entities, clazz)
+
+            EntityRelation.ManyToMany -> addManyToManyMethod(field, entity, entities, clazz)
+            else -> error("Unsupported relation: ${field.relation}")
+        }
+    }
+
+    private fun addOneToManyMethod(
+        field: FieldElem,
+        entity: EntityElem,
+        entities: EntitiesMap,
+        clazz: JavaClassNode
+    ): JavaMethodNode {
+        check(field.relation == EntityRelation.OneToMany) { "Expected OneToMany, but found: ${field.relation}" }
+
+        val methodName = "save${entity.name}${field.name.upperFirst()}"
+        val entityName = entity.name
+        val paramType = entity.getFullDtoName()
+        val paramName = paramType.lowerFirst()
+        val primaryFieldType = entity.getPrimaryFieldType()
+        val primaryFieldName = "${entityName}Id".lowerFirst()
+        val primaryGetter = entity.getPrimaryField().getGetterName()
+        val fieldGetter = field.getGetterName()
+        val refEntity = entities.getRefEntity(field)
+        val refEntityPrimaryFieldType = refEntity.getPrimaryFieldType()
+        val refEntityName = refEntity.name
+        val refEntityField = refEntityName.lowerFirst()
+        val oldEntityIds = "old${refEntityName}Ids"
+        val method = clazz.addMethod(methodName)
+            .addParameter(paramType, paramName)
+            .addParameter(primaryFieldType, primaryFieldName)
+        val refRepoName = refEntity.getRepositoryName().lowerFirst()
+        val refRepoMethodName = entities.getMethodByField(
+            entity,
+            field,
+            OneToManyMethod.FindRefPrimaryFieldByRefSyntheticField
+        ).keys.first()
+        val newEntityId = "new${refEntityName}Id"
+        val syntheticFieldSetter = entities.getSyntheticField(entity, field).getSetterName()
+        method.setBody(
+            """// load old ids
+            final Set<$refEntityPrimaryFieldType> $oldEntityIds = new HashSet<>($paramName.$primaryGetter() != null ?
+                    $refRepoName.$refRepoMethodName($paramName.$primaryGetter()) : Collections.emptyList());
+            // save new ${refEntityField}s
+            CollectionUtils.emptyIfNull($paramName.$fieldGetter()).forEach(fullDto -> {
+                final $refEntityPrimaryFieldType $newEntityId = saveFull$refEntityName(fullDto, dto -> (${refEntity.getDtoName()}) dto.$syntheticFieldSetter($primaryFieldName));
+                $oldEntityIds.remove($newEntityId);
+            });
+            // delete old ${refEntityField}s as OneToMany relation
+            ${refEntityField}IdsToDelete.addAll($oldEntityIds);""".parseAsBlock()
+        ).setJavadocComment(
+            """Save property {@link $paramType#$fieldGetter()} of OneToMany relation.
+
+@param $paramName full $entityName dto
+@param $primaryFieldName id of $entityName"""
+        )
+        return method
+    }
+
+    private fun addManyToManyMethod(
+        field: FieldElem,
+        entity: EntityElem,
+        entities: EntitiesMap,
+        clazz: JavaClassNode
+    ): JavaMethodNode {
+        check(field.relation == EntityRelation.ManyToMany) { "Expected ManyToMany, but found: ${field.relation}" }
+
+        val methodName = "save${entity.name}${field.name.upperFirst()}"
+        val entityName = entity.name
+        val paramType = entity.getFullDtoName()
+        val paramName = paramType.lowerFirst()
+        val primaryFieldType = entity.getPrimaryFieldType()
+        val primaryFieldName = "${entityName}Id".lowerFirst()
+        val primaryGetter = entity.getPrimaryField().getGetterName()
+        val fieldGetter = field.getGetterName()
+        val refEntity = entities.getRefEntity(field)
+        val refEntityPrimaryFieldType = refEntity.getPrimaryFieldType()
+        val refEntityName = refEntity.name
+        val refEntityFullDto = refEntity.getFullDtoName()
+        val refEntityField = refEntityName.lowerFirst()
+        val oldEntityIds = "old${refEntityName}Ids"
+        val method = clazz.addMethod(methodName)
+            .addParameter(paramType, paramName)
+            .addParameter(primaryFieldType, primaryFieldName)
+        val newEntityId = "new${refEntityName}Id"
+        val relationEntity = entities.getRelationEntity(entity, field)
+        val relationEntityDto = relationEntity.getDtoName()
+        val relationEntityRepo = relationEntity.getRepositoryName().lowerFirst()
+        val sourceField = relationEntity.fields[0]
+        val sourceFieldSetter = sourceField.getSetterName()
+        val sourceFieldName = sourceField.name.upperFirst()
+        val targetField = relationEntity.fields[1]
+        val targetFieldGetter = targetField.getGetterName()
+        val targetFieldSetter = targetField.getSetterName()
+        val entityList = "${refEntityField}s"
+        method.setBody(
+            """// load old ids
+            final Set<$refEntityPrimaryFieldType> $oldEntityIds = $paramName.$primaryGetter() != null ?
+                    $relationEntityRepo.findBy$sourceFieldName($paramName.$primaryGetter()).stream()
+                            .map($relationEntityDto::$targetFieldGetter)
+                            .collect(Collectors.toSet()) : Collections.emptySet();
+            // save new $entityList
+            final List<$refEntityFullDto> $entityList = $paramName.$fieldGetter();
+            if (CollectionUtils.isNotEmpty($entityList)) {
+                final List<$relationEntityDto> newRelations = new ArrayList<>($entityList.size());
+                $entityList.forEach($refEntityField -> {
+                    final $refEntityPrimaryFieldType $newEntityId = saveFull${refEntityName}($refEntityField);
+                    newRelations.add(($relationEntityDto) new $relationEntityDto().$sourceFieldSetter($primaryFieldName).$targetFieldSetter($newEntityId));
+                    $oldEntityIds.remove($newEntityId);
+                });
+                $relationEntityRepo.saveAll(newRelations);
+            }
+            if (!$oldEntityIds.isEmpty()) {
+                // delete old relations, but not $entityList because of ManyToMany relation
+                $relationEntityRepo.deleteAllById($oldEntityIds.stream().map(id -> Pair.of($primaryFieldName, id)).toList());
+            }""".parseAsBlock()
+        ).setJavadocComment(
+            """Save property {@link $paramType#$fieldGetter()} of ManyToMany relation.
+
+@param $paramName full $entityName dto
+@param $primaryFieldName id of $entityName"""
+        )
+        return method
     }
 
     private fun addSaveFullEntityMethods(clazz: JavaClassNode, entity: EntityElem): JavaMethodNode {

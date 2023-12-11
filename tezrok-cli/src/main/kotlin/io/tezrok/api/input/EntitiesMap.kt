@@ -33,7 +33,7 @@ data class EntitiesMap(private val entitiesIn: List<EntityElem>) {
 
         when (field.relation) {
             EntityRelation.OneToMany -> {
-                val refEntity = this[field.type!!]
+                val refEntity = getRefEntity(field)
                 val syntheticTo = entity.name + "." + field.name
                 return refEntity.fields.find { it.syntheticTo == syntheticTo }
                     ?: error("Synthetic field $syntheticTo not found")
@@ -79,7 +79,7 @@ data class EntitiesMap(private val entitiesIn: List<EntityElem>) {
      * Returns map of method name to JavaDoc related to OneToMany relation.
      */
     fun getMethodByField(entity: EntityElem, field: FieldElem, vararg types: OneToManyMethod): Map<String, String> {
-        val refEntity = this[field.type!!]
+        val refEntity = getRefEntity(field)
         val syntheticFieldName = getSyntheticField(entity, field).name.upperFirst()
         val toSupport = "to support OneToMany relation for field {@link ${entity.name}FullDto#${field.name}}"
         val result = mutableMapOf<String, String>()

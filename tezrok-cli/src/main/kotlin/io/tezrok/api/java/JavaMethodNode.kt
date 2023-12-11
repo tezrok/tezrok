@@ -16,10 +16,15 @@ import com.github.javaparser.ast.type.TypeParameter
 /**
  * Node that represents a Java method
  */
-open class JavaMethodNode(private val method: MethodDeclaration) {
+open class JavaMethodNode(private val method: MethodDeclaration, private val parent: JavaClassNode) {
     fun getName(): String = method.nameAsString
 
     fun getTypeAsString(): String = method.typeAsString
+
+    /**
+     * Returns parent class or interface
+     */
+    fun getOwner(): JavaClassNode = parent
 
     fun setBody(body: BlockStmt): JavaMethodNode {
         method.setBody(body)

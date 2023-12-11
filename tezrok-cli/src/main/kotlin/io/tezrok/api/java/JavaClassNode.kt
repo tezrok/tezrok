@@ -27,16 +27,16 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration, private
         .orElseThrow { IllegalStateException("Compilation unit not found for class: " + getName()) }
 
     fun getMethod(name: String): JavaMethodNode? = clazz.methods.filter { it.nameAsString == name }
-        .map { JavaMethodNode(it) }
+        .map { JavaMethodNode(it, this) }
         .firstOrNull()
 
-    fun addMethod(name: String): JavaMethodNode = JavaMethodNode(clazz.addMethod(name))
+    fun addMethod(name: String): JavaMethodNode = JavaMethodNode(clazz.addMethod(name), this)
 
     fun getOrAddMethod(name: String): JavaMethodNode = getMethod(name) ?: addMethod(name)
 
     fun hasMethod(name: String): Boolean = clazz.methods.any { it.nameAsString == name }
 
-    fun getMethods(): Stream<JavaMethodNode> = clazz.methods.asSequence().map { JavaMethodNode(it) }.asStream()
+    fun getMethods(): Stream<JavaMethodNode> = clazz.methods.asSequence().map { JavaMethodNode(it, this) }.asStream()
 
     fun getConstructors(): Stream<JavaConstructorNode> = clazz.constructors.asSequence().map { JavaConstructorNode(it) }.asStream()
 
