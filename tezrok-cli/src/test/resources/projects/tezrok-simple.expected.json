@@ -107,8 +107,8 @@
               "findOrderLinkedOrdersByOrderIdIn",
               "getIdFieldsById",
               "getIdFieldsByName",
-              "getIdByName",
               "findIdFieldsByIdIn",
+              "getIdByName",
               "findItemRelatedOrdersByItemId",
               "findItemRelatedOrdersByItemIdIn"
             ],
@@ -305,12 +305,16 @@
             "customMethods": [
               "getByNameOrEmail",
               "getByName",
-              "getByEmail"
+              "getByEmail",
+              "getIdByName",
+              "getIdByEmail"
             ],
             "customComments": {
               "getByEmail": "Returns {@link UserDto} by unique field {@link UserDto#email}.",
               "getByName": "Returns {@link UserDto} by unique field {@link UserDto#name}.",
-              "getByNameOrEmail": "Returns {@link UserDto} by name or email."
+              "getByNameOrEmail": "Returns {@link UserDto} by name or email.",
+              "getIdByEmail": "Returns primary ID of {@link UserDto} by unique field (email).",
+              "getIdByName": "Returns primary ID of {@link UserDto} by unique field (name)."
             },
             "init": "admin,admin@site.com,admin"
           },
@@ -364,12 +368,14 @@
             "customMethods": [
               "getByName",
               "findUserRolesByUserId",
-              "findUserRolesByUserIdIn"
+              "findUserRolesByUserIdIn",
+              "getIdByName"
             ],
             "customComments": {
               "findUserRolesByUserId": "Returns list of {@link RoleDto} by primary field to support ManyToMany relation for field {@link UserFullDto#roles}.",
               "findUserRolesByUserIdIn": "Returns list of {@link RoleDto} by primary fields to support ManyToMany relation for field {@link UserFullDto#roles}.",
-              "getByName": "Returns {@link RoleDto} by unique field {@link RoleDto#name}."
+              "getByName": "Returns {@link RoleDto} by unique field {@link RoleDto#name}.",
+              "getIdByName": "Returns primary ID of {@link RoleDto} by unique field (name)."
             },
             "init": "ADMIN,Administrator role\nUSER,Authenticated role"
           },
@@ -417,12 +423,14 @@
             "customMethods": [
               "getByName",
               "findRolePermissionsByRoleId",
-              "findRolePermissionsByRoleIdIn"
+              "findRolePermissionsByRoleIdIn",
+              "getIdByName"
             ],
             "customComments": {
               "findRolePermissionsByRoleId": "Returns list of {@link PermissionDto} by primary field to support ManyToMany relation for field {@link RoleFullDto#permissions}.",
               "findRolePermissionsByRoleIdIn": "Returns list of {@link PermissionDto} by primary fields to support ManyToMany relation for field {@link RoleFullDto#permissions}.",
-              "getByName": "Returns {@link PermissionDto} by unique field {@link PermissionDto#name}."
+              "getByName": "Returns {@link PermissionDto} by unique field {@link PermissionDto#name}.",
+              "getIdByName": "Returns primary ID of {@link PermissionDto} by unique field (name)."
             }
           },
           {
