@@ -155,6 +155,12 @@ data class EntitiesMap(private val entitiesIn: List<EntityElem>) {
         entitiesMap[name] = value
     }
 
+    /**
+     * Returns a synthetic field in specified entity which is needed to support OneToMany relation.
+     */
+    fun findOneToManySyntheticField(entity: EntityElem): FieldElem? =
+        entity.fields.find { field -> field.isSynthetic() && getRefField(field).relation == EntityRelation.OneToMany }
+
     companion object {
         fun from(entities: List<EntityElem>) = EntitiesMap(entities)
     }

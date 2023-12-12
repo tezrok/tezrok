@@ -14,7 +14,7 @@ internal class TezrokBuilderTest : BaseTest() {
     private val fixedClock = getFixedClock()
 
     @Test
-    fun testGenerateProject() {
+    fun testGenerateSimpleProject() {
         val projectPath = ResourceUtil.getResourceAsPath("/projects/tezrok-simple.json")
         val projectOutput = PathUtil.resolve("../../output/tezrok-simple")
 
