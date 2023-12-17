@@ -24,8 +24,8 @@ internal class JooqFeature : TezrokFeature {
         pomFile.addDependency("org.springframework.boot:spring-boot-starter-jooq:${'$'}{spring-boot.version}")
         pomFile.addDependency("org.postgresql:postgresql:42.6.0")
         pomFile.addDependency("org.jooq:jooq:${'$'}{jooq.version}")
-        pomFile.addProperty("testcontainers.version", "1.18.0")
-        pomFile.addProperty("jooq.version", "3.18.4")
+        pomFile.addProperty("testcontainers.version", "1.19.3")
+        pomFile.addProperty("jooq.version", "3.19.0")
         pomFile.addProperty("db.username", "postgres")
         pomFile.addProperty("db.password", "postgres")
 

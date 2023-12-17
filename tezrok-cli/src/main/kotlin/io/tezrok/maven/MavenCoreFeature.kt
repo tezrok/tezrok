@@ -27,11 +27,11 @@ internal class MavenCoreFeature : TezrokFeature {
             .withVersion(parentPomDependency.version)
 
         // add default properties
-        pomFile.addProperty("commons-lang3.version", "3.12.0")
-        pomFile.addProperty("logback.version", "1.4.6")
-        pomFile.addProperty("slf4j-api.version", "2.0.5")
-        pomFile.addProperty("junit.version", "5.8.1")
-        pomFile.addProperty("lombok.version", "1.18.28")
+        pomFile.addProperty("commons-lang3.version", "3.14.0")
+        pomFile.addProperty("logback.version", "1.4.14")
+        pomFile.addProperty("slf4j-api.version", "2.0.9")
+        pomFile.addProperty("junit.version", "5.10.1")
+        pomFile.addProperty("lombok.version", "1.18.30")
 
         // add default dependencies
         pomFile.addDependency("org.apache.commons:commons-lang3:${'$'}{commons-lang3.version}")
