@@ -42,6 +42,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
             val dtoDir = applicationPackageRoot.getOrAddJavaDirectory("dto")
             addBaseRepositoryFile(repositoryDir, projectElem, context)
             addWithIdInterfaces(dtoDir)
+            addIdDtoClasses(dtoDir, projectElem.packagePath, context)
 
             val schemaModule = context.getProject().modules.find { it.name == module.getName() }
                 ?: throw IllegalStateException("Module ${module.getName()} not found")
@@ -126,6 +127,13 @@ internal class JooqRepositoryFeature : TezrokFeature {
             .getOrAddMethod("getId2")
             .removeBody()
             .setReturnType("ID2")
+    }
+
+    private fun addIdDtoClasses(dtoDir: JavaDirectoryNode, packagePath: String, context: GeneratorContext) {
+        val fileName = "IdDto.java"
+        val idFile = dtoDir.addJavaFile(fileName)
+        val values = mapOf("package" to packagePath)
+        context.writeTemplate(idFile, "/templates/jooq/IdDto.java.vm", values)
     }
 
     /**

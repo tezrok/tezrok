@@ -2,20 +2,28 @@ package ${package}.web.rest;
 
 
 import ${package}.dto.${name}Dto;
+import ${package}.dto.full.${name}FullDto;
+import ${package}.dto.IdDto;
 import ${package}.service.${name}Service;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.http.ResponseEntity;
 import java.util.List;
 
+/**
+* Api methods for {@link ${name}Dto} entity
+*/
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/v1")
 public class ${name}Controller {
 
     @NotNull
@@ -25,18 +33,52 @@ public class ${name}Controller {
         this.${lname}Service = ${lname}Service;
     }
 
-    @RequestMapping("/${lname}s")
+    @RequestMapping("/${lname}s/table")
     public List<${name}Dto> findAll() {
         return ${lname}Service.findAll();
-    }
-
-    @PostMapping("/${lname}")
-    public ${name}Dto save(@RequestBody ${name}Dto dto) {
-        return ${lname}Service.save(dto);
     }
 
     @GetMapping(value = "/${lname}s/search")
     public Page<${name}Dto> searchByTerm(@RequestParam(value = "term", required = false) String searchTerm, Pageable pageable) {
         return ${lname}Service.searchByTerm(searchTerm, pageable);
+    }
+
+    @GetMapping("/${lname}/{id}/table")
+    public ResponseEntity<${name}Dto> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(${lname}Service.getById(id));
+    }
+
+    @GetMapping("/${lname}/{id}")
+    public ResponseEntity<${name}FullDto> getFull${name}ById(@PathVariable Long id) {
+        return ResponseEntity.ok(${lname}Service.getFull${name}ById(id));
+    }
+
+    @PostMapping("/${lname}")
+    public ResponseEntity<?> createFull${name}(@RequestBody ${name}FullDto dto, @RequestParam(value = "return", required = false, defaultValue = "false") boolean returnEntity) {
+        if (returnEntity) {
+            return ResponseEntity.ok(${lname}Service.saveFull${name}AndReturn(dto));
+        }
+
+        return ResponseEntity.ok(new IdDto(${lname}Service.saveFull${name}(dto)));
+    }
+
+    @PutMapping("/${lname}/{id}")
+    public ResponseEntity<?> updateFull${name}(@PathVariable Long id, @RequestBody ${name}FullDto dto, @RequestParam(value = "return", required = false, defaultValue = "false") boolean returnEntity) {
+        dto.${primarySetter}(id);
+
+        if (returnEntity) {
+            return ResponseEntity.ok(${lname}Service.saveFull${name}AndReturn(dto));
+        }
+
+        return ResponseEntity.ok(new IdDto(${lname}Service.saveFull${name}(dto)));
+    }
+
+    @PostMapping("/${lname}/import")
+    public ResponseEntity<?> importFull${name}(@RequestBody ${name}FullDto dto, @RequestParam(value = "return", required = false, defaultValue = "false") boolean returnEntity) {
+        if (returnEntity) {
+            return ResponseEntity.ok(${lname}Service.importFull${name}AndReturn(dto));
+        }
+
+        return ResponseEntity.ok(new IdDto(${lname}Service.importFull${name}(dto)));
     }
 }

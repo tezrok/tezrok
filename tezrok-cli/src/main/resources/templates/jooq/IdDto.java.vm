@@ -1,0 +1,21 @@
+package ${package}dto;
+
+import lombok.Data;
+
+import java.io.Serial;
+import java.io.Serializable;
+
+/**
+ * DTO with unique identifier.
+ */
+@Data
+public class IdDto<ID> implements Serializable, WithId<ID> {
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    private ID id;
+
+    public IdDto(ID id) {
+        this.id = id;
+    }
+}

@@ -5,6 +5,7 @@ import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.EntityElem
 import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.maven.ProjectNode
+import io.tezrok.util.getSetterName
 import org.slf4j.LoggerFactory
 
 /**
@@ -48,8 +49,12 @@ internal class ControllerFeature : TezrokFeature {
 
         if (!webDir.hasClass(fileName)) {
             val controllerFile = webDir.addJavaFile(fileName)
-            val values =
-                mapOf("package" to packagePath, "name" to name, "lname" to name.replaceFirstChar { it.lowercase() })
+            val values = mapOf(
+                "package" to packagePath,
+                "name" to name,
+                "lname" to name.replaceFirstChar { it.lowercase() },
+                "primarySetter" to entity.getPrimaryField().getSetterName()
+            )
             context.writeTemplate(controllerFile, "/templates/spring/EntityController.java.vm", values)
             // TODO: extract method from service class and add corresponding methods to controller
             // TODO: add custom methods

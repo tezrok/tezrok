@@ -58,7 +58,11 @@ open class ServiceFeature : TezrokFeature {
         if (!serviceDir.hasFile(fileName)) {
             val serviceFile = serviceDir.addJavaFile(fileName)
             val values =
-                mapOf("package" to packagePath, "name" to name, "lname" to name.replaceFirstChar { it.lowercase() })
+                mapOf(
+                    "package" to packagePath, "name" to name,
+                    "lname" to name.replaceFirstChar { it.lowercase() },
+                    "primaryType" to entity.getPrimaryField().asJavaType()
+                )
             context.writeTemplate(serviceFile, "/templates/spring/EntityService.java.vm", values)
             val serviceClass = serviceFile.getRootClass()
             val primaryFields = entity.fields.filter { it.primary == true }.map { it.asJavaType() }
@@ -123,6 +127,7 @@ open class ServiceFeature : TezrokFeature {
             if (isMethodReadOnly(method.getName())) {
                 newMethod.addAnnotation("Transactional", mapOf("readOnly" to BooleanLiteralExpr(true)))
             }
+            serviceClass.addImportsByType(method.getTypeAsString())
         }
     }
 
