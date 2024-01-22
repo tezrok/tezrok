@@ -1,5 +1,6 @@
 package io.tezrok.jooq
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import com.github.javaparser.ast.body.MethodDeclaration
@@ -154,28 +155,38 @@ internal class JooqRepositoryFeature : TezrokFeature {
             entity.description?.let { dtoClass.setJavadocComment(it) }
             val fields = entity.fields.filter { it.primary == true }
             val type1 = fields[0].asJavaType()
-            val name1 = fields[0].name.capitalize()
+            val name1 = fields[0].name.upperFirst()
             if (singlePrimary) {
                 dtoClass.implementInterface("WithId<$type1>")
-                dtoClass.addMethod("getId")
+                var method = dtoClass.addMethod("getId")
                     .withModifiers(Modifier.Keyword.PUBLIC)
                     .setReturnType(type1)
                     .addAnnotation(Override::class.java)
                     .setBody(ReturnStmt("super.get$name1()"));
+
+                if (name1 != "Id") {
+                    method.addAnnotation(JsonIgnore::class.java)
+                }
             } else {
                 val type2 = fields[1].asJavaType()
-                val name2 = fields[1].name.capitalize()
+                val name2 = fields[1].name.upperFirst()
                 dtoClass.implementInterface("WithId2<$type1, $type2>")
-                dtoClass.addMethod("getId1")
+                var method1 = dtoClass.addMethod("getId1")
                     .withModifiers(Modifier.Keyword.PUBLIC)
                     .setReturnType(type1)
                     .addAnnotation(Override::class.java)
                     .setBody(ReturnStmt("super.get$name1()"))
-                dtoClass.addMethod("getId2")
+                if (name1 != "Id1") {
+                    method1.addAnnotation(JsonIgnore::class.java)
+                }
+                val method2 = dtoClass.addMethod("getId2")
                     .withModifiers(Modifier.Keyword.PUBLIC)
                     .setReturnType(type2)
                     .addAnnotation(Override::class.java)
                     .setBody(ReturnStmt("super.get$name2()"))
+                if (name2 != "Id2") {
+                    method2.addAnnotation(JsonIgnore::class.java)
+                }
             }
         } else {
             log.warn(FILE_ALREADY_EXISTS, "$className.java")
@@ -244,6 +255,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
                 .withModifiers(Modifier.Keyword.PUBLIC)
                 .setReturnType(primaryFieldType)
                 .addAnnotation(Override::class.java)
+                .addAnnotation(JsonIgnore::class.java)
                 .setBody(ReturnStmt("this.$primaryFieldName"))
         }
     }

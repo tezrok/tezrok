@@ -44,12 +44,12 @@ public class ${name}Controller {
     }
 
     @GetMapping("/${lname}/{id}/table")
-    public ResponseEntity<${name}Dto> getById(@PathVariable Long id) {
+    public ResponseEntity<${name}Dto> getById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(${lname}Service.getById(id));
     }
 
     @GetMapping("/${lname}/{id}")
-    public ResponseEntity<${name}FullDto> getFull${name}ById(@PathVariable Long id) {
+    public ResponseEntity<${name}FullDto> getFull${name}ById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(${lname}Service.getFull${name}ById(id));
     }
 
@@ -63,7 +63,7 @@ public class ${name}Controller {
     }
 
     @PutMapping("/${lname}/{id}")
-    public ResponseEntity<?> updateFull${name}(@PathVariable Long id, @RequestBody ${name}FullDto dto, @RequestParam(value = "return", required = false, defaultValue = "false") boolean returnEntity) {
+    public ResponseEntity<?> updateFull${name}(@PathVariable("id") Long id, @RequestBody ${name}FullDto dto, @RequestParam(value = "return", required = false, defaultValue = "false") boolean returnEntity) {
         dto.${primarySetter}(id);
 
         if (returnEntity) {
