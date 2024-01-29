@@ -58,6 +58,11 @@ public class ${name}Service {
     }
 
     @Transactional()
+    public List<${primaryType}> importFull${name}s(List<${name}FullDto> items) {
+        return items.stream().map(item -> entityGraphStore.saveFull${name}(item, EntityUpdateType.UPDATE_RELATION_BY_NAME)).toList();
+    }
+
+    @Transactional()
     public ${name}FullDto importFull${name}AndReturn(${name}FullDto item) {
         final ${primaryType} id = entityGraphStore.saveFull${name}(item, EntityUpdateType.UPDATE_RELATION_BY_NAME);
         return entityGraphLoader.getFull${name}ById(id);

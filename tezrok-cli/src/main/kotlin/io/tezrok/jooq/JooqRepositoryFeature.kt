@@ -240,23 +240,27 @@ internal class JooqRepositoryFeature : TezrokFeature {
     }
 
     private fun addWithIdImplementation(dtoClass: JavaClassNode, entity: EntityElem, rootPackage: String) {
-        val fields = entity.fields.filter { it.primary == true }
-        check(fields.size == 1) { "Entity ${entity.name} has unsupported count of primary keys: ${fields.size}" }
+        val primaryFieldCount = entity.getPrimaryFieldCount()
+        check(primaryFieldCount == 1) { "Entity ${entity.name} has unsupported count of primary keys: $primaryFieldCount" }
 
-        val primaryFieldType = fields[0].asJavaType()
+        val primaryField = entity.getPrimaryField()
+        val primaryFieldType = primaryField.asJavaType()
 
         dtoClass.implementInterface("WithId<$primaryFieldType>")
         dtoClass.addImport("${rootPackage}.dto.WithId")
 
         // if primary key is "id" no need to add getId() method
         if (!dtoClass.hasMethod("getId")) {
-            val primaryFieldName = fields[0].name
-            dtoClass.addMethod("getId")
+            val primaryFieldName = primaryField.name
+            val method = dtoClass.addMethod("getId")
                 .withModifiers(Modifier.Keyword.PUBLIC)
                 .setReturnType(primaryFieldType)
                 .addAnnotation(Override::class.java)
-                .addAnnotation(JsonIgnore::class.java)
                 .setBody(ReturnStmt("this.$primaryFieldName"))
+
+            if (primaryFieldName != "id") {
+                method.addAnnotation(JsonIgnore::class.java)
+            }
         }
     }
 

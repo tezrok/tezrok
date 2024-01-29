@@ -12,6 +12,7 @@ import io.tezrok.api.java.JavaFieldNode
 import io.tezrok.api.java.JavaMethodNode
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.*
+import lombok.extern.slf4j.Slf4j
 import org.apache.commons.collections4.CollectionUtils
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.Nullable
@@ -51,6 +52,7 @@ internal class EntityGraphStoreFeature : TezrokFeature {
     ) {
         val clazz = repositoryDir.addClass("EntityGraphStore")
             .addAnnotation(Service::class.java)
+            .addAnnotation(Slf4j::class.java)
             .setModifiers(Modifier.Keyword.PUBLIC)
             .setJavadocComment(
                 """Stores whole entity by id with all relations.
@@ -555,6 +557,9 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         public Long saveFullOrder(final OrderFullDto orderFullDto, EntityUpdateType updateType) {
             try (final InnerContext ctx = new InnerContext(updateType)) {
                 return ctx.saveFullOrder(orderFullDto);
+            } catch (final Exception ex) {
+                log.error("Save SubjectFullDto failed: {}", subjectFullDto);
+                throw new IllegalStateException("Save SubjectFullDto failed", ex);
             }
         }
         */
@@ -568,6 +573,9 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
             .setBody(
                 """try (final InnerContext ctx = new InnerContext($updateTypeParam)) {
             return ctx.$methodName($fullDtoParam);
+            } catch (final Exception ex) {
+            log.error("Save $fullDtoName failed: {}", $fullDtoParam);
+            throw new IllegalStateException("Save $fullDtoName failed", ex);
             }""".parseAsBlock()
             )
             .setJavadocComment(
