@@ -17,7 +17,10 @@ import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.java.JavaFieldNode
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.*
+import lombok.AllArgsConstructor
 import lombok.Data
+import lombok.NoArgsConstructor
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.io.Serializable
@@ -210,6 +213,8 @@ internal class JooqRepositoryFeature : TezrokFeature {
             val dtoClass = dtoDir.addClass(className)
                 .setJavadocComment("Full dto (with logic and without synthetic fields) for {@link ${name}Dto} entity.")
                 .addAnnotation(Data::class.java)
+                .addAnnotation(AllArgsConstructor::class.java)
+                .addAnnotation(NoArgsConstructor::class.java)
                 .addImportBySimpleName("${name}Dto")
             dtoClass.implementInterface(Serializable::class.java)
             val addedFields = mutableSetOf<JavaFieldNode>()
@@ -234,6 +239,8 @@ internal class JooqRepositoryFeature : TezrokFeature {
 
             // implement WithId<$primaryFieldType> interface
             addWithIdImplementation(dtoClass, entity, rootPackage)
+            // implement Cloneable interface
+            addCloneableImplementation(dtoClass, entity)
         } else {
             log.warn(FILE_ALREADY_EXISTS, "$className.java")
         }
@@ -262,6 +269,58 @@ internal class JooqRepositoryFeature : TezrokFeature {
                 method.addAnnotation(JsonIgnore::class.java)
             }
         }
+    }
+
+    private fun addCloneableImplementation(dtoClass: JavaClassNode, entity: EntityElem) {
+        dtoClass.implementInterface("Cloneable")
+        dtoClass.addMethod("clone")
+            .withModifiers(Modifier.Keyword.PUBLIC)
+            .setReturnType(dtoClass.getName())
+            .addAnnotation(Override::class.java)
+            .setBody("return clone(false);".parseAsStatement())
+
+        val statements = mutableMapOf<String, String>()
+        val arguments = mutableListOf<String>()
+        entity.fields.filter { it.isNotSynthetic() }.forEach { field ->
+            if (ModelTypes.STRING == field.type) {
+                // final String newName = adjust ? StringUtils.abbreviate(this.name, null, 100) : this.name;
+                val varName = "new" + field.name.upperFirst()
+                val fieldName = "this." + field.name
+                val maxLength = field.maxLength ?: DEFAULT_VARCHAR_LENGTH
+                val statement =
+                    "final String $varName = adjust ? StringUtils.abbreviate($fieldName, null, $maxLength) : $fieldName;\n"
+                statements[varName] = statement
+                arguments.add(varName)
+                dtoClass.addImport(StringUtils::class.java)
+            } else if (field.relation == EntityRelation.OneToMany || field.relation == EntityRelation.ManyToMany) {
+                // final List<PermissionFullDto> newPermissions = this.permissions.stream().map(p -> p.clone(adjust)).collect(Collectors.toList());
+                val varName = "new" + field.name.upperFirst()
+                val targetType = "${field.type}FullDto"
+                val statement =
+                    "final List<$targetType> $varName = this.${field.name}.stream().map(p -> p.clone(adjust)).collect(Collectors.toList());\n"
+                statements[varName] = statement
+                arguments.add(varName)
+                dtoClass.addImport(Collectors::class.java)
+            } else if (field.logicField == true) {
+                arguments.add("this.${field.name} != null ? this.${field.name}.clone(adjust) : null")
+            } else {
+                arguments.add("this.${field.name}")
+            }
+        }
+
+        val body =
+            statements.values.joinToString("") + "return new ${entity.getFullDtoName()}(" + arguments.joinToString(", ") + ");"
+        dtoClass.addMethod("clone")
+            .withModifiers(Modifier.Keyword.PUBLIC)
+            .setReturnType(dtoClass.getName())
+            .addParameter("boolean", "adjust")
+            .setBody(body.parseAsBlock())
+            .setJavadocComment(
+                """Clone this object and adjust fields length due to database constraints.
+
+@param adjust if true then adjust fields length
+@return cloned object"""
+            )
     }
 
     private fun addBaseRepositoryFile(
@@ -521,5 +580,6 @@ internal class JooqRepositoryFeature : TezrokFeature {
         const val JOOQ_TWO_ID_REPO = "JooqRepository2.java"
         const val JOOQ_BASE_REPO = "JooqBaseRepository.java"
         const val FILE_ALREADY_EXISTS = "File already exists: {}"
+        const val DEFAULT_VARCHAR_LENGTH = 255
     }
 }
