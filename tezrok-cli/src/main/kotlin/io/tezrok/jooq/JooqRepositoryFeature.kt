@@ -283,12 +283,12 @@ internal class JooqRepositoryFeature : TezrokFeature {
         val arguments = mutableListOf<String>()
         entity.fields.filter { it.isNotSynthetic() }.forEach { field ->
             if (ModelTypes.STRING == field.type) {
-                // final String newName = adjust ? StringUtils.abbreviate(this.name, null, 100) : this.name;
+                // final String newName = adjust ? StringUtils.abbreviate(this.name, "", 100) : this.name;
                 val varName = "new" + field.name.upperFirst()
                 val fieldName = "this." + field.name
                 val maxLength = field.maxLength ?: DEFAULT_VARCHAR_LENGTH
                 val statement =
-                    "final String $varName = adjust ? StringUtils.abbreviate($fieldName, null, $maxLength) : $fieldName;\n"
+                    "final String $varName = adjust ? StringUtils.abbreviate($fieldName, \"\", $maxLength) : $fieldName;\n"
                 statements[varName] = statement
                 arguments.add(varName)
                 dtoClass.addImport(StringUtils::class.java)
