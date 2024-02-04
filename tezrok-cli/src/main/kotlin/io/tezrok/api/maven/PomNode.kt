@@ -27,6 +27,13 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
         // TODO: set name and description
     }
 
+    fun setDescription(description: String): PomNode {
+        getXml().getOrAdd("description", description)
+        return this
+    }
+
+    fun getDescription(): String = getXml().getNodeValue("description")
+
     fun addProperty(property: MavenProperty): PomNode = addProperty(property.name, property.value)
 
     fun addProperty(name: String, value: String): PomNode {

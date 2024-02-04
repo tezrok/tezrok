@@ -27,7 +27,7 @@ class TezrokBuilder private constructor() {
     private var outputFinalProject: Boolean = false
     private var finalProjectPath: Path? = null
     private var generateTime: Boolean = true
-    private var author: String = "tezrokUser"
+    private var authorLogin: String = "tezrokUser"
 
     fun generate() {
         val inputPath = path ?: throw IllegalStateException("Path not set")
@@ -47,7 +47,7 @@ class TezrokBuilder private constructor() {
             generatorProvider,
             clock,
             generateTime = generateTime,
-            author = author
+            authorLogin = authorLogin
         )
 
         featureManager.applyAll(project, context)
@@ -105,8 +105,11 @@ class TezrokBuilder private constructor() {
         return this
     }
 
-    fun setAuthor(author: String): TezrokBuilder {
-        this.author = author
+    /**
+     * Login of the author of the project. Used in sql db
+     */
+    fun setAuthorLogin(author: String): TezrokBuilder {
+        this.authorLogin = author
         return this
     }
 

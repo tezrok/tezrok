@@ -365,9 +365,12 @@ internal class JooqRepositoryFeature : TezrokFeature {
             val values =
                 mapOf("package" to rootPackage, "name" to name, "uname" to name.camelCaseToSqlUppercase())
             val fields = generateFields(entity)
-            val templateName = if (singlePrimary) "JooqTargetRepository" else "JooqTargetRepository2"
+            val templateName = if (singlePrimary)
+                "/templates/jooq/JooqTargetRepository.java.vm"
+            else
+                "/templates/jooq/JooqTargetRepository2.java.vm"
 
-            context.writeTemplate(repoClassFile, "/templates/jooq/${templateName}.java.vm", values + fields)
+            context.writeTemplate(repoClassFile, templateName, values + fields)
             val repoClass = repoClassFile.getRootClass()
 
             if (custom) {
@@ -406,7 +409,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
         val name = entity.name
         val repositoryPhysicalPath = repositoryDir.getPhysicalPath()
 
-        if (repositoryPhysicalPath != null && repositoryPhysicalPath.exists()) {
+        if (repositoryPhysicalPath != null) {
             val customFileName = "${name}CustomRepository.java"
             val customFilePath = repositoryPhysicalPath.resolve("custom/${customFileName}")
 
@@ -472,6 +475,8 @@ internal class JooqRepositoryFeature : TezrokFeature {
                     mapOf("package" to context.getProject().packagePath, "name" to name)
                 )
             }
+        } else {
+            log.warn("Physical path is not set for directory: {}", repositoryDir.getName())
         }
     }
 

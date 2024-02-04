@@ -17,9 +17,9 @@ internal class CoreGeneratorContext(
     private val generatorProvider: GeneratorProvider = NullGeneratorProvider,
     private val clock: Clock = Clock.systemDefaultZone(),
     private val generateTime: Boolean = true,
-    private val author: String = "TezrokUser"
+    private val authorLogin: String = "TezrokUser"
 ) : GeneratorContext {
-    override fun getAuthor(): String = author
+    override fun getAuthorLogin(): String = authorLogin
 
     override fun getClock(): Clock = clock
 

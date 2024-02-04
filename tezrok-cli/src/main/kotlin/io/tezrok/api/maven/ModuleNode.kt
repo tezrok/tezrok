@@ -11,10 +11,10 @@ import java.nio.file.Path
  * Represents a module. Which represents a separate maven module
  * which can be a library or a web application
  */
-open class ModuleNode(name: String, parent: BaseNode?, moduleElem: ModuleElem, private var physicalPath: Path? = null) : DirectoryNode(name, parent) {
+open class ModuleNode(moduleElem: ModuleElem, parent: BaseNode?, private var physicalPath: Path? = null) : DirectoryNode(moduleElem.name, parent) {
     val source: SourceNode = SourceNode(this)
 
-    val pom: PomNode = PomNode(artifactId = name, parent = this)
+    val pom: PomNode = PomNode(artifactId = moduleElem.name, parent = this).setDescription(moduleElem.description)
 
     val properties: TezrokProperties = PropertiesNode(moduleElem)
 

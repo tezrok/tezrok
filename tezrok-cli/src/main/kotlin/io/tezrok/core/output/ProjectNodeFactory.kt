@@ -16,7 +16,7 @@ internal class ProjectNodeFactory(private val projectElemRepository: ProjectElem
     }
 
     fun fromProject(projectElem: ProjectElem, projectOutput: Path): ProjectNode {
-        val project = ProjectNode(projectElem.name)
+        val project = ProjectNode(projectElem)
 
         projectElem.modules.map { module -> mapModule(module, project, projectOutput.resolve(module.name)) }
 

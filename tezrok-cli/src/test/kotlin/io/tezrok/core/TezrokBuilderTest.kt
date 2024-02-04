@@ -21,7 +21,7 @@ internal class TezrokBuilderTest : BaseTest() {
         TezrokBuilder.from(projectPath)
             .setOutput(projectOutput)
             .setOutputFinalProject(true)
-            .setAuthor("tezrokAdmin")
+            .setAuthorLogin("tezrokAdmin")
             .setClock(fixedClock)
             .generate()
     }
@@ -36,9 +36,25 @@ internal class TezrokBuilderTest : BaseTest() {
             .setOutput(projectOutput)
             .setOutputFinalProject(true)
             .setGenerateTime(false)
-            .setAuthor("timelineAdmin")
+            .setAuthorLogin("timelineAdmin")
             .setFinalProjectPath(projectPath.parent)
             .setClock(getFixedClock("2023-08-17T20:57:04.00Z"))
+            .generate()
+    }
+
+    @Test
+    fun testGenerateTezrokQAProject() {
+        val projectRoot = System.getProperty("tezrokQARoot") ?: error("tezrokQARoot is not set")
+        val projectPath = PathUtil.resolve("$projectRoot/tezrok-qa.json")
+        val projectOutput = PathUtil.resolve("$projectRoot/")
+
+        TezrokBuilder.from(projectPath)
+            .setOutput(projectOutput)
+            .setOutputFinalProject(true)
+            .setGenerateTime(false)
+            .setAuthorLogin("tezrokQa")
+            .setFinalProjectPath(projectPath.parent)
+            .setClock(getFixedClock("2024-02-04T11:20:42.00Z"))
             .generate()
     }
 }

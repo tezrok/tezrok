@@ -13,7 +13,7 @@ import java.util.function.Consumer
 interface GeneratorContext : GeneratorProvider {
     fun isGenerateTime(): Boolean = true
 
-    fun getAuthor(): String
+    fun getAuthorLogin(): String
 
     fun getClock(): Clock = Clock.systemDefaultZone()
 

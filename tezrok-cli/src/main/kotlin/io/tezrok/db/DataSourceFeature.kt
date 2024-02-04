@@ -17,8 +17,8 @@ internal class DataSourceFeature : TezrokFeature {
 
         properties.setPropertyIf("datasource.db-name", dbName)
         properties.setPropertyIf("datasource.url", "jdbc:postgresql://localhost:5432/$dbName")
-        properties.setPropertyIf("datasource.username", context.getAuthor())
-        properties.setPropertyIf("datasource.password", "${context.getAuthor()}Pwd")
+        properties.setPropertyIf("datasource.username", context.getAuthorLogin())
+        properties.setPropertyIf("datasource.password", "${context.getAuthorLogin()}Pwd")
         properties.setPropertyIf("datasource.driver-class-name", "org.postgresql.Driver")
         properties.setPropertyIf("datasource.dbms", "PostgreSQL")
 

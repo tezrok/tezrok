@@ -32,6 +32,7 @@ internal class JooqFeature : TezrokFeature {
         addGroovyPlugin(pomFile)
         addLiquibasePlugin(pomFile)
         addJooqPlugin(pomFile, projectElem.packagePath + ".jooq", schema?.schemaName ?: "public")
+        addJooqGenSource(pomFile)
 
         addJooqConfiguration(module, context)
 
@@ -90,6 +91,18 @@ internal class JooqFeature : TezrokFeature {
         configuration.add("url", "${'$'}{db.url}")
         configuration.add("username", "${'$'}{db.username}")
         configuration.add("password", "${'$'}{db.password}")
+    }
+
+    /**
+     * Adds build-helper-maven-plugin to add generated sources to the project.
+     */
+    private fun addJooqGenSource(pomFile: PomNode) {
+        val pluginNode = pomFile.addPluginDependency("org.codehaus.mojo:build-helper-maven-plugin:3.5.0")
+        val execution = pluginNode.addExecution("add-source", "add-source", BuildPhase.GenerateSources)
+        val configuration = execution.getConfiguration().node
+        configuration.add("sources")
+            .add("source")
+            .setValue("${'$'}{basedir}/target/generated-sources/jooq")
     }
 
     private fun addJooqPlugin(pomFile: PomNode, classPath: String, schemaName: String) {

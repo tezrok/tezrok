@@ -26,7 +26,7 @@ internal class LiquibaseFeatureTest : BaseTest() {
         val projectInput = mockProjectInput("core", schema)
         val generatorProvider = CoreGeneratorProvider()
         val generatorContext = CoreGeneratorContext(projectInput, generatorProvider, fixedClock)
-        val project = ProjectNode("TestProject")
+        val project = ProjectNode(projectInput)
         val module = project.addModule(projectInput.modules[0])
         module.properties.setProperty("datasource.username", "TestTezrokUser")
         liquibaseFeature.apply(project, generatorContext)
