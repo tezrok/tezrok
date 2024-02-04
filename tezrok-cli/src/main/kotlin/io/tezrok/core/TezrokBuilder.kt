@@ -4,6 +4,7 @@ import io.tezrok.core.feature.FeatureManager
 import io.tezrok.core.input.ProjectElemRepository
 import io.tezrok.core.output.ProjectNodeFactory
 import io.tezrok.core.output.ProjectOutputGenerator
+import io.tezrok.util.NameUtil
 import io.tezrok.util.mkdirs
 import io.tezrok.util.toSecuredPrettyJson
 import java.nio.file.Path
@@ -27,7 +28,7 @@ class TezrokBuilder private constructor() {
     private var outputFinalProject: Boolean = false
     private var finalProjectPath: Path? = null
     private var generateTime: Boolean = true
-    private var authorLogin: String = "tezrokUser"
+    private var authorLogin: String = NameUtil.validateWhitespaces("tezrokUser")
 
     fun generate() {
         val inputPath = path ?: throw IllegalStateException("Path not set")
@@ -109,7 +110,7 @@ class TezrokBuilder private constructor() {
      * Login of the author of the project. Used in sql db
      */
     fun setAuthorLogin(author: String): TezrokBuilder {
-        this.authorLogin = author
+        this.authorLogin = NameUtil.validateWhitespaces(author)
         return this
     }
 
