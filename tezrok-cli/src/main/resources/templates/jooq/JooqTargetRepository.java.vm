@@ -20,6 +20,18 @@ public class ${name}Repository extends JooqRepository<${name}Record, Long, ${nam
 
     #if ($updateAt == true || $createdAt == true)
     @Override
+    protected void beforeCreateRecord(final ${name}Record newRecord) {
+        #if ($createdAt == true)
+        newRecord.setCreatedAt(null);
+        newRecord.changed(Tables.USER.CREATED_AT, false);
+        #end
+        #if ($updateAt == true)
+        newRecord.setUpdatedAt(null);
+        newRecord.changed(Tables.USER.UPDATED_AT, false);
+        #end
+    }
+
+    @Override
     protected void beforeUpdateRecord(final ${name}Dto newPojo, final ${name}Record oldRecord) {
         #if ($createdAt == true)
         // don't update createdAt

@@ -44,6 +44,7 @@ abstract class JooqBaseRepository<R extends UpdatableRecord<R>, P> {
     @NotNull
     public P create(P pojo) {
         final R rec = newRecord(pojo);
+        beforeCreateRecord(rec);
         rec.store();
         return rec.into(pojoClass);
     }
@@ -126,5 +127,9 @@ abstract class JooqBaseRepository<R extends UpdatableRecord<R>, P> {
     @NotNull
     protected SortField<?> sortField(final TableField tableField, final Sort.Direction sortDirection) {
         return sortDirection == Sort.Direction.ASC ? tableField.asc() : tableField.desc();
+    }
+
+    protected void beforeCreateRecord(R newRecord) {
+        // no-op
     }
 }
