@@ -179,14 +179,14 @@
               },
               {
                 "name": "createdAt",
-                "type": "DateTime",
+                "type": "DateTimeTZ",
                 "description": "Date and time of entity creation",
                 "required": true,
                 "defValue": "now()"
               },
               {
                 "name": "updatedAt",
-                "type": "DateTime",
+                "type": "DateTimeTZ",
                 "description": "Date and time of entity update",
                 "required": true,
                 "defValue": "now()"
@@ -289,14 +289,14 @@
               },
               {
                 "name": "createdAt",
-                "type": "DateTime",
+                "type": "DateTimeTZ",
                 "description": "Date and time of entity creation",
                 "required": true,
                 "defValue": "now()"
               },
               {
                 "name": "updatedAt",
-                "type": "DateTime",
+                "type": "DateTimeTZ",
                 "description": "Date and time of entity update",
                 "required": true,
                 "defValue": "now()"
@@ -352,14 +352,14 @@
               },
               {
                 "name": "createdAt",
-                "type": "DateTime",
+                "type": "DateTimeTZ",
                 "description": "Date and time of entity creation",
                 "required": true,
                 "defValue": "now()"
               },
               {
                 "name": "updatedAt",
-                "type": "DateTime",
+                "type": "DateTimeTZ",
                 "description": "Date and time of entity update",
                 "required": true,
                 "defValue": "now()"
@@ -407,14 +407,14 @@
               },
               {
                 "name": "createdAt",
-                "type": "DateTime",
+                "type": "DateTimeTZ",
                 "description": "Date and time of entity creation",
                 "required": true,
                 "defValue": "now()"
               },
               {
                 "name": "updatedAt",
-                "type": "DateTime",
+                "type": "DateTimeTZ",
                 "description": "Date and time of entity update",
                 "required": true,
                 "defValue": "now()"

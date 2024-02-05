@@ -52,6 +52,7 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
     @Override
     public P update(@NotNull P pojo) {
         R rec = Objects.requireNonNull(getRecordById(pojo.getId()), () -> "Record not found by id: " + pojo.getId());
+        beforeUpdateRecord(pojo, rec);
         rec.from(pojo);
         rec.store();
         return rec.into(pojoClass);
@@ -80,5 +81,15 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
 
     public R getRecordById(ID id) {
         return dsl.selectFrom(table).where(idField.eq(id)).fetchOne();
+    }
+
+    /**
+     * Hook for updating record before storing it.
+     *
+     * @param newPojo   new pojo
+     * @param oldRecord old record
+     */
+    protected void beforeUpdateRecord(P newPojo, R oldRecord) {
+        // no-op
     }
 }

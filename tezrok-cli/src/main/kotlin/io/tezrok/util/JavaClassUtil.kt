@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.*
 
 fun JavaClassNode.addImportsByType(vararg types: String) {
@@ -34,6 +35,9 @@ fun JavaClassNode.addImportsByType(vararg types: String) {
         when (type) {
             "LocalDateTime" -> {
                 addImport(LocalDateTime::class.java)
+            }
+            "OffsetDateTime" -> {
+                addImport(OffsetDateTime::class.java)
             }
             "LocalDate" -> {
                 addImport(LocalDate::class.java)

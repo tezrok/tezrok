@@ -40,6 +40,7 @@ object SqlUtil {
             ModelTypes.STRING -> "'$value'"
             ModelTypes.DATE -> if (value == "now()") "CURRENT_DATE" else value
             ModelTypes.DATETIME -> if (value == "now()") "CURRENT_TIMESTAMP" else value
+            ModelTypes.DATETIME_TZ -> if (value == "now()") "CURRENT_TIMESTAMP" else value
             ModelTypes.INTEGER -> value.toIntOrNull()?.toString()
                 ?: throw IllegalArgumentException(INVALID_VALUE + value)
 

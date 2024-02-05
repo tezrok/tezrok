@@ -24,6 +24,7 @@ fun FieldElem.asJavaType(tryPrimitive: Boolean = false): String {
         ModelTypes.BOOLEAN -> if (tryPrimitive) "boolean" else "Boolean"
         ModelTypes.DATE -> "LocalDate"
         ModelTypes.DATETIME -> "LocalDateTime"
+        ModelTypes.DATETIME_TZ -> "OffsetDateTime"
         ModelTypes.FLOAT -> if (tryPrimitive) "float" else "Float"
         ModelTypes.DOUBLE -> if (tryPrimitive) "double" else "Double"
         ModelTypes.DECIMAL -> "BigDecimal"
@@ -39,6 +40,7 @@ fun FieldElem.isBaseType(): Boolean {
         ModelTypes.BOOLEAN -> true
         ModelTypes.DATE -> true
         ModelTypes.DATETIME -> true
+        ModelTypes.DATETIME_TZ -> true
         ModelTypes.FLOAT -> true
         ModelTypes.DOUBLE -> true
         ModelTypes.DECIMAL -> true
@@ -57,6 +59,7 @@ object ModelTypes {
     const val BOOLEAN = "Boolean"
     const val DATE = "Date"
     const val DATETIME = "DateTime"
+    const val DATETIME_TZ = "DateTimeTZ"
     const val FLOAT = "Float"
     const val DOUBLE = "Double"
     const val DECIMAL = "Decimal"

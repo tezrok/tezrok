@@ -362,8 +362,13 @@ internal class JooqRepositoryFeature : TezrokFeature {
 
         if (!repositoryDir.hasFile(repoClassFileName)) {
             val repoClassFile = repositoryDir.addJavaFile(repoClassFileName)
-            val values =
-                mapOf("package" to rootPackage, "name" to name, "uname" to name.camelCaseToSqlUppercase())
+            val values: Map<String, Any?> = mapOf(
+                "package" to rootPackage,
+                "name" to name,
+                "uname" to name.camelCaseToSqlUppercase(),
+                "updateAt" to entity.updatedAt,
+                "createdAt" to entity.createdAt
+            )
             val fields = generateFields(entity)
             val templateName = if (singlePrimary)
                 "/templates/jooq/JooqTargetRepository.java.vm"
@@ -548,7 +553,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
         }
     }
 
-    private fun generateFields(entity: EntityElem): Map<String, String> {
+    private fun generateFields(entity: EntityElem): Map<String, Any?> {
         var counter = 1
         return entity.fields.filter { it.primary == true }
             .map { it.name }

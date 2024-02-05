@@ -50,7 +50,7 @@ internal class EntityCreatedUpdatedFeature : TezrokFeature {
         if (foundField == null) {
             val newField = FieldElem(
                 name = name,
-                type = "DateTime",
+                type = "DateTimeTZ",
                 required = true,
                 defValue = DATETIME_NOW,
                 description = description
@@ -58,7 +58,7 @@ internal class EntityCreatedUpdatedFeature : TezrokFeature {
             return fields + newField
         }
 
-        check(foundField.type == null || foundField.type == "DateTime") { "Field '$name' must be of type dateTime" }
+        check(foundField.type == null || foundField.type == "DateTimeTZ") { "Field '$name' must be of type dateTime" }
         check(foundField.required == null || foundField.required == true) { "Field '$name' must be required" }
 
         return fields.map { if (it === foundField) fromField(it, description) else it }

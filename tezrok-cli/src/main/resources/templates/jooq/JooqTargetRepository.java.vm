@@ -5,6 +5,10 @@ import ${package}.jooq.tables.records.${name}Record;
 import ${package}.dto.${name}Dto;
 import org.jooq.DSLContext;
 
+#if ($updateAt == true || $createdAt == true)
+import java.time.OffsetDateTime;
+#end
+
 /**
  * Repository for {@link ${name}Dto} entity.
  */
@@ -13,4 +17,18 @@ public class ${name}Repository extends JooqRepository<${name}Record, Long, ${nam
     public ${name}Repository(final DSLContext dsl) {
         super(dsl, Tables.${uname}, Tables.${uname}.${field1}, ${name}Dto.class);
     }
+
+    #if ($updateAt == true || $createdAt == true)
+    @Override
+    protected void beforeUpdateRecord(final ${name}Dto newPojo, final ${name}Record oldRecord) {
+        #if ($createdAt == true)
+        // don't update createdAt
+        newPojo.setCreatedAt(null);
+        #end
+        #if ($updateAt == true)
+        // update updatedAt
+        newPojo.setUpdatedAt(OffsetDateTime.now());
+        #end
+    }
+    #end
 }

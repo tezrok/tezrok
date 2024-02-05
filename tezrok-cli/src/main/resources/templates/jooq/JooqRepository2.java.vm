@@ -45,6 +45,7 @@ abstract class JooqRepository2<R extends UpdatableRecord<R>, ID1, ID2, P extends
     public P update(@NotNull P pojo) {
         R rec = getRecordByIds(pojo.getId1(), pojo.getId2())
                 .orElseThrow(() -> new IllegalArgumentException("Record not found by id: " + pojo.getId1() + ", " + pojo.getId2()));
+        beforeUpdateRecord(pojo, rec);
         rec.from(pojo);
         rec.store();
         return rec.into(pojoClass);
@@ -83,5 +84,16 @@ abstract class JooqRepository2<R extends UpdatableRecord<R>, ID1, ID2, P extends
                 .map(id -> idField1.eq(id.getLeft()).and(idField2.eq(id.getRight())))
                 .reduce(Condition::or)
                 .orElseThrow();
+    }
+
+
+    /**
+     * Hook for updating record before storing it.
+     *
+     * @param newPojo   new pojo
+     * @param oldRecord old record
+     */
+    protected void beforeUpdateRecord(P newPojo, R oldRecord) {
+        // no-op
     }
 }

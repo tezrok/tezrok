@@ -227,6 +227,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
             ModelTypes.STRING -> getStringBasedType(field)
             ModelTypes.DATE -> "DATE"
             ModelTypes.DATETIME -> "TIMESTAMP"
+            ModelTypes.DATETIME_TZ -> "TIMESTAMP WITH TIME ZONE"
             ModelTypes.INTEGER -> if (field.isSerialEffective(singlePrimary)) "SERIAL" else "INT"
             ModelTypes.LONG -> if (field.isSerialEffective(singlePrimary)) "BIGSERIAL" else "BIGINT"
             ModelTypes.DOUBLE -> "FLOAT8"

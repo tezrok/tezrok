@@ -40,7 +40,7 @@ public class ${name}Controller {
 
     @GetMapping(value = "/${lname}s/search")
     public Page<${name}Dto> searchByTerm(@RequestParam(value = "term", required = false) String searchTerm, Pageable pageable) {
-        return ${lname}Service.searchByTerm(searchTerm, pageable);
+        return ${lname}Service.searchByTerm(searchTerm.trim(), pageable);
     }
 
     @GetMapping("/${lname}/{id}/table")
