@@ -14,12 +14,14 @@ import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.*
 import lombok.extern.slf4j.Slf4j
 import org.apache.commons.collections4.CollectionUtils
+import org.apache.commons.lang3.StringUtils
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.Nullable
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.*
 import java.util.stream.Collectors
+import java.util.stream.Stream
 
 /**
  * Creates EntityGraphStore class
@@ -104,6 +106,11 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
                 addLoadEntityIdFieldsOrReturnMethod(contextClass, entity)
             }
 
+        entities.filter { it.isNotSynthetic() }
+            .forEach { entity ->
+                addHasOnlyUniqueFieldsMethod(contextClass, entity)
+            }
+
         addCloseMethod(contextClass, entities)
     }
 
@@ -152,19 +159,24 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         val uniqueFields = entity.getUniqueStringFields()
 
         if (uniqueFields.isNotEmpty()) {
-            var second = false
+            val primaryIdSetter = primaryField.getSetterName()
             var code = "// check unique fields\n"
             uniqueFields.forEach { field ->
                 val idFieldsByUniqField = entity.getGetIdFieldsByUniqueField(field)
                 val primaryFieldByUniqField = entity.getGetPrimaryIdFieldByUniqueField(field)
                 val fieldGetter = field.getGetterName()
-                val elsePrefix = if (second) " else " else ""
-                code += """${elsePrefix}if (newFullDto.$fieldGetter() != null) {
+                code += """
+                if (newFullDto.$fieldGetter() != null) {
                 if (updateType == EntityUpdateType.UPDATE_RELATION_BY_NAME) {
-                    // if we don't have id, have unique field and need update only relation, return only id
-                    final Long idByName = $entityRepository.$primaryFieldByUniqField(newFullDto.$fieldGetter());
-                    if (idByName != null) {
-                        return Pair.of(idByName, null);
+                    final Long idByUniqField = $entityRepository.$primaryFieldByUniqField(newFullDto.$fieldGetter());
+                    if (idByUniqField != null) {
+                        if (hasOnlyUniqueFields(newFullDto)) {
+                            // if we don't have id, have unique field and need update only relation, return only id
+                            return Pair.of(idByUniqField, null);
+                        }
+                        // if we have other fields, then we need to update entity
+                        newFullDto.$primaryIdSetter(idByUniqField);
+                        return Pair.of(null, null);
                     }
                 }
             }"""
@@ -186,7 +198,6 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
                     return Pair.of(null, oldIdFields);
                 }"""
                 }
-                second = true
             }
 
             statements.addAll(code.parseAsStatements())
@@ -194,6 +205,31 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
 
         statements.add("return Pair.of(null, null);".parseAsStatement())
         method.setBody(statements)
+    }
+
+    private fun addHasOnlyUniqueFieldsMethod(contextClass: JavaClassNode, entity: EntityElem) {
+        val uniqueFields = entity.getUniqueStringFields()
+        val otherFields = entity.fields.filter { field -> field.logicField != true && field !in uniqueFields }
+        contextClass.addImport(StringUtils::class.java)
+            .addImport(Stream::class.java)
+            .addImport(Objects::class.java)
+
+        val uniqStatement = uniqueFields.map { field -> "fullDto.${field.getGetterName()}()" }.joinToString()
+            .let { str -> if (str.isNotBlank()) "!StringUtils.isAllEmpty($str)" else "" }
+        val otherStatement = otherFields.map { field -> "fullDto.${field.getGetterName()}()" }.joinToString()
+            .let { str -> if (str.isNotBlank()) "Stream.of($str).allMatch(Objects::isNull)" else "" }
+        val statements = listOf(uniqStatement, otherStatement).filter { it.isNotBlank() }
+        val finalStatement = if (statements.isNotEmpty()) statements.joinToString(
+            " && ",
+            prefix = "return ",
+            postfix = ";"
+        ) else "return false;"
+
+        contextClass.addMethod(entity.getHasOnlyUniqueFieldsMethod())
+            .addParameter(entity.getFullDtoName(), "fullDto")
+            .setReturnType("boolean")
+            .setBody(finalStatement.parseAsStatement())
+            .setJavadocComment("Returns true if at least one of the unique field is not null and other non-relation fields are null.")
     }
 
     private fun implementSaveFullEntityMethod(method: JavaMethodNode, entity: EntityElem, entitiesMap: EntitiesMap) {
@@ -648,6 +684,9 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
     }
 
     private fun EntityElem.getLoadEntityIdFieldsOrReturnMethod(): String = "load${this.name}IdFieldsOrReturn"
+
+    private fun EntityElem.getHasOnlyUniqueFieldsMethod(): String = "hasOnlyUniqueFields"
+
 
     private companion object {
         val log = LoggerFactory.getLogger(EntityGraphStoreFeature::class.java)!!
