@@ -67,7 +67,13 @@ object ModelTypes {
 
 fun EntityElem.getPrimaryFieldType(tryPrimitive: Boolean = false): String = getPrimaryField().asJavaType(tryPrimitive)
 
-fun EntityElem.getUniqueStringFields(): List<FieldElem> = fields.filter { it.unique == true && it.type == ModelTypes.STRING }
+fun EntityElem.getUniqueStringFields(): List<FieldElem> =
+    fields.filter { it.unique == true && it.type == ModelTypes.STRING }
+
+fun EntityElem.getUniqueGroups(logic: Boolean): Map<String, List<FieldElem>> =
+    fields.filter { it.hasUniqueGroup() }
+        .filter { if (logic) it.isNotSynthetic() else it.isNotLogic() }
+        .groupBy { it.uniqueGroup!! }
 
 fun EntityElem.getRepositoryName(): String = "${name}Repository"
 
@@ -111,4 +117,15 @@ fun EntityElem.getGetPrimaryIdFieldByUniqueField(field: FieldElem): String {
     check(getUniqueStringFields().contains(field)) { "Field ${field.name} is not found in entity $name" }
 
     return "get${getPrimaryField().name.upperFirst()}By${field.name.upperFirst()}"
+}
+
+fun EntityElem.getGetPrimaryIdFieldByGroupFields(fields: List<FieldElem>): String {
+    val uniqueGroup =
+        fields.first().uniqueGroup ?: error("Unique group not found for fields: ${fields.map { it.name }}")
+    fields.forEach { field ->
+        check(field.hasUniqueGroup()) { "Field ${field.name} is not in unique group" }
+        check(field.uniqueGroup == uniqueGroup) { "Field ${field.name} is not in unique group $uniqueGroup" }
+    }
+    val fieldsPart = fields.joinToString(separator = "And") { p -> p.name.upperFirst() }
+    return "get${getPrimaryField().name.upperFirst()}By$fieldsPart"
 }

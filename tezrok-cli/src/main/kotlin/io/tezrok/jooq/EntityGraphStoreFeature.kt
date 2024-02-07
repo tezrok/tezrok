@@ -154,7 +154,11 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
             )
         }
 
-        entity.fields.find { it.uniqueGroup?.isNotBlank() == true }?.let { error("Unique group is not supported yet") }
+        // TODO: move save of manyToOne and oneToOne fields above, because such field (or group) could be unique for current entity
+        entity.getUniqueGroups(true)
+            .forEach { (_, fields) ->
+                //TODO: add group unique fields
+            }
 
         val uniqueFields = entity.getUniqueStringFields()
 
@@ -214,16 +218,19 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
             .addImport(Stream::class.java)
             .addImport(Objects::class.java)
 
-        val uniqStatement = uniqueFields.map { field -> "fullDto.${field.getGetterName()}()" }.joinToString()
+        val uniqStatement = uniqueFields.filter { it.isNotSynthetic() }
+            .joinToString { field -> "fullDto.${field.getGetterName()}()" }
             .let { str -> if (str.isNotBlank()) "!StringUtils.isAllEmpty($str)" else "" }
-        val otherStatement = otherFields.map { field -> "fullDto.${field.getGetterName()}()" }.joinToString()
+        val otherStatement = otherFields.filter { p -> p.isNotSynthetic() }
+            .joinToString { field -> "fullDto.${field.getGetterName()}()" }
             .let { str -> if (str.isNotBlank()) "Stream.of($str).allMatch(Objects::isNull)" else "" }
-        val statements = listOf(uniqStatement, otherStatement).filter { it.isNotBlank() }
-        val finalStatement = if (statements.isNotEmpty()) statements.joinToString(
-            " && ",
-            prefix = "return ",
-            postfix = ";"
-        ) else "return false;"
+        val finalStatement = if (uniqStatement.isNotEmpty()) listOf(uniqStatement, otherStatement)
+            .filter { it.isNotBlank() }
+            .joinToString(
+                " && ",
+                prefix = "return ",
+                postfix = ";"
+            ) else "return false;"
 
         contextClass.addMethod(entity.getHasOnlyUniqueFieldsMethod())
             .addParameter(entity.getFullDtoName(), "fullDto")

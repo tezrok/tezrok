@@ -2,6 +2,7 @@ package io.tezrok.jooq
 
 import io.tezrok.jooq.Token.*
 import io.tezrok.util.camelCaseToSnakeCase
+import io.tezrok.util.lowerFirst
 
 /**
  * Parses method name into tokens.
@@ -15,7 +16,7 @@ object MethodExpressionParser {
         var index = 0
         val addNamePart = { part: Name ->
             when (val last = tokens.lastOrNull()) {
-                is OrderBy -> tokens.add(SortName(part.name.decapitalize()))
+                is OrderBy -> tokens.add(SortName(part.name.lowerFirst()))
 
                 is Name -> tokens[tokens.size - 1] = last.copy(name = last.name + part.name)
 

@@ -148,7 +148,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
             inits.add(sqlInitData)
         }
 
-        fields.filter { it.uniqueGroup != null }
+        fields.filter { it.isNotLogic() && it.hasUniqueGroup() }
             .groupBy { it.uniqueGroup }
             .forEach { (_, fields) ->
                 sb.append(",")

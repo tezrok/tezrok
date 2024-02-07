@@ -1,5 +1,7 @@
 package io.tezrok.jooq
 
+import io.tezrok.util.lowerFirst
+
 /**
  * Represents a token in custom jooq methods.
  *
@@ -7,7 +9,7 @@ package io.tezrok.jooq
  */
 abstract class Token(open val name: String) {
     data class Name(override val name: String, val ignoreCase: Boolean = false) : Token(name) {
-        fun decapitalize(): Name = this.copy(name = name.decapitalize())
+        fun decapitalize(): Name = this.copy(name = name.lowerFirst())
 
         fun ignoreCase(ignoreCase: Boolean = true): Name = this.copy(ignoreCase = ignoreCase)
     }

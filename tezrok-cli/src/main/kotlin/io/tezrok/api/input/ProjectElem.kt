@@ -2,6 +2,7 @@ package io.tezrok.api.input
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.tezrok.util.NameUtil
 import java.util.*
 
 /**
@@ -111,7 +112,8 @@ data class EntityElem(
      * Returns first primary field or throws an exception if primary field is not found
      */
     @JsonIgnore
-    fun getPrimaryField(): FieldElem = fields.find { it.primary == true } ?: error("Primary field not found in entity $name")
+    fun getPrimaryField(): FieldElem =
+        fields.find { it.primary == true } ?: error("Primary field not found in entity $name")
 
     /**
      * Returns all primary and synthetic fields (but not logic ones)
@@ -168,6 +170,13 @@ data class FieldElem(
         check(firstChar.isLowerCase()) {
             "Field name should start with lower case letter. Field name: $name"
         }
+        if (uniqueGroup != null) {
+            check(uniqueGroup.isNotBlank()) { "Field unique group cannot be blank" }
+            NameUtil.validateWhitespaces(uniqueGroup)
+            check(unique != true) {
+                "Field $name: uniqueGroup cannot be used with unique=true"
+            }
+        }
     }
 
     @JsonIgnore
@@ -175,6 +184,15 @@ data class FieldElem(
 
     @JsonIgnore
     fun isNotSynthetic(): Boolean = !isSynthetic()
+
+    @JsonIgnore
+    fun isLogic(): Boolean = logicField == true
+
+    @JsonIgnore
+    fun isNotLogic(): Boolean = !isLogic()
+
+    @JsonIgnore
+    fun hasUniqueGroup(): Boolean = uniqueGroup != null
 }
 
 /**
