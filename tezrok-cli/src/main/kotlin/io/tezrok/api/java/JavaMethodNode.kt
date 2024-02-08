@@ -7,6 +7,7 @@ import com.github.javaparser.ast.comments.JavadocComment
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.expr.MemberValuePair
 import com.github.javaparser.ast.expr.MethodCallExpr
+import com.github.javaparser.ast.expr.NormalAnnotationExpr
 import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.ast.stmt.ReturnStmt
 import com.github.javaparser.ast.stmt.Statement
@@ -116,6 +117,11 @@ open class JavaMethodNode(private val method: MethodDeclaration, private val par
     fun addAnnotation(annotationExpr: String, pairs: Map<String, Expression> = emptyMap()): JavaMethodNode {
         val annotation = method.addAndGetAnnotation(annotationExpr)
         annotation.setPairs(NodeList(pairs.map { MemberValuePair(it.key, it.value) }))
+        return this
+    }
+
+    fun addAnnotation(annotationExpr: NormalAnnotationExpr): JavaMethodNode {
+        method.addAnnotation(annotationExpr)
         return this
     }
 

@@ -130,6 +130,9 @@ data class EntityElem(
 
     @JsonIgnore
     fun isNotSynthetic(): Boolean = !isSynthetic()
+
+    fun hasRelations(vararg relations: EntityRelation): Boolean =
+        fields.any { it.isLogic() && it.hasRelations(*relations) }
 }
 
 data class EnumElem(
@@ -193,6 +196,8 @@ data class FieldElem(
 
     @JsonIgnore
     fun hasUniqueGroup(): Boolean = uniqueGroup != null
+
+    fun hasRelations(vararg relations: EntityRelation): Boolean = relation in relations
 }
 
 /**

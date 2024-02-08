@@ -12,11 +12,6 @@ public enum EntityUpdateType {
     DEFAULT,
 
     /**
-     *  If entity without id but with unique name, then id loaded by name and entity fully updated.
-     */
-    UPDATE_BY_NAME,
-
-    /**
      *  If entity without id but with unique name, then entity is not updated but relation is updated,
      *  otherwise new entity is created.
      */

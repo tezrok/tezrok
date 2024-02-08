@@ -14,9 +14,15 @@ import java.nio.file.Path
 open class ModuleNode(moduleElem: ModuleElem, parent: BaseNode?, private var physicalPath: Path? = null) : DirectoryNode(moduleElem.name, parent) {
     val source: SourceNode = SourceNode(this)
 
-    val pom: PomNode = PomNode(artifactId = moduleElem.name, parent = this).setDescription(moduleElem.description)
+    val pom: PomNode = PomNode(artifactId = moduleElem.name, parent = this)
 
     val properties: TezrokProperties = PropertiesNode(moduleElem)
+
+    init {
+        if (moduleElem.description.isNotBlank()) {
+            pom.setDescription(moduleElem.description)
+        }
+    }
 
     override fun getPhysicalPath(): Path? = physicalPath
 

@@ -10,9 +10,12 @@ import com.github.javaparser.ast.stmt.ReturnStmt
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.EntityElem
+import io.tezrok.api.input.EntityRelation
 import io.tezrok.api.java.JavaDirectoryNode
+import io.tezrok.api.java.JavaMethodNode
 import io.tezrok.api.maven.ProjectNode
 import org.mapstruct.Mapper
+import org.mapstruct.Mapping
 import org.slf4j.LoggerFactory
 
 /**
@@ -63,16 +66,23 @@ internal class MapperFeature : TezrokFeature {
                 .withModifiers(Modifier.Keyword.PUBLIC)
                 .setInterface(true)
                 .addImport(Mapper::class.java)
-                .addAnnotation(NormalAnnotationExpr(Name("Mapper"), NodeList(MemberValuePair("componentModel", StringLiteralExpr("spring")))))
+                .addAnnotation(
+                    NormalAnnotationExpr(
+                        Name("Mapper"),
+                        NodeList(MemberValuePair("componentModel", StringLiteralExpr("spring")))
+                    )
+                )
 
             val dtoType = "${name}Dto"
             val fullDtoType = "${name}FullDto"
             val toDtoName = "to$dtoType"
-            mapperClass.addMethod(toDtoName)
+            val method = mapperClass.addMethod(toDtoName)
                 .setReturnType(dtoType)
                 .setJavadocComment("Map instance of {@link $fullDtoType} to {@link $dtoType}.")
                 .addParameter(fullDtoType, "fullDto")
                 .removeBody()
+            addMappingAnnotation(method, entity)
+
             val toFullDtoName = "to$fullDtoType"
             mapperClass.addMethod(toFullDtoName)
                 .setReturnType(fullDtoType)
@@ -91,6 +101,27 @@ internal class MapperFeature : TezrokFeature {
         } else {
             log.warn("Mapper class {} already exists", className)
         }
+    }
+
+    private fun addMappingAnnotation(method: JavaMethodNode, entity: EntityElem) {
+        entity.fields.filter { it.isLogic() && it.hasRelations(EntityRelation.OneToOne, EntityRelation.ManyToOne) }
+            .forEach { logicField ->
+                val syntheticTo = entity.name + "." + logicField.name
+                entity.fields.find { it.syntheticTo == syntheticTo }?.let { targetField ->
+                    val source = logicField.name + "." + entity.getPrimaryField().name
+                    method.addAnnotation(
+                        NormalAnnotationExpr(
+                            Name("Mapping"),
+                            NodeList(
+                                MemberValuePair("source", StringLiteralExpr(source)),
+                                MemberValuePair("target", StringLiteralExpr(targetField.name))
+                            )
+                        )
+                    )
+
+                    method.getOwner().addImport(Mapping::class.java)
+                }
+            }
     }
 
     private companion object {

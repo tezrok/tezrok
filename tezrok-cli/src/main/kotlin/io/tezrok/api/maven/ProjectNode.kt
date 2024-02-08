@@ -16,7 +16,9 @@ open class ProjectNode(projectElem: ProjectElem) : DirectoryNode(projectElem.nam
 
     init {
         pom.dependencyId = pom.dependencyId.withPackaging("pom")
-        pom.setDescription(projectElem.description)
+        if (projectElem.description.isNotBlank()) {
+            pom.setDescription(projectElem.description)
+        }
     }
 
     fun getModules(): List<ModuleNode> = Collections.unmodifiableList(modules.toList())

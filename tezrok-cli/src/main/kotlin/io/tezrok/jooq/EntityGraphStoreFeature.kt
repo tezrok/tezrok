@@ -130,7 +130,7 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         val hasIdFields = entity.getIdFields().size > 1
         val primaryField = entity.getPrimaryField()
         val primaryIdGetter = primaryField.getGetterName()
-        if (hasIdFields) {
+        if (entity.hasRelations(EntityRelation.OneToOne)) {
             statements.addAll(
                 """if (newFullDto.getId() != null) {
                 if ($entityIdsSaved.contains(newFullDto.getId())) {
@@ -164,14 +164,29 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
 
         if (uniqueFields.isNotEmpty()) {
             val primaryIdSetter = primaryField.getSetterName()
-            var code = "// check unique fields\n"
+            var code = "if (updateType == EntityUpdateType.UPDATE_RELATION_BY_NAME) {\n// check unique fields\n"
             uniqueFields.forEach { field ->
                 val idFieldsByUniqField = entity.getGetIdFieldsByUniqueField(field)
                 val primaryFieldByUniqField = entity.getGetPrimaryIdFieldByUniqueField(field)
                 val fieldGetter = field.getGetterName()
-                code += """
+                // case when we have uniq field and id fields
+                if (hasIdFields) {
+                    code += """
                 if (newFullDto.$fieldGetter() != null) {
-                if (updateType == EntityUpdateType.UPDATE_RELATION_BY_NAME) {
+                    // if we have unique field, we can load id fields by it
+                    final $dtoName oldIdFields = $entityRepository.$idFieldsByUniqField(newFullDto.$fieldGetter(), $dtoName.class);
+    
+                    if (oldIdFields != null) {
+                        if ($entityIdsSaved.contains(oldIdFields.$primaryIdGetter())) {
+                            return Pair.of(oldIdFields.$primaryIdGetter(), null);
+                        }
+                        $entityIdsSaved.add(oldIdFields.$primaryIdGetter());
+                        return Pair.of(null, oldIdFields);
+                    }
+                }"""
+                } else {
+                    code += """
+                if (newFullDto.$fieldGetter() != null) {
                     final Long idByUniqField = $entityRepository.$primaryFieldByUniqField(newFullDto.$fieldGetter());
                     if (idByUniqField != null) {
                         if (hasOnlyUniqueFields(newFullDto)) {
@@ -182,28 +197,10 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
                         newFullDto.$primaryIdSetter(idByUniqField);
                         return Pair.of(null, null);
                     }
-                }
-            }"""
-                // case when we have uniqfield and id fields
-                if (hasIdFields) {
-                    code += """final $dtoName oldIdFields;
-                if (updateType == EntityUpdateType.UPDATE_BY_NAME) {
-                    // if we have unique field, we can load id fields by it
-                    oldIdFields = $entityRepository.$idFieldsByUniqField(newFullDto.$fieldGetter(), $dtoName.class);
-                } else {
-                    oldIdFields = null;
-                }
-
-                if (oldIdFields != null) {
-                    if ($entityIdsSaved.contains(oldIdFields.$primaryIdGetter())) {
-                        return Pair.of(oldIdFields.$primaryIdGetter(), null);
-                    }
-                    $entityIdsSaved.add(oldIdFields.$primaryIdGetter());
-                    return Pair.of(null, oldIdFields);
                 }"""
                 }
             }
-
+            code += "}"
             statements.addAll(code.parseAsStatements())
         }
 
@@ -328,6 +325,9 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
                         .withLineComment(" save property \"${field.name}\" - ${field.relation} relation")
                 )
             }
+
+        // orderFullDto.setId(orderDto.getId());
+        statements.add("$fullDtoParam.${primaryField.getSetterName()}($primaryFieldCall);".parseAsStatement())
 
         // return orderDto.getId();
         statements.add("return $primaryFieldCall;".parseAsStatement())
