@@ -9,6 +9,7 @@ import com.github.javaparser.ast.expr.StringLiteralExpr
 import com.github.javaparser.ast.stmt.ReturnStmt
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
+import io.tezrok.api.input.EntitiesMap
 import io.tezrok.api.input.EntityElem
 import io.tezrok.api.input.EntityRelation
 import io.tezrok.api.java.JavaDirectoryNode
@@ -43,11 +44,12 @@ internal class MapperFeature : TezrokFeature {
             val schemaModule = context.getProject().modules.find { it.name == module.getName() }
                 ?: throw IllegalStateException("Module ${module.getName()} not found")
             val schema = schemaModule.schema
-            if (schema != null && schema.entities != null) {
+            if (schema?.entities != null) {
                 val projectElem = context.getProject()
                 val mapperDir = applicationPackageRoot.getOrAddJavaDirectory("mapper")
+                val entitiesMap = EntitiesMap(schema.entities)
                 schema.entities.filter { it.isNotSynthetic() }.forEach { entity ->
-                    addMapperInterface(mapperDir, entity, projectElem.packagePath)
+                    addMapperInterface(mapperDir, entity, entitiesMap, projectElem.packagePath)
                 }
             }
         } else {
@@ -58,7 +60,12 @@ internal class MapperFeature : TezrokFeature {
         return true
     }
 
-    private fun addMapperInterface(mapperDir: JavaDirectoryNode, entity: EntityElem, packagePath: String) {
+    private fun addMapperInterface(
+        mapperDir: JavaDirectoryNode,
+        entity: EntityElem,
+        entitiesMap: EntitiesMap,
+        packagePath: String
+    ) {
         val name = entity.name
         val className = "${name}Mapper"
         if (!mapperDir.hasClass(className)) {
@@ -81,7 +88,7 @@ internal class MapperFeature : TezrokFeature {
                 .setJavadocComment("Map instance of {@link $fullDtoType} to {@link $dtoType}.")
                 .addParameter(fullDtoType, "fullDto")
                 .removeBody()
-            addMappingAnnotation(method, entity)
+            addMappingAnnotation(method, entity, entitiesMap)
 
             val toFullDtoName = "to$fullDtoType"
             mapperClass.addMethod(toFullDtoName)
@@ -103,12 +110,13 @@ internal class MapperFeature : TezrokFeature {
         }
     }
 
-    private fun addMappingAnnotation(method: JavaMethodNode, entity: EntityElem) {
+    private fun addMappingAnnotation(method: JavaMethodNode, entity: EntityElem, entitiesMap: EntitiesMap) {
         entity.fields.filter { it.isLogic() && it.hasRelations(EntityRelation.OneToOne, EntityRelation.ManyToOne) }
             .forEach { logicField ->
                 val syntheticTo = entity.name + "." + logicField.name
                 entity.fields.find { it.syntheticTo == syntheticTo }?.let { targetField ->
-                    val source = logicField.name + "." + entity.getPrimaryField().name
+                    val targetEntity = entitiesMap.getRefEntity(logicField)
+                    val source = logicField.name + "." + targetEntity.getPrimaryField().name
                     method.addAnnotation(
                         NormalAnnotationExpr(
                             Name("Mapping"),
