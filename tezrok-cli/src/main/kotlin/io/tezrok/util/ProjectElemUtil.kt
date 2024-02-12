@@ -120,12 +120,26 @@ fun EntityElem.getGetPrimaryIdFieldByUniqueField(field: FieldElem): String {
 }
 
 fun EntityElem.getGetPrimaryIdFieldByGroupFields(fields: List<FieldElem>): String {
-    val uniqueGroup =
-        fields.first().uniqueGroup ?: error("Unique group not found for fields: ${fields.map { it.name }}")
+    val uniqueGroup = fields.first().uniqueGroup
+        ?: error("Unique group not found for fields: ${fields.map { it.name }}")
     fields.forEach { field ->
         check(field.hasUniqueGroup()) { "Field ${field.name} is not in unique group" }
         check(field.uniqueGroup == uniqueGroup) { "Field ${field.name} is not in unique group $uniqueGroup" }
     }
     val fieldsPart = fields.joinToString(separator = "And") { p -> p.name.upperFirst() }
     return "get${getPrimaryField().name.upperFirst()}By$fieldsPart"
+}
+
+/**
+ * Make method name to `getIdFieldsByUniqueName(String name, Class<T> type)`
+ */
+fun EntityElem.getGetIdFieldsByGroupFields(fields: List<FieldElem>): String {
+    val uniqueGroup = fields.first().uniqueGroup
+        ?: error("Unique group not found for fields: ${fields.map { it.name }}")
+    fields.forEach { field ->
+        check(field.hasUniqueGroup()) { "Field ${field.name} is not in unique group" }
+        check(field.uniqueGroup == uniqueGroup) { "Field ${field.name} is not in unique group $uniqueGroup" }
+    }
+    val fieldsPart = fields.joinToString(separator = "And") { p -> p.name.upperFirst() }
+    return "getIdFieldsBy$fieldsPart"
 }

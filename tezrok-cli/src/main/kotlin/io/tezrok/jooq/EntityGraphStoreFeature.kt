@@ -158,12 +158,6 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
             )
         }
 
-        // TODO: move save of manyToOne and oneToOne fields above, because such field (or group) could be unique for current entity
-        entity.getUniqueGroups(true)
-            .forEach { (_, fields) ->
-                //TODO: add group unique fields
-            }
-
         val uniqueFields = entity.getUniqueStringFields()
 
         if (uniqueFields.isNotEmpty()) {
@@ -193,12 +187,12 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
                 if (newFullDto.$fieldGetter() != null) {
                     final Long idByUniqField = $entityRepository.$primaryFieldByUniqField(newFullDto.$fieldGetter());
                     if (idByUniqField != null) {
+                        newFullDto.$primaryIdSetter(idByUniqField);
                         if (hasOnlyUniqueFields(newFullDto)) {
                             // if we don't have id, have unique field and need update only relation, return only id
                             return Pair.of(idByUniqField, null);
                         }
-                        // if we have other fields, then we need to update entity
-                        newFullDto.$primaryIdSetter(idByUniqField);
+                        // if we have other fields, then we need to update entity                        
                         return Pair.of(null, null);
                     }
                 }"""
@@ -207,6 +201,11 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
             code += "}"
             statements.addAll(code.parseAsStatements())
         }
+
+        entity.getUniqueGroups(true)
+            .forEach { (_, fields) ->
+                val methodName = entity.getGetPrimaryIdFieldByGroupFields(fields)
+            }
 
         statements.add("return Pair.of(null, null);".parseAsStatement())
         method.setBody(statements)
@@ -537,7 +536,7 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
                 """if (oldIdFields.$syntheticGetter() != null && ($fullDtoParam.$fieldGetter() == null || oldIdFields.$syntheticGetter().equals($fullDtoParam.$fieldGetter().$targetEntityIdGetter()))) {
                 ${targetEntityName}IdsToDelete.add(oldIdFields.$syntheticGetter());
             }""".parseAsStatement()
-                    .withLineComment(" delete old ${entity.name} as it's not used anymore and it's OneToOne relation")
+                    .withLineComment(" delete old ${targetEntity.name} as it's not used anymore and it's OneToOne relation")
             )
         }
 
