@@ -57,7 +57,6 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
             sb.append("-- comments")
             addNewline(sb)
             comments.forEach { comment ->
-                // TODO: escape single quotes in comment
                 sb.append("COMMENT ON ${comment.type} ${comment.name} IS '${comment.comment.trim()}';")
                 addNewline(sb)
             }
@@ -111,11 +110,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
 
         if (entity.description?.isNotBlank() == true) {
             comments.add(
-                CommentOn(
-                    type = SqlObjectType.TABLE,
-                    name = tableName,
-                    comment = entity.description
-                )
+                CommentOn.table(tableName, entity.description)
             )
         }
 
@@ -213,11 +208,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
 
         if (field.description?.isNotBlank() == true) {
             comments.add(
-                CommentOn(
-                    type = SqlObjectType.COLUMN,
-                    name = "${tableName}.$columnName",
-                    comment = field.description
-                )
+                CommentOn.column("${tableName}.$columnName", field.description)
             )
         }
     }
@@ -318,7 +309,18 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         val type: SqlObjectType,
         val name: String,
         val comment: String
-    )
+    ) {
+        init {
+            check(name.isNotBlank()) { "Name is blank" }
+        }
+
+        companion object {
+            fun table(name: String, comment: String) = CommentOn(SqlObjectType.TABLE, name, normalizeComment(comment))
+            fun column(name: String, comment: String) = CommentOn(SqlObjectType.COLUMN, name, normalizeComment(comment))
+
+            private fun normalizeComment(comment: String) = comment.trim().replace("'", "''")
+        }
+    }
 
     enum class SqlObjectType {
         TABLE,
