@@ -113,22 +113,20 @@ internal class MapperFeature : TezrokFeature {
     private fun addMappingAnnotation(method: JavaMethodNode, entity: EntityElem, entitiesMap: EntitiesMap) {
         entity.fields.filter { it.isLogic() && it.hasRelations(EntityRelation.OneToOne, EntityRelation.ManyToOne) }
             .forEach { logicField ->
-                val syntheticTo = entity.name + "." + logicField.name
-                entity.fields.find { it.syntheticTo == syntheticTo }?.let { targetField ->
-                    val targetEntity = entitiesMap.getRefEntity(logicField)
-                    val source = logicField.name + "." + targetEntity.getPrimaryField().name
-                    method.addAnnotation(
-                        NormalAnnotationExpr(
-                            Name("Mapping"),
-                            NodeList(
-                                MemberValuePair("source", StringLiteralExpr(source)),
-                                MemberValuePair("target", StringLiteralExpr(targetField.name))
-                            )
+                val targetField = entitiesMap.getSyntheticField(entity, logicField)
+                val targetEntity = entitiesMap.getRefEntity(logicField)
+                val source = logicField.name + "." + targetEntity.getPrimaryField().name
+                method.addAnnotation(
+                    NormalAnnotationExpr(
+                        Name("Mapping"),
+                        NodeList(
+                            MemberValuePair("source", StringLiteralExpr(source)),
+                            MemberValuePair("target", StringLiteralExpr(targetField.name))
                         )
                     )
+                )
 
-                    method.getOwner().addImport(Mapping::class.java)
-                }
+                method.getOwner().addImport(Mapping::class.java)
             }
     }
 

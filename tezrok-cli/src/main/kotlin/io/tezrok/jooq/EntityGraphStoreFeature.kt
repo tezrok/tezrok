@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j
 import org.apache.commons.collections4.CollectionUtils
 import org.apache.commons.lang3.StringUtils
 import org.jetbrains.annotations.NotNull
-import org.jetbrains.annotations.Nullable
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.*
@@ -104,6 +103,11 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         entities.filter { it.isNotSynthetic() }
             .forEach { entity ->
                 addLoadEntityIdFieldsOrReturnMethod(contextClass, entity)
+            }
+
+        entities.filter { it.isNotSynthetic() }
+            .forEach { entity ->
+                addDeleteOldEntitiesMethod(contextClass, entity, entitiesMap)
             }
 
         entities.filter { it.isNotSynthetic() }
@@ -246,6 +250,30 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         val dtoField = dtoName.lowerFirst()
         val primaryField = entity.getPrimaryField()
         val idType = primaryField.asJavaType()
+
+        // generates save OneToOne and ManyToOne fields
+        entity.fields.filter { field -> field.relation == EntityRelation.ManyToOne || field.relation == EntityRelation.OneToOne }
+            .forEach { field ->
+                val syntheticField = entitiesMap.getSyntheticField(entity, field)
+                val refEntity = entitiesMap.getRefEntity(field)
+
+                if (field.relation == EntityRelation.OneToOne) {
+                    // saveOneToOneOrder(orderFullDto.getNextOrder());
+                    val methodName = getOrAddOneToOneMethod(refEntity, method.getOwner()).getName()
+                    statements.add(
+                        "$methodName($fullDtoParam.${field.getGetterName()}());"
+                            .parseAsStatement().withLineComment(" save property \"${field.name}\" - OneToOne relation")
+                    )
+                } else if (field.relation == EntityRelation.ManyToOne) {
+                    // orderDtoPre.setSelectedItemId(saveManyToOneItem(orderFullDto.getSelectedItem()));
+                    val methodName = getOrAddManyToOneMethod(refEntity, method.getOwner()).getName()
+                    statements.add(
+                        "$methodName($fullDtoParam.${field.getGetterName()}());"
+                            .parseAsStatement().withLineComment(" save property \"${field.name}\" - ManyToOne relation")
+                    )
+                }
+            }
+
         // Pair<Long, OrderDto> returnOrIds = loadOrderIdFieldsOrReturn(orderFullDto);
         val loadMethod = entity.getLoadEntityIdFieldsOrReturnMethod()
         statements.add(
@@ -255,9 +283,13 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
 
         // if (returnOrIds.getLeft() != null) { return returnOrIds.getLeft(); }
         statements.add("if (returnOrIds.getLeft() != null) { return returnOrIds.getLeft(); }".parseAsStatement())
-        if (entity.fields.any { it.relation == EntityRelation.OneToOne }) {
+        if (entity.hasRelations(EntityRelation.OneToOne)) {
             // final OrderDto oldIdFields = returnOrIds.getRight();
-            statements.add("final $dtoName oldIdFields = returnOrIds.getRight();".parseAsStatement())
+            // if (oldIdFields != null) { deleteOldEntities(orderFullDto, oldIdFields); }
+            statements.addAll(
+                """final $dtoName oldIdFields = returnOrIds.getRight();
+                    if (oldIdFields != null) { deleteOldEntities($fullDtoParam, oldIdFields); }""".parseAsStatements()
+            )
         }
 
         // final OrderDto orderDtoPre = orderMapper.toOrderDto(orderFullDto);
@@ -274,30 +306,6 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
             )
         }
 
-        // generates save OneToOne and ManyToOne fields
-        entity.fields.filter { field -> field.relation == EntityRelation.ManyToOne || field.relation == EntityRelation.OneToOne }
-            .forEach { field ->
-                val syntheticField = entitiesMap.getSyntheticField(entity, field)
-                val fieldGetter = syntheticField.getGetterName()
-                val refEntity = entitiesMap.getRefEntity(field)
-                val fieldSetter = syntheticField.getSetterName()
-
-                if (field.relation == EntityRelation.OneToOne) {
-                    // orderDtoPre.setSelectedItemId(saveOneToOneOrder(orderFullDto.getNextOrder(), oldIdFields != null ? oldIdFields.getNextOrderId() : null));
-                    val methodName = getOrAddOneToOneMethod(refEntity, method.getOwner()).getName()
-                    statements.add(
-                        "$dtoPreField.$fieldSetter($methodName($fullDtoParam.${field.getGetterName()}(), oldIdFields != null ? oldIdFields.$fieldGetter() : null));"
-                            .parseAsStatement().withLineComment(" save property \"${field.name}\" - OneToOne relation")
-                    )
-                } else if (field.relation == EntityRelation.ManyToOne) {
-                    // orderDtoPre.setSelectedItemId(saveManyToOneItem(orderFullDto.getSelectedItem()));
-                    val methodName = getOrAddManyToOneMethod(refEntity, method.getOwner()).getName()
-                    statements.add(
-                        "$dtoPreField.$fieldSetter($methodName($fullDtoParam.${field.getGetterName()}()));"
-                            .parseAsStatement().withLineComment(" save property \"${field.name}\" - ManyToOne relation")
-                    )
-                }
-            }
 
         // final OrderDto orderDto = orderRepository.save(orderDtoPre);
         val entityRepositoryName = entity.getRepositoryName().lowerFirst()
@@ -343,15 +351,12 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         val paramName = "new$entityName"
         val paramType = entity.getFullDtoName()
         return clazz.addMethod(methodName)
-            .addAnnotation(Nullable::class.java)
             .addParameter(paramType, paramName)
-            .setReturnType(entity.getPrimaryFieldType())
-            .setBody("return $paramName != null ? saveFull$entityName($paramName) : null;".parseAsStatement())
+            .setBody("if ($paramName != null) {saveFull$entityName($paramName);}".parseAsBlock())
             .setJavadocComment(
                 """Save property of type {@link $paramType} and ManyToOne relation.
 
-@param $paramName $entityName to save
-@return id of saved $entityName"""
+@param $paramName $entityName to save"""
             )
     }
 
@@ -360,29 +365,15 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         clazz.getMethod(methodName)?.let { return it }
 
         val entityName = entity.name
-        val entityField = entityName.lowerFirst()
         val paramName = "new$entityName"
         val paramType = entity.getFullDtoName()
-        val primaryIdType = entity.getPrimaryFieldType()
         return clazz.addMethod(methodName)
-            .addAnnotation(Nullable::class.java)
             .addParameter(paramType, paramName)
-            .addParameter(primaryIdType, "oldId")
-            .setReturnType(primaryIdType)
-            .setBody(
-                """final Long nextId = $paramName != null ? saveFull$entityName($paramName) : null;
-            if (oldId != null && !oldId.equals(nextId)) {
-                // delete old $entityName as it's not used anymore and it's OneToOne relation
-                ${entityField}IdsToDelete.add(oldId);
-            }
-            return nextId;""".parseAsBlock()
-            )
+            .setBody("if ($paramName != null) {saveFull$entityName($paramName);}".parseAsBlock())
             .setJavadocComment(
                 """Save property of type {@link $paramType} and OneToOne relation.
 
- @param $paramName new $entityName to save
- @param oldId    old $entityName id
- @return id of saved $entityName"""
+ @param $paramName new $entityName to save"""
             )
     }
 
@@ -515,6 +506,46 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
 @param $primaryFieldName id of $entityName"""
         )
         return method
+    }
+
+    private fun addDeleteOldEntitiesMethod(contextClass: JavaClassNode, entity: EntityElem, entitiesMap: EntitiesMap) {
+        val oneToOneFields = entity.fields.filter { it.relation == EntityRelation.OneToOne }
+        if (oneToOneFields.isEmpty()) {
+            return
+        }
+
+        val statements = NodeList<Statement>()
+        val fullDtoName = entity.getFullDtoName()
+        val fullDtoParam = fullDtoName.lowerFirst()
+        val dtoName = entity.getDtoName()
+        val dtoParam = "oldIdFields"
+
+        /*
+            // delete old BookProfile as it's not used anymore and it's OneToOne relation
+            if (oldIdFields.getProfileId() != null && (bookFullDto.getProfile() == null || oldIdFields.getProfileId().equals(bookFullDto.getProfile().getBookProfileId()))) {
+                bookProfileIdsToDelete.add(oldIdFields.getProfileId());
+            }
+         */
+        oneToOneFields.forEach { field ->
+            val fieldGetter = field.getGetterName()
+            val syntheticField = entitiesMap.getSyntheticField(entity, field)
+            val targetEntity = entitiesMap.getRefEntity(field)
+            val targetEntityName = targetEntity.name.lowerFirst()
+            val targetEntityIdGetter = targetEntity.getPrimaryField().getGetterName()
+            val syntheticGetter = syntheticField.getGetterName()
+            statements.add(
+                """if (oldIdFields.$syntheticGetter() != null && ($fullDtoParam.$fieldGetter() == null || oldIdFields.$syntheticGetter().equals($fullDtoParam.$fieldGetter().$targetEntityIdGetter()))) {
+                ${targetEntityName}IdsToDelete.add(oldIdFields.$syntheticGetter());
+            }""".parseAsStatement()
+                    .withLineComment(" delete old ${entity.name} as it's not used anymore and it's OneToOne relation")
+            )
+        }
+
+        // private void deleteOldEntities(@NotNull BookFullDto bookFullDto, @NotNull BookDto oldIdFields)
+        contextClass.addMethod("deleteOldEntities")
+            .addParameter(fullDtoName, fullDtoParam)
+            .addParameter(dtoName, dtoParam)
+            .setBody(statements)
     }
 
     private fun addSaveFullEntityMethods(
