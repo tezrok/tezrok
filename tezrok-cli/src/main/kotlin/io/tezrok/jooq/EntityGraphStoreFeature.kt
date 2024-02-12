@@ -102,7 +102,7 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
 
         entities.filter { it.isNotSynthetic() }
             .forEach { entity ->
-                addLoadEntityIdFieldsOrReturnMethod(contextClass, entity)
+                addLoadEntityIdMethod(contextClass, entity)
             }
 
         entities.filter { it.isNotSynthetic() }
@@ -118,15 +118,15 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         addCloseMethod(contextClass, entities)
     }
 
-    private fun addLoadEntityIdFieldsOrReturnMethod(clazz: JavaClassNode, entity: EntityElem) {
+    private fun addLoadEntityIdMethod(clazz: JavaClassNode, entity: EntityElem) {
         val fullDtoName = entity.getFullDtoName()
         val entityIdType = entity.getPrimaryFieldType()
         val dtoName = entity.getDtoName()
         val statements = NodeList<Statement>()
         val method = clazz.addMethod(entity.getLoadEntityIdFieldsOrReturnMethod())
             .addParameter(fullDtoName, "newFullDto")
-            .setReturnType("Pair<$entityIdType, $dtoName>")
-            .setJavadocComment("Return left value (ID) if we need to return, otherwise id fields of {@link $dtoName}.")
+            .setReturnType(entityIdType)
+            .setJavadocComment("Return primary id if we need just return it, otherwise null if we need save dto.")
 
         val entityField = entity.name.lowerFirst()
         val entityIdsSaved = """${entityField}IdsSaved"""
@@ -138,11 +138,10 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
             statements.addAll(
                 """if (newFullDto.getId() != null) {
                 if ($entityIdsSaved.contains(newFullDto.getId())) {
-                    return Pair.of(newFullDto.getId(), null);
+                    return newFullDto.getId();
                 }
                 $entityIdsSaved.add(newFullDto.getId());
-
-                return Pair.of(null, $entityRepository.getIdFieldsBy${primaryField.name.upperFirst()}(newFullDto.$primaryIdGetter(), $dtoName.class));
+                return null;
             }""".parseAsStatements()
             )
         } else {
@@ -720,7 +719,7 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         context.writeTemplate(idTracerFile, "/templates/jooq/EntityUpdateType.java.vm", values)
     }
 
-    private fun EntityElem.getLoadEntityIdFieldsOrReturnMethod(): String = "load${this.name}IdFieldsOrReturn"
+    private fun EntityElem.getLoadEntityIdFieldsOrReturnMethod(): String = "load${this.name}Id"
 
     private fun EntityElem.getHasOnlyUniqueFieldsMethod(): String = "hasOnlyUniqueFields"
 
