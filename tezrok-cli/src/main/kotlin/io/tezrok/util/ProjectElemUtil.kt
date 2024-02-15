@@ -126,7 +126,8 @@ fun EntityElem.getGetPrimaryIdFieldByGroupFields(fields: List<FieldElem>): Strin
         check(field.hasUniqueGroup()) { "Field ${field.name} is not in unique group" }
         check(field.uniqueGroup == uniqueGroup) { "Field ${field.name} is not in unique group $uniqueGroup" }
     }
-    val fieldsPart = fields.joinToString(separator = "And") { p -> p.name.upperFirst() }
+    val fieldsPart = fields.joinToString(separator = "And")
+    { field -> field.name.upperFirst() + if (field.isLogic()) "Id" else "" }
     return "get${getPrimaryField().name.upperFirst()}By$fieldsPart"
 }
 
@@ -140,6 +141,7 @@ fun EntityElem.getGetIdFieldsByGroupFields(fields: List<FieldElem>): String {
         check(field.hasUniqueGroup()) { "Field ${field.name} is not in unique group" }
         check(field.uniqueGroup == uniqueGroup) { "Field ${field.name} is not in unique group $uniqueGroup" }
     }
-    val fieldsPart = fields.joinToString(separator = "And") { p -> p.name.upperFirst() }
+    val fieldsPart = fields.joinToString(separator = "And")
+    { field -> field.name.upperFirst() + if (field.isLogic()) "Id" else "" }
     return "getIdFieldsBy$fieldsPart"
 }

@@ -123,7 +123,7 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         val entityIdType = entity.getPrimaryFieldType()
         val dtoName = entity.getDtoName()
         val statements = NodeList<Statement>()
-        val method = clazz.addMethod(entity.getLoadEntityIdFieldsOrReturnMethod())
+        val method = clazz.addMethod(entity.getTryGretEntityIdMethod())
             .addParameter(fullDtoName, "newFullDto")
             .setReturnType(entityIdType)
             .setJavadocComment("Return primary id if we need just return it, otherwise null if we need save dto.")
@@ -134,12 +134,23 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         val hasIdFields = entity.getIdFields().size > 1
         val primaryField = entity.getPrimaryField()
         val primaryIdGetter = primaryField.getGetterName()
-        if (entity.hasRelations(EntityRelation.OneToOne)) {
+        val hasOneToOneRelations = entity.hasRelations(EntityRelation.OneToOne)
+        if (hasOneToOneRelations) {
+            val idFieldsByPrimaryIdMethod = entity.getGetIdFieldsByPrimaryId();
+
             statements.addAll(
                 """if (newFullDto.getId() != null) {
                 if ($entityIdsSaved.contains(newFullDto.getId())) {
+                    // this dto already saving
                     return newFullDto.getId();
                 }
+                
+                final $dtoName oldIdFields = $entityRepository.$idFieldsByPrimaryIdMethod(newFullDto.getId(), $dtoName.class);
+                if (oldIdFields != null) {
+                    deleteOldEntities(newFullDto, oldIdFields);
+                }
+                
+                // need to update dto by id
                 $entityIdsSaved.add(newFullDto.getId());
                 return null;
             }""".parseAsStatements()
@@ -148,69 +159,131 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
             statements.addAll(
                 """if (newFullDto.getId() != null) {
                 if ($entityIdsSaved.contains(newFullDto.getId())) {
-                    return Pair.of(newFullDto.getId(), null);
+                    // this dto already saving
+                    return newFullDto.getId();
                 }
+                
+                // need to update dto by id
                 $entityIdsSaved.add(newFullDto.getId());
-
-                return Pair.of(null, null);
+                return null;
             }""".parseAsStatements()
             )
         }
 
+        val primaryIdSetter = primaryField.getSetterName()
+        val uniqueGroups = entity.getUniqueGroups(true)
         val uniqueFields = entity.getUniqueStringFields()
-
-        if (uniqueFields.isNotEmpty()) {
-            val primaryIdSetter = primaryField.getSetterName()
+        if (uniqueFields.isNotEmpty() || uniqueGroups.isNotEmpty()) {
             var code = "if (updateType == EntityUpdateType.UPDATE_RELATION_BY_NAME) {\n// check unique fields\n"
-            uniqueFields.forEach { field ->
-                val idFieldsByUniqField = entity.getGetIdFieldsByUniqueField(field)
-                val primaryFieldByUniqField = entity.getGetPrimaryIdFieldByUniqueField(field)
-                val fieldGetter = field.getGetterName()
-                // case when we have uniq field and id fields
-                if (hasIdFields) {
-                    code += """
+
+            if (uniqueFields.isNotEmpty()) {
+                uniqueFields.forEach { field ->
+                    val idFieldsByUniqField = entity.getGetIdFieldsByUniqueField(field)
+                    val fieldGetter = field.getGetterName()
+                    // case when we have uniq field and id fields
+                    if (hasOneToOneRelations) {
+                        code += """
                 if (newFullDto.$fieldGetter() != null) {
                     // if we have unique field, we can load id fields by it
                     final $dtoName oldIdFields = $entityRepository.$idFieldsByUniqField(newFullDto.$fieldGetter(), $dtoName.class);
-    
                     if (oldIdFields != null) {
-                        if ($entityIdsSaved.contains(oldIdFields.$primaryIdGetter())) {
-                            return Pair.of(oldIdFields.$primaryIdGetter(), null);
+                        newFullDto.$primaryIdSetter(oldIdFields.getId());
+                        if ($entityIdsSaved.contains(oldIdFields.getId())) {
+                            return oldIdFields.getId();
                         }
-                        $entityIdsSaved.add(oldIdFields.$primaryIdGetter());
-                        return Pair.of(null, oldIdFields);
-                    }
-                }"""
-                } else {
-                    code += """
-                if (newFullDto.$fieldGetter() != null) {
-                    final Long idByUniqField = $entityRepository.$primaryFieldByUniqField(newFullDto.$fieldGetter());
-                    if (idByUniqField != null) {
-                        newFullDto.$primaryIdSetter(idByUniqField);
+                        deleteOldEntities(newFullDto, oldIdFields);
                         if (hasOnlyUniqueFields(newFullDto)) {
-                            // if we don't have id, have unique field and need update only relation, return only id
-                            return Pair.of(idByUniqField, null);
+                            // if we don't have id, have only unique fields and need update only relation, return only id
+                            return oldIdFields.getId();
                         }
-                        // if we have other fields, then we need to update entity                        
-                        return Pair.of(null, null);
+                        $entityIdsSaved.add(oldIdFields.getId());
+                        return null;
                     }
                 }"""
+                    } else {
+                        val primaryFieldByUniqField = entity.getGetPrimaryIdFieldByUniqueField(field)
+                        code += """
+                if (newFullDto.$fieldGetter() != null) {
+                    // if we have unique field, we can load id fields by it
+                    final $entityIdType primaryId = $entityRepository.$primaryFieldByUniqField(newFullDto.$fieldGetter());
+                    if (primaryId != null) {
+                        newFullDto.$primaryIdSetter(primaryId);
+                        if ($entityIdsSaved.contains(primaryId)) {
+                            return primaryId;
+                        }
+                        if (hasOnlyUniqueFields(newFullDto)) {
+                            // if we don't have id, have only unique fields and need update only relation, return only id
+                            return primaryId;
+                        }
+                        $entityIdsSaved.add(primaryId);
+                        return null;
+                    }
+                }"""
+                    }
                 }
             }
+
+            uniqueGroups.forEach { (_, fields) ->
+                val notNullCondition = fields.joinToString(separator = "&&")
+                { field -> "newFullDto.${field.getGetterName()}() != null" }
+                val argumentList = fields.joinToString { field -> fieldArgumentGetter(field) }
+
+                if (hasOneToOneRelations) {
+                    val methodName = entity.getGetIdFieldsByGroupFields(fields)
+                    code += """
+                    if ($notNullCondition) {
+                        final $dtoName oldIdFields = $entityRepository.$methodName($argumentList, $dtoName.class);
+                        if (oldIdFields != null) {
+                            newFullDto.$primaryIdSetter(oldIdFields.getId());
+                            if ($entityIdsSaved.contains(oldIdFields.getId())) {
+                                return oldIdFields.getId();
+                            }
+                            deleteOldEntities(newFullDto, oldIdFields);
+                            if (hasOnlyUniqueFields(newFullDto)) {
+                                // if we don't have id, have only group unique fields and need update only relation, return only id
+                                return oldIdFields.getId();
+                            }
+                            $entityIdsSaved.add(oldIdFields.getId());
+                            return null;
+                        }"""
+                } else {
+                    val methodName = entity.getGetPrimaryIdFieldByGroupFields(fields)
+                    code += """
+                    if ($notNullCondition) {
+                        final $entityIdType primaryId = $entityRepository.$methodName($argumentList);
+                        if (primaryId != null) {
+                            newFullDto.$primaryIdSetter(primaryId);
+                            if ($entityIdsSaved.contains(primaryId)) {
+                                return primaryId;
+                            }
+                            if (hasOnlyUniqueFields(newFullDto)) {
+                                // if we don't have id, have unique field and need update only relation, return only id
+                                return primaryId;
+                            }
+                            $entityIdsSaved.add(primaryId);
+                            return null;
+                        }
+                    }"""
+                }
+            }
+
             code += "}"
             statements.addAll(code.parseAsStatements())
         }
 
-        entity.getUniqueGroups(true)
-            .forEach { (_, fields) ->
-                val methodName = entity.getGetPrimaryIdFieldByGroupFields(fields)
-            }
 
-        statements.add("return Pair.of(null, null);".parseAsStatement())
+
+        statements.add("return null;".parseAsStatement())
         method.setBody(statements)
     }
 
+    private fun fieldArgumentGetter(field: FieldElem): String {
+        val getter = "newFullDto.${field.getGetterName()}()"
+        return if (field.isLogic()) "$getter.getId()" else getter
+    }
+
     private fun addHasOnlyUniqueFieldsMethod(contextClass: JavaClassNode, entity: EntityElem) {
+        val uniqGroups = entity.getUniqueGroups(true)
         val uniqueFields = entity.getUniqueStringFields()
         val otherFields = entity.fields.filter { field -> field.logicField != true && field !in uniqueFields }
         contextClass.addImport(StringUtils::class.java)
@@ -220,10 +293,19 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         val uniqStatement = uniqueFields.filter { it.isNotSynthetic() }
             .joinToString { field -> "fullDto.${field.getGetterName()}()" }
             .let { str -> if (str.isNotBlank()) "!StringUtils.isAllEmpty($str)" else "" }
+        val groupsStatement = uniqGroups.map { (_, fields) ->
+            val notNullCondition = fields.joinToString(separator = "&&")
+            { field -> "fullDto.${field.getGetterName()}() != null" }
+            "($notNullCondition)"
+        }.joinToString(" || ").let { if (it.isNotBlank()) "($it)" else "" }
         val otherStatement = otherFields.filter { p -> p.isNotSynthetic() }
             .joinToString { field -> "fullDto.${field.getGetterName()}()" }
             .let { str -> if (str.isNotBlank()) "Stream.of($str).allMatch(Objects::isNull)" else "" }
-        val finalStatement = if (uniqStatement.isNotEmpty()) listOf(uniqStatement, otherStatement)
+        val finalStatement = if (uniqStatement.isNotEmpty() || uniqGroups.isNotEmpty()) listOf(
+            uniqStatement,
+            groupsStatement,
+            otherStatement
+        )
             .filter { it.isNotBlank() }
             .joinToString(
                 " && ",
@@ -272,23 +354,15 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
                 }
             }
 
-        // Pair<Long, OrderDto> returnOrIds = loadOrderIdFieldsOrReturn(orderFullDto);
-        val loadMethod = entity.getLoadEntityIdFieldsOrReturnMethod()
+        // Long id = tryGetOrderId(orderFullDto);
+        val loadMethod = entity.getTryGretEntityIdMethod()
         statements.add(
-            "final Pair<$idType, $dtoName> returnOrIds = $loadMethod($fullDtoParam);".parseAsStatement()
-                .withLineComment(" old $entityName ids fields")
+            "final $idType id = $loadMethod($fullDtoParam);".parseAsStatement()
+                .withLineComment(" stop save if id found")
         )
 
-        // if (returnOrIds.getLeft() != null) { return returnOrIds.getLeft(); }
-        statements.add("if (returnOrIds.getLeft() != null) { return returnOrIds.getLeft(); }".parseAsStatement())
-        if (entity.hasRelations(EntityRelation.OneToOne)) {
-            // final OrderDto oldIdFields = returnOrIds.getRight();
-            // if (oldIdFields != null) { deleteOldEntities(orderFullDto, oldIdFields); }
-            statements.addAll(
-                """final $dtoName oldIdFields = returnOrIds.getRight();
-                    if (oldIdFields != null) { deleteOldEntities($fullDtoParam, oldIdFields); }""".parseAsStatements()
-            )
-        }
+        // if (id != null) { return id; }
+        statements.add("if (id != null) { return id; }".parseAsStatement())
 
         // final OrderDto orderDtoPre = orderMapper.toOrderDto(orderFullDto);
         val mapperField = entity.getMapperName().lowerFirst()
@@ -303,7 +377,6 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
                     .parseAsStatement().withLineComment(" set synthetic field to support OneToMany relation")
             )
         }
-
 
         // final OrderDto orderDto = orderRepository.save(orderDtoPre);
         val entityRepositoryName = entity.getRepositoryName().lowerFirst()
@@ -532,7 +605,7 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
             val targetEntityIdGetter = targetEntity.getPrimaryField().getGetterName()
             val syntheticGetter = syntheticField.getGetterName()
             statements.add(
-                """if (oldIdFields.$syntheticGetter() != null && ($fullDtoParam.$fieldGetter() == null || oldIdFields.$syntheticGetter().equals($fullDtoParam.$fieldGetter().$targetEntityIdGetter()))) {
+                """if (oldIdFields.$syntheticGetter() != null && ($fullDtoParam.$fieldGetter() == null || !oldIdFields.$syntheticGetter().equals($fullDtoParam.$fieldGetter().$targetEntityIdGetter()))) {
                 ${targetEntityName}IdsToDelete.add(oldIdFields.$syntheticGetter());
             }""".parseAsStatement()
                     .withLineComment(" delete old ${targetEntity.name} as it's not used anymore and it's OneToOne relation")
@@ -719,7 +792,7 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         context.writeTemplate(idTracerFile, "/templates/jooq/EntityUpdateType.java.vm", values)
     }
 
-    private fun EntityElem.getLoadEntityIdFieldsOrReturnMethod(): String = "load${this.name}Id"
+    private fun EntityElem.getTryGretEntityIdMethod(): String = "tryGet${this.name}Id"
 
     private fun EntityElem.getHasOnlyUniqueFieldsMethod(): String = "hasOnlyUniqueFields"
 
