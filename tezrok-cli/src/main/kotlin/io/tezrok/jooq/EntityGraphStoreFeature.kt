@@ -131,9 +131,7 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         val entityField = entity.name.lowerFirst()
         val entityIdsSaved = """${entityField}IdsSaved"""
         val entityRepository = entity.getRepositoryName().lowerFirst()
-        val hasIdFields = entity.getIdFields().size > 1
         val primaryField = entity.getPrimaryField()
-        val primaryIdGetter = primaryField.getGetterName()
         val hasOneToOneRelations = entity.hasRelations(EntityRelation.OneToOne)
         if (hasOneToOneRelations) {
             val idFieldsByPrimaryIdMethod = entity.getGetIdFieldsByPrimaryId();
@@ -271,8 +269,6 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
             statements.addAll(code.parseAsStatements())
         }
 
-
-
         statements.add("return null;".parseAsStatement())
         method.setBody(statements)
     }
@@ -285,33 +281,33 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
     private fun addHasOnlyUniqueFieldsMethod(contextClass: JavaClassNode, entity: EntityElem) {
         val uniqGroups = entity.getUniqueGroups(true)
         val uniqueFields = entity.getUniqueStringFields()
-        val otherFields = entity.fields.filter { field -> field.logicField != true && field !in uniqueFields }
+        val uniqGroupFields = uniqGroups.flatMap { it.value }
+        val otherFields =
+            entity.fields.filter { field -> field.logicField != true && field !in uniqueFields && field !in uniqGroupFields }
         contextClass.addImport(StringUtils::class.java)
             .addImport(Stream::class.java)
             .addImport(Objects::class.java)
 
         val uniqStatement = uniqueFields.filter { it.isNotSynthetic() }
             .joinToString { field -> "fullDto.${field.getGetterName()}()" }
-            .let { str -> if (str.isNotBlank()) "!StringUtils.isAllEmpty($str)" else "" }
+            .let { str -> if (str.isNotBlank()) "Stream.of($str).anyMatch(Objects::nonNull)" else "" }
         val groupsStatement = uniqGroups.map { (_, fields) ->
-            val notNullCondition = fields.joinToString(separator = "&&")
+            fields.joinToString(separator = "&&")
             { field -> "fullDto.${field.getGetterName()}() != null" }
-            "($notNullCondition)"
-        }.joinToString(" || ").let { if (it.isNotBlank()) "($it)" else "" }
+        }
+        val uniqStatements = (groupsStatement + uniqStatement).filter { it.isNotBlank() }
+            .joinToString(" || ").let { if (it.isNotBlank()) "($it)" else "" }
         val otherStatement = otherFields.filter { p -> p.isNotSynthetic() }
             .joinToString { field -> "fullDto.${field.getGetterName()}()" }
             .let { str -> if (str.isNotBlank()) "Stream.of($str).allMatch(Objects::isNull)" else "" }
-        val finalStatement = if (uniqStatement.isNotEmpty() || uniqGroups.isNotEmpty()) listOf(
-            uniqStatement,
-            groupsStatement,
-            otherStatement
-        )
-            .filter { it.isNotBlank() }
-            .joinToString(
-                " && ",
-                prefix = "return ",
-                postfix = ";"
-            ) else "return false;"
+        val finalStatement =
+            if (uniqStatements.isNotBlank()) listOf(uniqStatements, otherStatement)
+                .filter { it.isNotBlank() }
+                .joinToString(
+                    " && ",
+                    prefix = "return ",
+                    postfix = ";"
+                ) else "return false;"
 
         contextClass.addMethod(entity.getHasOnlyUniqueFieldsMethod())
             .addParameter(entity.getFullDtoName(), "fullDto")
