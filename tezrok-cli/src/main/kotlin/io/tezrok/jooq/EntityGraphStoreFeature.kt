@@ -170,7 +170,7 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
 
         val primaryIdSetter = primaryField.getSetterName()
         val uniqueGroups = entity.getUniqueGroups(true)
-        val uniqueFields = entity.getUniqueStringFields()
+        val uniqueFields = entity.getUniqueFields()
         if (uniqueFields.isNotEmpty() || uniqueGroups.isNotEmpty()) {
             var code = "if (updateType == EntityUpdateType.UPDATE_RELATION_BY_NAME) {\n// check unique fields\n"
 
@@ -280,7 +280,7 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
 
     private fun addHasOnlyUniqueFieldsMethod(contextClass: JavaClassNode, entity: EntityElem) {
         val uniqGroups = entity.getUniqueGroups(true)
-        val uniqueFields = entity.getUniqueStringFields()
+        val uniqueFields = entity.getUniqueFields()
         val uniqGroupFields = uniqGroups.flatMap { it.value }
         val otherFields =
             entity.fields.filter { field -> field.logicField != true && field !in uniqueFields && field !in uniqGroupFields }
@@ -318,7 +318,6 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
 
     private fun implementSaveFullEntityMethod(method: JavaMethodNode, entity: EntityElem, entitiesMap: EntitiesMap) {
         val statements = NodeList<Statement>()
-
         val fullDtoName = entity.getFullDtoName()
         val fullDtoParam = fullDtoName.lowerFirst()
         val entityName = entity.name
