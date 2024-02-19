@@ -156,6 +156,20 @@ internal class JooqRepositoryFeature : TezrokFeature {
             val dtoClass = dtoDir.addClass(className)
             dtoClass.extendClass("$jooqPackageRoot.tables.pojos.$name")
             entity.description?.let { dtoClass.setJavadocComment(it) }
+
+            dtoClass.addConstructor()
+                .withModifiers(Modifier.Keyword.PUBLIC)
+            val constructor2 = dtoClass.addConstructor()
+                .withModifiers(Modifier.Keyword.PUBLIC)
+            val args = mutableListOf<String>()
+            entity.fields.filter { it.isNotLogic() }.forEach { field ->
+                val type = field.asJavaType()
+                val name = field.name
+                constructor2.addParameter(type, name)
+                args.add(name)
+            }
+            constructor2.setBody("super(${args.joinToString(", ")});".parseAsStatement())
+
             val fields = entity.fields.filter { it.primary == true }
             val type1 = fields[0].asJavaType()
             val name1 = fields[0].name.upperFirst()

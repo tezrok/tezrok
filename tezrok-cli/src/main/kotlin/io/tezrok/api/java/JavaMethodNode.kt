@@ -13,6 +13,7 @@ import com.github.javaparser.ast.stmt.ReturnStmt
 import com.github.javaparser.ast.stmt.Statement
 import com.github.javaparser.ast.type.Type
 import com.github.javaparser.ast.type.TypeParameter
+import io.tezrok.util.addImportsByType
 
 /**
  * Node that represents a Java method
@@ -41,6 +42,7 @@ open class JavaMethodNode(private val method: MethodDeclaration, private val par
     }
 
     fun addParameter(typeName: String, name: String, isFinal: Boolean = true): JavaMethodNode {
+        parent.addImportsByType(typeName)
         method.addAndGetParameter(typeName, name).setFinal(isFinal)
         return this
     }
@@ -53,6 +55,7 @@ open class JavaMethodNode(private val method: MethodDeclaration, private val par
     fun getParameters(): List<JavaMethodParameter> = method.parameters.map { JavaMethodParameter(it) }
 
     fun setReturnType(typeName: String): JavaMethodNode {
+        parent.addImportsByType(typeName)
         method.setType(typeName)
         return this
     }

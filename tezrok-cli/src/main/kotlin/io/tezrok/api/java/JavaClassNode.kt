@@ -38,7 +38,7 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration, private
 
     fun getMethods(): Stream<JavaMethodNode> = clazz.methods.asSequence().map { JavaMethodNode(it, this) }.asStream()
 
-    fun getConstructors(): Stream<JavaConstructorNode> = clazz.constructors.asSequence().map { JavaConstructorNode(it) }.asStream()
+    fun getConstructors(): Stream<JavaConstructorNode> = clazz.constructors.asSequence().map { JavaConstructorNode(it, this) }.asStream()
 
     fun getJavaFile(): JavaFileNode = javaFile
 
@@ -154,7 +154,7 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration, private
         return this
     }
 
-    fun addConstructor(): JavaConstructorNode = JavaConstructorNode(clazz.addConstructor())
+    fun addConstructor(): JavaConstructorNode = JavaConstructorNode(clazz.addConstructor(), this)
 
     fun isInterface(): Boolean = clazz.isInterface
 

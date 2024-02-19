@@ -297,7 +297,7 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         }
         val uniqStatements = (groupsStatement + uniqStatement).filter { it.isNotBlank() }
             .joinToString(" || ").let { if (it.isNotBlank()) "($it)" else "" }
-        val otherStatement = otherFields.filter { p -> p.isNotSynthetic() }
+        val otherStatement = otherFields.filter { p -> p.isNotSynthetic() && p.isNotPrimaryField() }
             .joinToString { field -> "fullDto.${field.getGetterName()}()" }
             .let { str -> if (str.isNotBlank()) "Stream.of($str).allMatch(Objects::isNull)" else "" }
         val finalStatement =
@@ -329,7 +329,6 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         // generates save OneToOne and ManyToOne fields
         entity.fields.filter { field -> field.relation == EntityRelation.ManyToOne || field.relation == EntityRelation.OneToOne }
             .forEach { field ->
-                val syntheticField = entitiesMap.getSyntheticField(entity, field)
                 val refEntity = entitiesMap.getRefEntity(field)
 
                 if (field.relation == EntityRelation.OneToOne) {

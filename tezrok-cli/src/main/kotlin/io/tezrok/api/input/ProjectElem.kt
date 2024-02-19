@@ -183,6 +183,12 @@ data class FieldElem(
     }
 
     @JsonIgnore
+    fun isPrimaryField(): Boolean = primary == true
+
+    @JsonIgnore
+    fun isNotPrimaryField(): Boolean = !isPrimaryField()
+
+    @JsonIgnore
     fun isSynthetic(): Boolean = syntheticTo?.isNotEmpty() == true
 
     @JsonIgnore
