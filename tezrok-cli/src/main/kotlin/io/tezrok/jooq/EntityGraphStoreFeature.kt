@@ -554,9 +554,12 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
             if (CollectionUtils.isNotEmpty($entityList)) {
                 final List<$relationEntityDto> newRelations = new ArrayList<>($entityList.size());
                 $entityList.forEach($refEntityField -> {
-                    final $refEntityPrimaryFieldType $newEntityId = saveFull${refEntityName}($refEntityField);
-                    newRelations.add(($relationEntityDto) new $relationEntityDto().$sourceFieldSetter($primaryFieldName).$targetFieldSetter($newEntityId));
-                    $oldEntityIds.remove($newEntityId);
+                    final $refEntityPrimaryFieldType $newEntityId = saveFull${refEntityName}($refEntityField);                    
+                    if ($oldEntityIds.contains($newEntityId)) {
+                        $oldEntityIds.remove($newEntityId);
+                    } else {
+                        newRelations.add(($relationEntityDto) new $relationEntityDto().$sourceFieldSetter($primaryFieldName).$targetFieldSetter($newEntityId));
+                    }
                 });
                 $relationEntityRepo.saveAll(newRelations);
             }
