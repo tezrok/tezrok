@@ -15,7 +15,7 @@
     </modules>
 
     <properties>
-        <kotlin.version>1.8.10</kotlin.version>
+        <kotlin.version>1.9.22</kotlin.version>
         <version.jackson>2.13.4.2</version.jackson>
     </properties>
 
