@@ -282,8 +282,7 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         val uniqGroups = entity.getUniqueGroups(true)
         val uniqueFields = entity.getUniqueFields()
         val uniqGroupFields = uniqGroups.flatMap { it.value }
-        val otherFields =
-            entity.fields.filter { field -> field.logicField != true && field !in uniqueFields && field !in uniqGroupFields }
+        val otherFields = entity.fields.filter { field -> field !in uniqueFields && field !in uniqGroupFields }
         contextClass.addImport(StringUtils::class.java)
             .addImport(Stream::class.java)
             .addImport(Objects::class.java)
@@ -313,7 +312,7 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
             .addParameter(entity.getFullDtoName(), "fullDto")
             .setReturnType("boolean")
             .setBody(finalStatement.parseAsStatement())
-            .setJavadocComment("Returns true if at least one of the unique field is not null and other non-relation fields are null.")
+            .setJavadocComment("Returns true if at least one of the unique field is not null and other fields are null.")
     }
 
     private fun implementSaveFullEntityMethod(method: JavaMethodNode, entity: EntityElem, entitiesMap: EntitiesMap) {
