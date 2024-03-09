@@ -3,10 +3,7 @@ package io.tezrok.entity
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.ProcessModelPhase
 import io.tezrok.api.TezrokFeature
-import io.tezrok.api.input.EntityElem
-import io.tezrok.api.input.FieldElem
-import io.tezrok.api.input.ModuleElem
-import io.tezrok.api.input.ProjectElem
+import io.tezrok.api.input.*
 import io.tezrok.api.maven.ProjectNode
 
 /**
@@ -31,12 +28,12 @@ internal class EntityCreatedUpdatedFeature : TezrokFeature {
 
     private fun processEntity(entity: EntityElem): EntityElem {
         val newFields = if (entity.createdAt == true) {
-            addFieldOrInherit(entity.fields, DEFAULT_CREATED_NAME, DEFAULT_CREATED_DESCRIPTION)
+            addFieldOrInherit(entity.fields, DEFAULT_CREATED_NAME, DEFAULT_CREATED_DESCRIPTION, MetaType.CreatedAt)
         } else {
             entity.fields
         }
         val newFields2 = if (entity.updatedAt == true) {
-            addFieldOrInherit(newFields, DEFAULT_UPDATED_NAME, DEFAULT_UPDATED_DESCRIPTION)
+            addFieldOrInherit(newFields, DEFAULT_UPDATED_NAME, DEFAULT_UPDATED_DESCRIPTION, MetaType.UpdatedAt)
         } else {
             newFields
         }
@@ -44,7 +41,7 @@ internal class EntityCreatedUpdatedFeature : TezrokFeature {
         return entity.copy(fields = newFields2)
     }
 
-    private fun addFieldOrInherit(fields: List<FieldElem>, name: String, description: String): List<FieldElem> {
+    private fun addFieldOrInherit(fields: List<FieldElem>, name: String, description: String, metaType: MetaType?): List<FieldElem> {
         val foundField = fields.find { it.name == name }
 
         if (foundField == null) {
@@ -53,7 +50,8 @@ internal class EntityCreatedUpdatedFeature : TezrokFeature {
                 type = "DateTimeTZ",
                 required = true,
                 defValue = DATETIME_NOW,
-                description = description
+                description = description,
+                metaType = metaType
             )
             return fields + newField
         }

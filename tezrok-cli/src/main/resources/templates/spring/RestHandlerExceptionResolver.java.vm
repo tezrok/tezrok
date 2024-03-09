@@ -1,0 +1,32 @@
+package ${package}.web.rest;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.ProblemDetail;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.servlet.HandlerExceptionResolver;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.json.MappingJackson2JsonView;
+
+/**
+ * Custom exception resolver for REST API. Implementation of {@link HandlerExceptionResolver}.
+ */
+public class RestHandlerExceptionResolver implements HandlerExceptionResolver {
+    @Override
+    public ModelAndView resolveException(final HttpServletRequest request, final HttpServletResponse response, Object handler, final Exception ex) {
+        if (ex instanceof MethodArgumentNotValidException exception) {
+            final ModelAndView model = new ModelAndView();
+            model.setView(new MappingJackson2JsonView());
+            model.setStatus(exception.getStatusCode());
+            final ProblemDetail problemDetail = exception.getBody();
+            model.addObject("status", problemDetail.getStatus());
+            model.addObject("type", problemDetail.getType());
+            model.addObject("detail", problemDetail.getDetail());
+            model.addObject("errors", exception.getBindingResult().getFieldErrors());
+            return model;
+        }
+
+        // default behavior
+        return null;
+    }
+}

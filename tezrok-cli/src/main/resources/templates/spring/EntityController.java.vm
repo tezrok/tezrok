@@ -5,6 +5,7 @@ import ${package}.dto.${name}Dto;
 import ${package}.dto.full.${name}FullDto;
 import ${package}.dto.IdDto;
 import ${package}.service.${name}Service;
+import jakarta.validation.Valid;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -54,7 +55,7 @@ public class ${name}Controller {
     }
 
     @PostMapping("/${lname}")
-    public ResponseEntity<?> createFull${name}(@RequestBody ${name}FullDto dto, @RequestParam(value = "return", required = false, defaultValue = "false") boolean returnEntity) {
+    public ResponseEntity<?> createFull${name}(@Valid @RequestBody ${name}FullDto dto, @RequestParam(value = "return", required = false, defaultValue = "false") boolean returnEntity) {
         if (returnEntity) {
             return ResponseEntity.ok(${lname}Service.saveFull${name}AndReturn(dto));
         }
@@ -63,7 +64,7 @@ public class ${name}Controller {
     }
 
     @PutMapping("/${lname}/{id}")
-    public ResponseEntity<?> updateFull${name}(@PathVariable("id") Long id, @RequestBody ${name}FullDto dto, @RequestParam(value = "return", required = false, defaultValue = "false") boolean returnEntity) {
+    public ResponseEntity<?> updateFull${name}(@PathVariable("id") Long id, @Valid @RequestBody ${name}FullDto dto, @RequestParam(value = "return", required = false, defaultValue = "false") boolean returnEntity) {
         dto.${primarySetter}(id);
 
         if (returnEntity) {
@@ -75,6 +76,7 @@ public class ${name}Controller {
 
     @PostMapping("/${lname}/import")
     public ResponseEntity<?> importFull${name}(@RequestBody ${name}FullDto dto, @RequestParam(value = "return", required = false, defaultValue = "false") boolean returnEntity) {
+        // TODO: validate dto before import
         if (returnEntity) {
             return ResponseEntity.ok(${lname}Service.importFull${name}AndReturn(dto));
         }

@@ -4,19 +4,20 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import com.github.javaparser.ast.body.MethodDeclaration
+import com.github.javaparser.ast.expr.IntegerLiteralExpr
 import com.github.javaparser.ast.stmt.ReturnStmt
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.ProcessModelPhase
 import io.tezrok.api.TezrokFeature
-import io.tezrok.api.input.EntityElem
-import io.tezrok.api.input.EntityRelation
-import io.tezrok.api.input.ModuleElem
-import io.tezrok.api.input.ProjectElem
+import io.tezrok.api.input.*
 import io.tezrok.api.java.JavaClassNode
 import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.java.JavaFieldNode
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.*
+import jakarta.validation.constraints.Email
+import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Size
 import lombok.AllArgsConstructor
 import lombok.Data
 import lombok.NoArgsConstructor
@@ -249,6 +250,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
                         else -> error("Unsupported relation: ${field.relation} in field: ${entity.name}.${field.name}")
                     }
                 }
+                addValidationAnnotations(addedFields.last(), field, dtoClass)
             }
 
             // implement WithId<$primaryFieldType> interface
@@ -257,6 +259,32 @@ internal class JooqRepositoryFeature : TezrokFeature {
             addCloneableImplementation(dtoClass, entity)
         } else {
             log.warn(FILE_ALREADY_EXISTS, "$className.java")
+        }
+    }
+
+    private fun addValidationAnnotations(
+        field: JavaFieldNode,
+        fieldElem: FieldElem,
+        clazz: JavaClassNode
+    ) {
+        if (fieldElem.required == true && (fieldElem.metaType == null || fieldElem.metaType !in setOf(MetaType.CreatedAt, MetaType.UpdatedAt))) {
+            // createAt and updatedAt fields are not required in dto but required in db
+            field.addAnnotation(NotNull::class.java)
+        }
+        if (fieldElem.metaType == MetaType.Email) {
+            field.addAnnotation(Email::class.java)
+        }
+        if (fieldElem.isStringType()) {
+            val minLength = fieldElem.minLength ?: 0
+            val maxLength = fieldElem.maxLength ?: DEFAULT_VARCHAR_LENGTH
+            clazz.addImport(Size::class.java)
+            field.addAnnotation(
+                "Size",
+                mapOf(
+                    "min" to IntegerLiteralExpr(minLength.toString()),
+                    "max" to IntegerLiteralExpr(maxLength.toString())
+                )
+            );
         }
     }
 

@@ -1,7 +1,10 @@
 package io.tezrok.api.java
 
 import com.github.javaparser.ast.Modifier
+import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.body.FieldDeclaration
+import com.github.javaparser.ast.expr.Expression
+import com.github.javaparser.ast.expr.MemberValuePair
 
 /**
  * Node that represents a Java field
@@ -19,6 +22,12 @@ open class JavaFieldNode(private val field: FieldDeclaration) {
 
     fun addAnnotation(annotationExp: String): JavaFieldNode {
         field.addAnnotation(annotationExp)
+        return this
+    }
+
+    fun addAnnotation(annotationExpr: String, pairs: Map<String, Expression> = emptyMap()): JavaFieldNode {
+        val annotation = field.addAndGetAnnotation(annotationExpr)
+        annotation.setPairs(NodeList(pairs.map { MemberValuePair(it.key, it.value) }))
         return this
     }
 

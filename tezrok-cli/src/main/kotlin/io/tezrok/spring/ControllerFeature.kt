@@ -20,17 +20,52 @@ internal class ControllerFeature : TezrokFeature {
 
         if (applicationPackageRoot != null) {
             val projectElem = context.getProject()
-            val webDir = applicationPackageRoot.getOrAddJavaDirectory("web").getOrAddJavaDirectory("rest")
+            val restDir = applicationPackageRoot.getOrAddJavaDirectory("web").getOrAddJavaDirectory("rest")
             val schema = context.getProject().modules.find { it.name == module.getName() }?.schema
 
             schema?.entities?.forEach { entity ->
-                addControllerClass(entity, webDir, projectElem.packagePath, context)
+                addControllerClass(entity, restDir, projectElem.packagePath, context)
             }
+
+            addRestHandlerExceptionResolver(restDir, projectElem.packagePath, context)
+            addWebMvcConfig(applicationPackageRoot.getOrAddJavaDirectory("config"), projectElem.packagePath, context)
         } else {
             log.warn("Application package root is not set, module: {}", module.getName())
         }
 
         return true
+    }
+
+    private fun addRestHandlerExceptionResolver(
+        restDir: JavaDirectoryNode,
+        packagePath: String,
+        context: GeneratorContext
+    ) {
+        val fileName = "RestHandlerExceptionResolver.java"
+        if (!restDir.hasClass(fileName)) {
+            val controllerFile = restDir.addJavaFile(fileName)
+            context.writeTemplate(
+                controllerFile,
+                "/templates/spring/RestHandlerExceptionResolver.java.vm",
+                mapOf("package" to packagePath)
+            )
+        }
+    }
+
+    private fun addWebMvcConfig(
+        configDir: JavaDirectoryNode,
+        packagePath: String,
+        context: GeneratorContext
+    ) {
+        val fileName = "WebMvcConfig.java"
+        if (!configDir.hasClass(fileName)) {
+            val controllerFile = configDir.addJavaFile(fileName)
+            context.writeTemplate(
+                controllerFile,
+                "/templates/spring/WebMvcConfig.java.vm",
+                mapOf("package" to packagePath)
+            )
+        }
     }
 
     private fun addControllerClass(

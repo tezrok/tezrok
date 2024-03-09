@@ -148,7 +148,8 @@ open class SpringSecurityFeature : TezrokFeature {
                     required = true,
                     unique = true,
                     maxLength = USER_EMAIL_MAX,
-                    minLength = USER_EMAIL_MIN
+                    minLength = USER_EMAIL_MIN,
+                    metaType = MetaType.Email
                 ),
                 FieldElem(name = "password", type = "String", maxLength = USER_PASSWORD_HASH_MAX, required = true),
                 FieldElem(name = "activated", type = "Boolean", required = true, defValue = "false"),

@@ -161,6 +161,8 @@ data class FieldElem(
     // true if field is synthetic and contains reference to another entity
     val syntheticTo: String? = null,
     val relation: EntityRelation? = null,
+    // used for known fields like createdAt, updatedAt
+    val metaType: MetaType? = null,
     // if true, then this field is synthetic and needed by other entity (field is added by user)
     val external: Boolean? = null
 ) {
@@ -217,4 +219,12 @@ enum class EntityRelation {
     ManyToOne,
 
     ManyToMany,
+}
+
+enum class MetaType {
+    CreatedAt,
+
+    UpdatedAt,
+
+    Email
 }
