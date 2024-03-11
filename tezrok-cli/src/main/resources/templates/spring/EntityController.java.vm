@@ -44,7 +44,7 @@ public class ${name}Controller {
         return ${lname}Service.searchByTerm(searchTerm.trim(), pageable);
     }
 
-    @GetMapping("/${lname}/{id}/table")
+    @GetMapping("/${lname}/table/{id}")
     public ResponseEntity<${name}Dto> getById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(${lname}Service.getById(id));
     }
