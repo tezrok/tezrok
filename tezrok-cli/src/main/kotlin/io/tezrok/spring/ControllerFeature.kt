@@ -27,7 +27,7 @@ internal class ControllerFeature : TezrokFeature {
                 addControllerClass(entity, restDir, projectElem.packagePath, context)
             }
 
-            addRestHandlerExceptionResolver(restDir, projectElem.packagePath, context)
+            addRestHandlerExceptionResolver(applicationPackageRoot.getOrAddJavaDirectory("error"), projectElem.packagePath, context)
             addWebMvcConfig(applicationPackageRoot.getOrAddJavaDirectory("config"), projectElem.packagePath, context)
         } else {
             log.warn("Application package root is not set, module: {}", module.getName())
