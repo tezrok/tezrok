@@ -58,8 +58,8 @@ public class ${name}Service {
     }
 
     @Transactional()
-    public List<${primaryType}> importFull${name}s(List<${name}FullDto> items) {
-        return items.stream().map(item -> entityGraphStore.saveFull${name}(item, EntityUpdateType.UPDATE_RELATION_BY_NAME)).toList();
+    public List<${primaryType}> importFull${name}s(List<${name}FullDto> items, boolean adjust) {
+        return items.stream().map(dto -> adjust ? dto.clone(true) : dto).map(item -> entityGraphStore.saveFull${name}(item, EntityUpdateType.UPDATE_RELATION_BY_NAME)).toList();
     }
 
     @Transactional()
