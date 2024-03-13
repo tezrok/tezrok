@@ -15,14 +15,14 @@
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <junit.version>5.9.1</junit.version>
-        <logback.version>1.4.14</logback.version>
-        <kotlin.version>1.8.0</kotlin.version>
-        <jackson.version>2.14.0</jackson.version>
-        <slf4j-api.version>2.0.9</slf4j-api.version>
-        <spring-boot.version>3.1.0</spring-boot.version>
-        <spring.version>6.0.9</spring.version>
-        <jooq.version>3.19.0</jooq.version>
+        <junit.version>5.10.2</junit.version>
+        <logback.version>1.5.3</logback.version>
+        <kotlin.version>1.9.23</kotlin.version>
+        <jackson.version>2.16.2</jackson.version>
+        <slf4j-api.version>2.0.12</slf4j-api.version>
+        <spring-boot.version>3.2.3</spring-boot.version>
+        <spring.version>6.1.4</spring.version>
+        <jooq.version>3.19.6</jooq.version>
     </properties>
 
     <dependencies>
@@ -59,12 +59,12 @@
         <dependency>
             <groupId>com.github.javaparser</groupId>
             <artifactId>javaparser-core</artifactId>
-            <version>3.25.3</version>
+            <version>3.25.9</version>
         </dependency>
         <dependency>
             <groupId>com.opencsv</groupId>
             <artifactId>opencsv</artifactId>
-            <version>5.8</version>
+            <version>5.9</version>
         </dependency>
 
         <!-- dependencies for generators -->
@@ -81,7 +81,7 @@
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-commons</artifactId>
-            <version>3.2.1</version>
+            <version>3.2.3</version>
         </dependency>
         <dependency>
             <groupId>org.jooq</groupId>
@@ -132,7 +132,7 @@
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-launcher</artifactId>
-            <version>1.9.0</version>
+            <version>1.10.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -144,13 +144,13 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>5.2.0</version>
+            <version>5.11.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito.kotlin</groupId>
             <artifactId>mockito-kotlin</artifactId>
-            <version>4.1.0</version>
+            <version>5.2.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -162,7 +162,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M7</version>
+                <version>3.2.5</version>
             </plugin>
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
@@ -191,7 +191,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
+                <version>3.12.1</version>
                 <executions>
                     <execution>
                         <id>compile</id>
@@ -216,7 +216,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.5.3</version>
+                <version>3.7.0</version>
                 <configuration>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
