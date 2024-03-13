@@ -1,0 +1,19 @@
+package ${package}.task;
+
+import org.jetbrains.annotations.Nullable;
+
+import java.util.UUID;
+
+public interface TaskContext {
+    UUID getId();
+
+    String getTitle();
+
+    boolean isCanceled();
+
+    TaskStatus getStatus();
+
+    TaskState getState();
+
+    void updateProgress(int progress, @Nullable String message);
+}

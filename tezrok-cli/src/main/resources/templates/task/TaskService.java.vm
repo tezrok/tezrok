@@ -1,0 +1,134 @@
+package ${package}.task;
+
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.stereotype.Service;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.UnaryOperator;
+
+/**
+ * Service runs tasks of type {@link TaskItem} in separate threads.
+ */
+@Slf4j
+@Service
+public class TaskService {
+    private static final String TASK_NOT_FOUND = "Task not found";
+    private final ExecutorService executor = Executors.newFixedThreadPool(5); // TODO: make configurable
+    // TODO: use database for tasks
+    private final Map<UUID, TaskContextIml> tasks = new LinkedHashMap<>();
+
+    @NotNull
+    public List<TaskState> getTasks() {
+        synchronized (tasks) {
+            return tasks.values().stream().map(TaskContextIml::getState)
+                    .sorted((a, b) -> b.getUpdated().compareTo(a.getCreated()))
+                    .toList();
+        }
+    }
+
+    @NotNull
+    public TaskState runTask(final TaskItem task) {
+        final TaskState state = TaskState.newState(task.getTitle());
+        log.info("Task start: \"{}\", taskId: {}", task.getTitle(), state.getId());
+        final TaskContextIml context = new TaskContextIml(state);
+        synchronized (tasks) {
+            tasks.put(state.getId(), context);
+        }
+        executor.submit(() -> runTaskInternal(task, context));
+        return state;
+    }
+
+    @NotNull
+    public TaskState cancelTask(final UUID taskId) {
+        synchronized (tasks) {
+            final TaskContextIml ctx = tasks.get(taskId);
+            if (ctx != null) {
+                if (ctx.getStatus().isCancelable()) {
+                    log.info("Task canceling: \"{}\", taskId: {}", ctx.getTitle(), ctx.getId());
+                    return ctx.setState(st -> st.withStatus(TaskStatus.CANCELING));
+                }
+                log.warn("Task not cancelable: \"{}\", taskId: {}", ctx.getTitle(), ctx.getId());
+                return ctx.getState();
+            }
+
+            log.warn("Task not found for canceling: {}", taskId);
+            return TaskState.errorState(taskId, TASK_NOT_FOUND, TASK_NOT_FOUND);
+        }
+    }
+
+    @NotNull
+    public TaskState getTask(final UUID taskId) {
+        synchronized (tasks) {
+            final TaskContextIml ctx = tasks.get(taskId);
+            if (ctx != null) {
+                return ctx.getState();
+            }
+            return TaskState.errorState(taskId, TASK_NOT_FOUND, TASK_NOT_FOUND);
+        }
+    }
+
+    private static void runTaskInternal(final TaskItem task, final TaskContextIml context) {
+        try {
+            log.info("Task started: \"{}\", taskId: {}", context.getTitle(), context.getId());
+            context.setState(st -> st.withStatus(TaskStatus.RUNNING));
+            task.run(context);
+            log.info("Task finished: \"{}\", taskId: {}", context.getTitle(), context.getId());
+            if (context.getStatus() == TaskStatus.CANCELING) {
+                context.setState(st -> st.withStatus(TaskStatus.CANCELED));
+            } else {
+                context.setState(st -> st.withStatus(TaskStatus.FINISHED));
+            }
+        } catch (final Exception ex) {
+            log.error("Error of running task: \"{}\", taskId: {}", context.getTitle(), context.getId(), ex);
+            context.setState(st -> st.withStatus(TaskStatus.FAILED).withMessage(ex.getMessage()));
+        }
+    }
+
+    private class TaskContextIml implements TaskContext {
+        @Getter
+        @NotNull
+        private TaskState state;
+
+        private TaskContextIml(@NotNull TaskState state) {
+            this.state = state;
+        }
+
+        private TaskState setState(@NotNull UnaryOperator<TaskState> updater) {
+            return state = updater.apply(state);
+        }
+
+        @Override
+        public UUID getId() {
+            return state.getId();
+        }
+
+        @Override
+        public String getTitle() {
+            return state.getTitle();
+        }
+
+        @Override
+        public boolean isCanceled() {
+            return state.getStatus() == TaskStatus.CANCELING || state.getStatus() == TaskStatus.CANCELED;
+        }
+
+        @Override
+        public TaskStatus getStatus() {
+            return state.getStatus();
+        }
+
+        @Override
+        public void updateProgress(final int progress, final String message) {
+            synchronized (tasks) {
+                state = state.withProgress(progress, message);
+            }
+        }
+    }
+}

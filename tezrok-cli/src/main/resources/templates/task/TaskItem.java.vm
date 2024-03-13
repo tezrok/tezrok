@@ -1,0 +1,11 @@
+package ${package}.task;
+
+import org.jetbrains.annotations.NotNull;
+
+public interface TaskItem {
+
+    @NotNull
+    String getTitle();
+
+    void run(@NotNull TaskContext context) throws Exception;
+}

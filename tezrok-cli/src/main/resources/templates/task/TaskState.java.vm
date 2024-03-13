@@ -1,0 +1,84 @@
+package ${package}.task;
+
+import lombok.Data;
+import org.jetbrains.annotations.NotNull;
+
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.Objects;
+import java.util.UUID;
+
+/**
+ * Represents current state of the task {@link TaskItem} running by {@link TaskService}.
+ */
+@Data
+public class TaskState {
+    /**
+     * Unique read-only id of the task.
+     */
+    private final UUID id;
+
+    /**
+     * Title of the task. Read-only.
+     */
+    private final String title;
+
+    /**
+     * Current {@link TaskStatus} of the task.
+     */
+    private final TaskStatus status;
+
+    /**
+     * Progress in percents.
+     */
+    private final int progress;
+
+    /**
+     * Current status message.
+     */
+    private final String message;
+
+    /**
+     * Date and time when the task was created.
+     */
+    private final OffsetDateTime created;
+
+    /**
+     * Date and time when the task was updated.
+     */
+    private final OffsetDateTime updated;
+
+    public final Duration getDuration() {
+        return Duration.between(created, updated);
+    }
+
+    @NotNull
+    public static TaskState newState(final String title) {
+        return new TaskState(UUID.randomUUID(), title, TaskStatus.NEW, 0, "", OffsetDateTime.now(), OffsetDateTime.now());
+    }
+
+    @NotNull
+    public static TaskState errorState(final UUID taskId, String title, final String message) {
+        return new TaskState(taskId, title, TaskStatus.FAILED, 0, message, OffsetDateTime.now(), OffsetDateTime.now());
+    }
+
+    @NotNull
+    public TaskState withStatus(final TaskStatus status) {
+        return new TaskState(id, title, status, progress, message, created, OffsetDateTime.now());
+    }
+
+    @NotNull
+    public TaskState withMessage(final String message) {
+        return new TaskState(id, title, status, progress, message, created, OffsetDateTime.now());
+    }
+
+    @NotNull
+    public TaskState withProgress(final int progress) {
+        return withProgress(progress, null);
+    }
+
+    @NotNull
+    public TaskState withProgress(final int progress, final String message) {
+        return new TaskState(id, title, status, Math.max(0, Math.min(100, progress)), Objects.toString(message, this.message), created, OffsetDateTime.now());
+    }
+}

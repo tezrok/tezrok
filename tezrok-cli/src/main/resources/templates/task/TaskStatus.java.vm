@@ -1,0 +1,14 @@
+package ${package}.task;
+
+public enum TaskStatus {
+    NEW,
+    RUNNING,
+    FINISHED,
+    CANCELING,
+    CANCELED,
+    FAILED;
+
+    public boolean isCancelable() {
+        return this == NEW || this == RUNNING;
+    }
+}

@@ -30,6 +30,7 @@ data class ModuleElem(
     val type: String = "", // TODO: enum
     val schema: SchemaElem? = null,
     val auth: AuthElem? = null,
+    val task: TaskElem? = null,
     val dependencies: List<String>? = null,
     // properties should be sorted by key, so we use TreeMap
     val properties: MutableMap<String, String?> = TreeMap()
@@ -38,6 +39,8 @@ data class ModuleElem(
         return "ModuleElem(name='$name')"
     }
 }
+
+data class TaskElem(val enable: Boolean?)
 
 data class AuthElem(
     val type: String,

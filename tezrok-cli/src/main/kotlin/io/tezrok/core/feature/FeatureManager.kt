@@ -26,6 +26,7 @@ import io.tezrok.spring.ControllerFeature
 import io.tezrok.spring.ServiceFeature
 import io.tezrok.spring.SpringFeature
 import io.tezrok.spring.SpringSecurityFeature
+import io.tezrok.task.TaskServiceFeature
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -56,6 +57,7 @@ internal class FeatureManager {
         features.add(ControllerFeature())
         features.add(DockerFeature())
         features.add(FrontendFeature())
+        features.add(TaskServiceFeature())
     }
 
     fun applyAll(project: ProjectNode, context: GeneratorContext) {

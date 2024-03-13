@@ -1,7 +1,7 @@
 package io.tezrok.api
 
-import io.tezrok.api.io.OutStream
 import io.tezrok.api.input.ProjectElem
+import io.tezrok.api.io.OutStream
 import org.apache.velocity.VelocityContext
 import java.io.Writer
 import java.time.Clock
@@ -41,4 +41,11 @@ interface GeneratorContext : GeneratorProvider {
      */
     fun writeTemplate(output: OutStream, templatePath: String, values: Map<String, Any?>) =
         writeTemplate(output, templatePath) { context -> values.forEach { (k, v) -> context.put(k, v) } }
+
+    /**
+     * Writes content to [OutStream] using specified template.
+     */
+    fun writeTemplate(output: OutStream, templatePath: String) =
+        writeTemplate(output, templatePath, mapOf("package" to getProject().packagePath))
+
 }
