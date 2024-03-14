@@ -14,7 +14,6 @@ import io.tezrok.entity.MapperFeature
 import io.tezrok.frontend.FrontendFeature
 import io.tezrok.java.GitIgnoreFeature
 import io.tezrok.java.HelloWorldFeature
-import io.tezrok.jooq.*
 import io.tezrok.jooq.EntityGraphLoaderFeature
 import io.tezrok.jooq.EntityGraphStoreFeature
 import io.tezrok.jooq.JooqEntityCustomMethodsFeature

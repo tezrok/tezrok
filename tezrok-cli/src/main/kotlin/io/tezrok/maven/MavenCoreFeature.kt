@@ -28,9 +28,9 @@ internal class MavenCoreFeature : TezrokFeature {
 
         // add default properties
         pomFile.addProperty("commons-lang3.version", "3.14.0")
-        pomFile.addProperty("logback.version", "1.4.14")
-        pomFile.addProperty("slf4j-api.version", "2.0.9")
-        pomFile.addProperty("junit.version", "5.10.1")
+        pomFile.addProperty("logback.version", "1.5.3")
+        pomFile.addProperty("slf4j-api.version", "2.0.12")
+        pomFile.addProperty("junit.version", "5.10.2")
         pomFile.addProperty("lombok.version", "1.18.30")
 
         // add default dependencies
@@ -43,8 +43,8 @@ internal class MavenCoreFeature : TezrokFeature {
         // add testing dependencies
         pomFile.addDependency("org.junit.jupiter:junit-jupiter-api:${'$'}{junit.version}:test")
         pomFile.addDependency("org.junit.jupiter:junit-jupiter-engine:${'$'}{junit.version}:test")
-        pomFile.addDependency("org.junit.platform:junit-platform-launcher:1.9.0:test")
-        pomFile.addDependency("org.mockito:mockito-core:5.2.0:test");
+        pomFile.addDependency("org.junit.platform:junit-platform-launcher:1.10.2:test")
+        pomFile.addDependency("org.mockito:mockito-core:5.11.0:test");
 
         // add dependencies from project
         projectElem.modules.find { it.name == module.getName() }?.dependencies?.forEach(pomFile::addDependency)
@@ -77,7 +77,7 @@ internal class MavenCoreFeature : TezrokFeature {
      * Add maven-compiler-plugin to pom.xml
      */
     private fun addMavenCompilerPlugin(pomFile: PomNode, configPath: Boolean = false) {
-        val pluginNode = pomFile.addPluginDependency("org.apache.maven.plugins:maven-compiler-plugin:3.11.0")
+        val pluginNode = pomFile.addPluginDependency("org.apache.maven.plugins:maven-compiler-plugin:3.12.1")
         val configuration = pluginNode.getConfiguration().node
         // TODO: get java version from context
         configuration.getOrAdd("source", "17")

@@ -30,7 +30,7 @@ internal class MapperFeature : TezrokFeature {
         pomFile.addProperty("mapstruct.version", "1.5.5.Final")
         pomFile.addDependency("org.mapstruct:mapstruct:${'$'}{mapstruct.version}")
 
-        val pluginNode = pomFile.addPluginDependency("org.apache.maven.plugins:maven-compiler-plugin:3.11.0")
+        val pluginNode = pomFile.addPluginDependency("org.apache.maven.plugins:maven-compiler-plugin:3.12.1")
         val configuration = pluginNode.getConfiguration().node
         configuration.getOrAdd("annotationProcessorPaths")
             .add("path")
