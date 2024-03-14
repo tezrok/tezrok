@@ -18,5 +18,11 @@ interface InStream {
      * Reads the content of this resource as string
      */
     fun asString(charset: Charset = StandardCharsets.UTF_8): String =
-            getInputStream().bufferedReader(charset).use(BufferedReader::readText)
+        getInputStream().bufferedReader(charset).use(BufferedReader::readText)
+
+    /**
+     * Reads the content of this resource as lines
+     */
+    fun asLines(charset: Charset = StandardCharsets.UTF_8): List<String> =
+        getInputStream().bufferedReader(charset).use(BufferedReader::readLines)
 }

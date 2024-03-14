@@ -33,6 +33,7 @@ data class ModuleElem(
     val auth: AuthElem? = null,
     val task: TaskElem? = null,
     val dependencies: List<String>? = null,
+    val spring: SpringElem? = null,
     // properties should be sorted by key, so we use TreeMap
     val properties: MutableMap<String, String?> = TreeMap()
 ) {
@@ -40,6 +41,13 @@ data class ModuleElem(
         return "ModuleElem(name='$name')"
     }
 }
+
+data class SpringElem(val properties: SpringPropertiesElem? = null)
+
+data class SpringPropertiesElem(
+    val includes: List<String>? = null,
+    val excludes: List<String>? = null
+)
 
 data class TaskElem(val enable: Boolean?)
 

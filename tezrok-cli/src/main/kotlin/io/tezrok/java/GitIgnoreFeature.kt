@@ -5,6 +5,7 @@ import io.tezrok.api.TezrokFeature
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.ResourceUtil
 import org.slf4j.LoggerFactory
+import io.tezrok.util.PathUtil.NEW_LINE
 
 /**
  * Adds .gitignore file into root of the project.
@@ -29,7 +30,7 @@ internal class GitIgnoreFeature : TezrokFeature {
                 }
             }
 
-            gitignoreFile.setString(lines.joinToString("\n"))
+            gitignoreFile.setString(lines.joinToString(NEW_LINE) + NEW_LINE)
         } else {
             log.warn("File .gitignore already exists in the project. Skipping.")
         }
