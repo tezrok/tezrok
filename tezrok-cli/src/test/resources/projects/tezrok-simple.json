@@ -5,7 +5,7 @@
   "modules": [
     {
       "name": "simpleModule",
-      "type": "tezrok",
+      "type": "Spring",
       "schema": {
         "schemaName": "smpl",
         "importSchema": "./schemas/Orders.json",

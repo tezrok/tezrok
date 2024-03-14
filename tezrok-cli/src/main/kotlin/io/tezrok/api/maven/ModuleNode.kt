@@ -2,6 +2,7 @@ package io.tezrok.api.maven
 
 import io.tezrok.api.TezrokProperties
 import io.tezrok.api.input.ModuleElem
+import io.tezrok.api.input.ModuleType
 import io.tezrok.api.node.BaseFileNode
 import io.tezrok.api.node.BaseNode
 import io.tezrok.api.node.DirectoryNode
@@ -18,8 +19,10 @@ open class ModuleNode(moduleElem: ModuleElem, parent: BaseNode?, private var phy
 
     val properties: TezrokProperties = PropertiesNode(moduleElem)
 
+    val custom: Boolean = moduleElem.type == ModuleType.Custom
+
     init {
-        if (moduleElem.description.isNotBlank()) {
+        if (!custom && moduleElem.description.isNotBlank()) {
             pom.setDescription(moduleElem.description)
         }
     }
@@ -30,5 +33,5 @@ open class ModuleNode(moduleElem: ModuleElem, parent: BaseNode?, private var phy
         this.physicalPath = physicalPath
     }
 
-    override fun getFiles(): List<BaseFileNode> = listOf(source, pom)
+    override fun getFiles(): List<BaseFileNode> = if (custom) emptyList() else listOf(source, pom)
 }

@@ -50,8 +50,9 @@ open class ProjectNode(projectElem: ProjectElem) : DirectoryNode(projectElem.nam
      * TODO: remove this temporal method when multiple modules are supported
      */
     fun getSingleModule(): ModuleNode {
-        check(modules.isNotEmpty()) { "No modules found" }
-        check(modules.size == 1) { "TODO: Support multiple modules" }
-        return modules.first()
+        val notCustomModules = modules.filter { !it.custom }
+        check(notCustomModules.isNotEmpty()) { "No modules found" }
+        check(notCustomModules.size == 1) { "TODO: Support multiple modules. Found: " + notCustomModules.map { it.getName() } }
+        return notCustomModules.first()
     }
 }
