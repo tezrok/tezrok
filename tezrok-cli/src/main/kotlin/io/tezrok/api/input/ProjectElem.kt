@@ -17,7 +17,8 @@ data class ProjectElem(
     @JsonProperty("package")
     val packagePath: String = "",
     val author: String = "",
-    val modules: List<ModuleElem> = emptyList()
+    val modules: List<ModuleElem> = emptyList(),
+    val git: GitElem? = null,
 ) {
     override fun toString(): String {
         return "ProjectElem(name='$name')"
@@ -210,6 +211,13 @@ data class FieldElem(
 
     fun hasRelations(vararg relations: EntityRelation): Boolean = relation in relations
 }
+
+data class GitElem(
+    // list of files to ignore
+    val ignores: List<String>? = null,
+    // list of files to exclude from std ignore list
+    val excludes: List<String>? = null
+)
 
 /**
  * Relation between entities
