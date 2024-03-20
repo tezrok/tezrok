@@ -73,7 +73,8 @@ open class SpringSecurityFeature : TezrokFeature {
             createdAt = true,
             updatedAt = true,
             customMethods = (inheritEntity?.customMethods ?: emptySet()) + "getByNameOrEmail",
-            customComments = (inheritEntity?.customComments ?: emptyMap()) + ("getByNameOrEmail" to "Returns {@link ${NAME_USER}Dto} by name or email."),
+            customComments = (inheritEntity?.customComments
+                ?: emptyMap()) + ("getByNameOrEmail" to "Returns {@link ${NAME_USER}Dto} by name or email."),
             fields = createUserFields(inheritEntity),
             init = inheritEntity?.init ?: stdUsersInit(stdUsers)
         )
@@ -149,9 +150,15 @@ open class SpringSecurityFeature : TezrokFeature {
                     unique = true,
                     maxLength = USER_EMAIL_MAX,
                     minLength = USER_EMAIL_MIN,
-                    metaType = MetaType.Email
+                    metaTypes = setOf(MetaType.Email)
                 ),
-                FieldElem(name = "password", type = "String", maxLength = USER_PASSWORD_HASH_MAX, required = true),
+                FieldElem(
+                    name = "password",
+                    type = "String",
+                    required = true,
+                    maxLength = USER_PASSWORD_HASH_MAX,
+                    metaTypes = setOf(MetaType.Sensitive)
+                ),
                 FieldElem(name = "activated", type = "Boolean", required = true, defValue = "false"),
                 FieldElem(name = "banned", type = "Boolean", required = true, defValue = "false"),
                 FieldElem(name = "roles", type = "Role", relation = EntityRelation.ManyToMany)

@@ -51,7 +51,7 @@ internal class EntityCreatedUpdatedFeature : TezrokFeature {
                 required = true,
                 defValue = DATETIME_NOW,
                 description = description,
-                metaType = metaType
+                metaTypes =  if (metaType != null) setOf(metaType) else null
             )
             return fields + newField
         }

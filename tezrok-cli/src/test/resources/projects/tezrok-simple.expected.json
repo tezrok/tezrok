@@ -183,7 +183,9 @@
                 "description": "Date and time of entity creation",
                 "required": true,
                 "defValue": "now()",
-                "metaType": "CreatedAt"
+                "metaTypes": [
+                  "CreatedAt"
+                ]
               },
               {
                 "name": "updatedAt",
@@ -191,7 +193,9 @@
                 "description": "Date and time of entity update",
                 "required": true,
                 "defValue": "now()",
-                "metaType": "UpdatedAt"
+                "metaTypes": [
+                  "UpdatedAt"
+                ]
               }
             ],
             "customMethods": [
@@ -264,13 +268,18 @@
                 "minLength": 4,
                 "maxLength": 40,
                 "unique": true,
-                "metaType": "Email"
+                "metaTypes": [
+                  "Email"
+                ]
               },
               {
                 "name": "password",
                 "type": "String",
                 "required": true,
-                "maxLength": 100
+                "maxLength": 100,
+                "metaTypes": [
+                  "Sensitive"
+                ]
               },
               {
                 "name": "activated",
@@ -296,7 +305,9 @@
                 "description": "Date and time of entity creation",
                 "required": true,
                 "defValue": "now()",
-                "metaType": "CreatedAt"
+                "metaTypes": [
+                  "CreatedAt"
+                ]
               },
               {
                 "name": "updatedAt",
@@ -304,7 +315,9 @@
                 "description": "Date and time of entity update",
                 "required": true,
                 "defValue": "now()",
-                "metaType": "UpdatedAt"
+                "metaTypes": [
+                  "UpdatedAt"
+                ]
               }
             ],
             "customMethods": [
@@ -361,7 +374,9 @@
                 "description": "Date and time of entity creation",
                 "required": true,
                 "defValue": "now()",
-                "metaType": "CreatedAt"
+                "metaTypes": [
+                  "CreatedAt"
+                ]
               },
               {
                 "name": "updatedAt",
@@ -369,7 +384,9 @@
                 "description": "Date and time of entity update",
                 "required": true,
                 "defValue": "now()",
-                "metaType": "UpdatedAt"
+                "metaTypes": [
+                  "UpdatedAt"
+                ]
               }
             ],
             "customMethods": [
@@ -418,7 +435,9 @@
                 "description": "Date and time of entity creation",
                 "required": true,
                 "defValue": "now()",
-                "metaType": "CreatedAt"
+                "metaTypes": [
+                  "CreatedAt"
+                ]
               },
               {
                 "name": "updatedAt",
@@ -426,7 +445,9 @@
                 "description": "Date and time of entity update",
                 "required": true,
                 "defValue": "now()",
-                "metaType": "UpdatedAt"
+                "metaTypes": [
+                  "UpdatedAt"
+                ]
               }
             ],
             "customMethods": [

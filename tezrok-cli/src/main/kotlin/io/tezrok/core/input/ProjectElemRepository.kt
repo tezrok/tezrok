@@ -92,7 +92,12 @@ internal class ProjectElemRepository {
     }
 
     private fun validateField(field: FieldElem, entity: EntityElem) {
+        check(field.name.isNotBlank()) { "Field name cannot be blank in entity '${entity.name}'" }
         check(field.type?.isNotBlank() == true) { "Field '${entity.name}.${field.name}' type is not defined" }
+
+        if (field.name == "password" || field.name == "pwd") {
+            check(field.hasMetaType(MetaType.Sensitive)) { "Field '${entity.name}.${field.name}' must have meta type 'Sensitive'" }
+        }
     }
 
     /**

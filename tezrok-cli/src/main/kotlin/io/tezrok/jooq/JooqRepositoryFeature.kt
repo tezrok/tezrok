@@ -1,10 +1,12 @@
 package io.tezrok.jooq
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.IntegerLiteralExpr
+import com.github.javaparser.ast.expr.NameExpr
 import com.github.javaparser.ast.stmt.ReturnStmt
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.ProcessModelPhase
@@ -206,6 +208,21 @@ internal class JooqRepositoryFeature : TezrokFeature {
                     method2.addAnnotation(JsonIgnore::class.java)
                 }
             }
+
+            val sensitiveFields = entity.fields.filter { it.hasMetaType(MetaType.Sensitive) }
+            if (sensitiveFields.isNotEmpty()) {
+                // override sensitive fields with @JsonIgnore
+                sensitiveFields.forEach { field ->
+                    val returnType = field.asJavaType()
+                    val getter = field.getGetterName()
+                    dtoClass.addMethod(getter)
+                        .withModifiers(Modifier.Keyword.PUBLIC)
+                        .setReturnType(returnType)
+                        .setBody(ReturnStmt("super.$getter()"))
+                        .addAnnotation(Override::class.java)
+                        .addAnnotation(JsonIgnore::class.java)
+                }
+            }
         } else {
             log.warn(FILE_ALREADY_EXISTS, "$className.java")
         }
@@ -267,11 +284,20 @@ internal class JooqRepositoryFeature : TezrokFeature {
         fieldElem: FieldElem,
         clazz: JavaClassNode
     ) {
-        if (fieldElem.required == true && (fieldElem.metaType == null || fieldElem.metaType !in setOf(MetaType.CreatedAt, MetaType.UpdatedAt))) {
+        if (fieldElem.hasMetaType(MetaType.Sensitive)) {
+            // @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+            clazz.addImport(JsonProperty::class.java)
+            field.addAnnotation(
+                "JsonProperty",
+                mapOf("access" to NameExpr("JsonProperty.Access.WRITE_ONLY"))
+            )
+        }
+
+        if (fieldElem.required == true && !fieldElem.hasMetaType(MetaType.CreatedAt) && !fieldElem.hasMetaType(MetaType.UpdatedAt)) {
             // createAt and updatedAt fields are not required in dto but required in db
             field.addAnnotation(NotNull::class.java)
         }
-        if (fieldElem.metaType == MetaType.Email) {
+        if (fieldElem.hasMetaType(MetaType.Email)) {
             field.addAnnotation(Email::class.java)
         }
         if (fieldElem.isStringType()) {
@@ -284,7 +310,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
                     "min" to IntegerLiteralExpr(minLength.toString()),
                     "max" to IntegerLiteralExpr(maxLength.toString())
                 )
-            );
+            )
         }
     }
 

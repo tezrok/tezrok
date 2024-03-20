@@ -186,7 +186,7 @@ data class FieldElem(
     val syntheticTo: String? = null,
     val relation: EntityRelation? = null,
     // used for known fields like createdAt, updatedAt
-    val metaType: MetaType? = null,
+    val metaTypes: Set<MetaType>? = null,
     // if true, then this field is synthetic and needed by other entity (field is added by user)
     val external: Boolean? = null
 ) {
@@ -230,6 +230,8 @@ data class FieldElem(
     fun hasUniqueGroup(): Boolean = uniqueGroup != null
 
     fun hasRelations(vararg relations: EntityRelation): Boolean = relation in relations
+
+    fun hasMetaType(metaType: MetaType): Boolean = metaTypes?.contains(metaType) == true
 }
 
 data class GitElem(
@@ -252,10 +254,27 @@ enum class EntityRelation {
     ManyToMany,
 }
 
+/**
+ * Field meta type
+ */
 enum class MetaType {
+    /**
+     * Field is created when entity is created and never changed
+     */
     CreatedAt,
 
+    /**
+     * Field is created when entity is created and updated when entity is updated
+     */
     UpdatedAt,
 
-    Email
+    /**
+     * Field is a string and email
+     */
+    Email,
+
+    /**
+     * Field is sensitive and should be stored and handled carefully
+     */
+    Sensitive
 }
