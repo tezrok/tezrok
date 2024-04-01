@@ -25,15 +25,15 @@ internal class DockerFeature : TezrokFeature {
         val dockerDir = project.getOrAddDirectory("docker")
         val startDbFile = dockerDir.getOrAddFile("start-db.sh")
         if (startDbFile.isEmpty()) {
-            context.writeTemplate(startDbFile, "/templates/docker/start-db.sh.vm", values)
+            context.writeTemplate(startDbFile, "/templates/docker/db-start-test.sh.vm", values)
         }
         val restartDbFile = dockerDir.getOrAddFile("restart-db.sh")
         if (restartDbFile.isEmpty()) {
-            context.writeTemplate(restartDbFile, "/templates/docker/restart-db.sh.vm", values)
+            context.writeTemplate(restartDbFile, "/templates/docker/db-restart-test.sh.vm", values)
         }
         val stopDbFile = dockerDir.getOrAddFile("stop-db.sh")
         if (stopDbFile.isEmpty()) {
-            context.writeTemplate(stopDbFile, "/templates/docker/stop-db.sh.vm", values)
+            context.writeTemplate(stopDbFile, "/templates/docker/db-stop-test.sh.vm", values)
         }
 
         properties.setPropertyIfAbsent("test.docker.name", dockerName)
