@@ -37,6 +37,7 @@ public class JooqConfiguration {
         dataSource.setJdbcUrl(environment.getRequiredProperty("spring.datasource.url"));
         dataSource.setUsername(environment.getRequiredProperty("spring.datasource.username"));
         dataSource.setPassword(environment.getRequiredProperty("spring.datasource.password"));
+        dataSource.setDriverClassName(environment.getRequiredProperty("spring.datasource.driver-class-name"));
 
         return dataSource;
     }

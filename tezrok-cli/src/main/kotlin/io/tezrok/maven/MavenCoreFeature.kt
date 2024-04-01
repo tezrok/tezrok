@@ -5,6 +5,7 @@ import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.ProjectElem
 import io.tezrok.api.maven.PomNode
 import io.tezrok.api.maven.ProjectNode
+import io.tezrok.util.NameUtil
 
 /**
  * Adds Maven default and extra dependencies
@@ -49,6 +50,7 @@ internal class MavenCoreFeature : TezrokFeature {
         // add dependencies from project
         projectElem.modules.find { it.name == module.getName() }?.dependencies?.forEach(pomFile::addDependency)
 
+        pomFile.setFinalName(NameUtil.toHyphenName(module.getName()))
         addMavenCompilerPlugin(pomFile, true)
 
         val javaRoot = module.source.main.java

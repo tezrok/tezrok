@@ -4,12 +4,13 @@ import io.tezrok.api.input.ModuleElem
 import io.tezrok.api.input.ProjectElem
 import io.tezrok.api.node.BaseFileNode
 import io.tezrok.api.node.DirectoryNode
+import java.nio.file.Path
 import java.util.Collections
 
 /**
  * Represents a model of maven project generation
  */
-open class ProjectNode(projectElem: ProjectElem) : DirectoryNode(projectElem.name, null) {
+open class ProjectNode(projectElem: ProjectElem, private val physicalPath: Path? = null) : DirectoryNode(projectElem.name, null) {
     private val modules: MutableList<ModuleNode> = mutableListOf()
 
     val pom: PomNode = PomNode(artifactId = projectElem.name, parent = this)
@@ -55,4 +56,6 @@ open class ProjectNode(projectElem: ProjectElem) : DirectoryNode(projectElem.nam
         check(notCustomModules.size == 1) { "TODO: Support multiple modules. Found: " + notCustomModules.map { it.getName() } }
         return notCustomModules.first()
     }
+
+    override fun getPhysicalPath(): Path? = physicalPath
 }

@@ -46,6 +46,13 @@ open class PomNode(artifactId: String, name: String = "pom.xml", parent: BaseNod
     fun getProperties(): Stream<MavenProperty> = getXml().nodesByPath("properties/*")
             .map { MavenProperty(it.getName(), it.getValue() ?: "") }
 
+    fun setFinalName(finalName: String): PomNode {
+        getXml().getOrAdd("build").getOrAdd("finalName", finalName)
+        return this
+    }
+
+    fun getFinalName(): String = getXml().getNodeValue("build/finalName")
+
     override fun getDependencies(): Stream<MavenDependency> = dependenciesAccess().getDependencies()
 
     /**

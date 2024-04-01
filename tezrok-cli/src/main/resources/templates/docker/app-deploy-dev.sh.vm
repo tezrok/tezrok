@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+# Script to deploy the docker image to the remote server
+source ./docker/custom/dockerenv.sh
+
+./docker/app-deploy-common.sh ${moduleName} $REMOTE_IP_DEV $REMOTE_USER_DEV
+
+# copy scripts to the remote server
+echo "Copy scripts to the remote server..."
+ssh $REMOTE_USER_DEV@$REMOTE_IP_DEV "mkdir -p /home/${moduleName}"
+scp ./docker/app-run-test.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/app-run-test.sh
+scp ./docker/app-stop-test.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/app-stop-test.sh
+scp ./docker/db-stop-test.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/db-stop-test.sh
+scp ./docker/db-start-test.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/db-start-test.sh
+scp ./docker/db-restart-test.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/db-restart-test.sh
+
+echo "Done"

@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+MODULE_NAME=${moduleName}
+echo "Run $MODULE_NAME app..."
+
+pushd "$(dirname "$0")" > /dev/null
+
+docker_container_exists() {
+    docker ps -a --format '{{.Names}}' | grep -q "^$1\$" && echo "true"
+}
+
+get_db_host() {
+  if [ "$(docker_container_exists ${dockerDbName})" == "true" ]; then
+    docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${dockerDbName} || echo ""
+  else
+    echo ""
+  fi
+}
+
+DB_HOST=$(get_db_host)
+# check if DB_HOST is empty start test database
+if [ -z "$DB_HOST" ]; then
+    echo "DB_HOST is empty. Start test database..."
+    ./db-start-test.sh
+fi
+DB_HOST=$(get_db_host)
+echo "DB_HOST=$DB_HOST"
+
+if [ -z "$DB_HOST" ]; then
+    echo "DB_HOST is empty. Exit..."
+    exit 1
+fi
+
+DB_USER=tezrokAdmin
+DB_PWD=tezrokAdminPwd
+
+# check if container exists and remove it
+if [ "$(docker_container_exists $MODULE_NAME)" == "true" ]; then
+    echo "Container '$MODULE_NAME' exists. Stop and remove it"
+    docker stop $MODULE_NAME
+    docker rm $MODULE_NAME
+fi
+
+# run new container
+docker run --rm -d -p 8080:8080 -v /etc/$MODULE_NAME/logs:/app/logs \
+    --name $MODULE_NAME \
+    -e "DB_HOST=$DB_HOST" \
+    -e "DB_USER=$DB_USER" \
+    -e "DB_PWD=$DB_PWD" \
+    ${projectName}/$MODULE_NAME
+
+# Restore the old current directory
+popd > /dev/null

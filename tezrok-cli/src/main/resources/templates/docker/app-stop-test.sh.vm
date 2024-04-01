@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+MODULE_NAME=${moduleName}
+echo "Stop test $MODULE_NAME..."
+
+# stop the container
+docker stop $MODULE_NAME

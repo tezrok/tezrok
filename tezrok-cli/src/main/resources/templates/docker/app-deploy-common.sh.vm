@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+# Script to deploy the docker image to the remote server
+MODULE_NAME=$1
+REMOTE_IP=$2
+REMOTE_USER=$3
+
+# check if the module name is provided
+if [ -z "$MODULE_NAME" ]; then
+  echo "Module name is not provided"
+  exit 1
+fi
+
+# check if the remote IP is provided
+if [ -z "$REMOTE_IP" ]; then
+  echo "Remote IP is not provided"
+  exit 1
+fi
+
+# check if the remote user is provided
+if [ -z "$REMOTE_USER" ]; then
+  echo "Remote user is not provided"
+  exit 1
+fi
+
+
+FILE_NAME=$MODULE_NAME'_'$(date +"%Y-%m-%d-%H-%M-%S")'.tar'
+IMAGE_NAME="${projectName}/$MODULE_NAME"
+echo "Deploy $MODULE_NAME app..."
+
+# save the docker image to a file
+echo "Save the docker image to a file: /tmp/$FILE_NAME..."
+docker save "$IMAGE_NAME" > "/tmp/$FILE_NAME"
+
+ls -lah "/tmp/$FILE_NAME"
+
+# copy the docker image file to the remote server
+echo "Copy the docker image file ($FILE_NAME) to the remote server: $REMOTE_IP..."
+scp "/tmp/$FILE_NAME" $REMOTE_USER@"$REMOTE_IP":"/tmp/$FILE_NAME"
+
+rm "/tmp/$FILE_NAME"
+
+# connect to the remote server via SSH and load the docker image
+echo "Load docker image on remote server from file: /tmp/$FILE_NAME..."
+ssh $REMOTE_USER@"$REMOTE_IP" "docker load -i /tmp/$FILE_NAME"
+
+echo "Remove the docker image file from the remote server"
+ssh $REMOTE_USER@"$REMOTE_IP" "rm /tmp/$FILE_NAME"

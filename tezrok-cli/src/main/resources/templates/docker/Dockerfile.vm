@@ -1,0 +1,6 @@
+FROM eclipse-temurin:17-jdk-alpine@sha256:ddd7a05cf8263989c29f2a9476dcfa25d0eaf8310d400f998ebd03c0d32feb72
+RUN mkdir -p /app/logs
+COPY ./${moduleNameOriginal}/target/${moduleName}.jar /app/app.jar
+EXPOSE 8080
+WORKDIR /app
+CMD "java" "-jar" "app.jar" --server.port=8080

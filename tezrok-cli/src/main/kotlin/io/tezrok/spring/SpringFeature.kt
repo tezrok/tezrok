@@ -51,11 +51,14 @@ internal class SpringFeature : TezrokFeature {
         if (!lines.contains("spring.datasource")) {
             val properties = module.properties
             // TODO: update only specified properties
+            val dbUrl = properties.getProperty("datasource.url")?.replace("localhost", "\${DB_HOST:localhost}")
+            val dbUser = "\${DB_USER:${properties.getProperty("datasource.username")}}"
+            val dbPwd = "\${DB_PWD:${properties.getProperty("datasource.password")}}"
             lines.addAll(
                 listOf(
-                    "spring.datasource.url=${properties.getProperty("datasource.url")}",
-                    "spring.datasource.username=${properties.getProperty("datasource.username")}",
-                    "spring.datasource.password=${properties.getProperty("datasource.password")}",
+                    "spring.datasource.url=$dbUrl",
+                    "spring.datasource.username=$dbUser",
+                    "spring.datasource.password=$dbPwd",
                     "spring.datasource.driver-class-name=${properties.getProperty("datasource.driver-class-name")}",
                     "spring.data.web.pageable.default-page-size=10",
                     "spring.data.web.pageable.max-page-size=20"

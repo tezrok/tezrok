@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
 
-docker stop ${dockerName}
+echo "Stop test database..."
+
+docker stop ${dockerDbName}
