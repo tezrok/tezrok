@@ -22,8 +22,8 @@ internal class DockerFeature : TezrokFeature {
             "projectName" to NameUtil.toHyphenName(project.getName()),
             "moduleNameOriginal" to module.getName(),
             "moduleName" to moduleName,
-            "userName" to properties.getProperty("datasource.username"),
-            "userPassword" to properties.getProperty("datasource.password"),
+            "dbUserName" to properties.getProperty("datasource.username"),
+            "dbUserPassword" to properties.getProperty("datasource.password"),
             "dbName" to properties.getProperty("datasource.db-name"),
             "dockerDbName" to dockerDbName
         )

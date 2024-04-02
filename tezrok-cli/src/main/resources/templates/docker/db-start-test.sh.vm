@@ -2,4 +2,4 @@
 
 echo "Start test database..."
 
-docker run --name ${dockerDbName} --rm -p 5432:5432 -e POSTGRES_DB=${dbName} -e POSTGRES_USER=${userName} -e POSTGRES_PASSWORD=${userPassword} -d postgres:15.2
+docker run --name ${dockerDbName} --rm -p 5432:5432 -e POSTGRES_DB=${dbName} -e POSTGRES_USER=${dbUserName} -e POSTGRES_PASSWORD=${dbUserPassword} -d postgres:15.2

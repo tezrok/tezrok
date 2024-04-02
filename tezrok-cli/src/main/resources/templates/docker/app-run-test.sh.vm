@@ -31,8 +31,8 @@ if [ -z "$DB_HOST" ]; then
     exit 1
 fi
 
-DB_USER=tezrokAdmin
-DB_PWD=tezrokAdminPwd
+DB_USER=${dbUserName}
+DB_PWD=${dbUserPassword}
 
 # check if container exists and remove it
 if [ "$(docker_container_exists $MODULE_NAME)" == "true" ]; then
