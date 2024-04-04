@@ -9,10 +9,7 @@ import io.tezrok.api.input.EntityElem
 import io.tezrok.api.java.JavaClassNode
 import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.maven.ProjectNode
-import io.tezrok.util.JavaParserFactory
-import io.tezrok.util.addImportsByType
-import io.tezrok.util.asJavaType
-import io.tezrok.util.getRootClass
+import io.tezrok.util.*
 import org.apache.commons.lang3.tuple.Pair
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -86,7 +83,7 @@ open class ServiceFeature : TezrokFeature {
         val repoBaseName = "JooqBaseRepository" // TODO: get from config
         val singlePrimary = primaryFields.size == 1
         val repoExtName = if (singlePrimary) "JooqRepository" else "JooqRepository2"
-        val fieldName = itemRepoName.replaceFirstChar { it.lowercase() }
+        val fieldName = itemRepoName.lowerFirst()
         val repoDir = serviceDir.getParentDirectory()?.getJavaDirectory("repository")
         repoDir?.getJavaFile(repoBaseName)?.getRootClass()?.let { repoBaseClass ->
             addMethodsFromRepoClass(serviceClass, repoBaseClass, fieldName, primaryFields, name)
@@ -95,7 +92,7 @@ open class ServiceFeature : TezrokFeature {
             addMethodsFromRepoClass(serviceClass, repoBaseClass, fieldName, primaryFields, name)
         }
         repoDir?.getJavaFile(itemRepoName)?.getRootClass()?.let { repoClass ->
-            addMethodsFromRepoClass(serviceClass, repoClass, fieldName, primaryFields)
+            addMethodsFromRepoClass(serviceClass, repoClass, fieldName, primaryFields, includeAbstract = true)
         }
 
         if (!singlePrimary) {
@@ -109,8 +106,9 @@ open class ServiceFeature : TezrokFeature {
         fieldName: String,
         primaryFields: List<String>,
         entityName: String = "",
+        includeAbstract: Boolean = false
     ) {
-        repoClass.getMethods().filter { method -> method.isPublic() && !method.isAbstract() }.forEach { method ->
+        repoClass.getMethods().filter { method -> method.isPublic() && (includeAbstract || !method.isAbstract()) }.forEach { method ->
             val newMethod = serviceClass.addMethod(method.getName())
                 .withModifiers(Modifier.Keyword.PUBLIC)
                 .setReturnType(replaceType(method.getTypeAsString(), entityName, primaryFields))
@@ -132,7 +130,7 @@ open class ServiceFeature : TezrokFeature {
     }
 
     private fun isMethodReadOnly(name: String) = name.let {
-        it.startsWith("get") || it.startsWith("find") || it.startsWith("count")
+        it.startsWith("get") && !it.startsWith("getOrCreate") || it.startsWith("find") || it.startsWith("count")
                 || it.startsWith("exists") || it.startsWith("search") || it.startsWith("list")
     }
 

@@ -259,4 +259,6 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration, private
         clazz.addMember(innerClass)
         return JavaClassNode(innerClass, javaFile)
     }
+
+    override fun toString(): String = clazz.toString()
 }
