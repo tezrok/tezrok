@@ -6,6 +6,7 @@ import io.tezrok.api.input.EntityElem
 import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.getSetterName
+import io.tezrok.util.lowerFirst
 import org.slf4j.LoggerFactory
 
 /**
@@ -87,7 +88,7 @@ internal class ControllerFeature : TezrokFeature {
             val values = mapOf(
                 "package" to packagePath,
                 "name" to name,
-                "lname" to name.replaceFirstChar { it.lowercase() },
+                "lname" to name.lowerFirst(),
                 "primarySetter" to entity.getPrimaryField().getSetterName()
             )
             context.writeTemplate(controllerFile, "/templates/spring/EntityController.java.vm", values)

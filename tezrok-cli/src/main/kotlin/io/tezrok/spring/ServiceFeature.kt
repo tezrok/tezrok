@@ -13,6 +13,7 @@ import io.tezrok.util.*
 import org.apache.commons.lang3.tuple.Pair
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 
@@ -57,14 +58,25 @@ open class ServiceFeature : TezrokFeature {
             val values =
                 mapOf(
                     "package" to packagePath, "name" to name,
-                    "lname" to name.replaceFirstChar { it.lowercase() },
+                    "lname" to name.lowerFirst(),
                     "primaryType" to entity.getPrimaryField().asJavaType()
                 )
             context.writeTemplate(serviceFile, "/templates/spring/EntityService.java.vm", values)
+            val customService = entity.customService == true
             val serviceClass = serviceFile.getRootClass()
             val primaryFields = entity.fields.filter { it.primary == true }.map { it.asJavaType() }
             addRepositoryMethods(serviceDir, name, serviceClass, primaryFields)
-            addCustomMethods(serviceDir, name, serviceClass)
+            if (customService) {
+                serviceClass.getConstructors()
+                    .findFirst()
+                    .orElseThrow { IllegalStateException("Constructor not found") }
+                    .setModifiers(Modifier.Keyword.PROTECTED)
+                serviceClass.setModifiers(Modifier.Keyword.PUBLIC, Modifier.Keyword.ABSTRACT)
+                addCustomMethods(serviceDir, name, serviceClass, customService, context)
+            } else {
+                serviceClass.addAnnotation(Service::class.java)
+                    .addAnnotation(Transactional::class.java)
+            }
         } else {
             log.warn("File already exists: {}", fileName)
         }
@@ -151,10 +163,16 @@ open class ServiceFeature : TezrokFeature {
     /**
      * Adds custom methods to service class from physical custom file.
      */
-    private fun addCustomMethods(serviceDir: JavaDirectoryNode, name: String, serviceClass: JavaClassNode) {
+    private fun addCustomMethods(
+        serviceDir: JavaDirectoryNode,
+        name: String,
+        serviceClass: JavaClassNode,
+        custom: Boolean,
+        context: GeneratorContext
+    ) {
         val servicePhysicalPath = serviceDir.getPhysicalPath()
+        val customFileName = "${name}CustomService.java"
         if (servicePhysicalPath != null && servicePhysicalPath.exists()) {
-            val customFileName = "${name}CustomService.java"
             val customFilePath = servicePhysicalPath.resolve("custom/${customFileName}")
 
             if (customFilePath.exists()) {
@@ -194,18 +212,20 @@ open class ServiceFeature : TezrokFeature {
                             addedMethods.joinToString(", ")
                         )
                     }
-
-                    // if we have custom service class, we need to remove annotations and make class abstract
-                    serviceClass.withModifiers(Modifier.Keyword.ABSTRACT)
-                        .removeAnnotation(Service::class.java)
-                        .removeImport(Service::class.java)
-                        .removeAnnotation("Transactional")
                 } else {
                     log.warn("Failed to parse file: {}", customFilePath)
                     parsedFile.problems.forEach { problem ->
                         log.warn("Problem: {}", problem)
                     }
                 }
+            } else if (custom) {
+                log.debug("Custom service file not found, create it: {}", customFilePath)
+                val customRepoFile = serviceDir.getOrAddJavaDirectory("custom").addJavaFile(customFileName)
+                context.writeTemplate(
+                    customRepoFile,
+                    "/templates/spring/EntityCustomService.java.vm",
+                    mapOf("package" to context.getProject().packagePath, "name" to name, "lname" to name.lowerFirst())
+                )
             }
         }
     }

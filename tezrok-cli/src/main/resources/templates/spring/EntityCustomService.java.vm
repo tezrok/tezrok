@@ -1,0 +1,24 @@
+package ${package}.service.custom;
+
+import ${package}.dto.${name}Dto;
+import ${package}.mapper.${name}Mapper;
+import ${package}.repository.EntityGraphLoader;
+import ${package}.repository.EntityGraphStore;
+import ${package}.repository.${name}Repository;
+import ${package}.service.${name}Service;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Custom service for {@link ${name}Service} for {@link ${name}Dto}.
+ */
+@Service
+@Transactional
+public class ${name}CustomService extends ${name}Service {
+    public ${name}CustomService(${name}Repository ${lname}Repository,
+                                 ${name}Mapper ${lname}Mapper,
+                                 EntityGraphLoader entityGraphLoader,
+                                 EntityGraphStore entityGraphStore) {
+        super(${lname}Repository, ${lname}Mapper, entityGraphLoader, entityGraphStore);
+    }
+}

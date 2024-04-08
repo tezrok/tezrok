@@ -18,8 +18,6 @@ import java.util.Collection;
 /**
  * Service for {@link ${name}Dto}.
  */
-@Transactional
-@Service
 public class ${name}Service {
     protected final ${name}Repository ${lname}Repository;
 

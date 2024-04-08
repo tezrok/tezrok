@@ -79,7 +79,14 @@ data class SchemaElem(
 data class EntityElem(
     val name: String,
     val description: String? = null,
+    /**
+     * If true, then custom repository will be created
+     */
     val customRepository: Boolean? = null,
+    /**
+     * If true, then custom service will be created
+     */
+    val customService: Boolean? = null,
     val syntheticTo: String? = null,
     // if true, object won't be deleted from database, but will be marked as deleted
     val activable: Boolean? = null,
