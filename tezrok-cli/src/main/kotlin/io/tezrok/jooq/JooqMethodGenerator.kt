@@ -41,6 +41,9 @@ internal class JooqMethodGenerator(
             methodName.startsWith(PREFIX_GET) ->
                 newMethod.setBody(generateGetByBody(methodName, returnType, params))
 
+            methodName.startsWith(PREFIX_DELETE) ->
+                newMethod.setBody(generateDeleteByBody(methodName, returnType, params))
+
             methodName.startsWith(PREFIX_COUNT) ->
                 newMethod.setBody(generateCountByBody(methodName, returnType, params))
 
@@ -62,6 +65,8 @@ internal class JooqMethodGenerator(
             methodName.startsWith(PREFIX_FIND) -> generateFindByBodyOnlyByName(methodName)
 
             methodName.startsWith(PREFIX_GET) -> generateGetByBodyOnlyByName(methodName)
+
+            methodName.startsWith(PREFIX_DELETE) -> generateDeleteByBodyOnlyByName(methodName)
 
             methodName.startsWith(PREFIX_COUNT) -> TODO("support count methods")
 
@@ -102,6 +107,8 @@ internal class JooqMethodGenerator(
         methodName.startsWith(PREFIX_GET) -> dtoName
 
         methodName.startsWith(PREFIX_COUNT) -> "int"
+
+        methodName.startsWith(PREFIX_DELETE) -> "int"
 
         else -> error("Unsupported method name: $methodName")
     }
@@ -368,6 +375,45 @@ internal class JooqMethodGenerator(
         }
     }
 
+    private fun generateDeleteByBodyOnlyByName(
+        methodName: String
+    ): MethodGen {
+        try {
+            val dtoName = "${entity.name}Dto"
+            val returnType = getReturnTypeByOnlyName(methodName, dtoName)
+            val params = mutableMapOf<String, String>()
+            val methodName = methodName.removePrefix(PREFIX_DELETE)
+            val methodPrefix = getMethodPrefix(methodName)
+            val relTables = getRelatedTables(methodPrefix)
+            val expressionPart = removeGetByPrefix(methodName, methodPrefix)
+            val (where, orderBy, limit, distinct, paramsOut) = parseAsJooqExpression(
+                expressionPart,
+                params,
+                singleResult = true,
+                relTables,
+                extractParams = true
+            )
+            // got params from expression
+            paramsOut.forEach(params::put)
+
+            check(orderBy.isEmpty()) { "OrderBy cannot be used with delete method" }
+            check(limit.isEmpty()) { "Top cannot be used with delete method" }
+            check(!distinct) { DISTINCT_CANNOT_BE_USED_WHOLE_TABLE }
+
+            if (relTables == null) {
+                return MethodGen(
+                    params = params,
+                    returnType = returnType,
+                    ReturnStmt("dsl.delete(table).where($where).execute()")
+                )
+            } else {
+                error("TODO: $relTables")
+            }
+        } catch (ex: Exception) {
+            throw RuntimeException("Failed to generate body for method \"$methodName\": ${ex.message}", ex)
+        }
+    }
+
     private fun makeSafeParamName(params: Map<String, String>): String {
         var index = 0
         var paramName = "type"
@@ -417,7 +463,7 @@ internal class JooqMethodGenerator(
             return entity.getIdFields()
         }
 
-        val singleField = tryGetFieldByName(methodPrefix.decapitalize())
+        val singleField = tryGetFieldByName(methodPrefix.lowerFirst())
         if (singleField != null) {
             return listOf(singleField)
         }
@@ -471,11 +517,34 @@ internal class JooqMethodGenerator(
             val expressionPart = removeCountByPrefix(methodName, entity.name)
             val (where, orderBy, limit, distinct) = parseAsJooqExpression(expressionPart, params, false)
 
-            check(orderBy.isEmpty()) { "OrderBy cannot be used with count methods" }
-            check(limit.isEmpty()) { "Top cannot be used with count methods" }
+            check(orderBy.isEmpty()) { "OrderBy cannot be used with count method" }
+            check(limit.isEmpty()) { "Top cannot be used with count method" }
             check(!distinct) { DISTINCT_CANNOT_BE_USED_WHOLE_TABLE }
 
             return ReturnStmt("dsl.fetchCount(table, $where)")
+
+        } catch (ex: Exception) {
+            throw RuntimeException("Failed to generate body for method \"$methodName\": ${ex.message}", ex)
+        }
+    }
+
+    private fun generateDeleteByBody(
+        methodName: String,
+        returnType: String,
+        params: MutableMap<String, String>
+    ): Statement {
+        try {
+            val supportedTypes = setOf("int", "Integer")
+            check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
+
+            val expressionPart = removeDeleteByPrefix(methodName, entity.name)
+            val (where, orderBy, limit, distinct) = parseAsJooqExpression(expressionPart, params, false)
+
+            check(orderBy.isEmpty()) { "OrderBy cannot be used with delete method" }
+            check(limit.isEmpty()) { "Top cannot be used with delete method" }
+            check(!distinct) { DISTINCT_CANNOT_BE_USED_WHOLE_TABLE }
+
+            return ReturnStmt("dsl.delete(table).where($where).execute()")
 
         } catch (ex: Exception) {
             throw RuntimeException("Failed to generate body for method \"$methodName\": ${ex.message}", ex)
@@ -535,6 +604,9 @@ internal class JooqMethodGenerator(
 
     private fun removeCountByPrefix(methodName: String, entityPrefix: String) =
         methodName.removePrefix(PREFIX_COUNT).removePrefix(entityPrefix).removePrefix(PREFIX_BY)
+
+    private fun removeDeleteByPrefix(methodName: String, entityPrefix: String) =
+        methodName.removePrefix(PREFIX_DELETE).removePrefix(entityPrefix).removePrefix(PREFIX_DELETE)
 
     private fun parseAsJooqExpression(
         expressionPart: String,
@@ -909,6 +981,7 @@ internal class JooqMethodGenerator(
     private companion object {
         const val PREFIX_FIND = "find"
         const val PREFIX_GET = "get"
+        const val PREFIX_DELETE = "delete"
         const val PREFIX_COUNT = "count"
         const val PREFIX_BY = "By"
         const val PREFIX_ID_FIELDS = "IdFields"
