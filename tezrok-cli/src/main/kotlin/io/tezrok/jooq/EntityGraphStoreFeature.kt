@@ -280,7 +280,7 @@ Entity save/update strategy depends on {@link EntityUpdateType}.
         }
         val uniqStatements = (groupsStatement + uniqStatement).filter { it.isNotBlank() }
             .joinToString(" || ").let { if (it.isNotBlank()) "($it)" else "" }
-        val otherStatement = otherFields.filter { p -> p.isNotSynthetic() && p.isNotPrimaryField() }
+        val otherStatement = otherFields.filter { p -> p.isNotSynthetic() && p.isNotPrimary() }
             .joinToString { field -> "fullDto.${field.getGetterName()}()" }
             .let { str -> if (str.isNotBlank()) "Stream.of($str).allMatch(Objects::isNull)" else "" }
         val finalStatement =

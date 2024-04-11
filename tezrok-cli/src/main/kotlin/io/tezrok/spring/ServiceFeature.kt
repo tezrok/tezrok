@@ -64,7 +64,7 @@ open class ServiceFeature : TezrokFeature {
             context.writeTemplate(serviceFile, "/templates/spring/EntityService.java.vm", values)
             val customService = entity.customService == true
             val serviceClass = serviceFile.getRootClass()
-            val primaryFields = entity.fields.filter { it.primary == true }.map { it.asJavaType() }
+            val primaryFields = entity.fields.filter { it.isPrimary() }.map { it.asJavaType() }
             addRepositoryMethods(serviceDir, name, serviceClass, primaryFields)
             if (customService) {
                 serviceClass.getConstructors()

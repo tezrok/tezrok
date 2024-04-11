@@ -60,7 +60,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
                 val entities = schema.entities?.associate { it.name to it } ?: emptyMap()
 
                 schema.entities?.forEach { entity ->
-                    val primaryCount = entity.fields.count { it.primary == true }
+                    val primaryCount = entity.getPrimaryFieldCount()
                     check(primaryCount in 1..2) { "Entity ${entity.name} has unsupported count of primary keys: $primaryCount" }
                     val singlePrimary = primaryCount == 1
 
@@ -173,7 +173,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
             }
             constructor2.setBody("super(${args.joinToString(", ")});".parseAsStatement())
 
-            val fields = entity.fields.filter { it.primary == true }
+            val fields = entity.fields.filter { it.isPrimary() }
             val type1 = fields[0].asJavaType()
             val name1 = fields[0].name.upperFirst()
             if (singlePrimary) {
@@ -623,7 +623,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
 
     private fun generateFields(entity: EntityElem): Map<String, Any?> {
         var counter = 1
-        return entity.fields.filter { it.primary == true }
+        return entity.fields.filter { it.isPrimary() }
             .map { it.name }
             .map { it.camelCaseToSnakeCase() }
             .map { "field${counter++}" to it.uppercase() }

@@ -144,17 +144,17 @@ data class EntityElem(
      */
     @JsonIgnore
     fun getPrimaryField(): FieldElem =
-        fields.find { it.primary == true } ?: error("Primary field not found in entity $name")
+        fields.find { it.isPrimary() } ?: error("Primary field not found in entity $name")
 
     /**
      * Returns all primary and synthetic fields (but not logic ones)
      */
     @JsonIgnore
     fun getIdFields(): List<FieldElem> =
-        fields.filter { field -> field.primary == true || field.logicField != true && field.isSynthetic() }
+        fields.filter { field -> field.isPrimary() || field.logicField != true && field.isSynthetic() }
 
     @JsonIgnore
-    fun getPrimaryFieldCount(): Int = fields.count { it.primary == true }
+    fun getPrimaryFieldCount(): Int = fields.count { it.isPrimary() }
 
     @JsonIgnore
     fun isSynthetic(): Boolean = syntheticTo?.isNotEmpty() == true
@@ -217,10 +217,10 @@ data class FieldElem(
     }
 
     @JsonIgnore
-    fun isPrimaryField(): Boolean = primary == true
+    fun isPrimary(): Boolean = primary == true
 
     @JsonIgnore
-    fun isNotPrimaryField(): Boolean = !isPrimaryField()
+    fun isNotPrimary(): Boolean = !isPrimary()
 
     @JsonIgnore
     fun isSynthetic(): Boolean = syntheticTo?.isNotEmpty() == true

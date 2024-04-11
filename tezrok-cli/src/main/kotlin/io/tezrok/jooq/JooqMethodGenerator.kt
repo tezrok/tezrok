@@ -227,13 +227,13 @@ internal class JooqMethodGenerator(
                 }
             } else {
                 val tableName = entity.name.camelCaseToSqlUppercase()
-                val primaryField = entity.fields.first { it.primary == true }.name.camelCaseToSqlUppercase()
+                val primaryField = entity.fields.first { it.isPrimary() }.name.camelCaseToSqlUppercase()
 
                 val from = if (relTables.relTable != null) {
                     val relTableName = relTables.relTable.name.camelCaseToSqlUppercase()
                     val targetTableName = relTables.target.name.camelCaseToSqlUppercase()
                     val primaryTargetField =
-                        relTables.target.fields.first { it.primary == true }.name.camelCaseToSqlUppercase()
+                        relTables.target.fields.first { it.isPrimary() }.name.camelCaseToSqlUppercase()
                     val relField1 = relTables.relTable.fields[0].name.camelCaseToSqlUppercase()
                     val relField2 = relTables.relTable.fields[1].name.camelCaseToSqlUppercase()
 

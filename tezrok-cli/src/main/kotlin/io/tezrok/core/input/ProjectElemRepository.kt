@@ -181,8 +181,8 @@ internal class ProjectElemRepository {
         if (targetEntity != null) {
             val logicField = sourceField.copy(logicField = true)
             val fullFieldName = "${sourceEntity.name}.${sourceField.name}"
-            val targetPrimaryField = targetEntity.fields.first { it.primary == true }
-            val sourcePrimaryField = sourceEntity.fields.first { it.primary == true }
+            val targetPrimaryField = targetEntity.fields.first { it.isPrimary() }
+            val sourcePrimaryField = sourceEntity.fields.first { it.isPrimary() }
 
             when (val relation =
                 sourceField.relation ?: error("Relation is not defined for field \"$fullFieldName\"")) {
@@ -276,7 +276,7 @@ internal class ProjectElemRepository {
     private fun addPrimaryFields(entity: EntityElem): EntityElem {
         val fields = entity.fields.toMutableList()
 
-        if (fields.none { it.primary == true }) {
+        if (fields.none { it.isPrimary() }) {
             // if no primary key is defined, add default primary key or use existing id field as primary key
             val idx = fields.indexOfFirst { it.name == PRIMARY_FIELD_NAME }
 

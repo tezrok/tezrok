@@ -102,7 +102,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         sb.append(" (")
         addNewline(sb)
 
-        val primaryFields = fields.filter { it.primary == true }
+        val primaryFields = fields.filter { it.isPrimary() }
 
         check(primaryFields.isNotEmpty()) { "Primary field not found in entity: ${entity.name}" }
 
@@ -195,7 +195,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         if (field.required == true && !field.isSerialEffective(singlePrimary)) {
             sb.append(" NOT NULL")
         }
-        if (field.primary == true && singlePrimary) {
+        if (field.isPrimary() && singlePrimary) {
             // for composite primary key, primary key is added at the end of the table
             sb.append(" PRIMARY KEY")
         } else if (field.unique == true) {
