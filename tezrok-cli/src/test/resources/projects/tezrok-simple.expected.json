@@ -346,7 +346,8 @@
               {
                 "name": "id",
                 "type": "Long",
-                "primary": true
+                "primary": true,
+                "primaryIdFrom": 10
               },
               {
                 "name": "name",
@@ -413,7 +414,8 @@
               {
                 "name": "id",
                 "type": "Long",
-                "primary": true
+                "primary": true,
+                "primaryIdFrom": 100
               },
               {
                 "name": "name",

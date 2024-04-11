@@ -35,6 +35,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         entities.forEachIndexed { index, entity ->
             generateTable(entity, sb, schemaName, comments, inits)
             if (index < entities.size - 1) {
+                generateCustomPrimarySeq(entity, schemaName, sb)
                 addNewline(sb)
             }
         }
@@ -165,8 +166,8 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
 
     }
 
-    private fun toTableName(tableName: String, schemaName: String = ""): String {
-        val tableNameFinal = if (postgresKeywords.contains(tableName.lowercase())) {
+    private fun toTableName(tableName: String, schemaName: String = "", escapeKeywords: Boolean = true): String {
+        val tableNameFinal = if (escapeKeywords && postgresKeywords.contains(tableName.lowercase())) {
             "\"$tableName\""
         } else {
             tableName
@@ -270,6 +271,21 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         }
 
         return foreignKeys
+    }
+
+    /**
+     * Add table primary key sequence start from if primary field is serial
+     */
+    private fun generateCustomPrimarySeq(entity: EntityElem, schemaName: String, sb: StringBuilder) {
+        if (entity.isSinglePrimary) {
+            val primaryField = entity.getPrimaryField()
+            if (primaryField.primaryIdFrom != null && primaryField.primaryIdFrom > 1 && primaryField.isSerialEffective(true)) {
+                val tableName = toTableName(entity.name, escapeKeywords = false)
+                val columnName = toColumnName(primaryField.name)
+                sb.append("SELECT setval('${schemaName}.${tableName}_${columnName}_seq', ${primaryField.primaryIdFrom - 1});")
+                addNewline(sb)
+            }
+        }
     }
 
     /**

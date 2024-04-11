@@ -93,10 +93,24 @@ internal class ProjectElemRepository {
 
     private fun validateField(field: FieldElem, entity: EntityElem) {
         check(field.name.isNotBlank()) { "Field name cannot be blank in entity '${entity.name}'" }
-        check(field.type?.isNotBlank() == true) { "Field '${entity.name}.${field.name}' type is not defined" }
+        val fieldName = "${entity.name}.${field.name}"
+        check(field.type?.isNotBlank() == true) { "Field '$fieldName' type is not defined" }
 
         if (field.name == "password" || field.name == "pwd") {
-            check(field.hasMetaType(MetaType.Sensitive)) { "Field '${entity.name}.${field.name}' must have meta type 'Sensitive'" }
+            check(field.hasMetaType(MetaType.Sensitive)) { "Field '$fieldName' must have meta type 'Sensitive'" }
+        }
+
+        if (field.isPrimary()) {
+            if (field.primaryIdFrom != null) {
+                check(field.primaryIdFrom >= 1) { "Field '$fieldName' primaryIdFrom must be greater than 0" }
+                check(field.type == ModelTypes.LONG || field.type == ModelTypes.INTEGER)
+                { "In field '$fieldName' used primaryIdFrom but type is not Long or Integer but: ${field.type}" }
+                check(entity.isSinglePrimary)
+                { "Entity '${entity.name}' must have only one primary field if primaryIdFrom is used" }
+            }
+        } else {
+            check(field.primaryIdFrom == null)
+            { "Field '$fieldName' primaryIdFrom must be null but found: ${field.primaryIdFrom}" }
         }
     }
 

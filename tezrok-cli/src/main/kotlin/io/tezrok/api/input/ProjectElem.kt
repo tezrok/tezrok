@@ -157,6 +157,9 @@ data class EntityElem(
     fun getPrimaryFieldCount(): Int = fields.count { it.isPrimary() }
 
     @JsonIgnore
+    val isSinglePrimary: Boolean = getPrimaryFieldCount() == 1
+
+    @JsonIgnore
     fun isSynthetic(): Boolean = syntheticTo?.isNotEmpty() == true
 
     @JsonIgnore
@@ -181,6 +184,10 @@ data class FieldElem(
     val required: Boolean? = null,
     val serial: Boolean? = null,
     val primary: Boolean? = null,
+    /**
+     * If field is primary, then this field can be used to set initial value for it
+     */
+    val primaryIdFrom: Long? = null,
     val pattern: String? = null,
     val minLength: Int? = null,
     val maxLength: Int? = null,

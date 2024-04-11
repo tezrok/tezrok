@@ -169,7 +169,7 @@ open class SpringSecurityFeature : TezrokFeature {
     private fun createRoleFields(inheritEntity: EntityElem?): List<FieldElem> {
         return mergeFields(
             inheritEntity, listOf(
-                FieldElem(name = "id", type = "Long", primary = true),
+                FieldElem(name = "id", type = "Long", primary = true, primaryIdFrom = 10),
                 FieldElem(
                     name = "name",
                     type = "String",
@@ -192,7 +192,7 @@ open class SpringSecurityFeature : TezrokFeature {
     private fun createPermissionFields(inheritEntity: EntityElem?): List<FieldElem> {
         return mergeFields(
             inheritEntity, listOf(
-                FieldElem(name = "id", type = "Long", primary = true),
+                FieldElem(name = "id", type = "Long", primary = true, primaryIdFrom = 100),
                 FieldElem(
                     name = "name",
                     type = "String",
@@ -231,6 +231,7 @@ open class SpringSecurityFeature : TezrokFeature {
             required = field.required ?: fieldFrom.required,
             serial = field.serial ?: fieldFrom.serial,
             primary = field.primary ?: fieldFrom.primary,
+            primaryIdFrom = field.primaryIdFrom ?: fieldFrom.primaryIdFrom,
             pattern = field.pattern ?: fieldFrom.pattern,
             minLength = field.minLength ?: fieldFrom.minLength,
             maxLength = field.maxLength ?: fieldFrom.maxLength,

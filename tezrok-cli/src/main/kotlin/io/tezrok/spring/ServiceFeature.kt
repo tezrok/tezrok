@@ -14,6 +14,7 @@ import org.apache.commons.lang3.tuple.Pair
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 
@@ -62,7 +63,7 @@ open class ServiceFeature : TezrokFeature {
                     "primaryType" to entity.getPrimaryField().asJavaType()
                 )
             context.writeTemplate(serviceFile, "/templates/spring/EntityService.java.vm", values)
-            val customService = entity.customService == true
+            val customService = entity.customService == true || getCustomFilePath(serviceDir, name)?.exists() == true
             val serviceClass = serviceFile.getRootClass()
             val primaryFields = entity.fields.filter { it.isPrimary() }.map { it.asJavaType() }
             addRepositoryMethods(serviceDir, name, serviceClass, primaryFields)
@@ -170,11 +171,8 @@ open class ServiceFeature : TezrokFeature {
         custom: Boolean,
         context: GeneratorContext
     ) {
-        val servicePhysicalPath = serviceDir.getPhysicalPath()
-        val customFileName = "${name}CustomService.java"
-        if (servicePhysicalPath != null && servicePhysicalPath.exists()) {
-            val customFilePath = servicePhysicalPath.resolve("custom/${customFileName}")
-
+        val customFilePath = getCustomFilePath(serviceDir, name)
+        if (customFilePath != null) {
             if (customFilePath.exists()) {
                 if (customFilePath.isDirectory()) {
                     log.warn("Found directory instead of file: {}", customFilePath)
@@ -220,6 +218,7 @@ open class ServiceFeature : TezrokFeature {
                 }
             } else if (custom) {
                 log.debug("Custom service file not found, create it: {}", customFilePath)
+                val customFileName = customFilePath.fileName.toString()
                 val customRepoFile = serviceDir.getOrAddJavaDirectory("custom").addJavaFile(customFileName)
                 context.writeTemplate(
                     customRepoFile,
@@ -228,6 +227,15 @@ open class ServiceFeature : TezrokFeature {
                 )
             }
         }
+    }
+
+    private fun getCustomFilePath(serviceDir: JavaDirectoryNode, name: String): Path? {
+        val servicePhysicalPath = serviceDir.getPhysicalPath()
+        val customFileName = "${name}CustomService.java"
+        return if (servicePhysicalPath != null && servicePhysicalPath.exists()) {
+            servicePhysicalPath.resolve("custom/${customFileName}")
+        } else
+            null
     }
 
     private companion object {

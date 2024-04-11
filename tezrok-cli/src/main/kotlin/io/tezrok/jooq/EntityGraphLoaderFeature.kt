@@ -542,7 +542,7 @@ internal class EntityGraphLoaderFeature : TezrokFeature {
     }
 
     private fun validateSinglePrimary(entity: EntityElem) {
-        check(entity.getPrimaryFieldCount() == 1) { "Entity ${entity.name} expected have exactly one primary field" }
+        check(entity.isSinglePrimary) { "Entity ${entity.name} expected have exactly one primary field" }
     }
 
     private fun EntityElem.getLoadIdsByEntityIdsMethodName(): String = "loadIdsBy${name}Ids"
