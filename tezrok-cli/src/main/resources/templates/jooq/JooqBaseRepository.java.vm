@@ -16,10 +16,11 @@ import static org.jooq.impl.DSL.falseCondition;
 /**
  * Base class for all Jooq repositories.
  *
- * @param <R>  Jooq record type
- * @param <P>  Pojo type
+ * @param <R> Jooq record type
+ * @param <P> Pojo type
  */
 abstract class JooqBaseRepository<R extends UpdatableRecord<R>, P> {
+
     protected final DSLContext dsl;
 
     protected final Table<R> table;
@@ -73,18 +74,14 @@ abstract class JooqBaseRepository<R extends UpdatableRecord<R>, P> {
     /**
      * Search by all string fields, if any.
      *
-     * @param term     search term
-     * @param pageable page request
+     * @param term      search term
+     * @param pageable  page request
+     * @param matchType match type
      * @return page of results
      */
     @NotNull
-    public Page<P> searchByTerm(final String term, final Pageable pageable) {
-        return findPage(whereClause(buildLikeExpression(term)), pageable, pojoClass);
-    }
-
-    @NotNull
-    protected String buildLikeExpression(final String term) {
-        return "%" + term + "%";
+    public Page<P> searchByTerm(final String term, final Pageable pageable, final MatchType matchType) {
+        return findPage(whereClause(term, matchType), pageable, pojoClass);
     }
 
     @NotNull
@@ -95,13 +92,25 @@ abstract class JooqBaseRepository<R extends UpdatableRecord<R>, P> {
     }
 
     @NotNull
-    protected Condition whereClause(final String likeExpression) {
-        // by default, all string fields are used for search term
-        return stringFields.stream().map(f -> f.likeIgnoreCase(likeExpression)).map(Condition.class::cast).reduce(falseCondition(), Condition::or);
+    protected Condition whereClause(final String term, final MatchType matchType) {
+        return switch (matchType) {
+            case EXACT -> stringFields.stream().map(f -> f.equalIgnoreCase(term)).map(Condition.class::cast).reduce(falseCondition(), Condition::or);
+            case STARTS_WITH, ENDS_WITH, CONTAINS -> stringFields.stream().map(f -> f.likeIgnoreCase(buildLikeExpression(term, matchType))).map(Condition.class::cast).reduce(falseCondition(), Condition::or);
+        };
     }
 
     protected long countByLikeExpression(final Condition where) {
         return dsl.fetchCount(dsl.select().from(table).where(where));
+    }
+
+    @NotNull
+    protected String buildLikeExpression(final String term, final MatchType matchType) {
+        return switch (matchType) {
+            case EXACT -> term;
+            case STARTS_WITH -> term + "%";
+            case ENDS_WITH -> "%" + term;
+            case CONTAINS -> "%" + term + "%";
+        };
     }
 
     @NotNull

@@ -4,11 +4,15 @@ package ${package}.web.rest;
 import ${package}.dto.${name}Dto;
 import ${package}.dto.full.${name}FullDto;
 import ${package}.dto.IdDto;
+import ${package}.repository.MatchType;
 import ${package}.service.${name}Service;
 import jakarta.validation.Valid;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -18,7 +22,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.http.ResponseEntity;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
 * Api methods for {@link ${name}Dto} entity
@@ -40,8 +47,28 @@ public class ${name}Controller {
     }
 
     @GetMapping(value = "/${lname}s/search")
-    public Page<${name}Dto> searchByTerm(@RequestParam(value = "term", required = false) String searchTerm, Pageable pageable) {
-        return ${lname}Service.searchByTerm(searchTerm.trim(), pageable);
+    public Page<${name}Dto> searchByTerm(@RequestParam(value = "term", required = false) String searchTerm,
+                                         @RequestParam(value = "match", defaultValue = "exact") String matchTypes,
+                                         @RequestParam(value = "union", defaultValue = "false") boolean unionPages,
+                                         Pageable pageable) {
+        // param "match" could be a list of MatchType separated by comma
+        // returns first not empty page result or empty page
+        // TODO: optimize this method
+        final Stream<Page<${name}Dto>> stream = Arrays.stream(matchTypes.split(","))
+                .filter(StringUtils::isNotBlank)
+                .map(MatchType::fromParam)
+                .distinct()
+                .map(type -> ${lname}Service.searchByTerm(searchTerm.trim(), pageable, type))
+                .filter(p -> p.getTotalElements() > 0);
+
+        if (unionPages) {
+            final List<Page<${name}Dto>> pages = stream.toList();
+            final List<${name}Dto> list = pages.stream().map(Slice::getContent).flatMap(Collection::stream).distinct().toList();
+            final long totalElements = pages.stream().mapToLong(Page::getTotalElements).sum();
+            return new PageImpl(list, pageable, totalElements);
+        } else {
+            return stream.findFirst().orElseGet(() -> Page.empty(pageable));
+        }
     }
 
     @GetMapping("/${lname}/table/{id}")

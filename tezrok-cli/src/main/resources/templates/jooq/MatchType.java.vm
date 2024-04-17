@@ -1,0 +1,36 @@
+package ${package}.repository;
+
+import org.jetbrains.annotations.NotNull;
+import org.springframework.data.domain.Pageable;
+
+import java.util.Arrays;
+
+/**
+ * Match type for string fields while searching in {@link JooqBaseRepository#searchByTerm(String, Pageable, MatchType)}.
+ */
+public enum MatchType {
+    EXACT("exact"),
+    STARTS_WITH("startsWith"),
+    ENDS_WITH("endsWith"),
+    CONTAINS("contains");
+
+    private final String param;
+
+    MatchType(final String param) {
+        this.param = param;
+    }
+
+    public String getParam() {
+        return param;
+    }
+
+    @NotNull
+    public static MatchType fromParam(final String param) {
+        for (final MatchType value : values()) {
+            if (value.param.equals(param)) {
+                return value;
+            }
+        }
+        throw new IllegalArgumentException(String.format("Unknown match type: %s. Expected values: %s", param, Arrays.toString(MatchType.values())));
+    }
+}

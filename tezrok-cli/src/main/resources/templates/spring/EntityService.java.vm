@@ -8,6 +8,7 @@ import ${package}.mapper.${name}Mapper;
 import ${package}.repository.EntityGraphLoader;
 import ${package}.repository.EntityGraphStore;
 import ${package}.repository.EntityUpdateType;
+import ${package}.repository.MatchType;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

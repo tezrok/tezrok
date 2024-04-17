@@ -403,6 +403,8 @@ internal class JooqRepositoryFeature : TezrokFeature {
         context.writeTemplate(jooq2IdRepoFile, "/templates/jooq/JooqRepository2.java.vm", values)
         val jooqBaseRepoFile = repositoryDir.addJavaFile(JOOQ_BASE_REPO)
         context.writeTemplate(jooqBaseRepoFile, "/templates/jooq/JooqBaseRepository.java.vm", values)
+        val matchTypeFile = repositoryDir.addJavaFile("MatchType.java")
+        context.writeTemplate(matchTypeFile, "/templates/jooq/MatchType.java.vm", values)
     }
 
     /**
