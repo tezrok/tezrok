@@ -26,10 +26,13 @@ abstract class JooqBaseRepository<R extends UpdatableRecord<R>, P> {
 
     protected final Class<P> pojoClass;
 
-    JooqBaseRepository(DSLContext dsl, Table<R> table, Class<P> pojoClass) {
+    private final List<Field<?>> stringFields;
+
+    JooqBaseRepository(final DSLContext dsl, Table<R> table, final Class<P> pojoClass) {
         this.dsl = dsl;
         this.table = table;
         this.pojoClass = pojoClass;
+        this.stringFields = Arrays.stream(table.fields()).filter(field -> String.class.equals(field.getType())).toList();
     }
 
     @NotNull
@@ -42,7 +45,7 @@ abstract class JooqBaseRepository<R extends UpdatableRecord<R>, P> {
     }
 
     @NotNull
-    public P create(P pojo) {
+    public P create(final P pojo) {
         final R rec = newRecord(pojo);
         beforeCreateRecord(rec);
         rec.store();
@@ -59,7 +62,7 @@ abstract class JooqBaseRepository<R extends UpdatableRecord<R>, P> {
     }
 
     @NotNull
-    protected R newRecord(Object obj) {
+    protected R newRecord(final Object obj) {
         return dsl.newRecord(table, obj);
     }
 
@@ -80,7 +83,7 @@ abstract class JooqBaseRepository<R extends UpdatableRecord<R>, P> {
     }
 
     @NotNull
-    protected String buildLikeExpression(String term) {
+    protected String buildLikeExpression(final String term) {
         return "%" + term + "%";
     }
 
@@ -92,17 +95,17 @@ abstract class JooqBaseRepository<R extends UpdatableRecord<R>, P> {
     }
 
     @NotNull
-    protected Condition whereClause(String likeExpression) {
+    protected Condition whereClause(final String likeExpression) {
         // by default, all string fields are used for search term
-        return Arrays.stream(table.fields()).filter(field -> String.class.equals(field.getType())).map(f -> f.likeIgnoreCase(likeExpression)).map(Condition.class::cast).reduce(falseCondition(), Condition::or);
+        return stringFields.stream().map(f -> f.likeIgnoreCase(likeExpression)).map(Condition.class::cast).reduce(falseCondition(), Condition::or);
     }
 
-    protected long countByLikeExpression(Condition where) {
+    protected long countByLikeExpression(final Condition where) {
         return dsl.fetchCount(dsl.select().from(table).where(where));
     }
 
     @NotNull
-    protected Collection<SortField<?>> getSortFields(Sort sort) {
+    protected Collection<SortField<?>> getSortFields(final Sort sort) {
         if (sort == null) {
             return Collections.emptyList();
         }

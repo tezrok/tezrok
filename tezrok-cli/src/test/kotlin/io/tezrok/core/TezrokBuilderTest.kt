@@ -30,7 +30,7 @@ internal class TezrokBuilderTest : BaseTest() {
     fun testGenerateTimelineProject() {
         val projectRoot = System.getProperty("timelineRoot") ?: error("timelineRoot is not set")
         val projectPath = PathUtil.resolve("$projectRoot/tezrok/tezrok-timeline.json")
-        val projectOutput = PathUtil.resolve("$projectRoot/project")
+        val projectOutput = PathUtil.resolve("$projectRoot/timeline-app")
 
         TezrokBuilder.from(projectPath)
             .setOutput(projectOutput)
