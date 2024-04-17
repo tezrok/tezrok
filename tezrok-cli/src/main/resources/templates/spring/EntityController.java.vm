@@ -48,7 +48,7 @@ public class ${name}Controller {
 
     @GetMapping(value = "/${lname}s/search")
     public Page<${name}Dto> searchByTerm(@RequestParam(value = "term", required = false) String searchTerm,
-                                         @RequestParam(value = "match", defaultValue = "exact") String matchTypes,
+                                         @RequestParam(value = "match", defaultValue = "contains") String matchTypes,
                                          @RequestParam(value = "union", defaultValue = "false") boolean unionPages,
                                          Pageable pageable) {
         // param "match" could be a list of MatchType separated by comma
