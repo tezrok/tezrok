@@ -122,7 +122,7 @@ open class SpringSecurityFeature : TezrokFeature {
             createdAt = true,
             skipService = true,
             skipController = true,
-            customMethods = inheritEntity?.customMethods,
+            customMethods = (inheritEntity?.customMethods ?: emptySet()) + "findByUsername",
             customComments = inheritEntity?.customComments,
             fields = createRememberMeTokenFields(inheritEntity)
         )
