@@ -48,7 +48,7 @@ internal class MapperFeature : TezrokFeature {
                 val projectElem = context.getProject()
                 val mapperDir = applicationPackageRoot.getOrAddJavaDirectory("mapper")
                 val entitiesMap = EntitiesMap(schema.entities)
-                schema.entities.filter { it.isNotSynthetic() }.forEach { entity ->
+                schema.entities.filter { it.isNotSynthetic() && it.hasFullDto() }.forEach { entity ->
                     addMapperInterface(mapperDir, entity, entitiesMap, projectElem.packagePath)
                 }
             }

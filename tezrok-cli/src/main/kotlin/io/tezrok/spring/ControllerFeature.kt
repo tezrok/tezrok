@@ -79,6 +79,10 @@ internal class ControllerFeature : TezrokFeature {
             // skip synthetic entities
             return
         }
+        if (entity.skipController == true) {
+            // skip entities with skipController flag
+            return
+        }
 
         val name = entity.name
         val fileName = "${name}Controller.java"

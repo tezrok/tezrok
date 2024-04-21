@@ -65,7 +65,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
                     val singlePrimary = primaryCount == 1
 
                     addDtoClass(dtoDir, entity, projectElem.packagePath, singlePrimary)
-                    if (entity.isNotSynthetic()) {
+                    if (entity.isNotSynthetic() && entity.hasFullDto()) {
                         addFullDtoClass(dtoDir, entity, projectElem.packagePath)
                     }
                     val baseMethods = getRepoMethods(repositoryDir, singlePrimary)
@@ -436,6 +436,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
                 "package" to rootPackage,
                 "name" to name,
                 "uname" to name.camelCaseToSqlUppercase(),
+                "idType" to entity.getPrimaryField().asJavaType(),
                 "updateAt" to entity.updatedAt,
                 "createdAt" to entity.createdAt
             )

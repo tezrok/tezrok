@@ -12,7 +12,7 @@ import java.time.OffsetDateTime;
 /**
  * Repository for {@link ${name}Dto} entity.
  */
-public class ${name}Repository extends JooqRepository2<${name}Record, Long, Long, ${name}Dto> {
+public class ${name}Repository extends JooqRepository2<${name}Record, ${idType}, ${idType}, ${name}Dto> {
 
     public ${name}Repository(final DSLContext dsl) {
         super(dsl, Tables.${uname}, Tables.${uname}.${field1}, Tables.${uname}.${field2}, ${name}Dto.class);

@@ -38,7 +38,7 @@ internal class EntityGraphStoreFeature : TezrokFeature {
             val schemaModule = context.getProject().modules.find { it.name == module.getName() }
                 ?: throw IllegalStateException("Module ${module.getName()} not found")
             schemaModule.schema?.entities?.let { entities ->
-                addEntityGraphStore(repositoryDir, entities)
+                addEntityGraphStore(repositoryDir, entities.filter { it.hasFullDto() })
             }
         } else {
             log.warn("Application package root is not set")

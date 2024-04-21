@@ -58,6 +58,7 @@ open class SpringSecurityFeature : TezrokFeature {
             entities[NAME_USER] = createUser(entities[NAME_USER], auth.stdInit == true)
             entities[NAME_ROLE] = createRole(entities[NAME_ROLE], auth.stdInit == true)
             entities[NAME_PERMISSION] = createPermission(entities[NAME_PERMISSION])
+            entities[NAME_REMEMBER_ME_TOKEN] = createRememberMeToken(entities[NAME_REMEMBER_ME_TOKEN])
 
             return module.copy(schema = schema.copy(entities = entities.values.toList()))
         }
@@ -72,6 +73,8 @@ open class SpringSecurityFeature : TezrokFeature {
             customRepository = true,
             createdAt = true,
             updatedAt = true,
+            skipService = inheritEntity?.skipService,
+            skipController = inheritEntity?.skipController,
             customMethods = (inheritEntity?.customMethods ?: emptySet()) + "getByNameOrEmail",
             customComments = (inheritEntity?.customComments
                 ?: emptyMap()) + ("getByNameOrEmail" to "Returns {@link ${NAME_USER}Dto} by name or email."),
@@ -87,6 +90,8 @@ open class SpringSecurityFeature : TezrokFeature {
             customRepository = true,
             createdAt = true,
             updatedAt = true,
+            skipService = inheritEntity?.skipService,
+            skipController = inheritEntity?.skipController,
             customMethods = inheritEntity?.customMethods,
             customComments = inheritEntity?.customComments,
             fields = createRoleFields(inheritEntity),
@@ -101,9 +106,26 @@ open class SpringSecurityFeature : TezrokFeature {
             customRepository = true,
             createdAt = true,
             updatedAt = true,
+            skipService = inheritEntity?.skipService,
+            skipController = inheritEntity?.skipController,
             customMethods = inheritEntity?.customMethods,
             customComments = inheritEntity?.customComments,
             fields = createPermissionFields(inheritEntity)
+        )
+    }
+
+    private fun createRememberMeToken(inheritEntity: EntityElem?): EntityElem {
+        return EntityElem(
+            name = NAME_REMEMBER_ME_TOKEN,
+            description = "Remember me token entity",
+            customRepository = false,
+            createdAt = true,
+            updatedAt = true,
+            skipService = true,
+            skipController = true,
+            customMethods = inheritEntity?.customMethods,
+            customComments = inheritEntity?.customComments,
+            fields = createRememberMeTokenFields(inheritEntity)
         )
     }
 
@@ -211,6 +233,37 @@ open class SpringSecurityFeature : TezrokFeature {
         )
     }
 
+    private fun createRememberMeTokenFields(inheritEntity: EntityElem?): List<FieldElem> {
+        return mergeFields(
+            inheritEntity, listOf(
+                FieldElem(
+                    name = "series",
+                    type = "String",
+                    description = "Remember me token primary key",
+                    required = true,
+                    primary = true,
+                    maxLength = REMEMBER_ME_SIZE,
+                    minLength = 3
+                ),
+                FieldElem(
+                    name = "username",
+                    type = "String",
+                    description = "Related user name",
+                    required = true,
+                    maxLength = USER_NAME_MAX,
+                    minLength = USER_NAME_MIN
+                ), FieldElem(
+                    name = "token",
+                    type = "String",
+                    description = "Remember me token",
+                    required = true,
+                    maxLength = REMEMBER_ME_SIZE,
+                    minLength = 3
+                )
+            )
+        )
+    }
+
     private fun mergeFields(inheritEntity: EntityElem?, fields: List<FieldElem>): List<FieldElem> {
         val map = inheritEntity?.fields?.associateBy { it.name }?.toMutableMap() ?: mutableMapOf()
 
@@ -247,6 +300,8 @@ open class SpringSecurityFeature : TezrokFeature {
         const val NAME_USER = "User"
         const val NAME_ROLE = "Role"
         const val NAME_PERMISSION = "Permission"
+        const val NAME_REMEMBER_ME_TOKEN = "RememberMeToken"
+        const val REMEMBER_ME_SIZE = 64
         const val USER_NAME_MIN: Int = 3
         const val USER_NAME_MAX: Int = 20
         const val USER_PASSWORD_MIN: Int = 5

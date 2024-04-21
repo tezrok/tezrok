@@ -52,6 +52,11 @@ open class ServiceFeature : TezrokFeature {
             return
         }
 
+        if (entity.skipService == true) {
+            // skip service generation
+            return
+        }
+
         val name = entity.name
         val fileName = "${name}Service.java"
         if (!serviceDir.hasFile(fileName)) {

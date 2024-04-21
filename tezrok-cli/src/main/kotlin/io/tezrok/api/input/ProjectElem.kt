@@ -94,6 +94,10 @@ data class EntityElem(
     val createdAt: Boolean? = null,
     // if true, updatedAt field will be added to entity
     val updatedAt: Boolean? = null,
+    // if true, service will not be created
+    val skipService: Boolean? = null,
+    // if true, controller will not be created
+    val skipController: Boolean? = null,
     val fields: List<FieldElem>,
     val customMethods: Set<String>? = null,
     val customComments: Map<String, String>? = null,
@@ -164,6 +168,9 @@ data class EntityElem(
 
     @JsonIgnore
     fun isNotSynthetic(): Boolean = !isSynthetic()
+
+    @JsonIgnore
+    fun hasFullDto(): Boolean = skipService != true && skipController != true
 
     fun hasRelations(vararg relations: EntityRelation): Boolean =
         fields.any { it.isLogic() && it.hasRelations(*relations) }
