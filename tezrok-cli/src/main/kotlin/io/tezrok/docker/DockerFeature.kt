@@ -3,9 +3,7 @@ package io.tezrok.docker
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.maven.ProjectNode
-import io.tezrok.api.node.DirectoryNode
 import io.tezrok.util.NameUtil
-import org.apache.velocity.shaded.commons.io.FilenameUtils
 import kotlin.io.path.exists
 
 /**
@@ -48,17 +46,5 @@ internal class DockerFeature : TezrokFeature {
         }
 
         return true
-    }
-
-    private fun GeneratorContext.addFile(
-        dockerDir: DirectoryNode,
-        path: String,
-        values: Map<String, String?>
-    ) {
-        val fileName = FilenameUtils.getName(path).removeSuffix(".vm")
-        val startDbFile = dockerDir.getOrAddFile(fileName)
-        if (startDbFile.isEmpty()) {
-            this.writeTemplate(startDbFile, path, values)
-        }
     }
 }

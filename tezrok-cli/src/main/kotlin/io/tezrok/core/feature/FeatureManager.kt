@@ -20,6 +20,7 @@ import io.tezrok.jooq.JooqEntityCustomMethodsFeature
 import io.tezrok.jooq.JooqFeature
 import io.tezrok.jooq.JooqRepositoryFeature
 import io.tezrok.liquibase.LiquibaseFeature
+import io.tezrok.logging.LoggingFeature
 import io.tezrok.maven.MavenCoreFeature
 import io.tezrok.spring.ControllerFeature
 import io.tezrok.spring.ServiceFeature
@@ -57,6 +58,7 @@ internal class FeatureManager {
         features.add(DockerFeature())
         features.add(FrontendFeature())
         features.add(TaskServiceFeature())
+        features.add(LoggingFeature())
     }
 
     fun applyAll(project: ProjectNode, context: GeneratorContext) {

@@ -2,7 +2,10 @@ package io.tezrok.api
 
 import io.tezrok.api.input.ProjectElem
 import io.tezrok.api.io.OutStream
+import io.tezrok.api.node.DirectoryNode
 import org.apache.velocity.VelocityContext
+import org.apache.velocity.shaded.commons.io.FilenameUtils
+import org.slf4j.LoggerFactory
 import java.io.Writer
 import java.time.Clock
 import java.util.function.Consumer
@@ -48,4 +51,21 @@ interface GeneratorContext : GeneratorProvider {
     fun writeTemplate(output: OutStream, templatePath: String) =
         writeTemplate(output, templatePath, mapOf("package" to getProject().packagePath))
 
+    /**
+     * Add a file to the target directory with the specified template.
+     * Name of the file is the same as the template name without the .vm extension.
+     */
+    fun addFile(targetDir: DirectoryNode, templatePath: String, values: Map<String, String?>) {
+        val fileName = FilenameUtils.getName(templatePath).removeSuffix(".vm")
+        val startDbFile = targetDir.getOrAddFile(fileName)
+        if (startDbFile.isEmpty()) {
+            writeTemplate(startDbFile, templatePath, values)
+        } else {
+            log.warn("File {} already exists, skipping", fileName)
+        }
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(GeneratorContext::class.java)!!
+    }
 }
