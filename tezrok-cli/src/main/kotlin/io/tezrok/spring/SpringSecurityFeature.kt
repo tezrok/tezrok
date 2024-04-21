@@ -120,7 +120,6 @@ open class SpringSecurityFeature : TezrokFeature {
             description = "Remember me token entity",
             customRepository = false,
             createdAt = true,
-            updatedAt = true,
             skipService = true,
             skipController = true,
             customMethods = inheritEntity?.customMethods,
@@ -259,6 +258,13 @@ open class SpringSecurityFeature : TezrokFeature {
                     required = true,
                     maxLength = REMEMBER_ME_SIZE,
                     minLength = 3
+                ),
+                FieldElem(
+                    name = "lastUsed",
+                    type = "DateTimeTZ",
+                    required = true,
+                    defValue = "now()",
+                    description = "Last used date and time"
                 )
             )
         )

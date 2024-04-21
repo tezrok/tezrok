@@ -466,6 +466,60 @@
             }
           },
           {
+            "name": "RememberMeToken",
+            "description": "Remember me token entity",
+            "customRepository": false,
+            "createdAt": true,
+            "skipService": true,
+            "skipController": true,
+            "fields": [
+              {
+                "name": "series",
+                "type": "String",
+                "description": "Remember me token primary key",
+                "required": true,
+                "primary": true,
+                "minLength": 3,
+                "maxLength": 64
+              },
+              {
+                "name": "username",
+                "type": "String",
+                "description": "Related user name",
+                "required": true,
+                "minLength": 3,
+                "maxLength": 20
+              },
+              {
+                "name": "token",
+                "type": "String",
+                "description": "Remember me token",
+                "required": true,
+                "minLength": 3,
+                "maxLength": 64
+              },
+              {
+                "name": "lastUsed",
+                "type": "DateTimeTZ",
+                "description": "Last used date and time",
+                "required": true,
+                "default": "now()"
+              },
+              {
+                "name": "createdAt",
+                "type": "DateTimeTZ",
+                "description": "Date and time of entity creation",
+                "required": true,
+                "default": "now()",
+                "metaTypes": [
+                  "CreatedAt"
+                ]
+              }
+            ],
+            "customMethods": [],
+            "customComments": {}
+          },
+          {
             "name": "OrderItemOtherItems",
             "description": "Synthetic entity of many-to-many relation for field \"Order.otherItems\"",
             "syntheticTo": "Order.otherItems",
