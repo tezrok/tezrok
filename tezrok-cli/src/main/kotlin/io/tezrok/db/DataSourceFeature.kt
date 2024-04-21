@@ -13,7 +13,7 @@ internal class DataSourceFeature : TezrokFeature {
         val module = project.getSingleModule()
         val properties = module.properties
         val moduleName = module.getName()
-        val dbName = "${moduleName}Db"
+        val dbName = "${moduleName}_db"
 
         properties.setPropertyIf("datasource.db-name", dbName)
         properties.setPropertyIf("datasource.url", "jdbc:postgresql://localhost:5432/$dbName")

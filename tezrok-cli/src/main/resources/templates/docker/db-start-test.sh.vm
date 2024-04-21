@@ -2,4 +2,13 @@
 
 echo "Start test database..."
 
-docker run --name ${dockerDbName} --rm -p 5432:5432 -e POSTGRES_DB=${dbName} -e POSTGRES_USER=${dbUserName} -e POSTGRES_PASSWORD=${dbUserPassword} -d postgres:15.2
+DB_DATA_DIR=$HOME/.testdata/timeline_db
+
+echo "Database data directory: $DB_DATA_DIR"
+
+docker run --name ${dockerDbName} --rm -p 5432:5432 \
+  -e POSTGRES_DB=${dbName} \
+  -e POSTGRES_USER=${dbUserName} \
+  -e POSTGRES_PASSWORD=${dbUserPassword} \
+  -v $DB_DATA_DIR:/var/lib/postgresql/data \
+  -d postgres:15.2
