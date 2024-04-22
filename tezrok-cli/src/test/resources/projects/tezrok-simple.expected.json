@@ -501,6 +501,17 @@
                 "unique": true
               },
               {
+                "name": "passwordResetCode",
+                "type": "String",
+                "maxLength": 36,
+                "unique": true
+              },
+              {
+                "name": "passwordResetCodeExpireAt",
+                "type": "DateTimeTZ",
+                "description": "Password reset code expiration date and time"
+              },
+              {
                 "name": "createdAt",
                 "type": "DateTimeTZ",
                 "description": "Date and time of entity creation",
@@ -524,18 +535,24 @@
             "customMethods": [
               "getByUserId",
               "getByActivationCode",
+              "getByPasswordResetCode",
               "getIdFieldsById",
               "getIdFieldsByActivationCode",
+              "getIdFieldsByPasswordResetCode",
               "findIdFieldsByIdIn",
-              "getIdByActivationCode"
+              "getIdByActivationCode",
+              "getIdByPasswordResetCode"
             ],
             "customComments": {
               "findIdFieldsByIdIn": "Returns list of ID fields (id, userId) of {@link UserProfileDto} into custom class.",
               "getByActivationCode": "Returns {@link UserProfileDto} by unique field {@link UserProfileDto#activationCode}.",
+              "getByPasswordResetCode": "Returns {@link UserProfileDto} by unique field {@link UserProfileDto#passwordResetCode}.",
               "getByUserId": "Returns {@link UserProfileDto} by unique field {@link UserProfileDto#userId}.",
               "getIdByActivationCode": "Returns primary ID of {@link UserProfileDto} by unique field (activationCode).",
+              "getIdByPasswordResetCode": "Returns primary ID of {@link UserProfileDto} by unique field (passwordResetCode).",
               "getIdFieldsByActivationCode": "Returns ID fields (id, userId) of {@link UserProfileDto} by unique field (activationCode) into custom class.",
-              "getIdFieldsById": "Returns ID fields (id, userId) of {@link UserProfileDto} into custom class."
+              "getIdFieldsById": "Returns ID fields (id, userId) of {@link UserProfileDto} into custom class.",
+              "getIdFieldsByPasswordResetCode": "Returns ID fields (id, userId) of {@link UserProfileDto} by unique field (passwordResetCode) into custom class."
             }
           },
           {
