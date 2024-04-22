@@ -466,6 +466,79 @@
             }
           },
           {
+            "name": "UserProfile",
+            "description": "Additional user data entity",
+            "customRepository": false,
+            "createdAt": true,
+            "updatedAt": true,
+            "fields": [
+              {
+                "name": "id",
+                "type": "Long",
+                "primary": true,
+                "primaryIdFrom": 10
+              },
+              {
+                "name": "user",
+                "type": "User",
+                "required": true,
+                "logicField": true,
+                "relation": "OneToOne"
+              },
+              {
+                "name": "userId",
+                "type": "Long",
+                "foreignField": "User.id",
+                "description": "Synthetic field for \"UserProfile.user\"",
+                "required": true,
+                "unique": true,
+                "syntheticTo": "UserProfile.user"
+              },
+              {
+                "name": "activationCode",
+                "type": "String",
+                "maxLength": 36,
+                "unique": true
+              },
+              {
+                "name": "createdAt",
+                "type": "DateTimeTZ",
+                "description": "Date and time of entity creation",
+                "required": true,
+                "default": "now()",
+                "metaTypes": [
+                  "CreatedAt"
+                ]
+              },
+              {
+                "name": "updatedAt",
+                "type": "DateTimeTZ",
+                "description": "Date and time of entity update",
+                "required": true,
+                "default": "now()",
+                "metaTypes": [
+                  "UpdatedAt"
+                ]
+              }
+            ],
+            "customMethods": [
+              "getByUserId",
+              "getByActivationCode",
+              "getIdFieldsById",
+              "getIdFieldsByActivationCode",
+              "findIdFieldsByIdIn",
+              "getIdByActivationCode"
+            ],
+            "customComments": {
+              "findIdFieldsByIdIn": "Returns list of ID fields (id, userId) of {@link UserProfileDto} into custom class.",
+              "getByActivationCode": "Returns {@link UserProfileDto} by unique field {@link UserProfileDto#activationCode}.",
+              "getByUserId": "Returns {@link UserProfileDto} by unique field {@link UserProfileDto#userId}.",
+              "getIdByActivationCode": "Returns primary ID of {@link UserProfileDto} by unique field (activationCode).",
+              "getIdFieldsByActivationCode": "Returns ID fields (id, userId) of {@link UserProfileDto} by unique field (activationCode) into custom class.",
+              "getIdFieldsById": "Returns ID fields (id, userId) of {@link UserProfileDto} into custom class."
+            }
+          },
+          {
             "name": "RememberMeToken",
             "description": "Remember me token entity",
             "customRepository": false,

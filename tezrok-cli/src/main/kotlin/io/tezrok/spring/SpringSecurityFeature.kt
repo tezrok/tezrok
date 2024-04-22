@@ -58,6 +58,7 @@ open class SpringSecurityFeature : TezrokFeature {
             entities[NAME_USER] = createUser(entities[NAME_USER], auth.stdInit == true)
             entities[NAME_ROLE] = createRole(entities[NAME_ROLE], auth.stdInit == true)
             entities[NAME_PERMISSION] = createPermission(entities[NAME_PERMISSION])
+            entities[NAME_USER_PROFILE] = createUserProfile(entities[NAME_USER_PROFILE])
             entities[NAME_REMEMBER_ME_TOKEN] = createRememberMeToken(entities[NAME_REMEMBER_ME_TOKEN])
 
             return module.copy(schema = schema.copy(entities = entities.values.toList()))
@@ -111,6 +112,21 @@ open class SpringSecurityFeature : TezrokFeature {
             customMethods = inheritEntity?.customMethods,
             customComments = inheritEntity?.customComments,
             fields = createPermissionFields(inheritEntity)
+        )
+    }
+
+    private fun createUserProfile(inheritEntity: EntityElem?): EntityElem {
+        return EntityElem(
+            name = NAME_USER_PROFILE,
+            description = "Additional user data entity",
+            customRepository = false,
+            createdAt = true,
+            updatedAt = true,
+            skipService = inheritEntity?.skipService,
+            skipController = inheritEntity?.skipController,
+            customMethods = inheritEntity?.customMethods,
+            customComments = inheritEntity?.customComments,
+            fields = createUserProfileFields(inheritEntity)
         )
     }
 
@@ -232,6 +248,21 @@ open class SpringSecurityFeature : TezrokFeature {
         )
     }
 
+    private fun createUserProfileFields(inheritEntity: EntityElem?): List<FieldElem> {
+        return mergeFields(
+            inheritEntity, listOf(
+                FieldElem(name = "id", type = "Long", primary = true, primaryIdFrom = 10),
+                FieldElem(name = "user", type = "User", required = true, relation = EntityRelation.OneToOne),
+                FieldElem(
+                    name = "activationCode",
+                    type = "String",
+                    unique = true,
+                    maxLength = ACTIVATION_CODE_MAX
+                )
+            )
+        )
+    }
+
     private fun createRememberMeTokenFields(inheritEntity: EntityElem?): List<FieldElem> {
         return mergeFields(
             inheritEntity, listOf(
@@ -306,10 +337,13 @@ open class SpringSecurityFeature : TezrokFeature {
         const val NAME_USER = "User"
         const val NAME_ROLE = "Role"
         const val NAME_PERMISSION = "Permission"
+        const val NAME_USER_PROFILE = "UserProfile"
         const val NAME_REMEMBER_ME_TOKEN = "RememberMeToken"
+        const val UUID_LENGTH: Int = 36
         const val REMEMBER_ME_SIZE = 64
         const val USER_NAME_MIN: Int = 3
         const val USER_NAME_MAX: Int = 20
+        const val ACTIVATION_CODE_MAX: Int = UUID_LENGTH
         const val USER_PASSWORD_MIN: Int = 5
         const val USER_PASSWORD_MAX: Int = 30
         const val USER_PASSWORD_HASH_MAX: Int = 100
