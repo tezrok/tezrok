@@ -497,12 +497,16 @@
               {
                 "name": "activationCode",
                 "type": "String",
+                "description": "Code to activate user account",
+                "minLength": 36,
                 "maxLength": 36,
                 "unique": true
               },
               {
                 "name": "passwordResetCode",
                 "type": "String",
+                "description": "Code to reset user password",
+                "minLength": 36,
                 "maxLength": 36,
                 "unique": true
               },

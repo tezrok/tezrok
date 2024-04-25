@@ -175,6 +175,7 @@ open class SpringSecurityFeature : TezrokFeature {
                 FieldElem(
                     name = "name",
                     type = "String",
+                    description = "User login",
                     required = true,
                     unique = true,
                     maxLength = USER_NAME_MAX,
@@ -183,6 +184,7 @@ open class SpringSecurityFeature : TezrokFeature {
                 FieldElem(
                     name = "email",
                     type = "String",
+                    description = "User email",
                     required = true,
                     unique = true,
                     maxLength = USER_EMAIL_MAX,
@@ -192,6 +194,7 @@ open class SpringSecurityFeature : TezrokFeature {
                 FieldElem(
                     name = "password",
                     type = "String",
+                    description = "Hashed user password",
                     required = true,
                     maxLength = USER_PASSWORD_HASH_MAX,
                     metaTypes = setOf(MetaType.Sensitive)
@@ -210,6 +213,7 @@ open class SpringSecurityFeature : TezrokFeature {
                 FieldElem(
                     name = "name",
                     type = "String",
+                    description = "Role name",
                     required = true,
                     unique = true,
                     maxLength = USER_NAME_MAX,
@@ -218,6 +222,7 @@ open class SpringSecurityFeature : TezrokFeature {
                 FieldElem(
                     name = "description",
                     type = "String",
+                    description = "Role description",
                     maxLength = DESCRIPTION_MAX,
                     minLength = DESCRIPTION_MIN
                 ),
@@ -233,6 +238,7 @@ open class SpringSecurityFeature : TezrokFeature {
                 FieldElem(
                     name = "name",
                     type = "String",
+                    description = "Permission name",
                     required = true,
                     unique = true,
                     maxLength = USER_NAME_MAX,
@@ -241,6 +247,7 @@ open class SpringSecurityFeature : TezrokFeature {
                 FieldElem(
                     name = "description",
                     type = "String",
+                    description = "Permission description",
                     maxLength = DESCRIPTION_MAX,
                     minLength = DESCRIPTION_MIN
                 )
@@ -256,13 +263,17 @@ open class SpringSecurityFeature : TezrokFeature {
                 FieldElem(
                     name = "activationCode",
                     type = "String",
+                    description = "Code to activate user account",
                     unique = true,
+                    minLength = ACTIVATION_CODE_MIN,
                     maxLength = ACTIVATION_CODE_MAX
                 ),
                 FieldElem(
                     name = "passwordResetCode",
                     type = "String",
+                    description = "Code to reset user password",
                     unique = true,
+                    minLength = PASSWORD_RESET_CODE_MIN,
                     maxLength = PASSWORD_RESET_CODE_MAX
                 ),
                 FieldElem(
@@ -354,10 +365,12 @@ open class SpringSecurityFeature : TezrokFeature {
         const val REMEMBER_ME_SIZE = 64
         const val USER_NAME_MIN: Int = 3
         const val USER_NAME_MAX: Int = 20
-        const val ACTIVATION_CODE_MAX: Int = UUID_LENGTH
-        const val PASSWORD_RESET_CODE_MAX: Int = UUID_LENGTH
+        const val ACTIVATION_CODE_MIN: Int = UUID_LENGTH
+        const val ACTIVATION_CODE_MAX: Int = ACTIVATION_CODE_MIN
+        const val PASSWORD_RESET_CODE_MIN: Int = UUID_LENGTH
+        const val PASSWORD_RESET_CODE_MAX: Int = PASSWORD_RESET_CODE_MIN
         const val USER_PASSWORD_MIN: Int = 5
-        const val USER_PASSWORD_MAX: Int = 30
+        const val USER_PASSWORD_MAX: Int = 55
         const val USER_PASSWORD_HASH_MAX: Int = 100
         const val USER_EMAIL_MIN: Int = 4
         const val USER_EMAIL_MAX: Int = 40
