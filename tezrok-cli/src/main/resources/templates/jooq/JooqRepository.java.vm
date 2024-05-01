@@ -61,7 +61,8 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
     @NotNull
     @Override
     public P save(@NotNull P pojo) {
-        return pojo.getId() == null ? create(pojo) : update(pojo);
+        // TODO: fix updating by string primary key
+        return pojo.getId() == null || String.class.equals(idField.getType()) ? create(pojo) : update(pojo);
     }
 
     public int deleteById(ID id) {
