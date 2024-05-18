@@ -85,7 +85,7 @@ internal class ControllerFeature : TezrokFeature {
         }
 
         val name = entity.name
-        val fileName = "${name}Controller.java"
+        val fileName = "${name}ApiController.java"
 
         if (!webDir.hasClass(fileName)) {
             val controllerFile = webDir.addJavaFile(fileName)
@@ -95,7 +95,7 @@ internal class ControllerFeature : TezrokFeature {
                 "lname" to name.lowerFirst(),
                 "primarySetter" to entity.getPrimaryField().getSetterName()
             )
-            context.writeTemplate(controllerFile, "/templates/spring/EntityController.java.vm", values)
+            context.writeTemplate(controllerFile, "/templates/spring/EntityApiController.java.vm", values)
             // TODO: extract method from service class and add corresponding methods to controller
             // TODO: add custom methods
         } else {

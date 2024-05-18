@@ -32,12 +32,11 @@ import java.util.Set;
 */
 @RestController
 @RequestMapping("/api/v1")
-public class ${name}Controller {
+public class ${name}ApiController {
 
-    @NotNull
     private final ${name}Service ${lname}Service;
 
-    public ${name}Controller(@NotNull ${name}Service ${lname}Service) {
+    public ${name}ApiController(${name}Service ${lname}Service) {
         this.${lname}Service = ${lname}Service;
     }
 

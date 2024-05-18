@@ -3,15 +3,21 @@ package ${package};
 import org.jooq.ExecuteContext;
 import org.jooq.ExecuteListener;
 import org.jooq.SQLDialect;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.UncategorizedSQLException;
 import org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator;
 import org.springframework.jdbc.support.SQLExceptionTranslator;
 
 public class ExceptionTranslator implements ExecuteListener {
-    @Override
-    public void exception(ExecuteContext context) {
-        SQLDialect dialect = context.configuration().dialect();
-        SQLExceptionTranslator translator = new SQLErrorCodeSQLExceptionTranslator(dialect.thirdParty().springDbName());
+    private static final String ACCESS_DATABASE_USING_J_OOQ = "Access database using jOOQ";
 
-        context.exception(translator.translate("Access database using jOOQ", context.sql(), context.sqlException()));
+    @Override
+    public void exception(final ExecuteContext context) {
+        final SQLDialect dialect = context.configuration().dialect();
+        final SQLExceptionTranslator translator = new SQLErrorCodeSQLExceptionTranslator(dialect.thirdParty().springDbName());
+        final DataAccessException dataException = translator.translate("Access database using jOOQ", context.sql(), context.sqlException());
+
+        context.exception(dataException != null ? dataException
+                : new UncategorizedSQLException(ACCESS_DATABASE_USING_J_OOQ, context.sql(), context.sqlException()));
     }
 }
