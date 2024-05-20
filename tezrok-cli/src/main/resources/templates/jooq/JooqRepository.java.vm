@@ -27,8 +27,10 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
         this.idField = idField;
     }
 
+    @Nullable
     public P getById(ID id) {
-        return getRecordById(id).map(rec -> rec.into(pojoClass));
+        final R recordById = getRecordById(id);
+        return recordById != null ? recordById.map(rec -> rec.into(pojoClass)) : null;
     }
 
     @NotNull
