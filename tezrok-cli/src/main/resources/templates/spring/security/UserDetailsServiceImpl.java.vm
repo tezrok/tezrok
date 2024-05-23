@@ -49,7 +49,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         final List<PermissionFullDto> permissions = roles.stream().map(RoleFullDto::getPermissions)
                 .filter(Objects::nonNull).flatMap(Collection::stream).toList();
         final List<GrantedAuthority> authorities = new ArrayList<>(roles.size() + permissions.size());
-        roles.forEach(role -> authorities.add(new SimpleGrantedAuthority("ROLE_" + role)));
+        roles.forEach(role -> authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName())));
         permissions.forEach(permission -> authorities.add(new SimpleGrantedAuthority(permission.getName())));
         return new UserDetailsImpl(userDto, authorities);
     }
