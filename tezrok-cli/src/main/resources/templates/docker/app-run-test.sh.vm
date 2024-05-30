@@ -42,8 +42,9 @@ if [ "$(docker_container_exists $MODULE_NAME)" == "true" ]; then
 fi
 
 # run new container
-docker run --rm -d -p 8080:8080 -v /etc/$MODULE_NAME/logs:/app/logs \
+docker run --rm -d -p 8080:8080 \
     --name $MODULE_NAME \
+    -v /etc/$MODULE_NAME/logs:/app/logs \
     -e "DB_HOST=$DB_HOST" \
     -e "DB_USER=$DB_USER" \
     -e "DB_PWD=$DB_PWD" \
