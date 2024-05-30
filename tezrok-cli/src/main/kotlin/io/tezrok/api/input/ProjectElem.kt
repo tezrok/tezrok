@@ -207,6 +207,7 @@ data class FieldElem(
     // true if field is synthetic and contains reference to another entity
     val syntheticTo: String? = null,
     val relation: EntityRelation? = null,
+    val example: String? = null,
     // used for known fields like createdAt, updatedAt
     val metaTypes: Set<MetaType>? = null,
     // if true, then this field is synthetic and needed by other entity (field is added by user)

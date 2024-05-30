@@ -2,6 +2,7 @@ package ${package}.repository;
 
 import ${package}.dto.WithId;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Table;
