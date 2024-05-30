@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import com.github.javaparser.ast.body.MethodDeclaration
-import com.github.javaparser.ast.expr.IntegerLiteralExpr
+import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.expr.NameExpr
 import com.github.javaparser.ast.stmt.ReturnStmt
 import io.tezrok.api.GeneratorContext
@@ -160,6 +160,19 @@ internal class JooqRepositoryFeature : TezrokFeature {
             dtoClass.extendClass("$jooqPackageRoot.tables.pojos.$name")
             entity.description?.let { dtoClass.setJavadocComment(it) }
 
+            // add field size constants
+            entity.fields.filter { it.isStringType() }.forEach { field ->
+                val minLength = field.minLength ?: 0
+                dtoClass.addField("int", field.minSizeConstantName())
+                    .setModifiers(Modifier.Keyword.PUBLIC, Modifier.Keyword.STATIC, Modifier.Keyword.FINAL)
+                    .setInitializer(minLength.toString())
+                val maxLength = field.maxLength ?: DEFAULT_VARCHAR_LENGTH
+                dtoClass.addField("int", field.maxSizeConstantName())
+                    .setModifiers(Modifier.Keyword.PUBLIC, Modifier.Keyword.STATIC, Modifier.Keyword.FINAL)
+                    .setInitializer(maxLength.toString())
+            }
+
+            // add empty constructor
             dtoClass.addConstructor()
                 .withModifiers(Modifier.Keyword.PUBLIC)
             val constructor2 = dtoClass.addConstructor()
@@ -267,7 +280,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
                         else -> error("Unsupported relation: ${field.relation} in field: ${entity.name}.${field.name}")
                     }
                 }
-                addValidationAnnotations(addedFields.last(), field, dtoClass)
+                addValidationAnnotations(addedFields.last(), field, dtoClass, entity)
             }
 
             // implement WithId<$primaryFieldType> interface
@@ -282,7 +295,8 @@ internal class JooqRepositoryFeature : TezrokFeature {
     private fun addValidationAnnotations(
         field: JavaFieldNode,
         fieldElem: FieldElem,
-        clazz: JavaClassNode
+        clazz: JavaClassNode,
+        entity: EntityElem
     ) {
         if (fieldElem.hasMetaType(MetaType.Sensitive)) {
             // @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
@@ -301,16 +315,17 @@ internal class JooqRepositoryFeature : TezrokFeature {
             field.addAnnotation(Email::class.java)
         }
         if (fieldElem.isStringType()) {
+            val dtoClassName = "${entity.name}Dto"
             val minLength = fieldElem.minLength ?: 0
-            val maxLength = fieldElem.maxLength ?: DEFAULT_VARCHAR_LENGTH
+            val annotationProps = mutableMapOf<String, Expression>()
+            if (minLength > 0) {
+                annotationProps["min"] = NameExpr(dtoClassName + "." + fieldElem.minSizeConstantName())
+            }
+            if (fieldElem.maxLength != null) {
+                annotationProps["max"] = NameExpr(dtoClassName + "." + fieldElem.maxSizeConstantName())
+            }
             clazz.addImport(Size::class.java)
-            field.addAnnotation(
-                "Size",
-                mapOf(
-                    "min" to IntegerLiteralExpr(minLength.toString()),
-                    "max" to IntegerLiteralExpr(maxLength.toString())
-                )
-            )
+            field.addAnnotation("Size", annotationProps)
         }
     }
 
@@ -654,6 +669,10 @@ internal class JooqRepositoryFeature : TezrokFeature {
 
         return entity
     }
+
+    private fun FieldElem.maxSizeConstantName() = this.name.camelCaseToSnakeCase().uppercase() + "_MAX_LENGTH"
+
+    private fun FieldElem.minSizeConstantName() = this.name.camelCaseToSnakeCase().uppercase() + "_MIN_LENGTH"
 
     private companion object {
         val log = LoggerFactory.getLogger(JooqRepositoryFeature::class.java)!!
