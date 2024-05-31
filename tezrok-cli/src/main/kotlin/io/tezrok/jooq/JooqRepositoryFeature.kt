@@ -364,12 +364,13 @@ internal class JooqRepositoryFeature : TezrokFeature {
 
         val statements = mutableMapOf<String, String>()
         val arguments = mutableListOf<String>()
+        val dtoClassName = "${entity.name}Dto"
         entity.fields.filter { it.isNotSynthetic() }.forEach { field ->
             if (ModelTypes.STRING == field.type) {
                 // final String newName = adjust ? StringUtils.abbreviate(this.name, "", 100) : this.name;
                 val varName = "new" + field.name.upperFirst()
                 val fieldName = "this." + field.name
-                val maxLength = field.maxLength ?: DEFAULT_VARCHAR_LENGTH
+                val maxLength = dtoClassName + "." + field.maxSizeConstantName()
                 val statement =
                     "final String $varName = adjust ? StringUtils.abbreviate($fieldName, \"\", $maxLength) : $fieldName;\n"
                 statements[varName] = statement
