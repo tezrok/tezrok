@@ -256,6 +256,7 @@
               {
                 "name": "name",
                 "type": "String",
+                "description": "User login",
                 "required": true,
                 "minLength": 3,
                 "maxLength": 20,
@@ -264,6 +265,7 @@
               {
                 "name": "email",
                 "type": "String",
+                "description": "User email",
                 "required": true,
                 "minLength": 4,
                 "maxLength": 40,
@@ -275,6 +277,7 @@
               {
                 "name": "password",
                 "type": "String",
+                "description": "Hashed user password",
                 "required": true,
                 "maxLength": 100,
                 "metaTypes": [
@@ -352,6 +355,7 @@
               {
                 "name": "name",
                 "type": "String",
+                "description": "Role name",
                 "required": true,
                 "minLength": 3,
                 "maxLength": 20,
@@ -360,6 +364,7 @@
               {
                 "name": "description",
                 "type": "String",
+                "description": "Role description",
                 "minLength": 0,
                 "maxLength": 150
               },
@@ -420,6 +425,7 @@
               {
                 "name": "name",
                 "type": "String",
+                "description": "Permission name",
                 "required": true,
                 "minLength": 3,
                 "maxLength": 20,
@@ -428,6 +434,7 @@
               {
                 "name": "description",
                 "type": "String",
+                "description": "Permission description",
                 "minLength": 0,
                 "maxLength": 150
               },
