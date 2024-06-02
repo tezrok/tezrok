@@ -3,11 +3,13 @@ package io.tezrok.jooq
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.github.javaparser.ast.Modifier
+import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.expr.NameExpr
 import com.github.javaparser.ast.stmt.ReturnStmt
+import com.github.javaparser.ast.stmt.Statement
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.ProcessModelPhase
 import io.tezrok.api.TezrokFeature
@@ -465,6 +467,9 @@ internal class JooqRepositoryFeature : TezrokFeature {
             context.writeTemplate(repoClassFile, templateName, values + fields)
             val repoClass = repoClassFile.getRootClass()
 
+            if (singlePrimary) {
+                addStandardMethods(entity, repoClass)
+            }
             if (custom) {
                 repoClass.getConstructors()
                     .findFirst()
@@ -479,6 +484,53 @@ internal class JooqRepositoryFeature : TezrokFeature {
             addCustomMethodsByNames(entity, repoClass, entities, baseMethods)
         } else {
             log.warn(FILE_ALREADY_EXISTS, repoClassFileName)
+        }
+    }
+
+    private fun addStandardMethods(
+        entity: EntityElem,
+        repoClass: JavaClassNode
+    ) {
+        val typeName = entity.name
+        val dtoType = entity.getDtoName()
+        val primaryField = entity.getPrimaryField()
+        val method = repoClass.addMethod("updatePartly")
+            .withModifiers(Modifier.Keyword.PUBLIC)
+            .addParameter(dtoType, "dto")
+            .setReturnType(primaryField.asJavaType())
+            .setJavadocComment("""Updates partly {@link $dtoType}. Only non-null fields will be updated.
+     
+@param dto {@link $dtoType} with several non-null fields
+@return updated entity ID"""
+            )
+
+        val statements = NodeList<Statement>()
+        statements.add("final ${typeName}Record rec = Objects.requireNonNull(getRecordById(dto.getId()), () -> \"$typeName not found by id: \" + dto.getId());".parseAsStatement())
+
+        entity.fields.filter { field -> canPartyUpdate(field, entity) }.forEach { field ->
+            val getter = field.getGetterName()
+            val setter = field.getSetterName()
+            statements.add("if (dto.$getter() != null) { rec.$setter(dto.$getter()); }".parseAsStatement())
+        }
+        if (entity.updatedAt == true) {
+            statements.add("rec.setUpdatedAt(OffsetDateTime.now());".parseAsStatement())
+        }
+        statements.add("rec.store();".parseAsStatement())
+        statements.add("return rec.${primaryField.getGetterName()}();".parseAsStatement())
+        method.setBody(statements)
+    }
+
+    private fun canPartyUpdate(field: FieldElem, entity: EntityElem): Boolean {
+        if (field.isLogic() || field.isSynthetic()) {
+            return false
+        }
+
+        return when (field.name) {
+            "id" -> false
+            "createdAt" -> entity.createdAt != true
+            "updatedAt" -> entity.updatedAt != true
+            "active" -> entity.activable != true
+            else -> true
         }
     }
 
@@ -677,6 +729,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
 
     private companion object {
         val log = LoggerFactory.getLogger(JooqRepositoryFeature::class.java)!!
+        val excludeFieldsFromPartyUpdate = setOf("active", "createdAt", "updatedAt")
         const val JOOQ_SINGLE_ID_REPO = "JooqRepository.java"
         const val JOOQ_TWO_ID_REPO = "JooqRepository2.java"
         const val JOOQ_BASE_REPO = "JooqBaseRepository.java"

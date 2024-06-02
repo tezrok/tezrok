@@ -4,10 +4,8 @@ import ${package}.jooq.Tables;
 import ${package}.jooq.tables.records.${name}Record;
 import ${package}.dto.${name}Dto;
 import org.jooq.DSLContext;
-
-#if ($updateAt == true || $createdAt == true)
+import java.util.Objects;
 import java.time.OffsetDateTime;
-#end
 
 /**
  * Repository for {@link ${name}Dto} entity.
