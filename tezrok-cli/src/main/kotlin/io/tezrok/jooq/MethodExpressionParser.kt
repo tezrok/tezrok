@@ -30,6 +30,7 @@ object MethodExpressionParser {
         while (index < parts.size) {
             val part = parts[index]
             val nextPart = if (index + 1 < parts.size) parts[index + 1].name else null
+            val isLastToken = nextPart == null
 
             if (part is Name) {
                 val lastToken = tokens.lastOrNull()
@@ -186,6 +187,15 @@ object MethodExpressionParser {
                         }
                     }
 
+                    NAME_PAGEABLE -> {
+                        if (isLastToken) {
+                            tokens.add(Pageable)
+                        } else {
+                            // probably field name is "Pageable"
+                            addNamePart(part)
+                        }
+                    }
+
                     NAME_IGNORE -> {
                         if (nextPart == NAME_CASE) {
                             if (lastToken is Name) {
@@ -270,6 +280,7 @@ object MethodExpressionParser {
     private const val NAME_AFTER = "After"
     private const val NAME_BEFORE = "Before"
     private const val NAME_DISTINCT = "Distinct"
+    private const val NAME_PAGEABLE = "Pageable"
     private const val NAME_BY = "By"
     private const val NAME_NOT = "Not"
     private const val NAME_ASC = "Asc"

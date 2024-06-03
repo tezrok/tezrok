@@ -44,6 +44,8 @@ abstract class Token(open val name: String) {
 
     object Distinct : Token("Distinct")
 
+    object Pageable : Token("Pageable")
+
     object And : Token("And")
 
     object Or : Token("Or")

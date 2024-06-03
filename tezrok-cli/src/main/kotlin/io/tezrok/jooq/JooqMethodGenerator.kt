@@ -178,7 +178,7 @@ internal class JooqMethodGenerator(
                 check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
             }
             val expressionPart = removeFindByPrefix(methodName, methodPrefix)
-            val (where, orderBy, limit, distinct, paramsOut) = parseAsJooqExpression(
+            val (where, orderBy, limit, distinct, pageable, paramsOut) = parseAsJooqExpression(
                 expressionPart,
                 emptyMap(),
                 singleResult = false,
@@ -320,7 +320,7 @@ internal class JooqMethodGenerator(
                 check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
             }
             val expressionPart = removeGetByPrefix(methodName, methodPrefix)
-            val (where, orderBy, limit, distinct, paramsOut) = parseAsJooqExpression(
+            val (where, orderBy, limit, distinct, pageable, paramsOut) = parseAsJooqExpression(
                 expressionPart,
                 params,
                 singleResult = true,
@@ -386,7 +386,7 @@ internal class JooqMethodGenerator(
             val methodPrefix = getMethodPrefix(methodName)
             val relTables = getRelatedTables(methodPrefix)
             val expressionPart = removeGetByPrefix(methodName, methodPrefix)
-            val (where, orderBy, limit, distinct, paramsOut) = parseAsJooqExpression(
+            val (where, orderBy, limit, distinct, pageable, paramsOut) = parseAsJooqExpression(
                 expressionPart,
                 params,
                 singleResult = true,
@@ -615,7 +615,7 @@ internal class JooqMethodGenerator(
         relTables: RelationTables? = null,
         extractParams: Boolean = false
     ): JooqExpression {
-        val (names, distinct) = parseTokensAndDistinct(MethodExpressionParser.parse(expressionPart))
+        val (names, distinct, pageable) = parseTokensAndDistictAndPageable(MethodExpressionParser.parse(expressionPart))
         val sb = StringBuilder()
         var orderBy = ""
         var limit = ""
@@ -852,6 +852,7 @@ internal class JooqMethodGenerator(
             where = sb.toString(),
             orderBy = orderBy,
             limit = limit,
+            pageable = pageable,
             distinct = distinct,
             params = paramsOut
         )
@@ -886,12 +887,12 @@ internal class JooqMethodGenerator(
         }
     }
 
-    private fun parseTokensAndDistinct(names: List<Token>): Pair<List<Token>, Boolean> {
+    private fun parseTokensAndDistictAndPageable(names: List<Token>): Triple<List<Token>, Boolean, Boolean> {
         val distinct: Boolean = names.firstOrNull() == Token.Distinct
-        return if (distinct)
-            names.subList(1, names.size) to true
-        else
-            names to false
+        val pageable = names.lastOrNull() == Token.Pageable
+        val names2 = if (distinct) names.subList(1, names.size) else names
+        val result = if (pageable) names2.subList(0, names2.size - 1) else names2
+        return Triple(result, distinct, pageable)
     }
 
     private fun typesEqual(field: FieldElem, paramType: String, supportCollection: Boolean = false): Boolean =
@@ -966,6 +967,7 @@ internal class JooqMethodGenerator(
         val orderBy: String,
         val limit: String,
         val distinct: Boolean,
+        val pageable: Boolean,
         val params: Map<String, String>
     )
 
