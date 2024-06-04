@@ -85,7 +85,8 @@ internal class JooqMethodGenerator(
 
     private fun addCustomMethodsComments(method: JavaMethodNode) {
         entity.customComments?.get(method.getName())?.let { comment ->
-            val packagePath = repoClass.getJavaFile().getJavaRoot()?.applicationPackageRoot?.getPackage() ?: error("Package not found")
+            val packagePath = repoClass.getJavaFile().getJavaRoot()?.applicationPackageRoot?.getPackage()
+                ?: error("Package not found")
             method.setJavadocComment(comment)
             repoClass.addImportsByType(comment, entities, packagePath)
         }
@@ -138,11 +139,12 @@ internal class JooqMethodGenerator(
                 else -> params to ""
             }
             val expressionPart = removeFindByPrefix(methodName, "${entity.name}s")
-            val (where, orderBy, limit, distinct) = parseAsJooqExpression(expressionPart, params, false)
+            val (where, orderBy, limit, distinct, pageable) = parseAsJooqExpression(expressionPart, params, false)
 
             check(limit.isEmpty() || !pageableRequest) { "Top and Pageable cannot be used together" }
             check(orderBy.isEmpty() || !pageableRequest) { "OrderBy and Pageable cannot be used together" }
             check(!distinct) { DISTINCT_CANNOT_BE_USED_WHOLE_TABLE }
+            check(!pageable) { "Pageable should be made by param not by name, please fix" }
 
             return when (returnType) {
                 dtoList -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchInto(${dtoName}.class)")
@@ -171,12 +173,6 @@ internal class JooqMethodGenerator(
             val methodPrefix = getMethodPrefix(methodName)
             val relTables = getRelatedTables(methodPrefix)
             val selectedColumns = parseFields(methodPrefix, relTables)
-            val returnType = getReturnTypeBySelectedColumnsAsList(selectedColumns, defaultReturnType)
-            val dtoList = "List<$dtoName>"
-            if (selectedColumns.isEmpty()) {
-                val supportedTypes = setOf(dtoList)
-                check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
-            }
             val expressionPart = removeFindByPrefix(methodName, methodPrefix)
             val (where, orderBy, limit, distinct, pageable, paramsOut) = parseAsJooqExpression(
                 expressionPart,
@@ -187,6 +183,14 @@ internal class JooqMethodGenerator(
             )
             // got params from expression
             paramsOut.forEach(params::put)
+            val dtoList = "List<$dtoName>"
+            val dtoPage = "Page<$dtoName>"
+            val returnType =
+                if (pageable) dtoPage else getReturnTypeBySelectedColumnsAsList(selectedColumns, defaultReturnType)
+            if (selectedColumns.isEmpty()) {
+                val supportedTypes = setOf(dtoList, dtoPage)
+                check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
+            }
 
             check(!distinct) { DISTINCT_CANNOT_BE_USED_WHOLE_TABLE }
 
@@ -221,6 +225,12 @@ internal class JooqMethodGenerator(
                         params = params,
                         returnType = returnType,
                         ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchInto(${dtoName}.class)")
+                    )
+
+                    dtoPage -> MethodGen(
+                        params = params,
+                        returnType = returnType,
+                        ReturnStmt("findPage($where, pageable, ${dtoName}.class, true)")
                     )
 
                     else -> error("Unsupported return type: $returnType")
@@ -283,9 +293,10 @@ internal class JooqMethodGenerator(
                 else -> params to ""
             }
             val expressionPart = removeGetByPrefix(methodName, entity.name)
-            val (where, orderBy, limit, distinct) = parseAsJooqExpression(expressionPart, params, true)
+            val (where, orderBy, limit, distinct, pageable) = parseAsJooqExpression(expressionPart, params, true)
 
             check(!distinct) { DISTINCT_CANNOT_BE_USED_WHOLE_TABLE }
+            check(!pageable) { PAGEABLE_CANNOT_BE_USED_HERE }
 
             return when (returnType) {
                 dtoName -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchOneInto(${dtoName}.class)")
@@ -331,6 +342,7 @@ internal class JooqMethodGenerator(
             paramsOut.forEach(params::put)
 
             check(!distinct) { DISTINCT_CANNOT_BE_USED_WHOLE_TABLE }
+            check(!pageable) { PAGEABLE_CANNOT_BE_USED_HERE }
 
             if (relTables == null) {
                 if (selectedColumns.isNotEmpty()) {
@@ -399,6 +411,7 @@ internal class JooqMethodGenerator(
             check(orderBy.isEmpty()) { "OrderBy cannot be used with delete method" }
             check(limit.isEmpty()) { "Top cannot be used with delete method" }
             check(!distinct) { DISTINCT_CANNOT_BE_USED_WHOLE_TABLE }
+            check(!pageable) { PAGEABLE_CANNOT_BE_USED_HERE }
 
             if (relTables == null) {
                 return MethodGen(
@@ -515,11 +528,12 @@ internal class JooqMethodGenerator(
             check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
 
             val expressionPart = removeCountByPrefix(methodName, entity.name)
-            val (where, orderBy, limit, distinct) = parseAsJooqExpression(expressionPart, params, false)
+            val (where, orderBy, limit, distinct, pageable) = parseAsJooqExpression(expressionPart, params, false)
 
             check(orderBy.isEmpty()) { "OrderBy cannot be used with count method" }
             check(limit.isEmpty()) { "Top cannot be used with count method" }
             check(!distinct) { DISTINCT_CANNOT_BE_USED_WHOLE_TABLE }
+            check(!pageable) { PAGEABLE_CANNOT_BE_USED_HERE }
 
             return ReturnStmt("dsl.fetchCount(table, $where)")
 
@@ -538,11 +552,12 @@ internal class JooqMethodGenerator(
             check(supportedTypes.contains(returnType)) { "Unsupported return type: '$returnType', expected: $supportedTypes" }
 
             val expressionPart = removeDeleteByPrefix(methodName, entity.name)
-            val (where, orderBy, limit, distinct) = parseAsJooqExpression(expressionPart, params, false)
+            val (where, orderBy, limit, distinct, pageable) = parseAsJooqExpression(expressionPart, params, false)
 
             check(orderBy.isEmpty()) { "OrderBy cannot be used with delete method" }
             check(limit.isEmpty()) { "Top cannot be used with delete method" }
             check(!distinct) { DISTINCT_CANNOT_BE_USED_WHOLE_TABLE }
+            check(!pageable) { PAGEABLE_CANNOT_BE_USED_HERE }
 
             return ReturnStmt("dsl.delete(table).where($where).execute()")
 
@@ -848,6 +863,10 @@ internal class JooqMethodGenerator(
             error("At least one parameter should be String to use AllIgnoreCase")
         }
 
+        if (pageable) {
+            paramsOut["pageable"] = "Pageable"
+        }
+
         return JooqExpression(
             where = sb.toString(),
             orderBy = orderBy,
@@ -988,6 +1007,7 @@ internal class JooqMethodGenerator(
         const val PREFIX_BY = "By"
         const val PREFIX_ID_FIELDS = "IdFields"
         const val DISTINCT_CANNOT_BE_USED_WHOLE_TABLE = "Distinct cannot be used whole table select"
+        const val PAGEABLE_CANNOT_BE_USED_HERE = "Pageable cannot be used here"
         const val GENERIC_LIST = "List<T>"
         const val GENERIC_T = "T"
         const val GENERIC_CLASS = "Class<T>"
