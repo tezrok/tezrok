@@ -68,7 +68,9 @@ internal class JooqMethodGenerator(
 
             methodName.startsWith(PREFIX_DELETE) -> generateDeleteByBodyOnlyByName(methodName)
 
-            methodName.startsWith(PREFIX_COUNT) -> TODO("support count methods")
+            methodName.startsWith(PREFIX_COUNT) -> generateCountByBodyOnlyByName(methodName)
+
+            methodName.startsWith(PREFIX_EXISTS) -> generateExistsByBodyOnlyByName(methodName)
 
             else -> error("Unsupported method name: $methodName")
         }
@@ -108,6 +110,8 @@ internal class JooqMethodGenerator(
         methodName.startsWith(PREFIX_GET) -> dtoName
 
         methodName.startsWith(PREFIX_COUNT) -> "int"
+
+        methodName.startsWith(PREFIX_EXISTS) -> "boolean"
 
         methodName.startsWith(PREFIX_DELETE) -> "int"
 
@@ -418,6 +422,86 @@ internal class JooqMethodGenerator(
                     params = params,
                     returnType = returnType,
                     ReturnStmt("dsl.delete(table).where($where).execute()")
+                )
+            } else {
+                error("TODO: $relTables")
+            }
+        } catch (ex: Exception) {
+            throw RuntimeException("Failed to generate body for method \"$methodName\": ${ex.message}", ex)
+        }
+    }
+
+    private fun generateExistsByBodyOnlyByName(
+        methodName: String
+    ): MethodGen {
+        try {
+            val dtoName = "${entity.name}Dto"
+            val returnType = getReturnTypeByOnlyName(methodName, dtoName)
+            val params = mutableMapOf<String, String>()
+            val methodName = methodName.removePrefix(PREFIX_EXISTS)
+            val methodPrefix = getMethodPrefix(methodName)
+            val relTables = getRelatedTables(methodPrefix)
+            val expressionPart = removeGetByPrefix(methodName, methodPrefix)
+            val (where, orderBy, limit, distinct, pageable, paramsOut) = parseAsJooqExpression(
+                expressionPart,
+                params,
+                singleResult = true,
+                relTables,
+                extractParams = true
+            )
+            // got params from expression
+            paramsOut.forEach(params::put)
+
+            check(orderBy.isEmpty()) { "OrderBy cannot be used with exists method" }
+            check(limit.isEmpty()) { "Top cannot be used with exists method" }
+            check(!distinct) { DISTINCT_CANNOT_BE_USED_WHOLE_TABLE }
+            check(!pageable) { PAGEABLE_CANNOT_BE_USED_HERE }
+
+            if (relTables == null) {
+                return MethodGen(
+                    params = params,
+                    returnType = returnType,
+                    ReturnStmt("dsl.fetchExists(table, $where)")
+                )
+            } else {
+                error("TODO: $relTables")
+            }
+        } catch (ex: Exception) {
+            throw RuntimeException("Failed to generate body for method \"$methodName\": ${ex.message}", ex)
+        }
+    }
+
+    private fun generateCountByBodyOnlyByName(
+        methodName: String
+    ): MethodGen {
+        try {
+            val dtoName = "${entity.name}Dto"
+            val returnType = getReturnTypeByOnlyName(methodName, dtoName)
+            val params = mutableMapOf<String, String>()
+            val methodName = methodName.removePrefix(PREFIX_EXISTS)
+            val methodPrefix = getMethodPrefix(methodName)
+            val relTables = getRelatedTables(methodPrefix)
+            val expressionPart = removeGetByPrefix(methodName, methodPrefix)
+            val (where, orderBy, limit, distinct, pageable, paramsOut) = parseAsJooqExpression(
+                expressionPart,
+                params,
+                singleResult = true,
+                relTables,
+                extractParams = true
+            )
+            // got params from expression
+            paramsOut.forEach(params::put)
+
+            check(orderBy.isEmpty()) { "OrderBy cannot be used with count method" }
+            check(limit.isEmpty()) { "Top cannot be used with count method" }
+            check(!distinct) { DISTINCT_CANNOT_BE_USED_WHOLE_TABLE }
+            check(!pageable) { PAGEABLE_CANNOT_BE_USED_HERE }
+
+            if (relTables == null) {
+                return MethodGen(
+                    params = params,
+                    returnType = returnType,
+                    ReturnStmt("dsl.fetchCount(table, $where)")
                 )
             } else {
                 error("TODO: $relTables")
@@ -1004,6 +1088,7 @@ internal class JooqMethodGenerator(
         const val PREFIX_GET = "get"
         const val PREFIX_DELETE = "delete"
         const val PREFIX_COUNT = "count"
+        const val PREFIX_EXISTS = "exists"
         const val PREFIX_BY = "By"
         const val PREFIX_ID_FIELDS = "IdFields"
         const val DISTINCT_CANNOT_BE_USED_WHOLE_TABLE = "Distinct cannot be used whole table select"
