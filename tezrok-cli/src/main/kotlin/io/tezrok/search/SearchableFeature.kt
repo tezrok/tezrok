@@ -152,7 +152,7 @@ internal class SearchableFeature : TezrokFeature {
                             entity.name.lowerFirst(),
                             entity.name,
                             description = "Reference to ${entity.name} entity",
-                            relation = EntityRelation.ManyToOne,
+                            relation = EntityRelation.OneToOne,
                             required = true
                         )
                     )
