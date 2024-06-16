@@ -34,12 +34,19 @@ internal class EntityActivableFeature : TezrokFeature {
             val activeField = entity.fields.find { it.name == DEFAULT_ACTIVE_NAME }
 
             if (activeField == null) {
-                val newField = FieldElem(name = DEFAULT_ACTIVE_NAME, type = "Boolean", required = true, defValue = DEFAULT_ACTIVE_VALUE, description = DEFAULT_ACTIVE_DESCRIPTION)
+                val newField = FieldElem(
+                    name = DEFAULT_ACTIVE_NAME,
+                    type = "Boolean",
+                    required = true,
+                    defValue = DEFAULT_ACTIVE_VALUE,
+                    description = DEFAULT_ACTIVE_DESCRIPTION,
+                    searchable = false // not searchable by default
+                )
                 return entity.copy(fields = entity.fields + newField)
             }
 
             check(activeField.type == null || activeField.type == "boolean") { "Field 'active' must be of type boolean" }
-            check(activeField.required == null  || activeField.required == true) { "Field 'active' must be required" }
+            check(activeField.required == null || activeField.required == true) { "Field 'active' must be required" }
 
             return entity.copy(fields = entity.fields.map { if (it === activeField) fromField(it) else it })
         }

@@ -17,6 +17,13 @@ fun String.resourceAsString(): String = ResourceUtil.getResourceAsString(this)
 fun String.camelCaseToSnakeCase(): String = camelCaseRegex.replace(this, "$1_$2")
 
 /**
+ * Convert camel case string to lower snake case
+ *
+ * Example: "FooBar" -> "foo_bar"
+ */
+fun String.camelCaseToLowerSnakeCase(): String = camelCaseToSnakeCase().lowercase()
+
+/**
  * Convert camel case string to sql case
  *
  * Example: "FooBar" -> "foo_bar"

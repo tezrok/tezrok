@@ -34,9 +34,15 @@ data class ModuleElem(
     val task: TaskElem? = null,
     val dependencies: List<String>? = null,
     val spring: SpringElem? = null,
+    // if true, then in module default search repositories will be created
+    val searchable: Boolean? = null,
     // properties should be sorted by key, so we use TreeMap
     val properties: MutableMap<String, String?> = TreeMap()
 ) {
+
+    @JsonIgnore
+    fun isSearchable(): Boolean = searchable == true
+
     override fun toString(): String {
         return "ModuleElem(name='$name')"
     }
@@ -94,6 +100,10 @@ data class EntityElem(
     val createdAt: Boolean? = null,
     // if true, updatedAt field will be added to entity
     val updatedAt: Boolean? = null,
+    // if true, entity will be searchable
+    val searchable: Boolean? = null,
+    // customizations for search entity
+    val searchEntity: SearchEntity? = null,
     // if true, service will not be created
     val skipService: Boolean? = null,
     // if true, controller will not be created
@@ -170,6 +180,9 @@ data class EntityElem(
     fun isNotSynthetic(): Boolean = !isSynthetic()
 
     @JsonIgnore
+    fun isSearchable(): Boolean = searchable == true
+
+    @JsonIgnore
     fun hasFullDto(): Boolean = skipService != true && skipController != true
 
     fun hasRelations(vararg relations: EntityRelation): Boolean =
@@ -207,6 +220,8 @@ data class FieldElem(
     // true if field is synthetic and contains reference to another entity
     val syntheticTo: String? = null,
     val relation: EntityRelation? = null,
+    // if true, entity will be searchable
+    val searchable: Boolean? = null,
     val example: String? = null,
     // used for known fields like createdAt, updatedAt
     val metaTypes: Set<MetaType>? = null,
@@ -250,6 +265,9 @@ data class FieldElem(
     fun isNotLogic(): Boolean = !isLogic()
 
     @JsonIgnore
+    fun isSearchable(): Boolean = searchable == true
+
+    @JsonIgnore
     fun hasUniqueGroup(): Boolean = uniqueGroup != null
 
     fun hasRelations(vararg relations: EntityRelation): Boolean = relation in relations
@@ -262,6 +280,13 @@ data class GitElem(
     val ignores: List<String>? = null,
     // list of files to exclude from std ignore list
     val excludes: List<String>? = null
+)
+
+data class SearchEntity(
+    /**
+     * Custom name for indexName in search engine
+     */
+    val indexName: String?
 )
 
 /**

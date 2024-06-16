@@ -5,6 +5,7 @@ enum class ProcessModelPhase {
      * First phase of the model processing.
      */
     PreProcess,
+
     /**
      * Phase of the model processing after normalized entities (synthetic fields added).
      */

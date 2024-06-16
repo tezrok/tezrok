@@ -1,0 +1,99 @@
+package ${package}.search;
+
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
+import org.springframework.data.elasticsearch.repository.support.ElasticsearchEntityInformation;
+import org.springframework.data.elasticsearch.repository.support.SimpleElasticsearchRepository;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+/**
+ * Implementation of {@link DynamicIndexRepository} with dynamic index name which calculates via {@link #getIndexName(Object)}.
+ */
+public abstract class DynamicIndexRepositoryImpl<T, ID extends Serializable> extends SimpleElasticsearchRepository<T, ID> implements DynamicIndexRepository<T, ID> {
+
+    /**
+     * TODO: reimplement methods from {@link SimpleElasticsearchRepository}
+     *
+     * @param metadata   entity metadata
+     * @param operations elasticsearch operations
+     */
+    public DynamicIndexRepositoryImpl(@NotNull ElasticsearchEntityInformation<T, ID> metadata,
+                                      @NotNull ElasticsearchOperations operations) {
+        super(metadata, operations);
+    }
+
+    @Override
+    public <S extends T> S save(@NotNull S entity, @NotNull String indexName) {
+        final IndexCoordinates indexCoordinates = getDynamicIndexCoordinates(indexName);
+        final IndexOperations indexOps = operations.indexOps(indexCoordinates);
+
+        if (!indexOps.exists()) {
+            indexOps.create();
+            indexOps.putMapping(entity.getClass());
+        }
+
+        final IndexQuery query = new IndexQueryBuilder()
+                .withObject(entity)
+                .withIndex(indexName)
+                .build();
+
+        String documentId = operations.index(query, indexCoordinates);
+        return (S) operations.get(documentId, entity.getClass());
+    }
+
+    public <S extends T> void indexAll(final List<S> entities) {
+        // group all entities by final index name
+        final Map<String, List<S>> grouped = entities.stream()
+                .collect(Collectors.groupingBy(this::getIndexName));
+        executeAndRefresh(operations -> {
+            grouped.forEach((indexName, list) -> {
+                List<IndexQuery> queries = list.stream()
+                        .map(entity -> new IndexQueryBuilder()
+                                .withObject(entity)
+                                .withIndex(indexName)
+                                .build())
+                        .toList();
+                operations.bulkIndex(queries, IndexCoordinates.of(indexName));
+            });
+            return 0;
+        });
+    }
+
+    @Override
+    public Page<T> search(@NotNull final Query query,
+                          @NotNull final String indexName,
+                          @NotNull final Class<T> entityClass,
+                          @NotNull final Pageable pageable) {
+        final IndexCoordinates indexCoordinates = getDynamicIndexCoordinates(indexName);
+        final NativeQuery searchQuery = new NativeQueryBuilder()
+                .withQuery(query)
+                .withPageable(pageable)
+                .build();
+
+        final SearchHits<T> hits = operations.search(searchQuery, entityClass, indexCoordinates);
+        return new PageImpl<>(hits.stream().map(SearchHit::getContent).toList(), pageable, hits.getTotalHits());
+    }
+
+    private IndexCoordinates getDynamicIndexCoordinates(String indexName) {
+        return IndexCoordinates.of(indexName);
+    }
+
+    @NotNull
+    protected abstract String getIndexName(T entity);
+}

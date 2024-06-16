@@ -59,9 +59,29 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration, private
         return this
     }
 
-    fun addAnnotation(annotationClass: Class<out Annotation>): JavaClassNode {
-        clazz.addAnnotation(annotationClass)
+    fun addAnnotation(annotationClass: Class<out Annotation>, vararg fields: Pair<String, Expression>): JavaClassNode {
+        return addAnnotation(annotationClass, fields.toMap())
+    }
+
+    fun addAnnotation(annotationClass: Class<out Annotation>, fields: Map<String, Expression>): JavaClassNode {
+        if (fields.isNotEmpty()) {
+            addImport(annotationClass)
+            val annotation = clazz.addAndGetAnnotation(annotationClass.simpleName)
+            annotation.setPairs(NodeList(fields.map { MemberValuePair(it.key, it.value) }))
+        } else {
+            clazz.addAnnotation(annotationClass)
+        }
         return this
+    }
+
+    fun addAnnotation(annotationClass: Class<out Annotation>, expression: Expression): JavaClassNode {
+        addImport(annotationClass)
+        clazz.addAnnotation(SingleMemberAnnotationExpr(Name(annotationClass.simpleName), expression))
+        return this
+    }
+
+    fun addAnnotation(annotationClass: Class<out Annotation>, expression: String): JavaClassNode {
+        return addAnnotation(annotationClass, StringLiteralExpr(expression))
     }
 
     fun addAnnotation(annotationExp: String): JavaClassNode {

@@ -1,0 +1,19 @@
+package ${package}.search;
+
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
+import org.springframework.data.repository.NoRepositoryBean;
+
+import java.io.Serializable;
+
+/**
+ * Extended repository for Elasticsearch with dynamic index name.
+ */
+@NoRepositoryBean
+public interface DynamicIndexRepository<T, ID extends Serializable> extends ElasticsearchRepository<T, ID> {
+    <S extends T> S save(S entity, String indexName);
+
+    Page<T> search(Query query, String indexName, Class<T> entityClass, Pageable pageable);
+}

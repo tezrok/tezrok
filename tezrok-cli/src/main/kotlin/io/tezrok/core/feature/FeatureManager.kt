@@ -22,6 +22,7 @@ import io.tezrok.jooq.JooqRepositoryFeature
 import io.tezrok.liquibase.LiquibaseFeature
 import io.tezrok.logging.LoggingFeature
 import io.tezrok.maven.MavenCoreFeature
+import io.tezrok.search.SearchableFeature
 import io.tezrok.spring.ControllerFeature
 import io.tezrok.spring.ServiceFeature
 import io.tezrok.spring.SpringFeature
@@ -58,6 +59,7 @@ internal class FeatureManager {
         features.add(DockerFeature())
         features.add(FrontendFeature())
         features.add(TaskServiceFeature())
+        features.add(SearchableFeature())
         features.add(LoggingFeature())
     }
 

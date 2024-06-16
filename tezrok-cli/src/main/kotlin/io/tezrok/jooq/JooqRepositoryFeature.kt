@@ -302,11 +302,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
     ) {
         if (fieldElem.hasMetaType(MetaType.Sensitive)) {
             // @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-            clazz.addImport(JsonProperty::class.java)
-            field.addAnnotation(
-                "JsonProperty",
-                mapOf("access" to NameExpr("JsonProperty.Access.WRITE_ONLY"))
-            )
+            field.addAnnotation(JsonProperty::class.java, "access" to NameExpr("JsonProperty.Access.WRITE_ONLY"))
         }
 
         if (fieldElem.required == true && !fieldElem.hasMetaType(MetaType.CreatedAt) && !fieldElem.hasMetaType(MetaType.UpdatedAt)) {
@@ -326,8 +322,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
             if (fieldElem.maxLength != null) {
                 annotationProps["max"] = NameExpr(dtoClassName + "." + fieldElem.maxSizeConstantName())
             }
-            clazz.addImport(Size::class.java)
-            field.addAnnotation("Size", annotationProps)
+            field.addAnnotation(Size::class.java, annotationProps)
         }
     }
 

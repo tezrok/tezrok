@@ -50,6 +50,7 @@ internal class EntityCreatedUpdatedFeature : TezrokFeature {
                 type = "DateTimeTZ",
                 required = true,
                 defValue = DATETIME_NOW,
+                searchable = false, // not searchable by default
                 description = description,
                 metaTypes =  if (metaType != null) setOf(metaType) else null
             )

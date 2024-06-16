@@ -55,11 +55,19 @@ interface GeneratorContext : GeneratorProvider {
      * Add a file to the target directory with the specified template.
      * Name of the file is the same as the template name without the .vm extension.
      */
-    fun addFile(targetDir: DirectoryNode, templatePath: String, values: Map<String, String?>) {
+    fun addFile(targetDir: DirectoryNode, templatePath: String, values: Map<String, String?> = emptyMap()) {
         val fileName = FilenameUtils.getName(templatePath).removeSuffix(".vm")
         val startDbFile = targetDir.getOrAddFile(fileName)
         if (startDbFile.isEmpty()) {
-            writeTemplate(startDbFile, templatePath, values)
+            if (fileName.endsWith(".java")) {
+                val finalValues = if (values.containsKey("package"))
+                    values
+                else
+                    values + mapOf("package" to getProject().packagePath)
+                writeTemplate(startDbFile, templatePath, finalValues)
+            } else {
+                writeTemplate(startDbFile, templatePath, values)
+            }
         } else {
             log.warn("File {} already exists, skipping", fileName)
         }
