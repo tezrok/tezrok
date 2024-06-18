@@ -143,6 +143,11 @@ open class JavaMethodNode(private val method: MethodDeclaration, private val par
         return this
     }
 
+    fun setStatic(isStatic: Boolean): JavaMethodNode {
+        method.setStatic(isStatic)
+        return this
+    }
+
     fun isPublic(): Boolean = method.isPublic
 
     fun isPrivate(): Boolean = method.isPrivate

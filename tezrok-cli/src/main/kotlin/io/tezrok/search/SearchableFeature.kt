@@ -1,18 +1,20 @@
 package io.tezrok.search
 
+import com.github.javaparser.ast.Modifier
+import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.expr.NameExpr
 import com.github.javaparser.ast.expr.StringLiteralExpr
+import com.github.javaparser.ast.stmt.Statement
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.ProcessModelPhase
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.*
+import io.tezrok.api.java.JavaClassNode
 import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.maven.ProjectNode
-import io.tezrok.util.ModelTypes
-import io.tezrok.util.asJavaType
-import io.tezrok.util.camelCaseToLowerSnakeCase
-import io.tezrok.util.lowerFirst
+import io.tezrok.util.*
 import lombok.Data
+import org.jetbrains.annotations.NotNull
 import org.slf4j.LoggerFactory
 import org.springframework.data.annotation.Id
 import org.springframework.data.annotation.TypeAlias
@@ -46,6 +48,14 @@ internal class SearchableFeature : TezrokFeature {
         }
 
         return true
+    }
+
+    override fun processModel(project: ProjectElem, phase: ProcessModelPhase): ProjectElem {
+        if (phase != ProcessModelPhase.PreProcess) {
+            return project
+        }
+
+        return project.copy(modules = project.modules.map { processModule(it) })
     }
 
     private fun addDynamicIndexRepositories(searchDir: JavaDirectoryNode, context: GeneratorContext) {
@@ -92,17 +102,39 @@ internal class SearchableFeature : TezrokFeature {
                     )
                 }
             }
+
+            addOfMethod(dtoClass, entity)
         } else {
             log.warn("Search DTO already exists: {}", entityName)
         }
     }
 
-    override fun processModel(project: ProjectElem, phase: ProcessModelPhase): ProjectElem {
-        if (phase != ProcessModelPhase.PreProcess) {
-            return project
-        }
+    private fun addOfMethod(searchDtoClass: JavaClassNode, entity: EntityElem) {
+        val dtoName = "${entity.name}Dto"
+        val searchDtoName = searchDtoClass.getName()
+        val paramName = entity.name.lowerFirst()
+        val method = searchDtoClass.addMethod("of")
+            .withModifiers(Modifier.Keyword.PUBLIC, Modifier.Keyword.STATIC)
+            .setReturnType(searchDtoClass.getName())
+            .addParameter(dtoName, paramName)
+            .addAnnotation(NotNull::class.java)
+            .setJavadocComment(
+                """Create {@link $searchDtoName} from {@link $dtoName}.
 
-        return project.copy(modules = project.modules.map { processModule(it) })
+@param $paramName source $paramName
+@return new {@link $searchDtoName}"""
+            )
+
+        val statements = NodeList<Statement>()
+        statements.add("final $searchDtoName result = new $searchDtoName();".parseAsStatement())
+        entity.fields.filter { it.isNotLogic() && it.isSearchable() }.forEach { field ->
+            val setter = field.getSetterName()
+            val getter = field.getGetterName()
+            statements.add("result.$setter($paramName.$getter());".parseAsStatement())
+        }
+        statements.add("return result;".parseAsStatement())
+
+        method.setBody(statements)
     }
 
     private fun processModule(module: ModuleElem): ModuleElem {
