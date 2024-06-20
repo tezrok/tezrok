@@ -19,6 +19,7 @@ import java.util.Collection;
 /**
  * Service for {@link ${name}Dto}.
  */
+@Transactional(readOnly = true)
 public class ${name}Service {
     protected final ${name}Repository ${lname}Repository;
 
@@ -35,7 +36,6 @@ public class ${name}Service {
         this.entityGraphStore = entityGraphStore;
     }
 
-    @Transactional(readOnly = true)
     public ${name}FullDto getFull${name}ById(${primaryType} id) {
         return entityGraphLoader.getFull${name}ById(id);
     }

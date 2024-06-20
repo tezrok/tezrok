@@ -81,7 +81,6 @@ open class ServiceFeature : TezrokFeature {
                 addCustomMethods(serviceDir, name, serviceClass, customService, context)
             } else {
                 serviceClass.addAnnotation(Service::class.java)
-                    .addAnnotation(Transactional::class.java)
             }
         } else {
             log.warn("File already exists: {}", fileName)
@@ -140,12 +139,14 @@ open class ServiceFeature : TezrokFeature {
                 serviceClass.addImportsByType(typeName)
             }
             newMethod.addReturnToLastExpression()
-            if (isMethodReadOnly(method.getName())) {
-                newMethod.addAnnotation("Transactional", mapOf("readOnly" to BooleanLiteralExpr(true)))
+            if (isMethodNotReadOnly(method.getName())) {
+                newMethod.addAnnotation(Transactional::class.java)
             }
             serviceClass.addImportsByType(method.getTypeAsString())
         }
     }
+
+    private fun isMethodNotReadOnly(name: String) = !isMethodReadOnly(name)
 
     private fun isMethodReadOnly(name: String) = name.let {
         it.startsWith("get") && !it.startsWith("getOrCreate") || it.startsWith("find") || it.startsWith("count")
