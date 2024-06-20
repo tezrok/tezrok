@@ -175,7 +175,8 @@
                 "type": "Boolean",
                 "description": "Is entity active or deleted",
                 "required": true,
-                "default": "false"
+                "default": "false",
+                "searchable": false
               },
               {
                 "name": "createdAt",
@@ -183,6 +184,7 @@
                 "description": "Date and time of entity creation",
                 "required": true,
                 "default": "now()",
+                "searchable": false,
                 "metaTypes": [
                   "CreatedAt"
                 ]
@@ -193,6 +195,7 @@
                 "description": "Date and time of entity update",
                 "required": true,
                 "default": "now()",
+                "searchable": false,
                 "metaTypes": [
                   "UpdatedAt"
                 ]
@@ -308,6 +311,7 @@
                 "description": "Date and time of entity creation",
                 "required": true,
                 "default": "now()",
+                "searchable": false,
                 "metaTypes": [
                   "CreatedAt"
                 ]
@@ -318,6 +322,7 @@
                 "description": "Date and time of entity update",
                 "required": true,
                 "default": "now()",
+                "searchable": false,
                 "metaTypes": [
                   "UpdatedAt"
                 ]
@@ -380,6 +385,7 @@
                 "description": "Date and time of entity creation",
                 "required": true,
                 "default": "now()",
+                "searchable": false,
                 "metaTypes": [
                   "CreatedAt"
                 ]
@@ -390,6 +396,7 @@
                 "description": "Date and time of entity update",
                 "required": true,
                 "default": "now()",
+                "searchable": false,
                 "metaTypes": [
                   "UpdatedAt"
                 ]
@@ -444,6 +451,7 @@
                 "description": "Date and time of entity creation",
                 "required": true,
                 "default": "now()",
+                "searchable": false,
                 "metaTypes": [
                   "CreatedAt"
                 ]
@@ -454,6 +462,7 @@
                 "description": "Date and time of entity update",
                 "required": true,
                 "default": "now()",
+                "searchable": false,
                 "metaTypes": [
                   "UpdatedAt"
                 ]
@@ -528,6 +537,7 @@
                 "description": "Date and time of entity creation",
                 "required": true,
                 "default": "now()",
+                "searchable": false,
                 "metaTypes": [
                   "CreatedAt"
                 ]
@@ -538,6 +548,7 @@
                 "description": "Date and time of entity update",
                 "required": true,
                 "default": "now()",
+                "searchable": false,
                 "metaTypes": [
                   "UpdatedAt"
                 ]
@@ -612,6 +623,7 @@
                 "description": "Date and time of entity creation",
                 "required": true,
                 "default": "now()",
+                "searchable": false,
                 "metaTypes": [
                   "CreatedAt"
                 ]
@@ -797,6 +809,7 @@
       "dependencies": [
         "commons-io:commons-io:2.13.0"
       ],
+      "searchable": false,
       "properties": {}
     }
   ]
