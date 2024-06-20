@@ -8,24 +8,19 @@ import ${package}.repository.MatchType;
 import ${package}.service.${name}Service;
 import jakarta.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.http.ResponseEntity;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashSet;
+
 import java.util.List;
-import java.util.Set;
 
 /**
 * Api methods for {@link ${name}Dto} entity
@@ -41,49 +36,20 @@ public class ${name}ApiController {
     }
 
     @RequestMapping("/${lname}s/table")
-    public List<${name}Dto> findAll() {
+    public List<${name}Dto> findAll${name}s() {
         return ${lname}Service.findAll();
     }
 
     @GetMapping(value = "/${lname}s/search")
-    public Page<${name}Dto> searchByTerm(@RequestParam(value = "term", required = false) String searchTerm,
-                                         @RequestParam(value = "match", defaultValue = "contains") String matchTypes,
-                                         @RequestParam(value = "union", defaultValue = "false") boolean unionPages,
+    public Page<${name}Dto> search${name}sByTerm(@RequestParam(value = "term", required = false) String searchTerm,
+                                         @RequestParam(value = "match", defaultValue = "contains") String matchType,
                                          Pageable pageable) {
-        // param "match" could be a list of MatchType separated by comma
-        // returns first not empty page result or empty page
         // TODO: optimize this method
-        final List<MatchType> matches = Arrays.stream(matchTypes.split(","))
-                .filter(StringUtils::isNotBlank)
-                .map(MatchType::fromParam)
-                .distinct()
-                .toList();
-        if (matches.size() == 1) {
-            return ${lname}Service.searchByTerm(searchTerm.trim(), pageable, matches.get(0), true);
-        } else if (unionPages) {
-            // collect page by calling searchByTerm with each match type
-            final Set<${name}Dto> results = new LinkedHashSet<>(pageable.getPageSize());
-            for (final MatchType matchType : matches) {
-                final Page<${name}Dto> page = ${lname}Service.searchByTerm(searchTerm.trim(), pageable, matchType, false);
-                results.addAll(page.getContent());
-                if (results.size() >= pageable.getPageSize()) {
-                    // break if we have enough results
-                    break;
-                }
-            }
-            return new PageImpl(new ArrayList<>(results), pageable, results.size());
-        } else {
-            // return first nonempty page
-            return matches.stream()
-                    .map(type -> ${lname}Service.searchByTerm(searchTerm.trim(), pageable, type, true))
-                    .filter(p -> p.getTotalElements() > 0)
-                    .findFirst()
-                    .orElseGet(() -> Page.empty(pageable));
-        }
+        return ${lname}Service.searchByTerm(StringUtils.trim(searchTerm), pageable, MatchType.fromParam(matchType), true);
     }
 
     @GetMapping("/${lname}/table/{id}")
-    public ResponseEntity<${name}Dto> getById(@PathVariable("id") Long id) {
+    public ResponseEntity<${name}Dto> get${name}ById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(${lname}Service.getById(id));
     }
 
