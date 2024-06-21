@@ -1,0 +1,13 @@
+package ${package}.error;
+
+import lombok.Getter;
+
+@Getter
+public class UserAlreadyExistsException extends Base${moduleName}Exception {
+    private final String name;
+
+    public UserAlreadyExistsException(String name) {
+        super("User with such name or email already exists");
+        this.name = name;
+    }
+}

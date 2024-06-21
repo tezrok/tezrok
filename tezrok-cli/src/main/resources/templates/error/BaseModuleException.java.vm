@@ -1,0 +1,21 @@
+package ${package}.error;
+
+/**
+ * Base exception for timeline application.
+ */
+public class Base${moduleName}Exception extends RuntimeException {
+    public Base${moduleName}Exception() {
+    }
+
+    public Base${moduleName}Exception(String message) {
+        super(message);
+    }
+
+    public Base${moduleName}Exception(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public Base${moduleName}Exception(Throwable cause) {
+        super(cause);
+    }
+}

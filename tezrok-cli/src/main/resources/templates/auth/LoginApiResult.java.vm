@@ -1,0 +1,59 @@
+package ${package}.dto.api;
+
+import lombok.Getter;
+import lombok.ToString;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.validation.FieldError;
+
+import java.util.List;
+
+/**
+ * Api result for login or register operations.
+ */
+@Getter
+@ToString(callSuper = true)
+public class LoginApiResult extends BaseApiResult {
+    private final String username;
+
+    public LoginApiResult(final boolean success, final String username, final String message, final List<FieldError> errors) {
+        super(success, message, errors);
+        this.username = username;
+    }
+
+    public LoginApiResult(final boolean success, final String username, final String message) {
+        this(success, username, message, null);
+    }
+
+    public LoginApiResult(final boolean success, final String username) {
+        this(success, username, null, null);
+    }
+
+    @NotNull
+    public static LoginApiResult error(final String username, final String message) {
+        return new LoginApiResult(false, username, message);
+    }
+
+    @NotNull
+    public static LoginApiResult errorUserAlreadyExists(final String username) {
+        final List<FieldError> errors = List.of(new FieldError("user",
+                "username",
+                null,
+                false,
+                new String[]{"user.already.exists"},
+                null,
+                "A user with this name already exists"));
+        return new LoginApiResult(false, username, "Registration failed", errors);
+    }
+
+    @NotNull
+    public static LoginApiResult errorEmailAlreadyExists(final String username) {
+        final List<FieldError> errors = List.of(new FieldError("user",
+                "email",
+                null,
+                false,
+                new String[]{"email.already.exists"},
+                null,
+                "A user with this email already exists"));
+        return new LoginApiResult(false, username, "Registration failed", errors);
+    }
+}

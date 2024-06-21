@@ -1,0 +1,184 @@
+package ${package}.web;
+
+import ${package}.dto.api.*;
+import ${package}.service.AuthService;
+import ${package}.service.CurrentAuthService;
+import ${package}.util.TimeUtil;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.annotation.*;
+
+/**
+ * Controller maintaining form authentication.
+ */
+@Slf4j
+@Controller
+public class AuthController {
+    private final CurrentAuthService currentAuthService;
+    private final AuthService authService;
+
+    public AuthController(final CurrentAuthService currentAuthService,
+                          final AuthService authService) {
+        this.currentAuthService = currentAuthService;
+        this.authService = authService;
+    }
+
+    @GetMapping("/login")
+    public String login(@ModelAttribute("userLogin") final UserLoginDto userDto) {
+        return "login";
+    }
+
+    /**
+     * Login existing user.
+     */
+    @PostMapping("/login")
+    public String login(@RequestBody @Valid @ModelAttribute("userLogin") final UserLoginDto userDto,
+                        final BindingResult bindingResult,
+                        @NotNull final HttpServletRequest request,
+                        @NotNull final HttpServletResponse response) {
+        log.debug("Try login user {}", userDto.getUsername());
+
+        if (currentAuthService.isAuthenticated()) {
+            log.warn("User already logged: {}, login action as {}", currentAuthService.getUsername(), userDto.getUsername());
+            bindingResult.rejectValue("username", "user.already.logged", "User already logged");
+            return "login";
+        }
+        if (bindingResult.hasErrors()) {
+            return "login";
+        }
+        final LoginApiResult result = authService.login(userDto, request, response);
+        if (!result.isSuccess()) {
+            TimeUtil.sleepWhenSuspicious();
+            bindErrors(bindingResult, result, "userLogin");
+            return "login";
+        }
+
+        return "redirect:/";
+    }
+
+    /**
+     * Register new user.
+     */
+    @GetMapping("/register")
+    public String register(@ModelAttribute("userRegister") final UserRegisterDto userDto) {
+        return "register";
+    }
+
+    /**
+     * Register new user.
+     */
+    @PostMapping("/register")
+    public String register(@RequestBody @Valid @ModelAttribute("userRegister") final UserRegisterDto userDto,
+                           final BindingResult bindingResult) {
+        log.debug("Try register new user {}, email: {}", userDto.getUsername(), userDto.getEmail());
+
+        if (currentAuthService.isAuthenticated()) {
+            log.warn("User already logged: {}, register action as {}", currentAuthService.getUsername(), userDto.getUsername());
+            bindingResult.rejectValue("username", "user.already.logged", "User already logged");
+            return "register";
+        }
+        if (bindingResult.hasErrors()) {
+            return "register";
+        }
+        final LoginApiResult result = authService.registerNewUser(userDto, false);
+        if (!result.isSuccess()) {
+            TimeUtil.sleepWhenSuspicious();
+            bindErrors(bindingResult, result, "userRegister");
+            return "register";
+        }
+
+        return "redirect:/login?register";
+    }
+
+    /**
+     * Register new user.
+     */
+    @GetMapping("/activate")
+    public String activate(@RequestParam("code") final String code,
+                           @ModelAttribute("userLogin") final UserLoginDto userDto,
+                           final BindingResult bindingResult) {
+        final BaseApiResult result = authService.activateUser(code);
+        if (!result.isSuccess()) {
+            TimeUtil.sleepWhenSuspicious();
+            bindErrors(bindingResult, result, "userLogin");
+            return "login";
+        }
+
+        return "redirect:/login?activate";
+    }
+
+    /**
+     * Start password recover.
+     */
+    @GetMapping("/recover")
+    public String recover(@ModelAttribute("passwordRecover") final PasswordRecoverDto passwordRecoverDto) {
+        return "recover";
+    }
+
+    /**
+     * Start password recover.
+     */
+    @PostMapping("/recover")
+    public String recover(@RequestBody @Valid @ModelAttribute("passwordRecover") final PasswordRecoverDto passwordRecoverDto,
+                          final BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return "recover";
+        }
+
+        final BaseApiResult result = authService.requestPasswordRecover(passwordRecoverDto);
+        if (!result.isSuccess()) {
+            TimeUtil.sleepWhenSuspicious();
+            bindErrors(bindingResult, result, "passwordRecover");
+            return "recover";
+        }
+
+        return "redirect:/recover?success";
+    }
+
+    /**
+     * Finish password recover.
+     */
+    @GetMapping("/recover-finish")
+    public String recoverFinish(@RequestParam("code") final String code,
+                                @ModelAttribute("passwordRecover") final PasswordRecoverFinishDto passwordRecoverFinishDto) {
+        if (!authService.isPasswordRecoveryActive(code)) {
+            return "redirect:/recover?expired";
+        }
+
+        passwordRecoverFinishDto.setRecoveryCode(code);
+        return "recover-finish";
+    }
+
+    /**
+     * Finish password recover.
+     */
+    @PostMapping("/recover-finish")
+    public String recoverFinish(@RequestBody @Valid @ModelAttribute("passwordRecover") final PasswordRecoverFinishDto passwordRecoverFinishDto,
+                                final BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return "recover-finish";
+        }
+        final BaseApiResult result = authService.finishPasswordRecovery(passwordRecoverFinishDto);
+        if (!result.isSuccess()) {
+            TimeUtil.sleepWhenSuspicious();
+            bindErrors(bindingResult, result, "passwordRecover");
+            return "recover-finish";
+        }
+
+        return "redirect:/login?recover";
+    }
+
+    private static void bindErrors(final BindingResult bindingResult,
+                                   final BaseApiResult result,
+                                   final String objectName) {
+        ListUtils.emptyIfNull(result.getErrors()).forEach(e -> bindingResult.rejectValue(e.getField(), e.getCode(), e.getDefaultMessage()));
+        bindingResult.addError(new ObjectError(objectName, result.getMessage()));
+    }
+}

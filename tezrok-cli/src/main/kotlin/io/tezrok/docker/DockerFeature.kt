@@ -3,7 +3,7 @@ package io.tezrok.docker
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.maven.ProjectNode
-import io.tezrok.util.NameUtil
+import io.tezrok.util.toHyphenName
 import kotlin.io.path.exists
 
 /**
@@ -14,10 +14,10 @@ internal class DockerFeature : TezrokFeature {
         // TODO: support sqlite database
         val module = project.getSingleModule()
         val properties = module.properties
-        val moduleName = NameUtil.toHyphenName(module.getName())
+        val moduleName = module.getName().toHyphenName()
         val dockerDbName = "$moduleName-test-db"
         val values = mapOf(
-            "projectName" to NameUtil.toHyphenName(project.getName()),
+            "projectName" to project.getName().toHyphenName(),
             "moduleNameOriginal" to module.getName(),
             "moduleName" to moduleName,
             "dbUserName" to properties.getProperty("datasource.username"),

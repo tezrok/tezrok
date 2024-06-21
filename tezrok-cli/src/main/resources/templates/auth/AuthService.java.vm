@@ -1,0 +1,404 @@
+package ${package}.service;
+
+import ${package}.config.AppConfig;
+import ${package}.dto.*;
+import ${package}.dto.api.*;
+import ${package}.repository.*;
+import jakarta.mail.MessagingException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.authentication.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.RememberMeServices;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
+/**
+ * Service for user authentication.
+ */
+@Service
+public class AuthService {
+    protected static final Logger log = LoggerFactory.getLogger(AuthService.class);
+    private static final int PASSWORD_RESET_CODE_EXPIRE_HOURS = 5; // TODO: add to config
+    private static final String USER_ADMIN = "admin";
+    private static final String USER_SYSTEM = "system";
+    private static final String USER_ANON = "anon";
+    private static final String USER_DEMO = "demo";
+    private static final Set<String> SYSTEM_USERS = Set.of(USER_ADMIN, USER_SYSTEM, USER_ANON, USER_DEMO);
+    public static final int CAPTCHA_LOG_LENGTH = 20;
+
+    protected final UserRepository userRepository;
+
+    protected final RoleRepository roleRepository;
+
+    protected final UserRoleRolesRepository userRoleRolesRepository;
+
+    protected final UserProfileRepository userProfileRepository;
+
+    protected final EntityGraphStore entityGraphStore;
+
+    protected final PasswordEncoder passwordEncoder;
+
+    protected final EmailService emailService;
+
+    protected final UserDetailsService userDetailsService;
+
+    protected final AuthenticationManager authenticationManager;
+
+    protected final RememberMeServices rememberMeServices;
+
+    protected final CurrentAuthService currentAuthService;
+
+    protected final CaptchaService captchaService;
+
+    protected final AppConfig appConfig;
+
+    public AuthService(final UserRepository userRepository,
+                       final RoleRepository roleRepository,
+                       final UserRoleRolesRepository userRoleRolesRepository,
+                       final UserProfileRepository userProfileRepository,
+                       final EntityGraphStore entityGraphStore,
+                       final PasswordEncoder passwordEncoder,
+                       final EmailService emailService,
+                       final UserDetailsService userDetailsService,
+                       final AuthenticationManager authenticationManager,
+                       final RememberMeServices rememberMeServices,
+                       final CurrentAuthService currentAuthService,
+                       final CaptchaService captchaService,
+                       final AppConfig appConfig) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.userRoleRolesRepository = userRoleRolesRepository;
+        this.userProfileRepository = userProfileRepository;
+        this.entityGraphStore = entityGraphStore;
+        this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
+        this.userDetailsService = userDetailsService;
+        this.authenticationManager = authenticationManager;
+        this.rememberMeServices = rememberMeServices;
+        this.currentAuthService = currentAuthService;
+        this.captchaService = captchaService;
+        this.appConfig = appConfig;
+    }
+
+    /**
+     * Registers a new user.
+     *
+     * @param user user data
+     * @return result of the operation
+     */
+    @NotNull
+    @Transactional
+    public LoginApiResult registerNewUser(@NotNull final UserRegisterDto user, final boolean registerActivated) {
+        log.debug("Registering new user: {}, email: {}, registerActivated: {}, token: {}", user.getUsername(),
+                user.getEmail(), registerActivated, StringUtils.abbreviateMiddle(user.getCaptchaToken(), "...", CAPTCHA_LOG_LENGTH));
+
+        Validate.notBlank(user.getUsername(), "User name is required");
+        Validate.notBlank(user.getPassword(), "User password is required");
+
+        if (SYSTEM_USERS.contains(user.getUsername().trim().toLowerCase())) {
+            return LoginApiResult.errorUserAlreadyExists(user.getUsername());
+        }
+
+        if (appConfig.isReCaptchaInRegisterEnable()) {
+            if (StringUtils.isNotBlank(user.getCaptchaToken())) {
+                if (!captchaService.checkToken(user.getCaptchaToken())) {
+                    return LoginApiResult.error(user.getUsername(), "Captcha failed");
+                }
+            } else {
+                return LoginApiResult.error(user.getUsername(), "Captcha required");
+            }
+        }
+
+        try {
+            final boolean activated = registerActivated || !appConfig.isActivationEnabled();
+            final UserDto newUser = new UserDto();
+            newUser.setName(StringUtils.trim(user.getUsername()));
+            newUser.setEmail(StringUtils.trim(user.getEmail()));
+            newUser.setPassword(passwordEncoder.encode(user.getPassword()));
+            newUser.setActivated(activated);
+            final UserDto userDto = userRepository.save(newUser);
+            final RoleDto roleDto = Objects.requireNonNull(roleRepository.getByName("USER"), "Role USER not found");
+            userRoleRolesRepository.save(new UserRoleRolesDto(userDto.getId(), roleDto.getId()));
+
+            if (appConfig.isActivationEnabled()) {
+                if (!activated) {
+                    final UserProfileDto userProfile = new UserProfileDto();
+                    userProfile.setUserId(userDto.getId());
+                    userProfile.setActivationCode(UUID.randomUUID().toString());
+                    userProfileRepository.save(userProfile);
+                    emailService.sendActivationLink(userDto, userProfile);
+                } else {
+                    log.warn("User activated without email confirmation: {}", userDto.getName());
+                }
+            } else {
+                log.debug("User registered without email confirmation: {}, activation disabled", userDto.getName());
+            }
+
+            log.info("User registered: {}, id: {}, email: {}, activated: {}", userDto.getName(), userDto.getId(), userDto.getEmail(), userDto.getActivated());
+
+            return new LoginApiResult(true, userDto.getName());
+        } catch (final DataIntegrityViolationException ex) {
+            log.error("User registration failed: {}", user.getUsername(), ex);
+            if (ex.getMessage().contains("user_name_key")) {
+                return LoginApiResult.errorUserAlreadyExists(user.getUsername());
+            } else if (ex.getMessage().contains("user_email_key")) {
+                return LoginApiResult.errorEmailAlreadyExists(user.getUsername());
+            } else {
+                return LoginApiResult.error(user.getUsername(), "Registration failed");
+            }
+        } catch (final MessagingException ex) {
+            log.error("User registration failed: {}", user.getUsername(), ex);
+            return LoginApiResult.error(user.getUsername(), "Internal email error");
+        }
+    }
+
+    /**
+     * Logs in user.
+     *
+     * @param user     user data
+     * @param request  request
+     * @param response response
+     * @return result of the operation
+     */
+    @NotNull
+    @Transactional
+    public LoginApiResult login(@NotNull final UserLoginDto user,
+                                @NotNull final HttpServletRequest request,
+                                @NotNull final HttpServletResponse response) {
+        log.debug("Logging in user: {}, remember me: {}, token: {}", user.getUsername(), user.isRememberMe(),
+                StringUtils.abbreviateMiddle(user.getCaptchaToken(), "...", CAPTCHA_LOG_LENGTH));
+
+        final LoginApiResult result = loginInternal(user, request, response);
+        if (result.isSuccess()) {
+            log.info("User logged success: {}", result.getUsername());
+        } else {
+            log.warn("User login failed: {}, message: {}, errors: {}", user.getUsername(), result.getMessage(), result.getErrors());
+        }
+
+        return result;
+    }
+
+    /**
+     * Logs out current user.
+     *
+     * @param request  request
+     * @param response response
+     * @return result of the operation
+     */
+    @NotNull
+    public BaseApiResult logout(final HttpServletRequest request, final HttpServletResponse response) {
+        final UserDetailsImpl currentUser = currentAuthService.getUserDetails();
+        log.debug("Logging out user: {}", currentUser != null ? currentUser.getUsername() : "null");
+
+        new SecurityContextLogoutHandler().logout(request, null, null);
+        cancelRememberMeCookie(response);
+
+        if (currentUser != null) {
+            log.info("User logout, name: {}", currentUser.getUsername());
+        }
+
+        return BaseApiResult.success();
+    }
+
+    /**
+     * Activates user by activation code.
+     *
+     * @param activationCode activation code
+     * @return result of the operation
+     */
+    @Transactional
+    public BaseApiResult activateUser(final String activationCode) {
+        log.debug("Activating user by code: {}", activationCode);
+
+        final UserProfileDto userProfile = userProfileRepository.getByActivationCode(activationCode);
+        if (userProfile == null) {
+            log.warn("Activation code not found: {}", activationCode);
+            return BaseApiResult.error("Activation code not found");
+        }
+
+        final UserDto user = userRepository.getById(userProfile.getUserId());
+        if (user.getActivated()) {
+            log.warn("User already activated: {}", user.getName());
+            return BaseApiResult.error("User already activated");
+        }
+
+        user.setActivated(true);
+        final Duration duration = Duration.between(user.getCreatedAt(), OffsetDateTime.now());
+        userRepository.update(user);
+        log.info("User activated: {}, duration: {}", user.getName(), duration);
+        return BaseApiResult.success("User successfully activated");
+    }
+
+    @Transactional
+    public BaseApiResult requestPasswordRecover(final PasswordRecoverDto passwordRecover) {
+        log.debug("Requesting password recover for email: {}, token: {}", passwordRecover.getEmail(),
+                StringUtils.abbreviateMiddle(passwordRecover.getCaptchaToken(), "...", CAPTCHA_LOG_LENGTH));
+
+        if (appConfig.isReCaptchaInPasswordRecoverEnable()) {
+            if (StringUtils.isNotBlank(passwordRecover.getCaptchaToken())) {
+                if (!captchaService.checkToken(passwordRecover.getCaptchaToken())) {
+                    return BaseApiResult.error("Captcha failed");
+                }
+            } else {
+                return BaseApiResult.error("Captcha required");
+            }
+        }
+
+        final UserDto user = userRepository.getByEmail(passwordRecover.getEmail());
+
+        try {
+            if (user != null) {
+                final UserProfileDto userProfile = Optional.ofNullable(userProfileRepository.getByUserId(user.getId()))
+                        .orElseGet(() -> (UserProfileDto) new UserProfileDto().setUserId(user.getId()));
+
+                userProfile.setPasswordResetCode(UUID.randomUUID().toString());
+                userProfile.setPasswordResetCodeExpireAt(OffsetDateTime.now().plusHours(PASSWORD_RESET_CODE_EXPIRE_HOURS));
+                userProfileRepository.save(userProfile);
+                emailService.sendPasswordRecover(user, userProfile);
+                log.info("Password recover email sent: {}, user: {}", passwordRecover.getEmail(), user.getName());
+            } else {
+                log.warn("User not found by email: {}", passwordRecover.getEmail());
+            }
+        } catch (final MessagingException ex) {
+            log.error("Request password recover failed: {}", passwordRecover.getEmail(), ex);
+            return BaseApiResult.error("Internal email error");
+        }
+
+        // response with success to avoid email enumeration and provide that email exists in the system
+        return BaseApiResult.success("Password recover email sent if the user exists in the system");
+    }
+
+    @Transactional
+    public BaseApiResult finishPasswordRecovery(final PasswordRecoverFinishDto passwordRecoverFinish) {
+        log.debug("Finishing password recover for code: {}, token: {}", passwordRecoverFinish.getRecoveryCode(),
+                StringUtils.abbreviateMiddle(passwordRecoverFinish.getCaptchaToken(), "...", CAPTCHA_LOG_LENGTH));
+
+        if (appConfig.isReCaptchaInPasswordRecoverEnable()) {
+            if (StringUtils.isNotBlank(passwordRecoverFinish.getCaptchaToken())) {
+                if (!captchaService.checkToken(passwordRecoverFinish.getCaptchaToken())) {
+                    return BaseApiResult.error("Captcha failed");
+                }
+            } else {
+                return BaseApiResult.error("Captcha required");
+            }
+        }
+
+        final UserProfileDto userProfile = userProfileRepository.getByPasswordResetCode(passwordRecoverFinish.getRecoveryCode());
+        if (userProfile == null || StringUtils.isBlank(userProfile.getPasswordResetCode()) || userProfile.getPasswordResetCodeExpireAt() == null) {
+            log.warn("Invalid password recover code: {}", passwordRecoverFinish.getRecoveryCode());
+            return BaseApiResult.error("Invalid password recover code");
+        }
+
+        if (OffsetDateTime.now().isAfter(userProfile.getPasswordResetCodeExpireAt())) {
+            return BaseApiResult.error("Your link is out of date. Please, reset your password again");
+        }
+
+        final UserDto user = userRepository.getById(userProfile.getUserId());
+        // password recovery code automatically activates user
+        user.setActivated(true);
+        user.setPassword(passwordEncoder.encode(passwordRecoverFinish.getNewPassword()));
+        userRepository.update(user);
+        // recover code can be used only once
+        userProfile.setPasswordResetCode(null);
+        userProfileRepository.update(userProfile);
+
+        log.info("Password successfully recovered: {}, email: {}, expired at: {}", user.getName(), user.getEmail(),
+                userProfile.getPasswordResetCodeExpireAt());
+        return BaseApiResult.success("Password successfully recovered");
+    }
+
+    @NotNull
+    private LoginApiResult loginInternal(final UserLoginDto user, final HttpServletRequest request, final HttpServletResponse response) {
+        try {
+            if (USER_SYSTEM.equalsIgnoreCase(user.getUsername()) || USER_ANON.equals(user.getUsername())) {
+                return LoginApiResult.error(user.getUsername(), "User reserved");
+            }
+
+            if (appConfig.isReCaptchaInLoginEnable()) {
+                if (StringUtils.isNotBlank(user.getCaptchaToken())) {
+                    if (!captchaService.checkToken(user.getCaptchaToken())) {
+                        return LoginApiResult.error(user.getUsername(), "Captcha failed");
+                    }
+                } else {
+                    return LoginApiResult.error(user.getUsername(), "Captcha required");
+                }
+            }
+
+            final UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsService.loadUserByUsername(StringUtils.trim(user.getUsername()));
+
+            if (!userDetails.getUser().getActivated() && appConfig.isActivationEnabled()) {
+                return LoginApiResult.error(user.getUsername(), "User not activated. Please, check out your email to activate user");
+            }
+
+            final UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword());
+            token.setDetails(userDetails);
+            final Authentication authenticate = authenticationManager.authenticate(token);
+            final SecurityContext securityContext = SecurityContextHolder.getContext();
+            securityContext.setAuthentication(authenticate);
+            final HttpSession session = request.getSession(true);
+            session.setAttribute("SPRING_SECURITY_CONTEXT", securityContext);
+
+            if (user.isRememberMe()) {
+                rememberMeServices.loginSuccess(request, response, authenticate);
+            } else {
+                cancelRememberMeCookie(response);
+            }
+
+            return new LoginApiResult(true, userDetails.getUsername(), "User logged in");
+        } catch (final UsernameNotFoundException ex) {
+            return new LoginApiResult(false, user.getUsername(), "User not found");
+        } catch (final LockedException ex) {
+            return new LoginApiResult(false, user.getUsername(), "User banned");
+        } catch (final DisabledException ex) {
+            return new LoginApiResult(false, user.getUsername(), "User disabled");
+        } catch (final BadCredentialsException ex) {
+            return new LoginApiResult(false, user.getUsername(), "Bad credentials");
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isPasswordRecoveryActive(final String recoveryCode) {
+        final UserProfileDto userProfile = userProfileRepository.getByPasswordResetCode(recoveryCode);
+        if (userProfile == null || StringUtils.isBlank(userProfile.getPasswordResetCode()) || userProfile.getPasswordResetCodeExpireAt() == null) {
+            log.warn("Invalid password recover code: {}", recoveryCode);
+            return false;
+        }
+
+        if (OffsetDateTime.now().isAfter(userProfile.getPasswordResetCodeExpireAt())) {
+            log.warn("Password recover code is out of date: {}, user: {}, expired at: {}", recoveryCode,
+                    userProfile.getUserId(), userProfile.getPasswordResetCodeExpireAt());
+            return false;
+        }
+
+        return true;
+    }
+
+    private void cancelRememberMeCookie(final HttpServletResponse response) {
+        final Cookie cookie = new Cookie("remember-me", null);
+        cookie.setMaxAge(0);
+        cookie.setPath("/");
+        response.addCookie(cookie);
+    }
+}

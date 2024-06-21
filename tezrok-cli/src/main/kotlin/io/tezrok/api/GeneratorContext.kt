@@ -43,13 +43,13 @@ interface GeneratorContext : GeneratorProvider {
      * Writes content to [OutStream] using specified template.
      */
     fun writeTemplate(output: OutStream, templatePath: String, values: Map<String, Any?>) =
-        writeTemplate(output, templatePath) { context -> values.forEach { (k, v) -> context.put(k, v) } }
+        writeTemplate(output, templatePath) { context -> extendsValues(templatePath, values).forEach { (k, v) -> context.put(k, v) } }
 
     /**
      * Writes content to [OutStream] using specified template.
      */
     fun writeTemplate(output: OutStream, templatePath: String) =
-        writeTemplate(output, templatePath, mapOf("package" to getProject().packagePath))
+        writeTemplate(output, templatePath, extendsValues(templatePath))
 
     /**
      * Add a file to the target directory with the specified template.
@@ -59,18 +59,17 @@ interface GeneratorContext : GeneratorProvider {
         val fileName = FilenameUtils.getName(templatePath).removeSuffix(".vm")
         val startDbFile = targetDir.getOrAddFile(fileName)
         if (startDbFile.isEmpty()) {
-            if (fileName.endsWith(".java")) {
-                val finalValues = if (values.containsKey("package"))
-                    values
-                else
-                    values + mapOf("package" to getProject().packagePath)
-                writeTemplate(startDbFile, templatePath, finalValues)
-            } else {
-                writeTemplate(startDbFile, templatePath, values)
-            }
+            writeTemplate(startDbFile, templatePath, extendsValues(templatePath, values))
         } else {
             log.warn("File {} already exists, skipping", fileName)
         }
+    }
+
+    fun extendsValues(templatePath: String, values: Map<String, Any?> = emptyMap()): Map<String, Any?> {
+        return if (values.containsKey("package") || !templatePath.endsWith(".java.vm"))
+            values
+        else
+            values + mapOf("package" to getProject().packagePath)
     }
 
     companion object {

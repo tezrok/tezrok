@@ -1,0 +1,93 @@
+package ${package}.service;
+
+import ${package}.dto.UserDetailsImpl;
+import org.jetbrains.annotations.Nullable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+
+/**
+ * Service for getting the currently authenticated user.
+ */
+@Service
+public class CurrentAuthService {
+    public static final String ANON_USER = "anonymousUser";
+
+    /**
+     * Returns whether the current user is authenticated.
+     *
+     * @return {@code true} if the current user is authenticated, {@code false} otherwise
+     */
+    public boolean isAuthenticated() {
+        final Authentication authentication = getAuthentication();
+        return authentication != null && authentication.isAuthenticated() && !ANON_USER.equals(authentication.getName());
+    }
+
+    /**
+     * Returns whether the current user is anonymous.
+     *
+     * @return {@code true} if the current user is anonymous, {@code false} otherwise
+     */
+    public boolean isAnonymous() {
+        final Authentication authentication = getAuthentication();
+        return authentication == null || ANON_USER.equals(authentication.getName());
+    }
+
+    /**
+     * Returns the username of the currently authenticated user.
+     *
+     * @return the username of the currently authenticated user or {@code null} if no authentication information is available
+     */
+    @Nullable
+    public String getUsername() {
+        final Authentication authentication = getAuthentication();
+        return authentication != null ? authentication.getName() : null;
+    }
+
+    /**
+     * Returns the currently authenticated user.
+     *
+     * @return the currently authenticated user or {@code null} if no authentication information is available
+     */
+    @Nullable
+    public UserDetailsImpl getUserDetails() {
+        final Authentication authentication = getAuthentication();
+        final Object principal = authentication != null ? authentication.getPrincipal() : null;
+        return principal instanceof UserDetailsImpl ? (UserDetailsImpl) principal : null;
+    }
+
+    /**
+     * Returns the currently authenticated principal or an authentication request token.
+     *
+     * @return {@link Authentication} or {@code null} if no authentication information is available
+     */
+    @Nullable
+    public Authentication getAuthentication() {
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            return authentication;
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns whether the current user has the specified authority.
+     *
+     * @param authority the authority to check
+     * @return {@code true} if the current user has the specified authority, {@code false} otherwise
+     */
+    public boolean hasAuthority(final String authority) {
+        final Authentication authentication = getAuthentication();
+        return authentication != null && authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(authority));
+    }
+
+    /**
+     * Returns whether the current user contains the authority "ROLE_ADMIN".
+     *
+     * @return {@code true} if the current user is an admin, {@code false} otherwise
+     */
+    public boolean isAdmin() {
+        return hasAuthority("ROLE_ADMIN");
+    }
+}

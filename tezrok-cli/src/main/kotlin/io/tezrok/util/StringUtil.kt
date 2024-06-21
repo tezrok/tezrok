@@ -47,4 +47,22 @@ fun String.lowerFirst(): String = replaceFirstChar { it.lowercase() }
  */
 fun String.upperFirst(): String = replaceFirstChar { it.uppercase() }
 
+/**
+ * Converts a name from camelCase to standard name
+ *
+ * Example: `camelCase` -> `camel-case`
+ */
+fun String.toHyphenName(): String = camelCaseRegex.replace(this, "$1-$2").lowercase()
+
+/**
+ * Converts a name from camelCase to standard name
+ *
+ * Example: `camel-case` -> `camelCase`
+ */
+fun String.hyphenNameToCamelCase(): String = hyphenNameRegex.replace(this) {
+    it.groupValues[1] + it.groupValues[3].uppercase()
+}
+
 private val camelCaseRegex = Regex("([a-z\\d])([A-Z]+)")
+
+private val hyphenNameRegex = Regex("([a-z\\d])(-)([a-z])")

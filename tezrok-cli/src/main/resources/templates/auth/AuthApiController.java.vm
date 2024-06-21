@@ -1,0 +1,135 @@
+package ${package}.web.rest;
+
+import ${package}.dto.UserDetailsImpl;
+import ${package}.dto.UserDto;
+import ${package}.dto.api.*;
+import ${package}.error.UserNotFoundException;
+import ${package}.service.AuthService;
+import ${package}.service.CurrentAuthService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
+
+/**
+ * Api methods for authentication.
+ *
+ * @see AuthService
+ */
+@RestController
+@RequestMapping("/api/v1/auth")
+public class AuthApiController {
+    protected static final Logger log = LoggerFactory.getLogger(AuthApiController.class);
+
+    private final AuthService authService;
+
+    private final CurrentAuthService currentAuthService;
+
+    public AuthApiController(final AuthService authService,
+                             final CurrentAuthService currentAuthService) {
+        this.authService = authService;
+        this.currentAuthService = currentAuthService;
+    }
+
+    /**
+     * Returns the currently authenticated user or throws an exception if the user is not authenticated.
+     *
+     * @return the currently authenticated user
+     * @throws UserNotFoundException if the user is not authenticated
+     */
+    @NotNull
+    @GetMapping("/me")
+    public UserDto getCurrentUser() {
+        return Optional.ofNullable(currentAuthService.getUserDetails()).map(UserDetailsImpl::getUser).orElseGet(UserDto::new);
+    }
+
+    @NotNull
+    @PostMapping("/register")
+    public LoginApiResult register(@RequestBody @Valid final UserRegisterDto userDto,
+                                   final BindingResult result) {
+        // TODO: add captcha
+        log.debug("Try register new user {}, email: {}", userDto.getUsername(), userDto.getEmail());
+
+        if (currentAuthService.isAuthenticated()) {
+            log.warn("User already logged: {}, register action as {}", currentAuthService.getUsername(), userDto.getUsername());
+            return new LoginApiResult(false, userDto.getUsername(), "Can't register new user in active session. Please, logout first.");
+        }
+
+        if (result.hasErrors()) {
+            return new LoginApiResult(false, userDto.getUsername(), "Invalid request", result.getFieldErrors());
+        }
+
+        return authService.registerNewUser(userDto, false);
+    }
+
+    @NotNull
+    @PostMapping("/login")
+    public LoginApiResult login(final HttpServletRequest request,
+                                final HttpServletResponse response,
+                                @RequestBody @Valid final UserLoginDto userLoginDto,
+                                final BindingResult result) {
+        log.debug("Try login: {}", userLoginDto.getUsername());
+
+        if (currentAuthService.isAuthenticated()) {
+            log.warn("User already logged as {}, login action as {}", currentAuthService.getUsername(), userLoginDto.getUsername());
+        }
+
+        if (result.hasErrors()) {
+            return new LoginApiResult(false, userLoginDto.getUsername(), "Invalid request", result.getFieldErrors());
+        }
+
+        return authService.login(userLoginDto, request, response);
+    }
+
+    @NotNull
+    @PostMapping("/logout")
+    public BaseApiResult logout(final HttpServletRequest request, final HttpServletResponse response) {
+        if (!currentAuthService.isAuthenticated()) {
+            log.warn("User not authorized");
+            return BaseApiResult.success();
+        }
+
+        return authService.logout(request, response);
+    }
+
+    @NotNull
+    @PostMapping("/recover")
+    public BaseApiResult recoverPassword(@RequestBody @Valid final PasswordRecoverDto recoverDto,
+                                         final BindingResult result) {
+        // TODO: add captcha
+        log.debug("Try password recover by email: {}", recoverDto.getEmail());
+
+        if (currentAuthService.isAuthenticated()) {
+            return BaseApiResult.error("Can't recover password in active session");
+        }
+
+        if (result.hasErrors()) {
+            return BaseApiResult.error("Invalid request", result.getFieldErrors());
+        }
+
+        return authService.requestPasswordRecover(recoverDto);
+    }
+
+    @NotNull
+    @PostMapping("/recoverFinish")
+    public BaseApiResult recoverPasswordFinish(@RequestBody @Valid final PasswordRecoverFinishDto recoverFinishDto,
+                                               final BindingResult result) {
+        log.debug("Try finish password recover by recovery code: {}", recoverFinishDto.getRecoveryCode());
+
+        if (currentAuthService.isAuthenticated()) {
+            return BaseApiResult.error("Can't recover password in active session");
+        }
+
+        if (result.hasErrors()) {
+            return BaseApiResult.error("Invalid request", result.getFieldErrors());
+        }
+
+        return authService.finishPasswordRecovery(recoverFinishDto);
+    }
+}
