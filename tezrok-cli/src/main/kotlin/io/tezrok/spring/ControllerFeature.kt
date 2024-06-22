@@ -28,8 +28,14 @@ internal class ControllerFeature : TezrokFeature {
                 addControllerClass(entity, restDir, projectElem.packagePath, context)
             }
 
-            addRestHandlerExceptionResolver(applicationPackageRoot.getOrAddJavaDirectory("error"), projectElem.packagePath, context)
-            addWebMvcConfig(applicationPackageRoot.getOrAddJavaDirectory("config"), projectElem.packagePath, context)
+            addRestHandlerExceptionResolver(
+                applicationPackageRoot.getOrAddJavaDirectory("error"),
+                projectElem.packagePath,
+                context
+            )
+            val configDir = applicationPackageRoot.getOrAddJavaDirectory("config")
+            context.addFile(configDir, "/templates/spring/WebMvcConfig.java.vm")
+            context.addFile(configDir, "/templates/spring/AlternativePathResourceResolver.java.vm")
         } else {
             log.warn("Application package root is not set, module: {}", module.getName())
         }
@@ -48,22 +54,6 @@ internal class ControllerFeature : TezrokFeature {
             context.writeTemplate(
                 controllerFile,
                 "/templates/spring/RestHandlerExceptionResolver.java.vm",
-                mapOf("package" to packagePath)
-            )
-        }
-    }
-
-    private fun addWebMvcConfig(
-        configDir: JavaDirectoryNode,
-        packagePath: String,
-        context: GeneratorContext
-    ) {
-        val fileName = "WebMvcConfig.java"
-        if (!configDir.hasClass(fileName)) {
-            val controllerFile = configDir.addJavaFile(fileName)
-            context.writeTemplate(
-                controllerFile,
-                "/templates/spring/WebMvcConfig.java.vm",
                 mapOf("package" to packagePath)
             )
         }

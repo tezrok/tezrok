@@ -1,0 +1,81 @@
+package ${package}.repository;
+
+import ${package}.dto.RememberMeTokenDto;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.web.authentication.rememberme.PersistentRememberMeToken;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+
+import java.time.OffsetDateTime;
+import java.util.Date;
+import java.util.List;
+
+/**
+ * Implementation of {@link PersistentTokenRepository}.
+ */
+public class PersistentTokenRepositoryImpl implements PersistentTokenRepository {
+    private final Logger log = LoggerFactory.getLogger(PersistentTokenRepositoryImpl.class);
+    private final RememberMeTokenRepository rememberMeTokenRepository;
+
+    public PersistentTokenRepositoryImpl(final RememberMeTokenRepository rememberMeTokenRepository) {
+        this.rememberMeTokenRepository = rememberMeTokenRepository;
+    }
+
+    @Override
+    public void createNewToken(final PersistentRememberMeToken token) {
+        if (token != null) {
+            final RememberMeTokenDto newToken = new RememberMeTokenDto();
+            newToken.setSeries(token.getSeries());
+            newToken.setUsername(token.getUsername());
+            newToken.setToken(token.getTokenValue());
+            newToken.setLastUsed(toOffsetDateTime(token.getDate()));
+            rememberMeTokenRepository.save(newToken);
+        }
+    }
+
+    @Override
+    public void updateToken(final String series, final String tokenValue, final Date lastUsed) {
+        final RememberMeTokenDto token = rememberMeTokenRepository.getById(series);
+
+        if (token != null) {
+            token.setLastUsed(toOffsetDateTime(lastUsed));
+            token.setToken(tokenValue);
+            rememberMeTokenRepository.update(token);
+        } else {
+            log.warn("User remember-me token not found: {}", series);
+        }
+    }
+
+    @Override
+    public PersistentRememberMeToken getTokenForSeries(final String seriesId) {
+        final RememberMeTokenDto token = rememberMeTokenRepository.getById(seriesId);
+
+        if (token != null) {
+            return new PersistentRememberMeToken(token.getUsername(),
+                    token.getSeries(),
+                    token.getToken(),
+                    new Date(token.getLastUsed().toInstant().toEpochMilli()));
+        }
+
+        return null;
+    }
+
+    @Override
+    public void removeUserTokens(final String username) {
+        final List<String> tokens = rememberMeTokenRepository.findByUsername(username)
+                .stream()
+                .map(RememberMeTokenDto::getSeries)
+                .toList();
+
+        if (!tokens.isEmpty()) {
+            rememberMeTokenRepository.deleteAllById(tokens);
+        }
+    }
+
+    @NotNull
+    private static OffsetDateTime toOffsetDateTime(final Date date) {
+        // TODO: fix this
+        return date.toInstant().atOffset(OffsetDateTime.now().getOffset());
+    }
+}

@@ -1,12 +1,16 @@
 package ${package}.config;
 
 import ${package}.error.RestHandlerExceptionResolver;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.HandlerExceptionResolver;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
@@ -16,6 +20,7 @@ import java.util.List;
  */
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
+
     private final AppConfig appConfig;
 
     public WebMvcConfig(final AppConfig appConfig) {
@@ -36,5 +41,30 @@ public class WebMvcConfig implements WebMvcConfigurer {
         final HttpComponentsClientHttpRequestFactory clientHttpRequestFactory = new HttpComponentsClientHttpRequestFactory();
         clientHttpRequestFactory.setConnectTimeout(appConfig.getHttpClientTimeout());
         return clientHttpRequestFactory;
+    }
+
+    @Bean
+    public WebMvcConfigurer webMvcConfigurer() {
+        return new WebMvcConfigurer() {
+            /**
+             * Enable CORS globally
+             * <p>
+             * TODO: configure CORS only for development
+             */
+            @Override
+            public void addCorsMappings(@NotNull final CorsRegistry registry) {
+                registry.addMapping("/api/**").allowedOrigins("http://localhost:5173").allowedMethods("GET", "POST", "PUT", "DELETE");
+            }
+
+            @Override
+            public void addViewControllers(@NotNull final ViewControllerRegistry registry) {
+                registry.addViewController("/error").setViewName("error");
+            }
+
+            @Override
+            public void addResourceHandlers(final ResourceHandlerRegistry registry) {
+                registry.addResourceHandler("/**").addResourceLocations("classpath:/public/", "classpath:/static/").resourceChain(true).addResolver(new AlternativePathResourceResolver());
+            }
+        };
     }
 }

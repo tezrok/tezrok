@@ -1,0 +1,116 @@
+package ${package}.service;
+
+import ${package}.config.AppConfig;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestOperations;
+import org.springframework.web.client.RestTemplate;
+
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.regex.Pattern;
+
+/**
+ * Service for captcha operations.
+ */
+@Slf4j
+@Service
+public class CaptchaService {
+    private static final Pattern RESPONSE_PATTERN = Pattern.compile("[A-Za-z0-9_-]+");
+    private final AppConfig appConfig;
+    private final RestOperations restTemplate;
+
+    public CaptchaService(final AppConfig appConfig, final RestTemplate restTemplate) {
+        this.appConfig = appConfig;
+        this.restTemplate = restTemplate;
+    }
+
+    public boolean isCaptchaInLoginEnable() {
+        return appConfig.isReCaptchaInLoginEnable();
+    }
+
+    public boolean isCaptchaInRegisterEnable() {
+        return appConfig.isReCaptchaInRegisterEnable();
+    }
+
+    public boolean isCaptchaInPasswordRecoverEnable() {
+        return appConfig.isReCaptchaInPasswordRecoverEnable();
+    }
+
+    public String getSiteKey() {
+        return appConfig.getReCaptchaSiteKey();
+    }
+
+    public boolean checkToken(final String token) {
+        if (!responseSanityCheck(token)) {
+            log.error("Captcha response contains invalid characters: {}", token);
+            return false;
+        }
+
+        final URI verifyUri = URI.create(String.format("https://www.google.com/recaptcha/api/siteverify?secret=%s&response=%s",
+                appConfig.getReCaptchaSecretKey(), token));
+        final GoogleResponse googleResponse = restTemplate.getForObject(verifyUri, GoogleResponse.class);
+        Objects.requireNonNull(googleResponse, () -> "Response is null for token: " + token);
+
+        final boolean success = googleResponse.isSuccess() && (googleResponse.getScore() == null || googleResponse.getScore() >= appConfig.getReCaptchaThreshold());
+        if (!success) {
+            log.warn("Captcha failed, response: {}, token: {}", googleResponse, token);
+        }
+
+        return success;
+    }
+
+    private boolean responseSanityCheck(String response) {
+        return StringUtils.isNotBlank(response) && RESPONSE_PATTERN.matcher(response).matches();
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @Data
+    public static class GoogleResponse {
+
+        @JsonProperty("success")
+        private boolean success;
+
+        @JsonProperty("score")
+        private Float score;
+
+        @JsonProperty("challenge_ts")
+        private String challengeTs;
+
+        @JsonProperty("hostname")
+        private String hostname;
+
+        @JsonProperty("error-codes")
+        private ErrorCode[] errorCodes;
+
+        enum ErrorCode {
+            MissingSecret,
+            InvalidSecret,
+            MissingResponse,
+            InvalidResponse;
+
+            private static Map<String, ErrorCode> errorsMap = new HashMap<>(4);
+
+            static {
+                errorsMap.put("missing-input-secret", MissingSecret);
+                errorsMap.put("invalid-input-secret", InvalidSecret);
+                errorsMap.put("missing-input-response", MissingResponse);
+                errorsMap.put("invalid-input-response", InvalidResponse);
+            }
+
+            @JsonCreator
+            public static ErrorCode forValue(String value) {
+                return errorsMap.get(value.toLowerCase());
+            }
+        }
+    }
+}

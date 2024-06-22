@@ -7,6 +7,7 @@ import io.tezrok.api.input.ProjectElem
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.api.maven.UseMavenDependency
 import io.tezrok.auth.AuthFeature
+import io.tezrok.captcha.CaptchaFeature
 import io.tezrok.db.DataSourceFeature
 import io.tezrok.docker.DockerFeature
 import io.tezrok.email.EmailFeature
@@ -55,6 +56,7 @@ internal class FeatureManager {
         features.add(SpringFeature())
         features.add(SpringSecurityFeature())
         features.add(WebApiFeature())
+        features.add(CaptchaFeature())
         features.add(AuthFeature())
         features.add(LiquibaseFeature())
         features.add(JooqFeature())

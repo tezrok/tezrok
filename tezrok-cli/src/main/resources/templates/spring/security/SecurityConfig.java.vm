@@ -2,7 +2,6 @@ package ${package}.config;
 
 import ${package}.repository.PersistentTokenRepositoryImpl;
 import ${package}.repository.RememberMeTokenRepository;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,10 +17,6 @@ import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableWebSecurity
@@ -65,36 +60,6 @@ public class SecurityConfig {
                 .rememberMeServices(rememberMeService()));
 
         return httpSecurity.build();
-    }
-
-    /**
-     * Enable CORS globally
-     * <p>
-     * TODO: configure CORS only for development
-     */
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(@NotNull final CorsRegistry registry) {
-                registry.addMapping("/api/**")
-                        .allowedOrigins("http://localhost:5173")
-                        .allowedMethods("GET", "POST", "PUT", "DELETE");
-            }
-
-            @Override
-            public void addViewControllers(@NotNull final ViewControllerRegistry registry) {
-                registry.addViewController("/error").setViewName("error");
-            }
-
-            @Override
-            public void addResourceHandlers(final ResourceHandlerRegistry registry) {
-                registry.addResourceHandler("/**")
-                        .addResourceLocations("classpath:/public/", "classpath:/static/")
-                        .resourceChain(true)
-                        .addResolver(new AlternativePathResourceResolver());
-            }
-        };
     }
 
     @Bean

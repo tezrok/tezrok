@@ -22,19 +22,14 @@ open class SpringSecurityFeature : TezrokFeature {
             val applicationPackageRoot = module.source.main.java.applicationPackageRoot
 
             if (applicationPackageRoot != null) {
-                val values = mapOf("package" to projectElem.packagePath)
-                val userDetails = applicationPackageRoot.getOrAddJavaDirectory("dto").addJavaFile("UserDetailsImpl")
-                context.writeTemplate(userDetails, "/templates/spring/security/UserDetailsImpl.java.vm", values)
-                val userDetailsService = applicationPackageRoot.getOrAddJavaDirectory("service")
-                    .addJavaFile("UserDetailsServiceImpl")
-                context.writeTemplate(
-                    userDetailsService,
-                    "/templates/spring/security/UserDetailsServiceImpl.java.vm",
-                    values
-                )
-                val securityConfig = applicationPackageRoot.getOrAddJavaDirectory("config")
-                    .addJavaFile("SecurityConfig")
-                context.writeTemplate(securityConfig, "/templates/spring/security/SecurityConfig.java.vm", values)
+                val dtoDir = applicationPackageRoot.getOrAddJavaDirectory("dto")
+                context.addFile(dtoDir, "/templates/spring/security/UserDetailsImpl.java.vm")
+                val serviceDir = applicationPackageRoot.getOrAddJavaDirectory("service")
+                context.addFile(serviceDir, "/templates/spring/security/UserDetailsServiceImpl.java.vm")
+                val configDir = applicationPackageRoot.getOrAddJavaDirectory("config")
+                context.addFile(configDir, "/templates/spring/security/SecurityConfig.java.vm")
+                val repositoryDir = applicationPackageRoot.getOrAddJavaDirectory("repository")
+                context.addFile(repositoryDir, "/templates/spring/security/PersistentTokenRepositoryImpl.java.vm")
             }
         }
 

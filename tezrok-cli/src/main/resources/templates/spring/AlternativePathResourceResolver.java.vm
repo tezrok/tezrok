@@ -1,0 +1,44 @@
+package ${package}.config;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.Nullable;
+import org.springframework.core.io.Resource;
+import org.springframework.web.servlet.resource.AbstractResourceResolver;
+import org.springframework.web.servlet.resource.ResourceResolverChain;
+
+import java.util.List;
+
+/**
+ * If resource not found, try alternative path.
+ * <p>
+ * Example: /some-path -> /some-path/index.html
+ */
+@Slf4j
+public class AlternativePathResourceResolver extends AbstractResourceResolver {
+    @Nullable
+    @Override
+    protected Resource resolveResourceInternal(final HttpServletRequest request,
+                                               final String requestPath,
+                                               final List<? extends Resource> locations,
+                                               final ResourceResolverChain chain) {
+        final Resource resource = chain.resolveResource(request, requestPath, locations);
+        if (resource != null) {
+            return resource;
+        }
+
+        final String alternativePath = String.format("%s/index.html", requestPath);
+        if (log.isTraceEnabled()) {
+            log.trace("Resource not found: {}, try alternative path: {}", requestPath, alternativePath);
+        }
+        return chain.resolveResource(request, alternativePath, locations);
+    }
+
+    @Nullable
+    @Override
+    protected String resolveUrlPathInternal(final String resourceUrlPath,
+                                            final List<? extends Resource> locations,
+                                            final ResourceResolverChain chain) {
+        return chain.resolveUrlPath(resourceUrlPath, locations);
+    }
+}
