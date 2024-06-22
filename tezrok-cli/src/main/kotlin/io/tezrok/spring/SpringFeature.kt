@@ -7,7 +7,7 @@ import io.tezrok.api.java.JavaClassNode
 import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.maven.ModuleNode
 import io.tezrok.api.maven.ProjectNode
-import io.tezrok.util.PathUtil.NEW_LINE
+import io.tezrok.util.addNewSettings
 import org.slf4j.LoggerFactory
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -71,32 +71,17 @@ internal class SpringFeature : TezrokFeature {
     }
 
     private fun updateApplicationProperties(module: ModuleNode, moduleElem: ModuleElem?) {
+        val properties = module.properties
+        val dbUrl = properties.getProperty("datasource.url")?.replace("localhost", "\${DB_HOST:localhost}")
+        val dbUser = "\${DB_USER:${properties.getProperty("datasource.username")}}"
+        val dbPwd = "\${DB_PWD:${properties.getProperty("datasource.password")}}"
         val appProps = module.source.main.resources.getOrAddFile("application.properties")
-        val lines = appProps.asLines().toMutableList()
-        if (!lines.contains("spring.datasource")) {
-            val properties = module.properties
-            // TODO: update only specified properties
-            val dbUrl = properties.getProperty("datasource.url")?.replace("localhost", "\${DB_HOST:localhost}")
-            val dbUser = "\${DB_USER:${properties.getProperty("datasource.username")}}"
-            val dbPwd = "\${DB_PWD:${properties.getProperty("datasource.password")}}"
-            lines.addAll(
-                listOf(
-                    "spring.datasource.url=$dbUrl",
-                    "spring.datasource.username=$dbUser",
-                    "spring.datasource.password=$dbPwd",
-                    "spring.datasource.driver-class-name=${properties.getProperty("datasource.driver-class-name")}",
-                    "spring.data.web.pageable.default-page-size=10",
-                    "spring.data.web.pageable.max-page-size=20"
-                )
-            )
-        }
-
-        moduleElem?.spring?.properties?.let { props ->
-            props.includes?.forEach(lines::add)
-            props.excludes?.forEach(lines::remove)
-        }
-
-        appProps.setString(lines.joinToString(NEW_LINE) + NEW_LINE)
+        appProps.addNewSettings(moduleElem, "spring.datasource.url=$dbUrl",
+            "spring.datasource.username=$dbUser",
+            "spring.datasource.password=$dbPwd",
+            "spring.datasource.driver-class-name=${properties.getProperty("datasource.driver-class-name")}",
+            "spring.data.web.pageable.default-page-size=10",
+            "spring.data.web.pageable.max-page-size=20")
     }
 
     private fun handleMainMethod(mainClass: JavaClassNode) {

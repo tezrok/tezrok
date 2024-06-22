@@ -2,11 +2,12 @@ package io.tezrok.liquibase
 
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
+import io.tezrok.api.input.ModuleElem
 import io.tezrok.api.maven.ModuleNode
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.api.maven.UseMavenDependency
 import io.tezrok.api.sql.SqlGenerator
-import io.tezrok.util.PathUtil
+import io.tezrok.util.addNewSettings
 import org.apache.velocity.shaded.commons.io.FilenameUtils
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -21,9 +22,10 @@ internal class LiquibaseFeature : TezrokFeature {
         val sqlGenerator = context.getGenerator(SqlGenerator::class.java)
             ?: throw IllegalArgumentException("SqlGenerator not found")
         val module = project.getSingleModule()
-        val schema = context.getProject().modules.find { it.name == module.getName() }?.schema
+        val moduleElem = context.getProject().modules.find { it.name == module.getName() }
+        val schema = moduleElem?.schema
             ?: throw IllegalArgumentException("No schema found for module ${module.getName()}")
-        updateApplicationProperties(module)
+        updateApplicationProperties(module, moduleElem)
         // update pom
         val pomFile = module.pom
         pomFile.addProperty("liquibase.version", "4.25.0")
@@ -49,17 +51,13 @@ internal class LiquibaseFeature : TezrokFeature {
         return true
     }
 
-    private fun updateApplicationProperties(module: ModuleNode) {
+    private fun updateApplicationProperties(module: ModuleNode, moduleElem: ModuleElem?) {
         val appProps = module.source.main.resources.getOrAddFile("application.properties")
-        val text = appProps.asString()
-        // TODO: check properly
-        if (!text.contains("spring.liquibase")) {
-            val newLines = """
-                spring.liquibase.enabled=true
-                spring.liquibase.change-log=classpath:db/master.xml${PathUtil.NEW_LINE}
-            """.trimIndent()
-            appProps.setString(text + newLines)
-        }
+        appProps.addNewSettings(
+            moduleElem, "# Liquibase properties",
+            "spring.liquibase.enabled=true",
+            "spring.liquibase.change-log=classpath:db/master.xml"
+        )
     }
 
     private fun datePrefix(context: GeneratorContext): String =
