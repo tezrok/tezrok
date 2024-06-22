@@ -4,6 +4,7 @@ import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.TezrokProperties
 import io.tezrok.api.maven.ProjectNode
+import io.tezrok.util.hyphenNameToSnakeCase
 
 /**
  * Adds a datasource properties to the project.
@@ -13,7 +14,7 @@ internal class DataSourceFeature : TezrokFeature {
         val module = project.getSingleModule()
         val properties = module.properties
         val moduleName = module.getName()
-        val dbName = "${moduleName}_db"
+        val dbName = "${moduleName.hyphenNameToSnakeCase()}_db"
 
         properties.setPropertyIf("datasource.db-name", dbName)
         properties.setPropertyIf("datasource.url", "jdbc:postgresql://localhost:5432/$dbName")
