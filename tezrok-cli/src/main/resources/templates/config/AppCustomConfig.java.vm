@@ -1,0 +1,15 @@
+package ${package}.config.custom;
+
+import ${package}.config.AppConfig;
+import lombok.Data;
+
+/**
+ * Custom application configuration as part of {@link AppConfig}
+ */
+@Data
+public abstract class AppCustomConfig {
+
+    protected void validate() {
+        // place validation logic here
+    }
+}

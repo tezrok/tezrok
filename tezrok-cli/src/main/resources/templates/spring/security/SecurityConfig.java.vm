@@ -1,17 +1,43 @@
 package ${package}.config;
 
+import ${package}.repository.PersistentTokenRepositoryImpl;
+import ${package}.repository.RememberMeTokenRepository;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.RememberMeServices;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfig {
+    private final AppConfig appConfig;
+    private final UserDetailsService userDetailsService;
+    private final RememberMeTokenRepository rememberMeTokenRepository;
+
+    public SecurityConfig(final AppConfig appConfig,
+                          final UserDetailsService userDetailsService,
+                          final RememberMeTokenRepository rememberMeTokenRepository) {
+        this.appConfig = appConfig;
+        this.userDetailsService = userDetailsService;
+        this.rememberMeTokenRepository = rememberMeTokenRepository;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -20,18 +46,73 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(final HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.formLogin(Customizer.withDefaults());
         httpSecurity.csrf(p -> p.disable());
         // TODO: properly configure security from input model
         httpSecurity.authorizeHttpRequests(req -> req
-                .requestMatchers("/admin").hasAuthority("ADMIN")
-                .requestMatchers("/public/**")
-                .permitAll()
-                .requestMatchers("/favicon.ico")
-                .permitAll()
-                .requestMatchers("/**")
-                .permitAll()
-                .anyRequest().authenticated());
+                .requestMatchers("/api/v1/**").authenticated()
+                .anyRequest().permitAll());
+
+        httpSecurity.logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login?logout")
+                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                .deleteCookies("JSESSIONID")
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
+                .permitAll());
+
+        httpSecurity.rememberMe(rememberMe -> rememberMe
+                .rememberMeServices(rememberMeService()));
+
         return httpSecurity.build();
+    }
+
+    /**
+     * Enable CORS globally
+     * <p>
+     * TODO: configure CORS only for development
+     */
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(@NotNull final CorsRegistry registry) {
+                registry.addMapping("/api/**")
+                        .allowedOrigins("http://localhost:5173")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE");
+            }
+
+            @Override
+            public void addViewControllers(@NotNull final ViewControllerRegistry registry) {
+                registry.addViewController("/error").setViewName("error");
+            }
+
+            @Override
+            public void addResourceHandlers(final ResourceHandlerRegistry registry) {
+                registry.addResourceHandler("/**")
+                        .addResourceLocations("classpath:/public/", "classpath:/static/")
+                        .resourceChain(true)
+                        .addResolver(new AlternativePathResourceResolver());
+            }
+        };
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(final AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
+
+    @Bean
+    public RememberMeServices rememberMeService() {
+        var service = new PersistentTokenBasedRememberMeServices(appConfig.getRememberMeKey(),
+                userDetailsService, persistentTokenRepository());
+        service.setAlwaysRemember(true);
+
+        return service;
+    }
+
+    @Bean
+    public PersistentTokenRepository persistentTokenRepository() {
+        return new PersistentTokenRepositoryImpl(rememberMeTokenRepository);
     }
 }

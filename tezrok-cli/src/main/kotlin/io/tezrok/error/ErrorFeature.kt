@@ -18,6 +18,7 @@ internal class ErrorFeature : TezrokFeature {
             val moduleName = module.getName().hyphenNameToCamelCase().upperFirst()
             val values = mapOf(
                 "moduleName" to moduleName,
+                "productName" to context.getProject().productName.ifBlank { context.getProject().name }
             )
             val errorDir = applicationPackageRoot.getOrAddJavaDirectory("error")
             val baseExceptionFile = errorDir.addJavaFile("Base${moduleName}Exception")

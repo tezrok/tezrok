@@ -9,6 +9,7 @@ import io.tezrok.api.maven.UseMavenDependency
 import io.tezrok.auth.AuthFeature
 import io.tezrok.db.DataSourceFeature
 import io.tezrok.docker.DockerFeature
+import io.tezrok.email.EmailFeature
 import io.tezrok.entity.EntityActivableFeature
 import io.tezrok.entity.EntityCreatedUpdatedFeature
 import io.tezrok.entity.MapperFeature
@@ -16,11 +17,7 @@ import io.tezrok.error.ErrorFeature
 import io.tezrok.frontend.FrontendFeature
 import io.tezrok.java.GitIgnoreFeature
 import io.tezrok.java.HelloWorldFeature
-import io.tezrok.jooq.EntityGraphLoaderFeature
-import io.tezrok.jooq.EntityGraphStoreFeature
-import io.tezrok.jooq.JooqEntityCustomMethodsFeature
-import io.tezrok.jooq.JooqFeature
-import io.tezrok.jooq.JooqRepositoryFeature
+import io.tezrok.jooq.*
 import io.tezrok.liquibase.LiquibaseFeature
 import io.tezrok.logging.LoggingFeature
 import io.tezrok.maven.MavenCoreFeature
@@ -30,6 +27,7 @@ import io.tezrok.spring.ServiceFeature
 import io.tezrok.spring.SpringFeature
 import io.tezrok.spring.SpringSecurityFeature
 import io.tezrok.task.TaskServiceFeature
+import io.tezrok.template.TemplateFeature
 import io.tezrok.util.UtilsFeature
 import io.tezrok.web.WebApiFeature
 import org.slf4j.Logger
@@ -52,6 +50,8 @@ internal class FeatureManager {
         features.add(HelloWorldFeature())
         features.add(UtilsFeature())
         features.add(ErrorFeature())
+        features.add(TemplateFeature())
+        features.add(EmailFeature())
         features.add(SpringFeature())
         features.add(SpringSecurityFeature())
         features.add(WebApiFeature())

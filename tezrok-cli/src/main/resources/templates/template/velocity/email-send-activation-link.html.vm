@@ -1,0 +1,11 @@
+<p>Dear ${username}!</p>
+
+<p>Congratulations, the ${productName} account <b>${username}</b> has been created. To activate your account, please click the following link:</p>
+
+<p><a href="$activationLink">$activationLink</a></p>
+
+<p>Note: If you did not do this, please ignore this email.</p>
+
+Best regards,<br/>
+${productName} Team <br/>
+${siteUrl}

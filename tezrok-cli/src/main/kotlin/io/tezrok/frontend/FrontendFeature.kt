@@ -15,20 +15,27 @@ internal class FrontendFeature : TezrokFeature {
         val module = project.getSingleModule()
         val gitignoreFile = project.getFile(".gitignore")
 
+        val moduelName = module.getName()
         if (gitignoreFile != null) {
             val text = gitignoreFile.asString()
             gitignoreFile.setString(
-                "$text\n" +
-                        "##############################\n" +
-                        "## Frontend\n" +
-                        "##############################\n" +
-                        "/${module.getName()}/src/main/resources/public/\n"
+                "$text\n" + """
+##############################
+## Frontend
+##############################
+/$moduelName/src/main/resources/public/
+/$moduelName/src/main/resources/static/assets/
+/$moduelName/src/main/resources/static/themes/
+/$moduelName/src/main/resources/static/test/
+/$moduelName/src/main/resources/static/favicon.ico
+/$moduelName/src/main/resources/templates/thymeleaf/index.html
+"""
             )
         }
 
         // add frontend module to the beginning of the list
         val modulesRefNode = project.pom.getModulesRefNode()
-        modulesRefNode.addModule(module.getName() + "-frontend")
+        modulesRefNode.addModule(moduelName + "-frontend")
         val modules = modulesRefNode.getModules().toMutableList()
         modules.add(0, modules.last())
         modules.removeAt(modules.size - 1)

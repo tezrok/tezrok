@@ -1,0 +1,78 @@
+package ${package}.config;
+
+import ${package}.config.custom.AppCustomConfig;
+import jakarta.annotation.PostConstruct;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+import java.util.Objects;
+
+@Data
+@Component
+@EqualsAndHashCode(callSuper = true)
+@ConfigurationProperties("${moduleName}")
+public class AppConfig extends AppCustomConfig {
+    private String mainHost;
+
+    /**
+     * When true, user after registration will be received activation email.
+     */
+    private boolean activationEnabled = true;
+
+    private String rememberMeKey;
+
+    private String adminPassword = "admin";
+
+    private String emailHost;
+
+    private String emailPassword;
+
+    private String emailFrom;
+
+    /**
+     * Product name. Used in email templates, titles, etc.
+     */
+    private String productName = "${productName}";
+
+    /**
+     * When true, reCaptcha will be enabled on login.
+     */
+    private boolean reCaptchaInLoginEnable = false;
+
+    /**
+     * When true, reCaptcha will be enabled on register.
+     */
+    private boolean reCaptchaInRegisterEnable = false;
+
+    /**
+     * When true, reCaptcha will be enabled on password recover.
+     */
+    private boolean reCaptchaInPasswordRecoverEnable = false;
+
+    /**
+     * Public site key for reCaptcha.
+     */
+    private String reCaptchaSiteKey;
+
+    /**
+     * Secret key for reCaptcha.
+     */
+    private String reCaptchaSecretKey;
+
+    private float reCaptchaThreshold = 0.5f;
+
+    private int httpClientTimeout = 5000;
+
+    @PostConstruct
+    protected void validate() {
+        Objects.requireNonNull(mainHost, "mainHost is required");
+        Objects.requireNonNull(emailFrom, "emailFrom is required");
+        Objects.requireNonNull(emailHost, "emailHost is required");
+        Objects.requireNonNull(emailPassword, "emailPassword is required");
+        Objects.requireNonNull(rememberMeKey, "rememberMeKey is required");
+        Objects.requireNonNull(adminPassword, "adminPassword is required");
+        super.validate();
+    }
+}

@@ -4,12 +4,14 @@ import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.ModuleElem
 import io.tezrok.api.java.JavaClassNode
+import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.maven.ModuleNode
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.PathUtil.NEW_LINE
 import org.slf4j.LoggerFactory
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import kotlin.io.path.exists
 
 /**
  * Adds Spring related dependencies and classes.
@@ -27,6 +29,11 @@ internal class SpringFeature : TezrokFeature {
         val springBootPlugin =
             pom.addPluginDependency("org.springframework.boot:spring-boot-maven-plugin:${'$'}{spring-boot.version}")
 
+        val applicationPackageRoot = module.source.main.java.applicationPackageRoot
+        if (applicationPackageRoot != null) {
+            addAppConfig(applicationPackageRoot.getOrAddJavaDirectory("config"), module, context)
+        }
+
         val mainClass = module.source.main.java.applicationClass
         if (mainClass != null) {
             handleMainMethod(mainClass)
@@ -43,6 +50,24 @@ internal class SpringFeature : TezrokFeature {
         }
 
         return true
+    }
+
+    private fun addAppConfig(configDir: JavaDirectoryNode, module: ModuleNode, context: GeneratorContext) {
+        val configClassName = "AppConfig"
+        if (!configDir.hasClass(configClassName)) {
+            val values = mapOf(
+                "moduleName" to module.getName(),
+                "productName" to context.getProject().productName.ifBlank { context.getProject().name }
+            )
+            context.addFile(configDir, "/templates/config/AppConfig.java.vm", values)
+            val customConfigDir = configDir.getOrAddDirectory("custom")
+            val physicalFile = customConfigDir.getPhysicalPath()?.resolve("AppCustomConfig.java")
+            if (physicalFile == null || !physicalFile.exists()) {
+                context.addFile(customConfigDir, "/templates/config/AppCustomConfig.java.vm", values)
+            }
+        } else {
+            log.warn("Config class already exists: {}", configClassName)
+        }
     }
 
     private fun updateApplicationProperties(module: ModuleNode, moduleElem: ModuleElem?) {

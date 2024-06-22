@@ -1,0 +1,43 @@
+package ${package}.service;
+
+import lombok.extern.slf4j.Slf4j;
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.runtime.RuntimeConstants;
+import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.stereotype.Service;
+
+import java.io.StringWriter;
+import java.util.Map;
+
+/**
+ * Service for working with templates.
+ */
+@Slf4j
+@Service
+public class TemplateService {
+    @NotNull
+    public String getTemplate(final String templatePath, final Map<String, String> params) {
+        final Template masterTemplate = getTemplate(templatePath);
+        final VelocityContext velocityContext = new VelocityContext();
+        params.forEach(velocityContext::put);
+
+        final StringWriter writer = new StringWriter();
+        masterTemplate.merge(velocityContext, writer);
+
+        return writer.toString();
+    }
+
+    /**
+     * Returns a Velocity template from the resources
+     */
+    @NotNull
+    public Template getTemplate(final String templatePath) {
+        final VelocityEngine engine = new VelocityEngine();
+        engine.setProperty(RuntimeConstants.RESOURCE_LOADERS, "classpath");
+        engine.setProperty("resource.loader.classpath.class", ClasspathResourceLoader.class.getName());
+        return engine.getTemplate(templatePath, "UTF-8");
+    }
+}

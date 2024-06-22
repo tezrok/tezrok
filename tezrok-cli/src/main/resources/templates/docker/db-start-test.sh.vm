@@ -2,7 +2,7 @@
 
 echo "Start test database..."
 
-DB_DATA_DIR=$HOME/.testdata/${moduleName}_db
+DB_DATA_DIR=$HOME/.testdata/${moduleName}-db
 
 echo "Database data directory: $DB_DATA_DIR"
 

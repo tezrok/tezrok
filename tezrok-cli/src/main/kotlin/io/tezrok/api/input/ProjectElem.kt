@@ -10,6 +10,7 @@ import java.util.*
  */
 data class ProjectElem(
     val name: String = "",
+    val productName: String = "",
     val version: String = "",
     val description: String = "",
     val frontend: Boolean? = null,
