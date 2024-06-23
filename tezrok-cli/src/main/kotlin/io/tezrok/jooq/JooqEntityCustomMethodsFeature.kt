@@ -50,8 +50,7 @@ internal class JooqEntityCustomMethodsFeature : TezrokFeature {
                 ManyToManyMethod.FindRefEntitiesByPrimaryFieldIn
             )
             entities[refEntity.name] = refEntity
-                .withCustomMethods(*methods.keys.toTypedArray())
-                .withCustomComments(*methods.map { it.key to it.value }.toTypedArray())
+                .withMethods(methods)
         }
 
         for (field in entity.fields.filter { it.relation == EntityRelation.OneToMany }) {
@@ -65,16 +64,14 @@ internal class JooqEntityCustomMethodsFeature : TezrokFeature {
                 OneToManyMethod.FindRefIdFieldsByRefSyntheticFields
             )
             entities[refEntity.name] = refEntity
-                .withCustomMethods(*methods.keys.toTypedArray())
-                .withCustomComments(*methods.map { it.key to it.value }.toTypedArray())
+                .withMethods(methods)
         }
 
         if (entity.isNotSynthetic()) {
             // make helper methods for EntityGraphLoader
             val methods = entities.getIdFieldsMethods(entity)
             entities[entity.name] = entities[entity.name]
-                .withCustomMethods(*methods.keys.toTypedArray())
-                .withCustomComments(*methods.map { it.key to it.value }.toTypedArray())
+                .withMethods(methods)
         }
     }
 

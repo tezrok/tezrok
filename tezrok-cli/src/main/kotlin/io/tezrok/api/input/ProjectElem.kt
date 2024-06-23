@@ -2,8 +2,10 @@ package io.tezrok.api.input
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import io.tezrok.util.NameUtil
 import java.util.*
+import kotlin.collections.LinkedHashSet
 
 /**
  * Represents a model of a project loaded from a tezrok.json file.
@@ -110,8 +112,14 @@ data class EntityElem(
     // if true, controller will not be created
     val skipController: Boolean? = null,
     val fields: List<FieldElem>,
-    val customMethods: Set<String>? = null,
-    val customComments: Map<String, String>? = null,
+    @Deprecated("Use methods instead")
+    @JsonProperty("customMethods")
+    val customMethodsOld: Set<String>? = null,
+    @Deprecated("Use methods instead")
+    @JsonProperty("customComments")
+    val customCommentsOld: Map<String, String>? = null,
+    @JsonDeserialize(`as` = LinkedHashSet::class)
+    val methods: Set<MethodElem> = LinkedHashSet(),
     // initial data for entity in csv format
     val init: String? = null,
 ) {
@@ -124,23 +132,54 @@ data class EntityElem(
         check(firstChar.isUpperCase()) {
             "Entity name should start with upper case letter. Entity name: $name"
         }
+        if (customMethodsOld != null) {
+            error("Entity '$name' contains deprecated customMethodsOld ($customMethodsOld). Use methods instead.")
+        }
+        if (customCommentsOld != null) {
+            error("Entity '$name' contains deprecated customCommentsOld ($customCommentsOld). Use methods instead.")
+        }
     }
 
-    fun withCustomMethods(vararg methods: String): EntityElem {
-        methods.forEach { method ->
-            check(method.isNotBlank()) { "Custom method cannot be blank" }
-            check(method.first().isLetterOrDigit() && method.last().isLetterOrDigit()) {
-                "Custom method should start and end with letter or digit"
+    fun withMethods(methodNames: Map<String, String>): EntityElem {
+        return withMethods(methodNames.map { MethodElem(it.key, it.value) }.toSet())
+    }
+
+    fun withMethods(vararg methodNames: Pair<String, String>): EntityElem {
+        return withMethods(methodNames.map { MethodElem(it.first, it.second) }.toSet())
+    }
+
+    fun withMethods(vararg newMethods: MethodElem): EntityElem {
+        return withMethods(newMethods.toSet())
+    }
+
+    fun withMethods(newMethods: Set<MethodElem>): EntityElem {
+        val oldMethods = methods
+        val methodNames = oldMethods.map { it.name }.toMutableSet()
+
+        for (newMethod in newMethods) {
+            check(newMethod.name.isNotBlank()) { "Method name cannot be blank" }
+            val firstChar = newMethod.name.first()
+            check(firstChar.isLetter()) {
+                "Method name should start with letter, but found: ${newMethod.name}"
             }
+            check(firstChar.isLowerCase()) {
+                "Method name should start with lower case letter, but found: ${newMethod.name}"
+            }
+            check(!methodNames.contains(newMethod.name)) {
+                "Method with name '${newMethod.name}' already exists"
+            }
+            methodNames.add(newMethod.name)
         }
 
-        return this.copy(customMethods = (customMethods ?: emptySet()) + methods)
+        return this.copy(methods = oldMethods + newMethods)
     }
 
-    fun withCustomComments(vararg comments: Pair<String, String>): EntityElem {
-        val newComments = TreeMap(customComments ?: emptyMap())
-        newComments.putAll(comments)
-        return this.copy(customComments = newComments)
+    fun getMethod(name: String): MethodElem {
+        return methods.find { it.name == name } ?: error("Method $name not found in entity $name. Expected methods: " + methods.map { it.name })
+    }
+
+    fun tryGetMethod(name: String): MethodElem? {
+        return methods.find { it.name == name }
     }
 
     /**
@@ -275,6 +314,29 @@ data class FieldElem(
 
     fun hasMetaType(metaType: MetaType): Boolean = metaTypes?.contains(metaType) == true
 }
+
+data class MethodElem(
+    /**
+     * Name of the method
+     */
+    val name: String,
+    /**
+     * Comment for method and for OpenAPI specification
+     */
+    val description: String? = null,
+    /**
+     * If true, then method will be accessible by rest controller
+     */
+    val api: Boolean? = null,
+    /**
+     * List of roles that can access this method
+     */
+    val roles: List<String>? = null,
+    /**
+     * List of permissions which are required to access this method
+     */
+    val permissions: List<String>? = null,
+)
 
 data class GitElem(
     // list of files to ignore

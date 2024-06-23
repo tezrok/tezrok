@@ -493,7 +493,8 @@ internal class JooqRepositoryFeature : TezrokFeature {
             .withModifiers(Modifier.Keyword.PUBLIC)
             .addParameter(dtoType, "dto")
             .setReturnType(primaryField.asJavaType())
-            .setJavadocComment("""Updates partly {@link $dtoType}. Only non-null fields will be updated.
+            .setJavadocComment(
+                """Updates partly {@link $dtoType}. Only non-null fields will be updated.
      
 @param dto {@link $dtoType} with several non-null fields
 @return updated entity ID"""
@@ -670,7 +671,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
     }
 
     /**
-     * Add custom methods from [EntityElem.customMethods] into generated repository class.
+     * Add custom methods from [EntityElem.methods] into generated repository class.
      */
     private fun addCustomMethodsByNames(
         entity: EntityElem,
@@ -678,9 +679,8 @@ internal class JooqRepositoryFeature : TezrokFeature {
         entities: Map<String, EntityElem>,
         baseMethods: Set<String>
     ) {
-        val names = entity.customMethods ?: return
         val methodGenerator = JooqMethodGenerator(entity, repoClass, entities)
-        names.forEach { methodName ->
+        entity.methods.map { it.name }.forEach { methodName ->
             if (!baseMethods.contains(methodName)) {
                 methodGenerator.generateByOnlyName(methodName)
             }
@@ -711,8 +711,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
             val methodComments =
                 uniqueFields.map { "getBy${it.name.capitalize()}" to "Returns {@link ${entity.name}Dto} by unique field {@link ${entity.name}Dto#${it.name}}." }
                     .toTypedArray()
-            val methods = methodComments.map { it.first }.toTypedArray()
-            return entity.withCustomMethods(*methods).withCustomComments(*methodComments)
+            return entity.withMethods(*methodComments)
         }
 
         return entity

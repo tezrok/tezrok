@@ -1,5 +1,6 @@
 {
   "name": "simple-app",
+  "productName": "Simple Test App",
   "version": "0.0.1",
   "description": "",
   "package": "com.tezrok.simple",
@@ -100,30 +101,48 @@
                 "relation": "ManyToMany"
               }
             ],
-            "customMethods": [
-              "getByName",
-              "getByNextOrderId",
-              "findOrderLinkedOrdersByOrderId",
-              "findOrderLinkedOrdersByOrderIdIn",
-              "getIdFieldsById",
-              "getIdFieldsByName",
-              "findIdFieldsByIdIn",
-              "getIdByName",
-              "findItemRelatedOrdersByItemId",
-              "findItemRelatedOrdersByItemIdIn"
-            ],
-            "customComments": {
-              "findIdFieldsByIdIn": "Returns list of ID fields (id, selectedItemId, nextOrderId) of {@link OrderDto} into custom class.",
-              "findItemRelatedOrdersByItemId": "Returns list of {@link OrderDto} by primary field to support ManyToMany relation for field {@link ItemFullDto#relatedOrders}.",
-              "findItemRelatedOrdersByItemIdIn": "Returns list of {@link OrderDto} by primary fields to support ManyToMany relation for field {@link ItemFullDto#relatedOrders}.",
-              "findOrderLinkedOrdersByOrderId": "Returns list of {@link OrderDto} by primary field to support ManyToMany relation for field {@link OrderFullDto#linkedOrders}.",
-              "findOrderLinkedOrdersByOrderIdIn": "Returns list of {@link OrderDto} by primary fields to support ManyToMany relation for field {@link OrderFullDto#linkedOrders}.",
-              "getByName": "Returns {@link OrderDto} by unique field {@link OrderDto#name}.",
-              "getByNextOrderId": "Returns {@link OrderDto} by unique field {@link OrderDto#nextOrderId}.",
-              "getIdByName": "Returns primary ID of {@link OrderDto} by unique field (name).",
-              "getIdFieldsById": "Returns ID fields (id, selectedItemId, nextOrderId) of {@link OrderDto} into custom class.",
-              "getIdFieldsByName": "Returns ID fields (id, selectedItemId, nextOrderId) of {@link OrderDto} by unique field (name) into custom class."
-            }
+            "methods": [
+              {
+                "name": "getByName",
+                "description": "Returns {@link OrderDto} by unique field {@link OrderDto#name}."
+              },
+              {
+                "name": "getByNextOrderId",
+                "description": "Returns {@link OrderDto} by unique field {@link OrderDto#nextOrderId}."
+              },
+              {
+                "name": "findOrderLinkedOrdersByOrderId",
+                "description": "Returns list of {@link OrderDto} by primary field to support ManyToMany relation for field {@link OrderFullDto#linkedOrders}."
+              },
+              {
+                "name": "findOrderLinkedOrdersByOrderIdIn",
+                "description": "Returns list of {@link OrderDto} by primary fields to support ManyToMany relation for field {@link OrderFullDto#linkedOrders}."
+              },
+              {
+                "name": "getIdFieldsById",
+                "description": "Returns ID fields (id, selectedItemId, nextOrderId) of {@link OrderDto} into custom class."
+              },
+              {
+                "name": "getIdFieldsByName",
+                "description": "Returns ID fields (id, selectedItemId, nextOrderId) of {@link OrderDto} by unique field (name) into custom class."
+              },
+              {
+                "name": "findIdFieldsByIdIn",
+                "description": "Returns list of ID fields (id, selectedItemId, nextOrderId) of {@link OrderDto} into custom class."
+              },
+              {
+                "name": "getIdByName",
+                "description": "Returns primary ID of {@link OrderDto} by unique field (name)."
+              },
+              {
+                "name": "findItemRelatedOrdersByItemId",
+                "description": "Returns list of {@link OrderDto} by primary field to support ManyToMany relation for field {@link ItemFullDto#relatedOrders}."
+              },
+              {
+                "name": "findItemRelatedOrdersByItemIdIn",
+                "description": "Returns list of {@link OrderDto} by primary fields to support ManyToMany relation for field {@link ItemFullDto#relatedOrders}."
+              }
+            ]
           },
           {
             "name": "Item",
@@ -201,30 +220,44 @@
                 ]
               }
             ],
-            "customMethods": [
-              "findOrderOtherItemsByOrderIdAndItemTitle",
-              "findOrderItemsByItemItemsOrderIdAndItemTitle",
-              "findOrderOtherItemsByOrderId",
-              "findOrderOtherItemsByOrderIdIn",
-              "findOrderItemsByItemItemsOrderId",
-              "findIdByItemsOrderId",
-              "findIdItemsOrderIdByItemsOrderIdIn",
-              "findItemOtherItemsByItemId",
-              "findItemOtherItemsByItemIdIn",
-              "getIdFieldsById",
-              "findIdFieldsByIdIn"
-            ],
-            "customComments": {
-              "findIdByItemsOrderId": "Returns list of primary field of {@link ItemDto} to support OneToMany relation for field {@link OrderFullDto#items}.",
-              "findIdFieldsByIdIn": "Returns list of ID fields (id, itemsOrderId) of {@link ItemDto} into custom class.",
-              "findIdItemsOrderIdByItemsOrderIdIn": "Returns specified fields (id, itemsOrderId) of {@link ItemDto} into custom class to support OneToMany relation for field {@link OrderFullDto#items}",
-              "findItemOtherItemsByItemId": "Returns list of {@link ItemDto} by primary field to support ManyToMany relation for field {@link ItemFullDto#otherItems}.",
-              "findItemOtherItemsByItemIdIn": "Returns list of {@link ItemDto} by primary fields to support ManyToMany relation for field {@link ItemFullDto#otherItems}.",
-              "findOrderItemsByItemItemsOrderId": "Returns list of {@link ItemDto} to support OneToMany relation for field {@link OrderFullDto#items}.",
-              "findOrderOtherItemsByOrderId": "Returns list of {@link ItemDto} by primary field to support ManyToMany relation for field {@link OrderFullDto#otherItems}.",
-              "findOrderOtherItemsByOrderIdIn": "Returns list of {@link ItemDto} by primary fields to support ManyToMany relation for field {@link OrderFullDto#otherItems}.",
-              "getIdFieldsById": "Returns ID fields (id, itemsOrderId) of {@link ItemDto} into custom class."
-            }
+            "methods": [
+              {
+                "name": "findOrderOtherItemsByOrderId",
+                "description": "Returns list of {@link ItemDto} by primary field to support ManyToMany relation for field {@link OrderFullDto#otherItems}."
+              },
+              {
+                "name": "findOrderOtherItemsByOrderIdIn",
+                "description": "Returns list of {@link ItemDto} by primary fields to support ManyToMany relation for field {@link OrderFullDto#otherItems}."
+              },
+              {
+                "name": "findOrderItemsByItemItemsOrderId",
+                "description": "Returns list of {@link ItemDto} to support OneToMany relation for field {@link OrderFullDto#items}."
+              },
+              {
+                "name": "findIdByItemsOrderId",
+                "description": "Returns list of primary field of {@link ItemDto} to support OneToMany relation for field {@link OrderFullDto#items}."
+              },
+              {
+                "name": "findIdItemsOrderIdByItemsOrderIdIn",
+                "description": "Returns specified fields (id, itemsOrderId) of {@link ItemDto} into custom class to support OneToMany relation for field {@link OrderFullDto#items}"
+              },
+              {
+                "name": "findItemOtherItemsByItemId",
+                "description": "Returns list of {@link ItemDto} by primary field to support ManyToMany relation for field {@link ItemFullDto#otherItems}."
+              },
+              {
+                "name": "findItemOtherItemsByItemIdIn",
+                "description": "Returns list of {@link ItemDto} by primary fields to support ManyToMany relation for field {@link ItemFullDto#otherItems}."
+              },
+              {
+                "name": "getIdFieldsById",
+                "description": "Returns ID fields (id, itemsOrderId) of {@link ItemDto} into custom class."
+              },
+              {
+                "name": "findIdFieldsByIdIn",
+                "description": "Returns list of ID fields (id, itemsOrderId) of {@link ItemDto} into custom class."
+              }
+            ]
           },
           {
             "name": "Info",
@@ -241,8 +274,7 @@
                 "maxLength": 100
               }
             ],
-            "customMethods": [],
-            "customComments": {}
+            "methods": []
           },
           {
             "name": "User",
@@ -328,20 +360,28 @@
                 ]
               }
             ],
-            "customMethods": [
-              "getByNameOrEmail",
-              "getByName",
-              "getByEmail",
-              "getIdByName",
-              "getIdByEmail"
+            "methods": [
+              {
+                "name": "getByNameOrEmail",
+                "description": "Returns {@link UserDto} by name or email."
+              },
+              {
+                "name": "getByName",
+                "description": "Returns {@link UserDto} by unique field {@link UserDto#name}."
+              },
+              {
+                "name": "getByEmail",
+                "description": "Returns {@link UserDto} by unique field {@link UserDto#email}."
+              },
+              {
+                "name": "getIdByName",
+                "description": "Returns primary ID of {@link UserDto} by unique field (name)."
+              },
+              {
+                "name": "getIdByEmail",
+                "description": "Returns primary ID of {@link UserDto} by unique field (email)."
+              }
             ],
-            "customComments": {
-              "getByEmail": "Returns {@link UserDto} by unique field {@link UserDto#email}.",
-              "getByName": "Returns {@link UserDto} by unique field {@link UserDto#name}.",
-              "getByNameOrEmail": "Returns {@link UserDto} by name or email.",
-              "getIdByEmail": "Returns primary ID of {@link UserDto} by unique field (email).",
-              "getIdByName": "Returns primary ID of {@link UserDto} by unique field (name)."
-            },
             "init": "admin,admin@site.com,admin"
           },
           {
@@ -402,18 +442,24 @@
                 ]
               }
             ],
-            "customMethods": [
-              "getByName",
-              "findUserRolesByUserId",
-              "findUserRolesByUserIdIn",
-              "getIdByName"
+            "methods": [
+              {
+                "name": "getByName",
+                "description": "Returns {@link RoleDto} by unique field {@link RoleDto#name}."
+              },
+              {
+                "name": "findUserRolesByUserId",
+                "description": "Returns list of {@link RoleDto} by primary field to support ManyToMany relation for field {@link UserFullDto#roles}."
+              },
+              {
+                "name": "findUserRolesByUserIdIn",
+                "description": "Returns list of {@link RoleDto} by primary fields to support ManyToMany relation for field {@link UserFullDto#roles}."
+              },
+              {
+                "name": "getIdByName",
+                "description": "Returns primary ID of {@link RoleDto} by unique field (name)."
+              }
             ],
-            "customComments": {
-              "findUserRolesByUserId": "Returns list of {@link RoleDto} by primary field to support ManyToMany relation for field {@link UserFullDto#roles}.",
-              "findUserRolesByUserIdIn": "Returns list of {@link RoleDto} by primary fields to support ManyToMany relation for field {@link UserFullDto#roles}.",
-              "getByName": "Returns {@link RoleDto} by unique field {@link RoleDto#name}.",
-              "getIdByName": "Returns primary ID of {@link RoleDto} by unique field (name)."
-            },
             "init": "ADMIN,Administrator role\nUSER,Authenticated role"
           },
           {
@@ -468,18 +514,24 @@
                 ]
               }
             ],
-            "customMethods": [
-              "getByName",
-              "findRolePermissionsByRoleId",
-              "findRolePermissionsByRoleIdIn",
-              "getIdByName"
-            ],
-            "customComments": {
-              "findRolePermissionsByRoleId": "Returns list of {@link PermissionDto} by primary field to support ManyToMany relation for field {@link RoleFullDto#permissions}.",
-              "findRolePermissionsByRoleIdIn": "Returns list of {@link PermissionDto} by primary fields to support ManyToMany relation for field {@link RoleFullDto#permissions}.",
-              "getByName": "Returns {@link PermissionDto} by unique field {@link PermissionDto#name}.",
-              "getIdByName": "Returns primary ID of {@link PermissionDto} by unique field (name)."
-            }
+            "methods": [
+              {
+                "name": "getByName",
+                "description": "Returns {@link PermissionDto} by unique field {@link PermissionDto#name}."
+              },
+              {
+                "name": "findRolePermissionsByRoleId",
+                "description": "Returns list of {@link PermissionDto} by primary field to support ManyToMany relation for field {@link RoleFullDto#permissions}."
+              },
+              {
+                "name": "findRolePermissionsByRoleIdIn",
+                "description": "Returns list of {@link PermissionDto} by primary fields to support ManyToMany relation for field {@link RoleFullDto#permissions}."
+              },
+              {
+                "name": "getIdByName",
+                "description": "Returns primary ID of {@link PermissionDto} by unique field (name)."
+              }
+            ]
           },
           {
             "name": "UserProfile",
@@ -554,28 +606,44 @@
                 ]
               }
             ],
-            "customMethods": [
-              "getByUserId",
-              "getByActivationCode",
-              "getByPasswordResetCode",
-              "getIdFieldsById",
-              "getIdFieldsByActivationCode",
-              "getIdFieldsByPasswordResetCode",
-              "findIdFieldsByIdIn",
-              "getIdByActivationCode",
-              "getIdByPasswordResetCode"
-            ],
-            "customComments": {
-              "findIdFieldsByIdIn": "Returns list of ID fields (id, userId) of {@link UserProfileDto} into custom class.",
-              "getByActivationCode": "Returns {@link UserProfileDto} by unique field {@link UserProfileDto#activationCode}.",
-              "getByPasswordResetCode": "Returns {@link UserProfileDto} by unique field {@link UserProfileDto#passwordResetCode}.",
-              "getByUserId": "Returns {@link UserProfileDto} by unique field {@link UserProfileDto#userId}.",
-              "getIdByActivationCode": "Returns primary ID of {@link UserProfileDto} by unique field (activationCode).",
-              "getIdByPasswordResetCode": "Returns primary ID of {@link UserProfileDto} by unique field (passwordResetCode).",
-              "getIdFieldsByActivationCode": "Returns ID fields (id, userId) of {@link UserProfileDto} by unique field (activationCode) into custom class.",
-              "getIdFieldsById": "Returns ID fields (id, userId) of {@link UserProfileDto} into custom class.",
-              "getIdFieldsByPasswordResetCode": "Returns ID fields (id, userId) of {@link UserProfileDto} by unique field (passwordResetCode) into custom class."
-            }
+            "methods": [
+              {
+                "name": "getByUserId",
+                "description": "Returns {@link UserProfileDto} by unique field {@link UserProfileDto#userId}."
+              },
+              {
+                "name": "getByActivationCode",
+                "description": "Returns {@link UserProfileDto} by unique field {@link UserProfileDto#activationCode}."
+              },
+              {
+                "name": "getByPasswordResetCode",
+                "description": "Returns {@link UserProfileDto} by unique field {@link UserProfileDto#passwordResetCode}."
+              },
+              {
+                "name": "getIdFieldsById",
+                "description": "Returns ID fields (id, userId) of {@link UserProfileDto} into custom class."
+              },
+              {
+                "name": "getIdFieldsByActivationCode",
+                "description": "Returns ID fields (id, userId) of {@link UserProfileDto} by unique field (activationCode) into custom class."
+              },
+              {
+                "name": "getIdFieldsByPasswordResetCode",
+                "description": "Returns ID fields (id, userId) of {@link UserProfileDto} by unique field (passwordResetCode) into custom class."
+              },
+              {
+                "name": "findIdFieldsByIdIn",
+                "description": "Returns list of ID fields (id, userId) of {@link UserProfileDto} into custom class."
+              },
+              {
+                "name": "getIdByActivationCode",
+                "description": "Returns primary ID of {@link UserProfileDto} by unique field (activationCode)."
+              },
+              {
+                "name": "getIdByPasswordResetCode",
+                "description": "Returns primary ID of {@link UserProfileDto} by unique field (passwordResetCode)."
+              }
+            ]
           },
           {
             "name": "RememberMeToken",
@@ -629,10 +697,12 @@
                 ]
               }
             ],
-            "customMethods": [
-              "findByUsername"
-            ],
-            "customComments": {}
+            "methods": [
+              {
+                "name": "findByUsername",
+                "description": "Find by username."
+              }
+            ]
           },
           {
             "name": "OrderItemOtherItems",
@@ -654,11 +724,19 @@
                 "syntheticTo": "Order.otherItems"
               }
             ],
-            "customMethods": [
-              "findByOrderId",
-              "findByItemId",
-              "findByOrderIdIn",
-              "findByItemIdIn"
+            "methods": [
+              {
+                "name": "findByOrderId"
+              },
+              {
+                "name": "findByItemId"
+              },
+              {
+                "name": "findByOrderIdIn"
+              },
+              {
+                "name": "findByItemIdIn"
+              }
             ]
           },
           {
@@ -681,11 +759,19 @@
                 "syntheticTo": "Order.linkedOrders"
               }
             ],
-            "customMethods": [
-              "findByOrderSourceId",
-              "findByOrderTargetId",
-              "findByOrderSourceIdIn",
-              "findByOrderTargetIdIn"
+            "methods": [
+              {
+                "name": "findByOrderSourceId"
+              },
+              {
+                "name": "findByOrderTargetId"
+              },
+              {
+                "name": "findByOrderSourceIdIn"
+              },
+              {
+                "name": "findByOrderTargetIdIn"
+              }
             ]
           },
           {
@@ -708,11 +794,19 @@
                 "syntheticTo": "Item.otherItems"
               }
             ],
-            "customMethods": [
-              "findByItemSourceId",
-              "findByItemTargetId",
-              "findByItemSourceIdIn",
-              "findByItemTargetIdIn"
+            "methods": [
+              {
+                "name": "findByItemSourceId"
+              },
+              {
+                "name": "findByItemTargetId"
+              },
+              {
+                "name": "findByItemSourceIdIn"
+              },
+              {
+                "name": "findByItemTargetIdIn"
+              }
             ]
           },
           {
@@ -735,11 +829,19 @@
                 "syntheticTo": "Item.relatedOrders"
               }
             ],
-            "customMethods": [
-              "findByItemId",
-              "findByOrderId",
-              "findByItemIdIn",
-              "findByOrderIdIn"
+            "methods": [
+              {
+                "name": "findByItemId"
+              },
+              {
+                "name": "findByOrderId"
+              },
+              {
+                "name": "findByItemIdIn"
+              },
+              {
+                "name": "findByOrderIdIn"
+              }
             ]
           },
           {
@@ -762,11 +864,19 @@
                 "syntheticTo": "User.roles"
               }
             ],
-            "customMethods": [
-              "findByUserId",
-              "findByRoleId",
-              "findByUserIdIn",
-              "findByRoleIdIn"
+            "methods": [
+              {
+                "name": "findByUserId"
+              },
+              {
+                "name": "findByRoleId"
+              },
+              {
+                "name": "findByUserIdIn"
+              },
+              {
+                "name": "findByRoleIdIn"
+              }
             ]
           },
           {
@@ -789,11 +899,19 @@
                 "syntheticTo": "Role.permissions"
               }
             ],
-            "customMethods": [
-              "findByRoleId",
-              "findByPermissionId",
-              "findByRoleIdIn",
-              "findByPermissionIdIn"
+            "methods": [
+              {
+                "name": "findByRoleId"
+              },
+              {
+                "name": "findByPermissionId"
+              },
+              {
+                "name": "findByRoleIdIn"
+              },
+              {
+                "name": "findByPermissionIdIn"
+              }
             ]
           }
         ],

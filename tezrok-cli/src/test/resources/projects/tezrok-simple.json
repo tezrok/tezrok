@@ -1,5 +1,6 @@
 {
   "name": "simple-app",
+  "productName": "Simple Test App",
   "version": "0.0.1",
   "package": "com.tezrok.simple",
   "modules": [
@@ -50,9 +51,13 @@
             "activable": true,
             "createdAt": true,
             "updatedAt": true,
-            "customMethods": [
-              "findOrderItemsByItemItemsOrderIdAndItemTitle",
-              "findOrderOtherItemsByOrderIdAndItemTitle"
+            "methods": [
+              {
+                "name": "findOrderOtherItemsByOrderIdAndItemTitle"
+              },
+              {
+                "name": "findOrderItemsByItemItemsOrderIdAndItemTitle"
+              }
             ],
             "fields": [
               {
@@ -95,7 +100,7 @@
         "type": "simple",
         "stdInit": true
       },
-      "task" : {
+      "task": {
         "enable": true
       },
       "dependencies": [

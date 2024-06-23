@@ -28,7 +28,8 @@ internal class ProjectElemRepository {
         check(projectPath.fileSize() > 0) { "Project file is empty: $projectPath" }
 
         val rawProject = JsonUtil.mapper.readValue(projectPath.toURL(), ProjectElem::class.java)
-        val jsonProject = rawProject.copy(modules = rawProject.modules.map { module -> tryLoadModuleFromJson(module, projectPath) })
+        val jsonProject =
+            rawProject.copy(modules = rawProject.modules.map { module -> tryLoadModuleFromJson(module, projectPath) })
         val preProject = projectModifier(jsonProject, ProcessModelPhase.PreProcess)
         val preProjectFinal = preProject.copy(modules = preProject.modules.map { module -> normalizeModule(module) })
         val processProject = projectModifier(preProjectFinal, ProcessModelPhase.Process)
@@ -126,7 +127,8 @@ internal class ProjectElemRepository {
         val entitiesFromJson = entitiesFromSchema(jsonSchema)
         val jsonEntitiesNames = entitiesFromJson.map { it.name }.toSet()
         // add entities from custom defined schema
-        val entities = entitiesFromJson + (inheritSchema?.entities ?: emptyList()).filter { !jsonEntitiesNames.contains(it.name) }
+        val entities =
+            entitiesFromJson + (inheritSchema?.entities ?: emptyList()).filter { !jsonEntitiesNames.contains(it.name) }
         val enums = enumsFromSchema(jsonSchema)
         val schema = SchemaElem(
             schemaName = inheritSchema?.schemaName ?: "public",
@@ -250,11 +252,11 @@ internal class ProjectElemRepository {
                         name = entityName,
                         syntheticTo = fullFieldName,
                         description = "Synthetic entity of many-to-many relation for field \"$fullFieldName\"",
-                        customMethods = setOf(
-                            "findBy$fieldName1",
-                            "findBy$fieldName2",
-                            "findBy${fieldName1}In",
-                            "findBy${fieldName2}In"
+                        methods = setOf(
+                            MethodElem("findBy$fieldName1"),
+                            MethodElem("findBy$fieldName2"),
+                            MethodElem("findBy${fieldName1}In"),
+                            MethodElem("findBy${fieldName2}In")
                         ),
                         fields = listOf(
                             FieldElem(
@@ -309,7 +311,7 @@ internal class ProjectElemRepository {
         return entity.copy(
             description = inheritEntity?.description ?: entity.description,
             customRepository = inheritEntity?.customRepository ?: entity.customRepository,
-            customMethods = inheritEntity?.customMethods ?: entity.customMethods,
+            methods = inheritEntity?.methods ?: entity.methods,
             activable = inheritEntity?.activable ?: entity.activable,
             createdAt = inheritEntity?.createdAt ?: entity.createdAt,
             updatedAt = inheritEntity?.updatedAt ?: entity.updatedAt,

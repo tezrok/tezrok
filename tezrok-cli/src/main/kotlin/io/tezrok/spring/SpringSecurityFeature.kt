@@ -63,6 +63,7 @@ open class SpringSecurityFeature : TezrokFeature {
     }
 
     private fun createUser(inheritEntity: EntityElem?, stdUsers: Boolean): EntityElem {
+        val inheritMethods = inheritEntity?.methods ?: emptySet()
         return EntityElem(
             name = NAME_USER,
             description = "User entity",
@@ -71,9 +72,10 @@ open class SpringSecurityFeature : TezrokFeature {
             updatedAt = true,
             skipService = inheritEntity?.skipService,
             skipController = inheritEntity?.skipController,
-            customMethods = (inheritEntity?.customMethods ?: emptySet()) + "getByNameOrEmail",
-            customComments = (inheritEntity?.customComments
-                ?: emptyMap()) + ("getByNameOrEmail" to "Returns {@link ${NAME_USER}Dto} by name or email."),
+            methods = inheritMethods + MethodElem(
+                "getByNameOrEmail",
+                "Returns {@link ${NAME_USER}Dto} by name or email."
+            ),
             fields = createUserFields(inheritEntity),
             init = inheritEntity?.init ?: stdUsersInit(stdUsers)
         )
@@ -88,8 +90,7 @@ open class SpringSecurityFeature : TezrokFeature {
             updatedAt = true,
             skipService = inheritEntity?.skipService,
             skipController = inheritEntity?.skipController,
-            customMethods = inheritEntity?.customMethods,
-            customComments = inheritEntity?.customComments,
+            methods = inheritEntity?.methods ?: emptySet(),
             fields = createRoleFields(inheritEntity),
             init = inheritEntity?.init ?: stdRolesInit(stdRoles)
         )
@@ -104,8 +105,7 @@ open class SpringSecurityFeature : TezrokFeature {
             updatedAt = true,
             skipService = inheritEntity?.skipService,
             skipController = inheritEntity?.skipController,
-            customMethods = inheritEntity?.customMethods,
-            customComments = inheritEntity?.customComments,
+            methods = inheritEntity?.methods ?: emptySet(),
             fields = createPermissionFields(inheritEntity)
         )
     }
@@ -119,13 +119,13 @@ open class SpringSecurityFeature : TezrokFeature {
             updatedAt = true,
             skipService = inheritEntity?.skipService,
             skipController = inheritEntity?.skipController,
-            customMethods = inheritEntity?.customMethods,
-            customComments = inheritEntity?.customComments,
+            methods = inheritEntity?.methods ?: emptySet(),
             fields = createUserProfileFields(inheritEntity)
         )
     }
 
     private fun createRememberMeToken(inheritEntity: EntityElem?): EntityElem {
+        val inheritMethods = inheritEntity?.methods ?: emptySet()
         return EntityElem(
             name = NAME_REMEMBER_ME_TOKEN,
             description = "Remember me token entity",
@@ -133,8 +133,7 @@ open class SpringSecurityFeature : TezrokFeature {
             createdAt = true,
             skipService = true,
             skipController = true,
-            customMethods = (inheritEntity?.customMethods ?: emptySet()) + "findByUsername",
-            customComments = inheritEntity?.customComments,
+            methods = inheritMethods + MethodElem("findByUsername", "Find by username."),
             fields = createRememberMeTokenFields(inheritEntity)
         )
     }
