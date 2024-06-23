@@ -17,7 +17,7 @@ abstract class BaseNode(private var name: String, private val parent: Node?) : N
      * Sets the name of the node
      */
     override fun setName(name: String) {
-        // TODO: validate name
+        check(name.isNotBlank()) { "Name cannot be blank" }
         this.name = name
     }
 

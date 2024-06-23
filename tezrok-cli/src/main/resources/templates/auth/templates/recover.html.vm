@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${productName} - Reset your password</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="shortcut icon" href="/favicon.png" type=image/x-icon>
+    <script th:if="${@captchaService.isCaptchaInPasswordRecoverEnable()}" th:src="'https://www.google.com/recaptcha/api.js?render='+${@captchaService.getSiteKey()}" async defer="defer"></script>
+</head>
+<body>
+<div class="login-container">
+    <h2>Reset your password</h2>
+    <form th:unless="${param.success}" action="/recover" method="POST" class="login-form" th:object="${passwordRecover}" id="recoverForm">
+        <div th:if="${#fields.hasGlobalErrors()}" class="failed">
+            <span th:errors="*{global}">Invalid input</span>
+        </div>
+        <div th:if="${param.expired}" class="failed">
+            The password reset link has expired. Please, request a new one.
+        </div>
+        <div class="input-container">
+            <label for="email">Enter your email address, and we will send you a link to reset your password</label>
+            <input type="text" th:field="*{email}" required/>
+            <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="validation-error">
+                Email error
+            </div>
+        </div>
+        <input type="hidden" id="captchaToken" name="captchaToken"/>
+        <button type="submit">Reset password</button>
+        <div class="input-container">
+            If you remember your password, <a href="/login">login here</a>
+        </div>
+    </form>
+    <div th:if="${param.success}" class="success">
+        A password reset email has been sent to you. Please, check your email.
+    </div>
+</div>
+
+<script th:inline="javascript" th:if="${@captchaService.isCaptchaInPasswordRecoverEnable()}">
+    const recoverForm = document.getElementById('recoverForm');
+    if (recoverForm) {
+        recoverForm.addEventListener('submit', onSubmit);
+
+        function onSubmit(e) {
+            e.preventDefault();
+            if (typeof grecaptcha !== 'undefined') {
+                const siteKey = /*[[${@captchaService.getSiteKey()}]]*/ 'defaultKey';
+                grecaptcha.ready(function () {
+                    grecaptcha.execute(siteKey, {action: 'submit'}).then(function (token) {
+                        document.getElementById('captchaToken').value = token;
+                        recoverForm.submit();
+                    });
+                });
+            } else {
+                recoverForm.submit();
+            }
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${productName} - Set new password</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="shortcut icon" href="/favicon.png" type=image/x-icon>
+    <script th:if="${@captchaService.isCaptchaInPasswordRecoverEnable()}" th:src="'https://www.google.com/recaptcha/api.js?render='+${@captchaService.getSiteKey()}" async defer="defer"></script>
+</head>
+<body>
+<div class="login-container">
+    <h2>Set new password</h2>
+    <form action="/recover-finish" method="POST" class="login-form" th:object="${passwordRecover}" id="recoverForm">
+        <div th:if="${#fields.hasGlobalErrors()}" class="failed">
+            <span th:errors="*{global}">Invalid input</span>
+        </div>
+        <div th:if="${#fields.hasErrors('recoveryCode')}" th:errors="*{recoveryCode}" class="validation-error">
+            Recovery code error
+        </div>
+        <div class="input-container">
+            <label for="password">Enter new password</label>
+            <input type="password" id="password" required/>
+        </div>
+        <div class="input-container">
+            <label for="newPassword">Repeat new password</label>
+            <input type="password" th:field="*{newPassword}" required/>
+            <div th:if="${#fields.hasErrors('newPassword')}" th:errors="*{newPassword}" class="validation-error">
+                New password error
+            </div>
+            <div id="password-mismatch" class="validation-error" style="display: none;">
+                Passwords do not match
+            </div>
+        </div>
+        <input type="hidden" th:field="*{recoveryCode}" required/>
+        <input type="hidden" id="captchaToken" name="captchaToken"/>
+        <button type="submit">Save</button>
+        <div class="input-container">
+            If you remember your password, <a href="/login">login here</a>
+        </div>
+    </form>
+</div>
+
+<script th:inline="javascript">
+    const recoverForm = document.getElementById('recoverForm');
+    recoverForm.addEventListener('submit', onSubmit);
+
+    function onSubmit(e) {
+        e.preventDefault();
+        const password = document.getElementById('password').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const passwordMismatch = document.getElementById('password-mismatch');
+        passwordMismatch.style.display = 'none';
+        if (password !== newPassword) {
+            passwordMismatch.style.display = 'block';
+            return;
+        }
+
+        if (typeof grecaptcha !== 'undefined') {
+            const siteKey = /*[[${@captchaService.getSiteKey()}]]*/ 'defaultKey';
+            grecaptcha.ready(function () {
+                grecaptcha.execute(siteKey, {action: 'submit'}).then(function (token) {
+                    document.getElementById('captchaToken').value = token;
+                    recoverForm.submit();
+                });
+            });
+        } else {
+            recoverForm.submit();
+        }
+    }
+</script>
+</body>
+</html>

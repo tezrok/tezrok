@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${productName} - Register new user</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="shortcut icon" href="/favicon.png" type=image/x-icon>
+    <script th:if="${@captchaService.isCaptchaInRegisterEnable()}" th:src="'https://www.google.com/recaptcha/api.js?render='+${@captchaService.getSiteKey()}" async defer="defer"></script>
+</head>
+<body>
+<div class="login-container">
+    <h2>Sing up</h2>
+    <form action="/register" method="POST" class="login-form" th:object="${userRegister}" id="registerForm">
+        <div th:if="${#fields.hasGlobalErrors()}" class="failed">
+            <span th:errors="*{global}">Invalid username or password</span>
+        </div>
+        <div class="input-container">
+            <label for="username">Username</label>
+            <input type="text" th:field="*{username}" required/>
+            <div th:if="${#fields.hasErrors('username')}" th:errors="*{username}" class="validation-error">
+                User name error
+            </div>
+        </div>
+        <div class="input-container">
+            <label for="password">Password</label>
+            <input type="password" th:field="*{password}" required/>
+            <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="validation-error">
+                Password error
+            </div>
+        </div>
+        <div class="input-container">
+            <label for="email">Email</label>
+            <input type="text" th:field="*{email}" required/>
+            <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="validation-error">
+                Email error
+            </div>
+        </div>
+        <input type="hidden" id="captchaToken" name="captchaToken"/>
+        <button type="submit">Register</button>
+        <div class="input-container">
+            Already have an account? <a href="/login">Login here</a>
+        </div>
+    </form>
+</div>
+
+<script th:inline="javascript" th:if="${@captchaService.isCaptchaInRegisterEnable()}">
+    const registerForm = document.getElementById('registerForm');
+    registerForm.addEventListener('submit', onSubmit);
+
+    function onSubmit(e) {
+        e.preventDefault();
+        if (typeof grecaptcha !== 'undefined') {
+            const siteKey = /*[[${@captchaService.getSiteKey()}]]*/ 'defaultKey';
+            grecaptcha.ready(function () {
+                grecaptcha.execute(siteKey, {action: 'submit'}).then(function (token) {
+                    document.getElementById('captchaToken').value = token;
+                    registerForm.submit();
+                });
+            });
+        } else {
+            registerForm.submit();
+        }
+    }
+</script>
+</body>
+</html>

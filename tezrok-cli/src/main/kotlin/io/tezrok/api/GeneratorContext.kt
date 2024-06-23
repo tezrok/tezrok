@@ -3,6 +3,7 @@ package io.tezrok.api
 import io.tezrok.api.input.ProjectElem
 import io.tezrok.api.io.OutStream
 import io.tezrok.api.node.DirectoryNode
+import io.tezrok.util.ResourceUtil
 import org.apache.velocity.VelocityContext
 import org.apache.velocity.shaded.commons.io.FilenameUtils
 import org.slf4j.LoggerFactory
@@ -43,7 +44,12 @@ interface GeneratorContext : GeneratorProvider {
      * Writes content to [OutStream] using specified template.
      */
     fun writeTemplate(output: OutStream, templatePath: String, values: Map<String, Any?>) =
-        writeTemplate(output, templatePath) { context -> extendsValues(templatePath, values).forEach { (k, v) -> context.put(k, v) } }
+        writeTemplate(output, templatePath) { context ->
+            extendsValues(
+                templatePath,
+                values
+            ).forEach { (k, v) -> context.put(k, v) }
+        }
 
     /**
      * Writes content to [OutStream] using specified template.
@@ -56,12 +62,27 @@ interface GeneratorContext : GeneratorProvider {
      * Name of the file is the same as the template name without the .vm extension.
      */
     fun addFile(targetDir: DirectoryNode, templatePath: String, values: Map<String, String?> = emptyMap()) {
-        val fileName = FilenameUtils.getName(templatePath).removeSuffix(".vm")
-        val startDbFile = targetDir.getOrAddFile(fileName)
-        if (startDbFile.isEmpty()) {
-            writeTemplate(startDbFile, templatePath, extendsValues(templatePath, values))
+        val templateName = FilenameUtils.getName(templatePath)
+        if (templateName.endsWith(".vm")) {
+            val fileName = templateName.removeSuffix(".vm")
+            val startDbFile = targetDir.getOrAddFile(fileName)
+            if (startDbFile.isEmpty()) {
+                writeTemplate(startDbFile, templatePath, extendsValues(templatePath, values))
+            } else {
+                log.warn("File {} already exists, skipping", fileName)
+            }
         } else {
-            log.warn("File {} already exists, skipping", fileName)
+            check(values.isEmpty()) { "Values are not supported for non-vm files" }
+            val startDbFile = targetDir.getOrAddFile(templateName)
+            if (startDbFile.isEmpty()) {
+                startDbFile.getOutputStream().use { os ->
+                    ResourceUtil.getResourceAsStream(templatePath).use { inputStream ->
+                        inputStream.copyTo(os)
+                    }
+                }
+            } else {
+                log.warn("File {} already exists, skipping", templateName)
+            }
         }
     }
 

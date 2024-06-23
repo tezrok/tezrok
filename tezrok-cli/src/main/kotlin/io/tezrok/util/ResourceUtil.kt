@@ -1,5 +1,6 @@
 package io.tezrok.util
 
+import java.io.InputStream
 import java.nio.file.Path
 import kotlin.io.path.toPath
 
@@ -18,4 +19,7 @@ object ResourceUtil {
 
     fun getResourceAsPath(path: String): Path =
         javaClass.getResource(path)?.toURI()?.toPath() ?: throw Exception("Resource not found: $path")
+
+    fun getResourceAsStream(path: String): InputStream = javaClass.getResource(path)?.openStream()
+        ?: throw Exception("Resource not found: $path")
 }
