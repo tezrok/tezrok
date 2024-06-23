@@ -153,8 +153,8 @@ internal class JooqMethodGenerator(
             return when (returnType) {
                 dtoList -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchInto(${dtoName}.class)")
                 recordList -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetch()")
-                dtoPage -> ReturnStmt("findPage($where, $lastParam, ${dtoName}.class)")
-                recordPage -> ReturnStmt("findPage($where, $lastParam, $recordName.class)")
+                dtoPage -> ReturnStmt("findPage($where, $lastParam, ${dtoName}.class, true)")
+                recordPage -> ReturnStmt("findPage($where, $lastParam, $recordName.class, true)")
                 GENERIC_LIST -> ReturnStmt("dsl.selectFrom(table).where($where)$orderBy$limit.fetchInto($lastParam)")
                 else -> error("Unsupported return type: $returnType")
             }
