@@ -329,14 +329,21 @@ data class MethodElem(
      */
     val api: Boolean? = null,
     /**
+     * If true, then method will not be generated
+     */
+    val skipGenerate: Boolean? = null,
+    /**
      * List of roles that can access this method
      */
     val roles: List<String>? = null,
     /**
      * List of permissions which are required to access this method
      */
-    val permissions: List<String>? = null,
-)
+    val permissions: List<String>? = null
+) {
+    @JsonIgnore
+    fun isApi(): Boolean = api == true
+}
 
 data class GitElem(
     // list of files to ignore

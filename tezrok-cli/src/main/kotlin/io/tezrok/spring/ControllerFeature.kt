@@ -1,8 +1,12 @@
 package io.tezrok.spring
 
 import io.tezrok.api.GeneratorContext
+import io.tezrok.api.ProcessModelPhase
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.EntityElem
+import io.tezrok.api.input.MethodElem
+import io.tezrok.api.input.ModuleElem
+import io.tezrok.api.input.ProjectElem
 import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.getSetterName
@@ -80,18 +84,93 @@ internal class ControllerFeature : TezrokFeature {
 
         if (!webDir.hasClass(fileName)) {
             val controllerFile = webDir.addJavaFile(fileName)
-            val values = mapOf(
+            val values = mutableMapOf<String, Any>(
                 "package" to packagePath,
                 "name" to name,
                 "lname" to name.lowerFirst(),
                 "primarySetter" to entity.getPrimaryField().getSetterName()
             )
+            entity.methods.filter { it.isApi() }.forEach { method ->
+                values[getBaseName(method.name, entity.name)] = true
+            }
             context.writeTemplate(controllerFile, "/templates/spring/EntityApiController.java.vm", values)
             // TODO: extract method from service class and add corresponding methods to controller
             // TODO: add custom methods
         } else {
             log.warn("File already exists: {}", fileName)
         }
+    }
+
+    private fun getBaseName(name: String, entityName: String): String {
+        return when (name) {
+            "getFull${entityName}ById" -> "getFullEntityById"
+            "createFull${entityName}" -> "createFullEntity"
+            "updateFull${entityName}" -> "updateFullEntity"
+            "search${entityName}sByTerm" -> "searchEntitiesByTerm"
+            "importFull${entityName}" -> "importFullEntity"
+            else -> name
+        }
+    }
+
+    override fun processModel(project: ProjectElem, phase: ProcessModelPhase): ProjectElem {
+        if (phase != ProcessModelPhase.Process) {
+            // synthetic fields should be added before, so we need Process phase
+            return project
+        }
+
+        return project.copy(modules = project.modules.map { processModule(it) })
+    }
+
+    private fun processModule(module: ModuleElem): ModuleElem {
+        return module.copy(schema = module.schema?.copy(entities = module.schema.entities?.map { processEntity(it) }))
+    }
+
+    /**
+     * Add custom methods by entity relations.
+     */
+    private fun processEntity(entity: EntityElem): EntityElem {
+        val entityName = entity.name
+        val entityDto = "${entityName}Dto"
+        val entityDtoFull = "${entityName}FullDto"
+        val methodsMap = entity.methods.associateBy { it.name }.toMutableMap()
+        val methods = mutableSetOf<MethodElem>()
+        methods.add(createApiMethod("findAll", "Finds all {@link $entityDto}s.", methodsMap))
+        methods.add(createApiMethod("getById", "Gets {@link $entityDto} by id.", methodsMap))
+        methods.add(createApiMethod("getFull${entityName}ById", "Gets {@link $entityDtoFull} by id.", methodsMap))
+        methods.add(createApiMethod("createFull${entityName}", "Creates {@link $entityDtoFull}.", methodsMap))
+        methods.add(
+            createApiMethod(
+                "updateFull${entityName}",
+                "Updates existing {@link $entityDtoFull} by id.",
+                methodsMap
+            )
+        )
+        methods.add(createApiMethod("importFull${entityName}", "Imports {@link $entityDtoFull}.", methodsMap))
+        methods.add(
+            createApiMethod(
+                "search${entityName}sByTerm",
+                "Search {@link $entityDto} by term (by all string fields).",
+                methodsMap
+            )
+        )
+        methods.addAll(methodsMap.values)
+        return entity.copy(methods = methods)
+    }
+
+    private fun createApiMethod(
+        name: String,
+        description: String,
+        methodsMap: MutableMap<String, MethodElem>
+    ): MethodElem {
+        val inheritedMethod = methodsMap.remove(name)
+        return MethodElem(
+            name = name,
+            description = inheritedMethod?.description ?: description,
+            api = inheritedMethod?.api ?: true,
+            roles = inheritedMethod?.roles,
+            permissions = inheritedMethod?.permissions,
+            skipGenerate = true
+        )
     }
 
     private companion object {

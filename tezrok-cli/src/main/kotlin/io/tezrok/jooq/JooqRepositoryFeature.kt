@@ -679,10 +679,13 @@ internal class JooqRepositoryFeature : TezrokFeature {
         entities: Map<String, EntityElem>,
         baseMethods: Set<String>
     ) {
-        val methodGenerator = JooqMethodGenerator(entity, repoClass, entities)
-        entity.methods.map { it.name }.forEach { methodName ->
-            if (!baseMethods.contains(methodName)) {
-                methodGenerator.generateByOnlyName(methodName)
+        val methodsToGenerate = entity.methods.filter { it.skipGenerate != true }
+        if (methodsToGenerate.isNotEmpty()) {
+            val methodGenerator = JooqMethodGenerator(entity, repoClass, entities)
+            methodsToGenerate.map { it.name }.forEach { methodName ->
+                if (!baseMethods.contains(methodName)) {
+                    methodGenerator.generateByOnlyName(methodName)
+                }
             }
         }
     }

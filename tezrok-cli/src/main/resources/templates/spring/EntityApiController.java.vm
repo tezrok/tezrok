@@ -35,29 +35,28 @@ public class ${name}ApiController {
         this.${lname}Service = ${lname}Service;
     }
 
+#if ($findAll)
     @RequestMapping("/${lname}s/table")
     public List<${name}Dto> findAll() {
         return ${lname}Service.findAll();
     }
+#end
 
-    @GetMapping(value = "/${lname}s/search")
-    public Page<${name}Dto> search${name}sByTerm(@RequestParam(value = "term", required = false) String searchTerm,
-                                         @RequestParam(value = "match", defaultValue = "contains") String matchType,
-                                         Pageable pageable) {
-        // TODO: optimize this method
-        return ${lname}Service.searchByTerm(StringUtils.trim(searchTerm), pageable, MatchType.fromParam(matchType), true);
-    }
-
+#if ($getById)
     @GetMapping("/${lname}/table/{id}")
     public ResponseEntity<${name}Dto> getById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(${lname}Service.getById(id));
     }
+#end
 
+#if ($getFullEntityById)
     @GetMapping("/${lname}/{id}")
     public ResponseEntity<${name}FullDto> getFull${name}ById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(${lname}Service.getFull${name}ById(id));
     }
+#end
 
+#if ($createFullEntity)
     @PostMapping("/${lname}")
     public ResponseEntity<?> createFull${name}(@Valid @RequestBody ${name}FullDto dto, @RequestParam(value = "return", required = false, defaultValue = "false") boolean returnEntity) {
         if (returnEntity) {
@@ -66,7 +65,9 @@ public class ${name}ApiController {
 
         return ResponseEntity.ok(new IdDto(${lname}Service.saveFull${name}(dto)));
     }
+#end
 
+#if ($updateFullEntity)
     @PutMapping("/${lname}/{id}")
     public ResponseEntity<?> updateFull${name}(@PathVariable("id") Long id, @Valid @RequestBody ${name}FullDto dto, @RequestParam(value = "return", required = false, defaultValue = "false") boolean returnEntity) {
         dto.${primarySetter}(id);
@@ -77,7 +78,9 @@ public class ${name}ApiController {
 
         return ResponseEntity.ok(new IdDto(${lname}Service.saveFull${name}(dto)));
     }
+#end
 
+#if ($importFullEntity)
     @PostMapping("/${lname}/import")
     public ResponseEntity<?> importFull${name}(@RequestBody ${name}FullDto dto, @RequestParam(value = "return", required = false, defaultValue = "false") boolean returnEntity) {
         // TODO: validate dto before import
@@ -87,4 +90,15 @@ public class ${name}ApiController {
 
         return ResponseEntity.ok(new IdDto(${lname}Service.importFull${name}(dto)));
     }
+#end
+
+#if ($searchEntitiesByTerm)
+    @GetMapping(value = "/${lname}s/search")
+    public Page<${name}Dto> search${name}sByTerm(@RequestParam(value = "term", required = false) String searchTerm,
+                                                 @RequestParam(value = "match", defaultValue = "contains") String matchType,
+                                                 Pageable pageable) {
+        // TODO: optimize this method
+        return ${lname}Service.searchByTerm(StringUtils.trim(searchTerm), pageable, MatchType.fromParam(matchType), true);
+    }
+#end
 }
