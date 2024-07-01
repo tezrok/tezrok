@@ -53,7 +53,14 @@
             "updatedAt": true,
             "methods": [
               {
-                "name": "findOrderOtherItemsByOrderIdAndItemTitle"
+                "name": "findOrderOtherItemsByOrderIdAndItemTitle",
+                "api": true,
+                "description": "Find order other items by order id and item title",
+                "apiPath": "/order-items-foo-bar",
+                "args": {
+                  "orderId": 12,
+                  "itemTitle": "foo"
+                }
               },
               {
                 "name": "findOrderItemsByItemItemsOrderIdAndItemTitle"
@@ -77,7 +84,7 @@
                 "relation": "ManyToMany"
               }
             ],
-            "stdMethodProps" : {
+            "stdMethodProps": {
               "api": "false"
             }
           },

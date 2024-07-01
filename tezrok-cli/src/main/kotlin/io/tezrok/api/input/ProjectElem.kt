@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import io.tezrok.util.NameUtil
+import org.springframework.web.bind.annotation.RequestMethod
 import java.util.*
-import kotlin.collections.LinkedHashSet
 
 /**
  * Represents a model of a project loaded from a tezrok.json file.
@@ -333,6 +333,18 @@ data class MethodElem(
      * If true, then method will be accessible by rest controller
      */
     val api: Boolean? = null,
+    /**
+     * Rest path for method. Used only if api is true
+     */
+    val apiPath: String? = null,
+    /**
+     * Http-method for api-method. Used only if api is true
+     */
+    val apiMethod: RequestMethod? = null,
+    /**
+     * Arguments for service method call
+     */
+    val args: Map<String, Any?>? = null,
     /**
      * If true, then method will not be generated. This method probably standard.
      */

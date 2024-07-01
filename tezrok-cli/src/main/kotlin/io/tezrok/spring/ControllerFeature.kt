@@ -1,14 +1,21 @@
 package io.tezrok.spring
 
+import com.github.javaparser.ast.Modifier
+import com.github.javaparser.ast.expr.NameExpr
+import com.github.javaparser.ast.expr.StringLiteralExpr
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.ProcessModelPhase
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.*
+import io.tezrok.api.java.JavaClassNode
 import io.tezrok.api.java.JavaDirectoryNode
+import io.tezrok.api.java.JavaMethodNode
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.getSetterName
 import io.tezrok.util.lowerFirst
+import io.tezrok.util.parseAsStatement
 import org.slf4j.LoggerFactory
+import org.springframework.web.bind.annotation.*
 
 /**
  * Creates controller class for each entity.
@@ -24,10 +31,11 @@ internal class ControllerFeature : TezrokFeature {
         if (applicationPackageRoot != null) {
             val projectElem = context.getProject()
             val restDir = applicationPackageRoot.getOrAddJavaDirectory("web").getOrAddJavaDirectory("rest")
+            val serviceDir = applicationPackageRoot.getOrAddJavaDirectory("service")
             val schema = context.getProject().modules.find { it.name == module.getName() }?.schema
 
             schema?.entities?.forEach { entity ->
-                addControllerClass(entity, restDir, projectElem.packagePath, context)
+                addControllerClass(entity, restDir, serviceDir, context)
             }
 
             addRestHandlerExceptionResolver(
@@ -64,7 +72,7 @@ internal class ControllerFeature : TezrokFeature {
     private fun addControllerClass(
         entity: EntityElem,
         webDir: JavaDirectoryNode,
-        packagePath: String,
+        serviceDir: JavaDirectoryNode,
         context: GeneratorContext
     ) {
         if (entity.syntheticTo?.isNotBlank() == true) {
@@ -82,7 +90,6 @@ internal class ControllerFeature : TezrokFeature {
         if (!webDir.hasClass(fileName)) {
             val controllerFile = webDir.addJavaFile(fileName)
             val values = mutableMapOf<String, Any>(
-                "package" to packagePath,
                 "name" to name,
                 "lname" to name.lowerFirst(),
                 "primarySetter" to entity.getPrimaryField().getSetterName()
@@ -92,11 +99,80 @@ internal class ControllerFeature : TezrokFeature {
             }
             context.writeTemplate(controllerFile, "/templates/spring/EntityApiController.java.vm", values)
             val controllerClass = controllerFile.getRootClass()
+            val serviceClass = serviceDir.getClass("${name}Service") ?: error("Service class not found: ${name}Service")
             entity.methods.filter { it.isApi() && it.skipGenerate != true }.forEach { method ->
-                // TODO: create method in controller
+                addCustomApiMethod(controllerClass, method, serviceClass)
             }
         } else {
             log.warn("File already exists: {}", fileName)
+        }
+    }
+
+    private fun addCustomApiMethod(
+        clazz: JavaClassNode,
+        methodElem: MethodElem,
+        serviceClass: JavaClassNode
+    ) {
+        val serviceField = serviceClass.getName().lowerFirst()
+        val serviceMethod = serviceClass.getMethod(methodElem.name)
+            ?: error("Service method not found: ${methodElem.name}")
+        // TODO: get params from apiPath as well
+        // TODO: support Principal for userDto/userId parameter
+        val args = methodElem.args?.map { it.value }
+            ?.map { if (it is String) "\"$it\"" else it }
+            ?.joinToString(", ")
+            ?: ""
+        val method = clazz.addMethod(methodElem.name)
+            .withModifiers(Modifier.Keyword.PUBLIC)
+            .setReturnType(serviceMethod.getTypeAsString())
+            .setBody("return $serviceField.${serviceMethod.getName()}(${args});".parseAsStatement())
+
+        if (methodElem.description?.isNotBlank() == true) {
+            method.setJavadocComment(methodElem.description)
+        }
+        annotateMappingHttpMethod(method, methodElem)
+    }
+
+    private fun annotateMappingHttpMethod(method: JavaMethodNode, methodElem: MethodElem) {
+        val httpMethod = methodElem.apiMethod ?: getRequestBYMethodName(method.getName())
+        val apiPath = methodElem.apiPath ?: error("apiPath is required for method: ${method.getName()}")
+        when (httpMethod) {
+            RequestMethod.GET -> method.addAnnotation(GetMapping::class.java, apiPath)
+            RequestMethod.POST -> method.addAnnotation(PostMapping::class.java, apiPath)
+            RequestMethod.PUT -> method.addAnnotation(PutMapping::class.java, apiPath)
+            RequestMethod.DELETE -> method.addAnnotation(DeleteMapping::class.java, apiPath)
+            RequestMethod.PATCH -> method.addAnnotation(PatchMapping::class.java, apiPath)
+            RequestMethod.HEAD -> method.addAnnotation(
+                RequestMapping::class.java,
+                "method" to NameExpr("RequestMethod.HEAD"),
+                "path" to StringLiteralExpr(apiPath)
+            ).addImport(RequestMethod::class.java)
+
+            RequestMethod.OPTIONS -> method.addAnnotation(
+                RequestMapping::class.java,
+                "method" to NameExpr("RequestMethod.OPTIONS"),
+                "path" to StringLiteralExpr(apiPath)
+            ).addImport(RequestMethod::class.java)
+
+            RequestMethod.TRACE -> method.addAnnotation(
+                RequestMapping::class.java,
+                "method" to NameExpr("RequestMethod.TRACE"),
+                "path" to StringLiteralExpr(apiPath)
+            ).addImport(RequestMethod::class.java)
+        }
+    }
+
+    private fun getRequestBYMethodName(name: String): RequestMethod {
+        return when {
+            name.startsWith("get") || name.startsWith("find") -> RequestMethod.GET
+            name.startsWith("create") -> RequestMethod.POST
+            name.startsWith("update") -> RequestMethod.PUT
+            name.startsWith("delete") -> RequestMethod.DELETE
+            name.startsWith("head") -> RequestMethod.HEAD
+            name.startsWith("patch") -> RequestMethod.PATCH
+            name.startsWith("options") -> RequestMethod.OPTIONS
+            name.startsWith("trace") -> RequestMethod.TRACE
+            else -> RequestMethod.GET
         }
     }
 

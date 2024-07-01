@@ -4,16 +4,14 @@ import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.comments.JavadocComment
-import com.github.javaparser.ast.expr.Expression
-import com.github.javaparser.ast.expr.MemberValuePair
-import com.github.javaparser.ast.expr.MethodCallExpr
-import com.github.javaparser.ast.expr.NormalAnnotationExpr
+import com.github.javaparser.ast.expr.*
 import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.ast.stmt.ReturnStmt
 import com.github.javaparser.ast.stmt.Statement
 import com.github.javaparser.ast.type.Type
 import com.github.javaparser.ast.type.TypeParameter
 import io.tezrok.util.addImportsByType
+import org.springframework.web.bind.annotation.RequestMethod
 
 /**
  * Node that represents a Java method
@@ -112,6 +110,21 @@ open class JavaMethodNode(private val method: MethodDeclaration, private val par
         return this
     }
 
+    fun addAnnotation(annotationClass: Class<out Annotation>, vararg fields: Pair<String, Expression>): JavaMethodNode {
+        return addAnnotation(annotationClass, fields.toMap())
+    }
+
+    fun addAnnotation(annotationClass: Class<out Annotation>, fields: Map<String, Expression>): JavaMethodNode {
+        if (fields.isNotEmpty()) {
+            parent.addImport(annotationClass)
+            val annotation = method.addAndGetAnnotation(annotationClass.simpleName)
+            annotation.setPairs(NodeList(fields.map { MemberValuePair(it.key, it.value) }))
+        } else {
+            addAnnotation(annotationClass)
+        }
+        return this
+    }
+
     fun addAnnotation(annotationClass: Class<out Annotation>): JavaMethodNode {
         method.addAnnotation(annotationClass)
         return this
@@ -126,6 +139,20 @@ open class JavaMethodNode(private val method: MethodDeclaration, private val par
     fun addAnnotation(annotationExpr: NormalAnnotationExpr): JavaMethodNode {
         method.addAnnotation(annotationExpr)
         return this
+    }
+
+    fun addAnnotation(annotationClass: Class<out Annotation>, expression: Expression): JavaMethodNode {
+        parent.addImport(annotationClass)
+        method.addAnnotation(SingleMemberAnnotationExpr(Name(annotationClass.simpleName), expression))
+        return this
+    }
+
+    fun addAnnotation(annotationClass: Class<out Annotation>, expression: String): JavaMethodNode {
+        return addAnnotation(annotationClass, StringLiteralExpr(expression))
+    }
+
+    fun addImport(importClass: Class<RequestMethod>) {
+        parent.addImport(importClass)
     }
 
     fun clearBody(): JavaMethodNode {
