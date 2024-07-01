@@ -1,10 +1,17 @@
 package ${package}.service;
 
 import ${package}.dto.UserDetailsImpl;
+import ${package}.dto.UserDto;
+import ${package}.error.UserNotFoundException;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import java.security.Principal;
+import java.util.Optional;
 
 /**
  * Service for getting the currently authenticated user.
@@ -89,5 +96,15 @@ public class CurrentAuthService {
      */
     public boolean isAdmin() {
         return hasAuthority("ROLE_ADMIN");
+    }
+
+    @NotNull
+    public UserDto getUserByPrincipal(final Principal principal) {
+        return Optional.ofNullable(principal)
+                .map(AbstractAuthenticationToken.class::cast)
+                .map(AbstractAuthenticationToken::getPrincipal)
+                .map(UserDetailsImpl.class::cast)
+                .map(UserDetailsImpl::getUser)
+                .orElseThrow(UserNotFoundException::new);
     }
 }
