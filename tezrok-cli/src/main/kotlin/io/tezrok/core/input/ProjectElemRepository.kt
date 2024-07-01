@@ -312,6 +312,7 @@ internal class ProjectElemRepository {
             description = inheritEntity?.description ?: entity.description,
             customRepository = inheritEntity?.customRepository ?: entity.customRepository,
             methods = inheritEntity?.methods ?: entity.methods,
+            stdMethodProps = inheritEntity?.stdMethodProps ?: entity.stdMethodProps,
             activable = inheritEntity?.activable ?: entity.activable,
             createdAt = inheritEntity?.createdAt ?: entity.createdAt,
             updatedAt = inheritEntity?.updatedAt ?: entity.updatedAt,

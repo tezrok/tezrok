@@ -2,7 +2,6 @@ package io.tezrok.spring
 
 import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.body.MethodDeclaration
-import com.github.javaparser.ast.expr.BooleanLiteralExpr
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.EntityElem

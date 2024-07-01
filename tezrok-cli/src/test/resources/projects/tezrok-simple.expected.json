@@ -103,6 +103,48 @@
             ],
             "methods": [
               {
+                "name": "findAll",
+                "description": "Finds all {@link OrderDto}s.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getById",
+                "description": "Gets {@link OrderDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getFullOrderById",
+                "description": "Gets {@link OrderFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "createFullOrder",
+                "description": "Creates {@link OrderFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "updateFullOrder",
+                "description": "Updates existing {@link OrderFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "importFullOrder",
+                "description": "Imports {@link OrderFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "searchOrdersByTerm",
+                "description": "Search {@link OrderDto} by term (by all string fields).",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
                 "name": "getByName",
                 "description": "Returns {@link OrderDto} by unique field {@link OrderDto#name}."
               },
@@ -222,6 +264,54 @@
             ],
             "methods": [
               {
+                "name": "findAll",
+                "description": "Finds all {@link ItemDto}s.",
+                "api": false,
+                "skipGenerate": true
+              },
+              {
+                "name": "getById",
+                "description": "Gets {@link ItemDto} by id.",
+                "api": false,
+                "skipGenerate": true
+              },
+              {
+                "name": "getFullItemById",
+                "description": "Gets {@link ItemFullDto} by id.",
+                "api": false,
+                "skipGenerate": true
+              },
+              {
+                "name": "createFullItem",
+                "description": "Creates {@link ItemFullDto}.",
+                "api": false,
+                "skipGenerate": true
+              },
+              {
+                "name": "updateFullItem",
+                "description": "Updates existing {@link ItemFullDto} by id.",
+                "api": false,
+                "skipGenerate": true
+              },
+              {
+                "name": "importFullItem",
+                "description": "Imports {@link ItemFullDto}.",
+                "api": false,
+                "skipGenerate": true
+              },
+              {
+                "name": "searchItemsByTerm",
+                "description": "Search {@link ItemDto} by term (by all string fields).",
+                "api": false,
+                "skipGenerate": true
+              },
+              {
+                "name": "findOrderOtherItemsByOrderIdAndItemTitle"
+              },
+              {
+                "name": "findOrderItemsByItemItemsOrderIdAndItemTitle"
+              },
+              {
                 "name": "findOrderOtherItemsByOrderId",
                 "description": "Returns list of {@link ItemDto} by primary field to support ManyToMany relation for field {@link OrderFullDto#otherItems}."
               },
@@ -257,7 +347,10 @@
                 "name": "findIdFieldsByIdIn",
                 "description": "Returns list of ID fields (id, itemsOrderId) of {@link ItemDto} into custom class."
               }
-            ]
+            ],
+            "stdMethodProps": {
+              "api": false
+            }
           },
           {
             "name": "Info",
@@ -274,7 +367,50 @@
                 "maxLength": 100
               }
             ],
-            "methods": []
+            "methods": [
+              {
+                "name": "findAll",
+                "description": "Finds all {@link InfoDto}s.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getById",
+                "description": "Gets {@link InfoDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getFullInfoById",
+                "description": "Gets {@link InfoFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "createFullInfo",
+                "description": "Creates {@link InfoFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "updateFullInfo",
+                "description": "Updates existing {@link InfoFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "importFullInfo",
+                "description": "Imports {@link InfoFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "searchInfosByTerm",
+                "description": "Search {@link InfoDto} by term (by all string fields).",
+                "api": true,
+                "skipGenerate": true
+              }
+            ]
           },
           {
             "name": "User",
@@ -362,6 +498,48 @@
             ],
             "methods": [
               {
+                "name": "findAll",
+                "description": "Finds all {@link UserDto}s.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getById",
+                "description": "Gets {@link UserDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getFullUserById",
+                "description": "Gets {@link UserFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "createFullUser",
+                "description": "Creates {@link UserFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "updateFullUser",
+                "description": "Updates existing {@link UserFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "importFullUser",
+                "description": "Imports {@link UserFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "searchUsersByTerm",
+                "description": "Search {@link UserDto} by term (by all string fields).",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
                 "name": "getByNameOrEmail",
                 "description": "Returns {@link UserDto} by name or email."
               },
@@ -444,6 +622,48 @@
             ],
             "methods": [
               {
+                "name": "findAll",
+                "description": "Finds all {@link RoleDto}s.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getById",
+                "description": "Gets {@link RoleDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getFullRoleById",
+                "description": "Gets {@link RoleFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "createFullRole",
+                "description": "Creates {@link RoleFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "updateFullRole",
+                "description": "Updates existing {@link RoleFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "importFullRole",
+                "description": "Imports {@link RoleFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "searchRolesByTerm",
+                "description": "Search {@link RoleDto} by term (by all string fields).",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
                 "name": "getByName",
                 "description": "Returns {@link RoleDto} by unique field {@link RoleDto#name}."
               },
@@ -515,6 +735,48 @@
               }
             ],
             "methods": [
+              {
+                "name": "findAll",
+                "description": "Finds all {@link PermissionDto}s.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getById",
+                "description": "Gets {@link PermissionDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getFullPermissionById",
+                "description": "Gets {@link PermissionFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "createFullPermission",
+                "description": "Creates {@link PermissionFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "updateFullPermission",
+                "description": "Updates existing {@link PermissionFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "importFullPermission",
+                "description": "Imports {@link PermissionFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "searchPermissionsByTerm",
+                "description": "Search {@link PermissionDto} by term (by all string fields).",
+                "api": true,
+                "skipGenerate": true
+              },
               {
                 "name": "getByName",
                 "description": "Returns {@link PermissionDto} by unique field {@link PermissionDto#name}."
@@ -608,6 +870,48 @@
             ],
             "methods": [
               {
+                "name": "findAll",
+                "description": "Finds all {@link UserProfileDto}s.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getById",
+                "description": "Gets {@link UserProfileDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getFullUserProfileById",
+                "description": "Gets {@link UserProfileFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "createFullUserProfile",
+                "description": "Creates {@link UserProfileFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "updateFullUserProfile",
+                "description": "Updates existing {@link UserProfileFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "importFullUserProfile",
+                "description": "Imports {@link UserProfileFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "searchUserProfilesByTerm",
+                "description": "Search {@link UserProfileDto} by term (by all string fields).",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
                 "name": "getByUserId",
                 "description": "Returns {@link UserProfileDto} by unique field {@link UserProfileDto#userId}."
               },
@@ -699,6 +1003,48 @@
             ],
             "methods": [
               {
+                "name": "findAll",
+                "description": "Finds all {@link RememberMeTokenDto}s.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getById",
+                "description": "Gets {@link RememberMeTokenDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getFullRememberMeTokenById",
+                "description": "Gets {@link RememberMeTokenFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "createFullRememberMeToken",
+                "description": "Creates {@link RememberMeTokenFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "updateFullRememberMeToken",
+                "description": "Updates existing {@link RememberMeTokenFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "importFullRememberMeToken",
+                "description": "Imports {@link RememberMeTokenFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "searchRememberMeTokensByTerm",
+                "description": "Search {@link RememberMeTokenDto} by term (by all string fields).",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
                 "name": "findByUsername",
                 "description": "Find by username."
               }
@@ -725,6 +1071,48 @@
               }
             ],
             "methods": [
+              {
+                "name": "findAll",
+                "description": "Finds all {@link OrderItemOtherItemsDto}s.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getById",
+                "description": "Gets {@link OrderItemOtherItemsDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getFullOrderItemOtherItemsById",
+                "description": "Gets {@link OrderItemOtherItemsFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "createFullOrderItemOtherItems",
+                "description": "Creates {@link OrderItemOtherItemsFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "updateFullOrderItemOtherItems",
+                "description": "Updates existing {@link OrderItemOtherItemsFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "importFullOrderItemOtherItems",
+                "description": "Imports {@link OrderItemOtherItemsFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "searchOrderItemOtherItemssByTerm",
+                "description": "Search {@link OrderItemOtherItemsDto} by term (by all string fields).",
+                "api": true,
+                "skipGenerate": true
+              },
               {
                 "name": "findByOrderId"
               },
@@ -761,6 +1149,48 @@
             ],
             "methods": [
               {
+                "name": "findAll",
+                "description": "Finds all {@link OrderOrderLinkedOrdersDto}s.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getById",
+                "description": "Gets {@link OrderOrderLinkedOrdersDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getFullOrderOrderLinkedOrdersById",
+                "description": "Gets {@link OrderOrderLinkedOrdersFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "createFullOrderOrderLinkedOrders",
+                "description": "Creates {@link OrderOrderLinkedOrdersFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "updateFullOrderOrderLinkedOrders",
+                "description": "Updates existing {@link OrderOrderLinkedOrdersFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "importFullOrderOrderLinkedOrders",
+                "description": "Imports {@link OrderOrderLinkedOrdersFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "searchOrderOrderLinkedOrderssByTerm",
+                "description": "Search {@link OrderOrderLinkedOrdersDto} by term (by all string fields).",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
                 "name": "findByOrderSourceId"
               },
               {
@@ -795,6 +1225,48 @@
               }
             ],
             "methods": [
+              {
+                "name": "findAll",
+                "description": "Finds all {@link ItemItemOtherItemsDto}s.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getById",
+                "description": "Gets {@link ItemItemOtherItemsDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getFullItemItemOtherItemsById",
+                "description": "Gets {@link ItemItemOtherItemsFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "createFullItemItemOtherItems",
+                "description": "Creates {@link ItemItemOtherItemsFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "updateFullItemItemOtherItems",
+                "description": "Updates existing {@link ItemItemOtherItemsFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "importFullItemItemOtherItems",
+                "description": "Imports {@link ItemItemOtherItemsFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "searchItemItemOtherItemssByTerm",
+                "description": "Search {@link ItemItemOtherItemsDto} by term (by all string fields).",
+                "api": true,
+                "skipGenerate": true
+              },
               {
                 "name": "findByItemSourceId"
               },
@@ -831,6 +1303,48 @@
             ],
             "methods": [
               {
+                "name": "findAll",
+                "description": "Finds all {@link ItemOrderRelatedOrdersDto}s.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getById",
+                "description": "Gets {@link ItemOrderRelatedOrdersDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getFullItemOrderRelatedOrdersById",
+                "description": "Gets {@link ItemOrderRelatedOrdersFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "createFullItemOrderRelatedOrders",
+                "description": "Creates {@link ItemOrderRelatedOrdersFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "updateFullItemOrderRelatedOrders",
+                "description": "Updates existing {@link ItemOrderRelatedOrdersFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "importFullItemOrderRelatedOrders",
+                "description": "Imports {@link ItemOrderRelatedOrdersFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "searchItemOrderRelatedOrderssByTerm",
+                "description": "Search {@link ItemOrderRelatedOrdersDto} by term (by all string fields).",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
                 "name": "findByItemId"
               },
               {
@@ -866,6 +1380,48 @@
             ],
             "methods": [
               {
+                "name": "findAll",
+                "description": "Finds all {@link UserRoleRolesDto}s.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getById",
+                "description": "Gets {@link UserRoleRolesDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getFullUserRoleRolesById",
+                "description": "Gets {@link UserRoleRolesFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "createFullUserRoleRoles",
+                "description": "Creates {@link UserRoleRolesFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "updateFullUserRoleRoles",
+                "description": "Updates existing {@link UserRoleRolesFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "importFullUserRoleRoles",
+                "description": "Imports {@link UserRoleRolesFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "searchUserRoleRolessByTerm",
+                "description": "Search {@link UserRoleRolesDto} by term (by all string fields).",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
                 "name": "findByUserId"
               },
               {
@@ -900,6 +1456,48 @@
               }
             ],
             "methods": [
+              {
+                "name": "findAll",
+                "description": "Finds all {@link RolePermissionPermissionsDto}s.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getById",
+                "description": "Gets {@link RolePermissionPermissionsDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "getFullRolePermissionPermissionsById",
+                "description": "Gets {@link RolePermissionPermissionsFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "createFullRolePermissionPermissions",
+                "description": "Creates {@link RolePermissionPermissionsFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "updateFullRolePermissionPermissions",
+                "description": "Updates existing {@link RolePermissionPermissionsFullDto} by id.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "importFullRolePermissionPermissions",
+                "description": "Imports {@link RolePermissionPermissionsFullDto}.",
+                "api": true,
+                "skipGenerate": true
+              },
+              {
+                "name": "searchRolePermissionPermissionssByTerm",
+                "description": "Search {@link RolePermissionPermissionsDto} by term (by all string fields).",
+                "api": true,
+                "skipGenerate": true
+              },
               {
                 "name": "findByRoleId"
               },

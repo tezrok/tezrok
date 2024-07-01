@@ -3,10 +3,7 @@ package io.tezrok.spring
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.ProcessModelPhase
 import io.tezrok.api.TezrokFeature
-import io.tezrok.api.input.EntityElem
-import io.tezrok.api.input.MethodElem
-import io.tezrok.api.input.ModuleElem
-import io.tezrok.api.input.ProjectElem
+import io.tezrok.api.input.*
 import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.getSetterName
@@ -90,12 +87,14 @@ internal class ControllerFeature : TezrokFeature {
                 "lname" to name.lowerFirst(),
                 "primarySetter" to entity.getPrimaryField().getSetterName()
             )
-            entity.methods.filter { it.isApi() }.forEach { method ->
+            entity.methods.filter { it.isApi() && it.skipGenerate == true }.forEach { method ->
                 values[getBaseName(method.name, entity.name)] = true
             }
             context.writeTemplate(controllerFile, "/templates/spring/EntityApiController.java.vm", values)
-            // TODO: extract method from service class and add corresponding methods to controller
-            // TODO: add custom methods
+            val controllerClass = controllerFile.getRootClass()
+            entity.methods.filter { it.isApi() && it.skipGenerate != true }.forEach { method ->
+                // TODO: create method in controller
+            }
         } else {
             log.warn("File already exists: {}", fileName)
         }
@@ -126,7 +125,7 @@ internal class ControllerFeature : TezrokFeature {
     }
 
     /**
-     * Add custom methods by entity relations.
+     * Add standard methods by entity relations.
      */
     private fun processEntity(entity: EntityElem): EntityElem {
         val entityName = entity.name
@@ -134,22 +133,58 @@ internal class ControllerFeature : TezrokFeature {
         val entityDtoFull = "${entityName}FullDto"
         val methodsMap = entity.methods.associateBy { it.name }.toMutableMap()
         val methods = mutableSetOf<MethodElem>()
-        methods.add(createApiMethod("findAll", "Finds all {@link $entityDto}s.", methodsMap))
-        methods.add(createApiMethod("getById", "Gets {@link $entityDto} by id.", methodsMap))
-        methods.add(createApiMethod("getFull${entityName}ById", "Gets {@link $entityDtoFull} by id.", methodsMap))
-        methods.add(createApiMethod("createFull${entityName}", "Creates {@link $entityDtoFull}.", methodsMap))
+        methods.add(
+            createApiMethod(
+                "findAll", "Finds all {@link $entityDto}s.",
+                entity.stdMethodProps,
+                methodsMap
+            )
+        )
+        methods.add(
+            createApiMethod(
+                "getById",
+                "Gets {@link $entityDto} by id.",
+                entity.stdMethodProps,
+                methodsMap
+            )
+        )
+        methods.add(
+            createApiMethod(
+                "getFull${entityName}ById",
+                "Gets {@link $entityDtoFull} by id.",
+                entity.stdMethodProps,
+                methodsMap
+            )
+        )
+        methods.add(
+            createApiMethod(
+                "createFull${entityName}",
+                "Creates {@link $entityDtoFull}.",
+                entity.stdMethodProps,
+                methodsMap
+            )
+        )
         methods.add(
             createApiMethod(
                 "updateFull${entityName}",
                 "Updates existing {@link $entityDtoFull} by id.",
+                entity.stdMethodProps,
                 methodsMap
             )
         )
-        methods.add(createApiMethod("importFull${entityName}", "Imports {@link $entityDtoFull}.", methodsMap))
+        methods.add(
+            createApiMethod(
+                "importFull${entityName}",
+                "Imports {@link $entityDtoFull}.",
+                entity.stdMethodProps,
+                methodsMap
+            )
+        )
         methods.add(
             createApiMethod(
                 "search${entityName}sByTerm",
                 "Search {@link $entityDto} by term (by all string fields).",
+                entity.stdMethodProps,
                 methodsMap
             )
         )
@@ -160,15 +195,16 @@ internal class ControllerFeature : TezrokFeature {
     private fun createApiMethod(
         name: String,
         description: String,
+        commonProps: MethodProps?,
         methodsMap: MutableMap<String, MethodElem>
     ): MethodElem {
         val inheritedMethod = methodsMap.remove(name)
         return MethodElem(
             name = name,
             description = inheritedMethod?.description ?: description,
-            api = inheritedMethod?.api ?: true,
-            roles = inheritedMethod?.roles,
-            permissions = inheritedMethod?.permissions,
+            api = commonProps?.api ?: inheritedMethod?.api ?: true,
+            roles = commonProps?.roles ?: inheritedMethod?.roles,
+            permissions = commonProps?.permissions ?: inheritedMethod?.permissions,
             skipGenerate = true
         )
     }

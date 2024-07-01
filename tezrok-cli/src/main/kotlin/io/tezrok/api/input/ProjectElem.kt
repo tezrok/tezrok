@@ -120,6 +120,10 @@ data class EntityElem(
     val customCommentsOld: Map<String, String>? = null,
     @JsonDeserialize(`as` = LinkedHashSet::class)
     val methods: Set<MethodElem> = LinkedHashSet(),
+    /**
+     * Common properties for all standard methods
+     */
+    val stdMethodProps: MethodProps? = null,
     // initial data for entity in csv format
     val init: String? = null,
 ) {
@@ -175,7 +179,8 @@ data class EntityElem(
     }
 
     fun getMethod(name: String): MethodElem {
-        return methods.find { it.name == name } ?: error("Method $name not found in entity $name. Expected methods: " + methods.map { it.name })
+        return methods.find { it.name == name }
+            ?: error("Method $name not found in entity $name. Expected methods: " + methods.map { it.name })
     }
 
     fun tryGetMethod(name: String): MethodElem? {
@@ -329,7 +334,7 @@ data class MethodElem(
      */
     val api: Boolean? = null,
     /**
-     * If true, then method will not be generated
+     * If true, then method will not be generated. This method probably standard.
      */
     val skipGenerate: Boolean? = null,
     /**
@@ -344,6 +349,24 @@ data class MethodElem(
     @JsonIgnore
     fun isApi(): Boolean = api == true
 }
+
+/**
+ * Common properties of a method.
+ */
+data class MethodProps(
+    /**
+     * If true, then method will be accessible by rest controller
+     */
+    val api: Boolean? = null,
+    /**
+     * List of roles that can access this method
+     */
+    val roles: List<String>? = null,
+    /**
+     * List of permissions which are required to access this method
+     */
+    val permissions: List<String>? = null
+)
 
 data class GitElem(
     // list of files to ignore

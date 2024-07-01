@@ -76,7 +76,10 @@
                 "type": "Order",
                 "relation": "ManyToMany"
               }
-            ]
+            ],
+            "stdMethodProps" : {
+              "api": "false"
+            }
           },
           {
             "name": "Info",
