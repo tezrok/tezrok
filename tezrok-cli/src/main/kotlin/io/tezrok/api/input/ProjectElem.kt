@@ -344,6 +344,7 @@ data class MethodElem(
     /**
      * Arguments for service method call
      */
+    @JsonDeserialize(`as` = LinkedHashMap::class)
     val args: Map<String, Any?>? = null,
     /**
      * If true, then method will not be generated. This method probably standard.

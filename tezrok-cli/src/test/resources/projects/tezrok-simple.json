@@ -63,7 +63,13 @@
                 }
               },
               {
-                "name": "findOrderItemsByItemItemsOrderIdAndItemTitle"
+                "name": "findOrderItemsByItemItemsOrderIdAndItemTitle",
+                "api": true,
+                "apiPath": "/order-items-and/{title}",
+                "args": {
+                  "param@orderId": 42,
+                  "path@title": ""
+                }
               }
             ],
             "fields": [

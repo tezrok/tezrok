@@ -50,7 +50,11 @@ open class JavaMethodNode(private val method: MethodDeclaration, private val par
         return this
     }
 
-    fun getParameters(): List<JavaMethodParameter> = method.parameters.map { JavaMethodParameter(it) }
+    fun getParameters(): List<JavaMethodParameter> = method.parameters.map { JavaMethodParameter(it, this) }
+
+    fun getLastParameter(): JavaMethodParameter {
+        return method.parameters.lastOrNull()?.let { JavaMethodParameter(it, this) } ?: error("Method has no parameters")
+    }
 
     fun setReturnType(typeName: String): JavaMethodNode {
         parent.addImportsByType(typeName)
@@ -151,7 +155,7 @@ open class JavaMethodNode(private val method: MethodDeclaration, private val par
         return addAnnotation(annotationClass, StringLiteralExpr(expression))
     }
 
-    fun addImport(importClass: Class<RequestMethod>) {
+    fun addImport(importClass: Class<*>) {
         parent.addImport(importClass)
     }
 

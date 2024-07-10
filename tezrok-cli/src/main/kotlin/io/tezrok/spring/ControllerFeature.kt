@@ -1,6 +1,8 @@
 package io.tezrok.spring
 
 import com.github.javaparser.ast.Modifier
+import com.github.javaparser.ast.expr.BooleanLiteralExpr
+import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.expr.NameExpr
 import com.github.javaparser.ast.expr.StringLiteralExpr
 import io.tezrok.api.GeneratorContext
@@ -116,16 +118,49 @@ internal class ControllerFeature : TezrokFeature {
         val serviceField = serviceClass.getName().lowerFirst()
         val serviceMethod = serviceClass.getMethod(methodElem.name)
             ?: error("Service method not found: ${methodElem.name}")
-        // TODO: get params from apiPath as well
-        // TODO: support Principal for userDto/userId parameter
-        val args = methodElem.args?.map { it.value }
-            ?.map { if (it is String) "\"$it\"" else it }
-            ?.joinToString(", ")
-            ?: ""
         val method = clazz.addMethod(methodElem.name)
             .withModifiers(Modifier.Keyword.PUBLIC)
             .setReturnType(serviceMethod.getTypeAsString())
-            .setBody("return $serviceField.${serviceMethod.getName()}(${args});".parseAsStatement())
+        // TODO: support Principal for userDto/userId parameter
+        val arguments = mutableListOf<String>()
+        val serviceArgs = serviceMethod.getParameters()
+        var paramIndex = 0
+        check(serviceArgs.size == methodElem.args?.size) { "Service method args count mismatch: ${serviceArgs.size} != ${methodElem.args?.size}" }
+        methodElem.args?.forEach{ (param, value) ->
+            val index = param.indexOf('@')
+            val (type, name) = if (index >= 0) {
+                param.substring(0, index) to param.substring(index + 1)
+            } else {
+                "" to param
+            }
+            when(type) {
+                "param" -> {
+                    method.addParameter(serviceArgs[paramIndex].getTypeAsString(), name)
+                    arguments += name
+                    val annotationParams = mutableMapOf<String, Expression>()
+                    annotationParams["value"] = StringLiteralExpr(name)
+                    annotationParams["required"] = BooleanLiteralExpr(false)
+                    if (value != null) {
+                        annotationParams["defaultValue"] = StringLiteralExpr(value.toString())
+                    }
+                    val lastParameter = method.getLastParameter()
+                    lastParameter.addAnnotation(RequestParam::class.java, annotationParams)
+                }
+                "path" -> {
+                    check(value == "") { "Path variable value is not supported, but found: '$value'" }
+                    method.addParameter(serviceArgs[paramIndex].getTypeAsString(), name)
+                    arguments += name
+                    val lastParameter = method.getLastParameter()
+                    lastParameter.addAnnotation(PathVariable::class.java, name)
+                }
+                "" -> {
+                    arguments += if (value is String) "\"$value\"" else value.toString()
+                }
+            }
+            paramIndex++
+        }
+        val args = arguments.joinToString(", ")
+        method.setBody("return $serviceField.${serviceMethod.getName()}(${args});".parseAsStatement())
 
         if (methodElem.description?.isNotBlank() == true) {
             method.setJavadocComment(methodElem.description)
