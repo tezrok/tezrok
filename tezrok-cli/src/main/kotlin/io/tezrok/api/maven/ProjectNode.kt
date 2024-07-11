@@ -5,12 +5,13 @@ import io.tezrok.api.input.ProjectElem
 import io.tezrok.api.node.BaseFileNode
 import io.tezrok.api.node.DirectoryNode
 import java.nio.file.Path
-import java.util.Collections
+import java.util.*
 
 /**
  * Represents a model of maven project generation
  */
-open class ProjectNode(projectElem: ProjectElem, private val physicalPath: Path? = null) : DirectoryNode(projectElem.name, null) {
+open class ProjectNode(projectElem: ProjectElem, private val physicalPath: Path? = null) :
+    DirectoryNode(projectElem.name, null) {
     private val modules: MutableList<ModuleNode> = mutableListOf()
 
     val pom: PomNode = PomNode(artifactId = projectElem.name, parent = this)
@@ -31,7 +32,9 @@ open class ProjectNode(projectElem: ProjectElem, private val physicalPath: Path?
         // TODO: validate module name
         val module = ModuleNode(moduleElem, this)
         modules.add(module)
-        pom.getModulesRefNode().addModule(moduleElem.name)
+        val modulesRefNode = pom.getModulesRefNode()
+        modulesRefNode.addModule(moduleElem.name)
+        modulesRefNode.sortModules { name -> modules.first { it.getName() == name }.moduleElem.getFinalOrder() }
         return module
     }
 

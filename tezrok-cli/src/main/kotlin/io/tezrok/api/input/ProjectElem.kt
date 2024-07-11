@@ -40,11 +40,16 @@ data class ModuleElem(
     // if true, then in module default search repositories will be created
     val searchable: Boolean? = null,
     // properties should be sorted by key, so we use TreeMap
-    val properties: MutableMap<String, String?> = TreeMap()
+    val properties: MutableMap<String, String?> = TreeMap(),
+    // used to sort modules in project, default is 100
+    val order: Int? = null
 ) {
 
     @JsonIgnore
     fun isSearchable(): Boolean = searchable == true
+
+    @JsonIgnore
+    fun getFinalOrder(): Int = order ?: 100
 
     override fun toString(): String {
         return "ModuleElem(name='$name')"

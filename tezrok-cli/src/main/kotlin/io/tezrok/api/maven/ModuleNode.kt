@@ -11,7 +11,7 @@ import io.tezrok.api.node.DirectoryNode
  * Represents a module. Which represents a separate maven module
  * which can be a library or a web application
  */
-open class ModuleNode(moduleElem: ModuleElem, parent: BaseNode?) : DirectoryNode(moduleElem.name, parent) {
+open class ModuleNode(val moduleElem: ModuleElem, parent: BaseNode?) : DirectoryNode(moduleElem.name, parent) {
     val source: SourceNode = SourceNode(this)
 
     val pom: PomNode = PomNode(artifactId = moduleElem.name, parent = this)

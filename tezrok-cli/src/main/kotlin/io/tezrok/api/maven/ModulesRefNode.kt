@@ -2,6 +2,7 @@ package io.tezrok.api.maven
 
 import io.tezrok.api.xml.XmlNode
 import java.util.*
+import java.util.function.Function
 import java.util.stream.Stream
 
 /**
@@ -18,6 +19,13 @@ open class ModulesRefNode(private val node: XmlNode) {
         return node.remove(getModuleByName(name)
             .map { listOf(it) }
             .orElseGet(::emptyList))
+    }
+
+    /**
+     * Sorts modules by the given selector.
+     */
+    fun sortModules(selector: Function<String, Int>) {
+        setModules(getModules().sortedBy { node -> selector.apply(node.getValue()!!) })
     }
 
     fun getModules(): List<XmlNode> = moduleNodes().toList()
