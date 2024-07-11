@@ -7,6 +7,7 @@ DB_DATA_DIR=$HOME/.testdata/${moduleName}-db
 echo "Database data directory: $DB_DATA_DIR"
 
 docker run --name ${dockerDbName} --rm -p 5432:5432 \
+  --shm-size=1g \
   -e POSTGRES_DB=${dbName} \
   -e POSTGRES_USER=${dbUserName} \
   -e POSTGRES_PASSWORD=${dbUserPassword} \
