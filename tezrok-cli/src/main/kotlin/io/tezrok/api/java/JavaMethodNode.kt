@@ -155,6 +155,17 @@ open class JavaMethodNode(private val method: MethodDeclaration, private val par
         return addAnnotation(annotationClass, StringLiteralExpr(expression))
     }
 
+    /**
+     * Adds an annotation with an array initializer
+     *
+     * Example:  @Secured({ "ROLE_USER", "ROLE_ADMIN" })
+     */
+    fun addAnnotation(annotationClass: Class<out Annotation>, arrayInit: List<Expression>): JavaMethodNode {
+        val arrayExpr = ArrayInitializerExpr()
+        arrayExpr.values = NodeList(arrayInit)
+        return addAnnotation(annotationClass, arrayExpr)
+    }
+
     fun addImport(importClass: Class<*>) {
         parent.addImport(importClass)
     }

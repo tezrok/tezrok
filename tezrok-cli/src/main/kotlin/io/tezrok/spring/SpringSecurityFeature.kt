@@ -76,6 +76,7 @@ open class SpringSecurityFeature : TezrokFeature {
                 "getByNameOrEmail",
                 "Returns {@link ${NAME_USER}Dto} by name or email."
             ),
+            stdMethodProps = applyAdminRole(inheritEntity?.stdMethodProps),
             fields = createUserFields(inheritEntity),
             init = inheritEntity?.init ?: stdUsersInit(stdUsers)
         )
@@ -91,6 +92,7 @@ open class SpringSecurityFeature : TezrokFeature {
             skipService = inheritEntity?.skipService,
             skipController = inheritEntity?.skipController,
             methods = inheritEntity?.methods ?: emptySet(),
+            stdMethodProps = applyAdminRole(inheritEntity?.stdMethodProps),
             fields = createRoleFields(inheritEntity),
             init = inheritEntity?.init ?: stdRolesInit(stdRoles)
         )
@@ -106,6 +108,7 @@ open class SpringSecurityFeature : TezrokFeature {
             skipService = inheritEntity?.skipService,
             skipController = inheritEntity?.skipController,
             methods = inheritEntity?.methods ?: emptySet(),
+            stdMethodProps = applyAdminRole(inheritEntity?.stdMethodProps),
             fields = createPermissionFields(inheritEntity)
         )
     }
@@ -120,6 +123,7 @@ open class SpringSecurityFeature : TezrokFeature {
             skipService = inheritEntity?.skipService,
             skipController = inheritEntity?.skipController,
             methods = inheritEntity?.methods ?: emptySet(),
+            stdMethodProps = applyAdminRole(inheritEntity?.stdMethodProps),
             fields = createUserProfileFields(inheritEntity)
         )
     }
@@ -134,8 +138,13 @@ open class SpringSecurityFeature : TezrokFeature {
             skipService = true,
             skipController = true,
             methods = inheritMethods + MethodElem("findByUsername", "Find by username."),
+            stdMethodProps = applyAdminRole(inheritEntity?.stdMethodProps),
             fields = createRememberMeTokenFields(inheritEntity)
         )
+    }
+
+    private fun applyAdminRole(inheritProps: MethodProps?): MethodProps {
+        return (inheritProps ?: MethodProps()).copy(roles = inheritProps?.roles ?: listOf("ROLE_ADMIN"))
     }
 
     /**

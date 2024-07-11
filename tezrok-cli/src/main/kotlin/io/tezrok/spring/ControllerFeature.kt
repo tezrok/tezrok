@@ -17,6 +17,8 @@ import io.tezrok.util.getSetterName
 import io.tezrok.util.lowerFirst
 import io.tezrok.util.parseAsStatement
 import org.slf4j.LoggerFactory
+import org.springframework.security.access.annotation.Secured
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 
 /**
@@ -102,6 +104,13 @@ internal class ControllerFeature : TezrokFeature {
             context.writeTemplate(controllerFile, "/templates/spring/EntityApiController.java.vm", values)
             val controllerClass = controllerFile.getRootClass()
             val serviceClass = serviceDir.getClass("${name}Service") ?: error("Service class not found: ${name}Service")
+            // secure std method by annotation
+            entity.methods.filter { it.isApi() && it.skipGenerate == true }.forEach { methodElem ->
+                val method = controllerClass.getMethod(methodElem.name)
+                if (method != null) {
+                    annotateSecureMethod(method, methodElem)
+                }
+            }
             entity.methods.filter { it.isApi() && it.skipGenerate != true }.forEach { method ->
                 addCustomApiMethod(controllerClass, method, serviceClass)
             }
@@ -126,14 +135,14 @@ internal class ControllerFeature : TezrokFeature {
         val serviceArgs = serviceMethod.getParameters()
         var paramIndex = 0
         check(serviceArgs.size == methodElem.args?.size) { "Service method args count mismatch: ${serviceArgs.size} != ${methodElem.args?.size}" }
-        methodElem.args?.forEach{ (param, value) ->
+        methodElem.args?.forEach { (param, value) ->
             val index = param.indexOf('@')
             val (type, name) = if (index >= 0) {
                 param.substring(0, index) to param.substring(index + 1)
             } else {
                 "" to param
             }
-            when(type) {
+            when (type) {
                 "param" -> {
                     method.addParameter(serviceArgs[paramIndex].getTypeAsString(), name)
                     arguments += name
@@ -146,6 +155,7 @@ internal class ControllerFeature : TezrokFeature {
                     val lastParameter = method.getLastParameter()
                     lastParameter.addAnnotation(RequestParam::class.java, annotationParams)
                 }
+
                 "path" -> {
                     check(value == "") { "Path variable value is not supported, but found: '$value'" }
                     method.addParameter(serviceArgs[paramIndex].getTypeAsString(), name)
@@ -153,6 +163,7 @@ internal class ControllerFeature : TezrokFeature {
                     val lastParameter = method.getLastParameter()
                     lastParameter.addAnnotation(PathVariable::class.java, name)
                 }
+
                 "" -> {
                     arguments += if (value is String) "\"$value\"" else value.toString()
                 }
@@ -166,6 +177,7 @@ internal class ControllerFeature : TezrokFeature {
             method.setJavadocComment(methodElem.description)
         }
         annotateMappingHttpMethod(method, methodElem)
+        annotateSecureMethod(method, methodElem)
     }
 
     private fun annotateMappingHttpMethod(method: JavaMethodNode, methodElem: MethodElem) {
@@ -194,6 +206,37 @@ internal class ControllerFeature : TezrokFeature {
                 "method" to NameExpr("RequestMethod.TRACE"),
                 "path" to StringLiteralExpr(apiPath)
             ).addImport(RequestMethod::class.java)
+        }
+    }
+
+    private fun annotateSecureMethod(method: JavaMethodNode, methodElem: MethodElem) {
+        val roles = methodElem.roles
+        if (roles?.isNotEmpty() == true) {
+            if (roles.size == 1) {
+                method.addAnnotation(
+                    Secured::class.java,
+                    roles[0]
+                )
+            } else {
+                method.addAnnotation(
+                    Secured::class.java,
+                    roles.map { StringLiteralExpr(it) }
+                )
+            }
+        }
+        val permissions = methodElem.permissions
+        if (permissions?.isNotEmpty() == true) {
+            if (permissions.size == 1) {
+                method.addAnnotation(
+                    PreAuthorize::class.java,
+                    "hasAuthority('${permissions[0]}')"
+                )
+            } else {
+                method.addAnnotation(
+                    PreAuthorize::class.java,
+                    permissions.joinToString("', '", "hasAnyAuthority('", "')")
+                )
+            }
         }
     }
 

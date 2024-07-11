@@ -514,43 +514,64 @@
                 "name": "findAll",
                 "description": "Finds all {@link UserDto}s.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "getById",
                 "description": "Gets {@link UserDto} by id.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "getFullUserById",
                 "description": "Gets {@link UserFullDto} by id.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "createFullUser",
                 "description": "Creates {@link UserFullDto}.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "updateFullUser",
                 "description": "Updates existing {@link UserFullDto} by id.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "importFullUser",
                 "description": "Imports {@link UserFullDto}.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "searchUsersByTerm",
                 "description": "Search {@link UserDto} by term (by all string fields).",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "getByNameOrEmail",
@@ -573,6 +594,11 @@
                 "description": "Returns primary ID of {@link UserDto} by unique field (email)."
               }
             ],
+            "stdMethodProps": {
+              "roles": [
+                "ROLE_ADMIN"
+              ]
+            },
             "init": "admin,admin@site.com,admin"
           },
           {
@@ -638,43 +664,64 @@
                 "name": "findAll",
                 "description": "Finds all {@link RoleDto}s.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "getById",
                 "description": "Gets {@link RoleDto} by id.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "getFullRoleById",
                 "description": "Gets {@link RoleFullDto} by id.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "createFullRole",
                 "description": "Creates {@link RoleFullDto}.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "updateFullRole",
                 "description": "Updates existing {@link RoleFullDto} by id.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "importFullRole",
                 "description": "Imports {@link RoleFullDto}.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "searchRolesByTerm",
                 "description": "Search {@link RoleDto} by term (by all string fields).",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "getByName",
@@ -693,6 +740,11 @@
                 "description": "Returns primary ID of {@link RoleDto} by unique field (name)."
               }
             ],
+            "stdMethodProps": {
+              "roles": [
+                "ROLE_ADMIN"
+              ]
+            },
             "init": "ADMIN,Administrator role\nUSER,Authenticated role"
           },
           {
@@ -752,43 +804,64 @@
                 "name": "findAll",
                 "description": "Finds all {@link PermissionDto}s.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "getById",
                 "description": "Gets {@link PermissionDto} by id.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "getFullPermissionById",
                 "description": "Gets {@link PermissionFullDto} by id.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "createFullPermission",
                 "description": "Creates {@link PermissionFullDto}.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "updateFullPermission",
                 "description": "Updates existing {@link PermissionFullDto} by id.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "importFullPermission",
                 "description": "Imports {@link PermissionFullDto}.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "searchPermissionsByTerm",
                 "description": "Search {@link PermissionDto} by term (by all string fields).",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "getByName",
@@ -806,7 +879,12 @@
                 "name": "getIdByName",
                 "description": "Returns primary ID of {@link PermissionDto} by unique field (name)."
               }
-            ]
+            ],
+            "stdMethodProps": {
+              "roles": [
+                "ROLE_ADMIN"
+              ]
+            }
           },
           {
             "name": "UserProfile",
@@ -886,43 +964,64 @@
                 "name": "findAll",
                 "description": "Finds all {@link UserProfileDto}s.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "getById",
                 "description": "Gets {@link UserProfileDto} by id.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "getFullUserProfileById",
                 "description": "Gets {@link UserProfileFullDto} by id.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "createFullUserProfile",
                 "description": "Creates {@link UserProfileFullDto}.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "updateFullUserProfile",
                 "description": "Updates existing {@link UserProfileFullDto} by id.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "importFullUserProfile",
                 "description": "Imports {@link UserProfileFullDto}.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "searchUserProfilesByTerm",
                 "description": "Search {@link UserProfileDto} by term (by all string fields).",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "getByUserId",
@@ -960,7 +1059,12 @@
                 "name": "getIdByPasswordResetCode",
                 "description": "Returns primary ID of {@link UserProfileDto} by unique field (passwordResetCode)."
               }
-            ]
+            ],
+            "stdMethodProps": {
+              "roles": [
+                "ROLE_ADMIN"
+              ]
+            }
           },
           {
             "name": "RememberMeToken",
@@ -1019,49 +1123,75 @@
                 "name": "findAll",
                 "description": "Finds all {@link RememberMeTokenDto}s.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "getById",
                 "description": "Gets {@link RememberMeTokenDto} by id.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "getFullRememberMeTokenById",
                 "description": "Gets {@link RememberMeTokenFullDto} by id.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "createFullRememberMeToken",
                 "description": "Creates {@link RememberMeTokenFullDto}.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "updateFullRememberMeToken",
                 "description": "Updates existing {@link RememberMeTokenFullDto} by id.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "importFullRememberMeToken",
                 "description": "Imports {@link RememberMeTokenFullDto}.",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "searchRememberMeTokensByTerm",
                 "description": "Search {@link RememberMeTokenDto} by term (by all string fields).",
                 "api": true,
-                "skipGenerate": true
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
               },
               {
                 "name": "findByUsername",
                 "description": "Find by username."
               }
-            ]
+            ],
+            "stdMethodProps": {
+              "roles": [
+                "ROLE_ADMIN"
+              ]
+            }
           },
           {
             "name": "OrderItemOtherItems",
