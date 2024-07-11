@@ -11,7 +11,7 @@ internal class EmailFeature : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
         val module = project.getSingleModule()
         val pom = module.pom
-        pom.addDependency("jakarta.mail:jakarta.mail-api:2.0.1")
+        pom.addDependency("jakarta.mail:jakarta.mail-api:2.1.3")
         pom.addDependency("org.eclipse.angus:jakarta.mail:2.0.3")
 
         val applicationPackageRoot = module.source.main.java.applicationPackageRoot
