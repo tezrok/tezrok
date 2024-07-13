@@ -17,6 +17,16 @@ get_db_host() {
   fi
 }
 
+#if ($searchEnabled)
+get_search_host() {
+  if [ "$(docker_container_exists ${moduleName}-test-elasticsearch)" == "true" ]; then
+    docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${moduleName}-test-elasticsearch || echo ""
+  else
+    echo ""
+  fi
+}
+#end
+
 DB_HOST=$(get_db_host)
 # check if DB_HOST is empty start test database
 if [ -z "$DB_HOST" ]; then
@@ -30,6 +40,15 @@ if [ -z "$DB_HOST" ]; then
     echo "DB_HOST is empty. Exit..."
     exit 1
 fi
+
+#if ($searchEnabled)
+SEARCH_HOST=$(get_search_host)
+if [ -z "SEARCH_HOST" ]; then
+    echo "SEARCH_HOST is empty. Exit..."
+    exit 1
+fi
+echo "SEARCH_HOST=$SEARCH_HOST"
+#end
 
 DB_USER=${dbUserName}
 DB_PWD=${dbUserPassword}
@@ -48,6 +67,9 @@ docker run --rm -d -p 8080:8080 \
     -e "DB_HOST=$DB_HOST" \
     -e "DB_USER=$DB_USER" \
     -e "DB_PWD=$DB_PWD" \
+#if ($searchEnabled)
+    -e "SEARCH_HOST=$SEARCH_HOST" \
+#end
     ${projectName}/$MODULE_NAME
 
 # Restore the old current directory

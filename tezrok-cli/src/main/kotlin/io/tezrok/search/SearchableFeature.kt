@@ -11,6 +11,7 @@ import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.*
 import io.tezrok.api.java.JavaClassNode
 import io.tezrok.api.java.JavaDirectoryNode
+import io.tezrok.api.maven.ModuleNode
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.*
 import lombok.Data
@@ -52,6 +53,7 @@ internal class SearchableFeature : TezrokFeature {
                     addSearchDto(dtoDir, entity)
                 }
             }
+            updateApplicationProperties(module, schemaModule)
         }
 
         return true
@@ -200,6 +202,14 @@ internal class SearchableFeature : TezrokFeature {
         }
 
         return entities.plus(extraEntities)
+    }
+
+    private fun updateApplicationProperties(module: ModuleNode, moduleElem: ModuleElem?) {
+        val appProps = module.source.main.resources.getOrAddFile("application.properties")
+        appProps.addNewSettings(
+            moduleElem, "# Elasticsearch properties",
+            "elasticsearch.url=${'$'}{SEARCH_HOST:localhost}:9200"
+        )
     }
 
     private companion object {

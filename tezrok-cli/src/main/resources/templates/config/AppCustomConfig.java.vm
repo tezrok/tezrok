@@ -12,4 +12,8 @@ public abstract class AppCustomConfig {
     protected void validate() {
         // place validation logic here
     }
+
+    protected void show() {
+        // log mandatory properties
+    }
 }
