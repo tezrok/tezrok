@@ -36,6 +36,8 @@ internal class SearchableFeature : TezrokFeature {
         if (applicationPackageRoot != null && schemaModule.isSearchable()) {
             module.pom.addDependency("org.springframework.boot:spring-boot-starter-data-elasticsearch:${'$'}{spring-boot.version}")
             addDynamicIndexRepositories(applicationPackageRoot.getOrAddJavaDirectory("search"), context)
+            val configDir = applicationPackageRoot.getOrAddJavaDirectory("config")
+            context.addFile(configDir, "/templates/search/ElasticsearchConfig.java.vm")
 
             // add search DTOs
             if (entities.any { it.isSearchable() }) {

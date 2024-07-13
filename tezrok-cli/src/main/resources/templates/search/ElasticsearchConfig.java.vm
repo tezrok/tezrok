@@ -1,0 +1,33 @@
+package ${package}.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.elasticsearch.client.ClientConfiguration;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.repository.support.ElasticsearchEntityInformationCreator;
+import org.springframework.data.elasticsearch.repository.support.ElasticsearchEntityInformationCreatorImpl;
+
+/**
+ * Configuration for Elasticsearch.
+ */
+@Configuration
+public class ElasticsearchConfig extends ElasticsearchConfiguration {
+    private final AppConfig appConfig;
+
+    public ElasticsearchConfig(AppConfig appConfig) {
+        this.appConfig = appConfig;
+    }
+
+    @Override
+    public ClientConfiguration clientConfiguration() {
+        return ClientConfiguration.builder()
+                .connectedTo(appConfig.getElasticsearchHost())
+                .build();
+    }
+
+    @Bean
+    public ElasticsearchEntityInformationCreator elasticsearchEntityInformationCreator(ElasticsearchOperations elasticsearchOperations) {
+        return new ElasticsearchEntityInformationCreatorImpl(elasticsearchOperations.getElasticsearchConverter().getMappingContext());
+    }
+}
