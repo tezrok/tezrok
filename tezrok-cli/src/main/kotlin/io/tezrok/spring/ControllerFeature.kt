@@ -104,15 +104,15 @@ internal class ControllerFeature : TezrokFeature {
             context.writeTemplate(controllerFile, "/templates/spring/EntityApiController.java.vm", values)
             val controllerClass = controllerFile.getRootClass()
             val serviceClass = serviceDir.getClass("${name}Service") ?: error("Service class not found: ${name}Service")
-            // secure std method by annotation
-            entity.methods.filter { it.isApi() && it.skipGenerate == true }.forEach { methodElem ->
+            entity.methods.filter { it.isApi() && it.skipGenerate != true }.forEach { method ->
+                addCustomApiMethod(controllerClass, method, serviceClass)
+            }
+            // secure methods by annotation
+            entity.methods.filter { it.isApi() }.forEach { methodElem ->
                 val method = controllerClass.getMethod(methodElem.name)
                 if (method != null) {
                     annotateSecureMethod(method, methodElem)
                 }
-            }
-            entity.methods.filter { it.isApi() && it.skipGenerate != true }.forEach { method ->
-                addCustomApiMethod(controllerClass, method, serviceClass)
             }
         } else {
             log.warn("File already exists: {}", fileName)
@@ -177,7 +177,6 @@ internal class ControllerFeature : TezrokFeature {
             method.setJavadocComment(methodElem.description)
         }
         annotateMappingHttpMethod(method, methodElem)
-        annotateSecureMethod(method, methodElem)
     }
 
     private fun annotateMappingHttpMethod(method: JavaMethodNode, methodElem: MethodElem) {
