@@ -69,8 +69,9 @@ if [ "$(docker_container_exists $MODULE_NAME)" == "true" ]; then
 fi
 
 # run new container
-docker run --rm -d -p 8080:8080 \
+docker run --rm \
     --name $MODULE_NAME \
+    -p 127.0.0.1:8080:8080 \
     -v /etc/$MODULE_NAME/logs:/app/logs \
     -e "DB_HOST=$DB_HOST" \
     -e "DB_USER=$DB_USER" \
@@ -81,7 +82,7 @@ docker run --rm -d -p 8080:8080 \
 #if ($searchEnabled)
     -e "SEARCH_HOST=$SEARCH_HOST" \
 #end
-    ${projectName}/$MODULE_NAME
+    -d ${projectName}/$MODULE_NAME
 
 # Restore the old current directory
 popd > /dev/null
