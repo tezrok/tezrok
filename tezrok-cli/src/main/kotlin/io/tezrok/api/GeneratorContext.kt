@@ -61,7 +61,7 @@ interface GeneratorContext : GeneratorProvider {
      * Add a file to the target directory with the specified template.
      * Name of the file is the same as the template name without the .vm extension.
      */
-    fun addFile(targetDir: DirectoryNode, templatePath: String, values: Map<String, String?> = emptyMap()) {
+    fun addFile(targetDir: DirectoryNode, templatePath: String, values: Map<String, Any?> = emptyMap()) {
         val templateName = FilenameUtils.getName(templatePath)
         if (templateName.endsWith(".vm")) {
             val fileName = templateName.removeSuffix(".vm")

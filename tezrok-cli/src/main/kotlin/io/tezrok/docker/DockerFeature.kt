@@ -13,6 +13,8 @@ internal class DockerFeature : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
         // TODO: support sqlite database
         val module = project.getSingleModule()
+        val schemaModule = context.getProject().modules.find { it.name == module.getName() }
+            ?: throw IllegalStateException("Module ${module.getName()} not found")
         val properties = module.properties
         val moduleName = module.getName().toHyphenName()
         val dockerDbName = "$moduleName-test-db"
@@ -23,7 +25,8 @@ internal class DockerFeature : TezrokFeature {
             "dbUserName" to properties.getProperty("datasource.username"),
             "dbUserPassword" to properties.getProperty("datasource.password"),
             "dbName" to properties.getProperty("datasource.db-name"),
-            "dockerDbName" to dockerDbName
+            "dockerDbName" to dockerDbName,
+            "searchEnabled" to schemaModule.isSearchable()
         )
 
         context.addFile(project, "/templates/docker/.dockerignore.vm", values)

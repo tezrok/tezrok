@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+echo "Start test search engine..."
+
+SEARCH_DATA_DIR=$HOME/.testdata/${moduleName}-search
+
+echo "Search data directory: $SEARCH_DATA_DIR"
+
+# TODO: fix permission issue
+chown -R 1000:1000 ~/.testdata/${moduleName}-search/
+
+docker run --rm --name ${moduleName}-test-elasticsearch \
+  -p 9200:9200 \
+  -v $SEARCH_DATA_DIR:/usr/share/elasticsearch/data \
+  -e "discovery.type=single-node" \
+  -e "ES_JAVA_OPTS=-Xmx1048m -Xms1048m" \
+  -e "xpack.security.enabled=false" \
+  -d elasticsearch:8.14.1

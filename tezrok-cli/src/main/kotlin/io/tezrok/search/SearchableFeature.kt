@@ -38,6 +38,11 @@ internal class SearchableFeature : TezrokFeature {
             addDynamicIndexRepositories(applicationPackageRoot.getOrAddJavaDirectory("search"), context)
             val configDir = applicationPackageRoot.getOrAddJavaDirectory("config")
             context.addFile(configDir, "/templates/search/ElasticsearchConfig.java.vm")
+            val dockerDir = project.getOrAddDirectory("docker")
+            val values = mapOf(
+                "moduleName" to module.getName().toHyphenName(),
+            )
+            context.addFile(dockerDir, "/templates/search/search-start-test.sh.vm", values)
 
             // add search DTOs
             if (entities.any { it.isSearchable() }) {
