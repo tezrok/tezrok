@@ -13,9 +13,11 @@ scp ./docker/app-stop-test.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName
 scp ./docker/db-stop-test.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/db-stop-test.sh
 scp ./docker/db-start-test.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/db-start-test.sh
 scp ./docker/db-restart-test.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/db-restart-test.sh
-scp ./docker/secrets.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/secrets.sh
 #if ($searchEnabled)
 scp ./docker/search-start-test.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/search-start-test.sh
 #end
+
+# copy secrets if not exist yet
+rsync -av --ignore-existing ./docker/secrets.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/secrets.sh
 
 echo "Done"
