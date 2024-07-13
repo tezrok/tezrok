@@ -65,7 +65,7 @@ internal class AuthFeature : TezrokFeature {
             moduleElem,
             "spring.thymeleaf.prefix=classpath:/templates/thymeleaf/",
             "# ${moduleName} properties",
-            "${moduleName}.main-host=http://localhost:8080",
+            "${moduleName}.main-host=${'$'}{MAIN_HOST:http://localhost:8080}",
             "${moduleName}.remember-me-key=replace-for-real-key",
             "${moduleName}.activation-enabled=true",
             "${moduleName}.re-captcha-in-login-enable=false",

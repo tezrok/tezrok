@@ -39,6 +39,7 @@ internal class DockerFeature : TezrokFeature {
         context.addFile(dockerDir, "/templates/docker/app-stop-test.sh.vm", values)
         context.addFile(dockerDir, "/templates/docker/app-deploy-common.sh.vm", values)
         context.addFile(dockerDir, "/templates/docker/app-deploy-dev.sh.vm", values)
+        context.addFile(dockerDir, "/templates/docker/secrets.sh.vm", values)
         context.addFile(dockerDir, "/templates/docker/Dockerfile.vm", values)
         properties.setPropertyIfAbsent("test.db.docker.name", dockerDbName)
 

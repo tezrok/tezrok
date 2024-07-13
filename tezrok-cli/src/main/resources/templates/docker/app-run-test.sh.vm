@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
 
 MODULE_NAME=${moduleName}
+MAIN_HOST=http://localhost:8080
+EMAIL_HOST=smtphost.com
 echo "Run $MODULE_NAME app..."
 
 pushd "$(dirname "$0")" > /dev/null
+
+# Load secrets from
+if [ -f "secrets.sh" ]; then
+    echo "File secrets.sh exists. Sourcing it..."
+    source secrets.sh
+fi
 
 docker_container_exists() {
     docker ps -a --format '{{.Names}}' | grep -q "^$1\$" && echo "true"
@@ -67,6 +75,9 @@ docker run --rm -d -p 8080:8080 \
     -e "DB_HOST=$DB_HOST" \
     -e "DB_USER=$DB_USER" \
     -e "DB_PWD=$DB_PWD" \
+    -e "MAIN_HOST=$MAIN_HOST" \
+    -e "EMAIL_HOST=$EMAIL_HOST" \
+    -e "EMAIL_PWD=$EMAIL_PWD" \
 #if ($searchEnabled)
     -e "SEARCH_HOST=$SEARCH_HOST" \
 #end
