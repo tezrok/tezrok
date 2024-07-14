@@ -283,6 +283,19 @@ open class SpringSecurityFeature : TezrokFeature {
                     name = "passwordResetCodeExpireAt",
                     type = "DateTimeTZ",
                     description = "Password reset code expiration date and time"
+                ),
+                FieldElem(
+                    name = "apiKey",
+                    type = "String",
+                    description = "Current user API key",
+                    unique = true,
+                    minLength = API_KEY_MAX,
+                    maxLength = API_KEY_MAX
+                ),
+                FieldElem(
+                    name = "apiKeyExpireAt",
+                    type = "DateTimeTZ",
+                    description = "User API key expiration date and time"
                 )
             )
         )
@@ -372,6 +385,8 @@ open class SpringSecurityFeature : TezrokFeature {
         const val ACTIVATION_CODE_MAX: Int = ACTIVATION_CODE_MIN
         const val PASSWORD_RESET_CODE_MIN: Int = UUID_LENGTH
         const val PASSWORD_RESET_CODE_MAX: Int = PASSWORD_RESET_CODE_MIN
+        const val API_KEY_MIN: Int = 42
+        const val API_KEY_MAX: Int = API_KEY_MIN
         const val USER_PASSWORD_MIN: Int = 5
         const val USER_PASSWORD_MAX: Int = 55
         const val USER_PASSWORD_HASH_MAX: Int = 100
