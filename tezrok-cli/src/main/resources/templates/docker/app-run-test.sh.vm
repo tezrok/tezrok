@@ -27,8 +27,8 @@ get_db_host() {
 
 #if ($searchEnabled)
 get_search_host() {
-  if [ "$(docker_container_exists ${moduleName}-test-elasticsearch)" == "true" ]; then
-    docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${moduleName}-test-elasticsearch || echo ""
+  if [ "$(docker_container_exists ${moduleName}-test-search)" == "true" ]; then
+    docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${moduleName}-test-search || echo ""
   else
     echo ""
   fi

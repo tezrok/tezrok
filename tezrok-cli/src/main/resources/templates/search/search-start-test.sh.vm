@@ -9,7 +9,7 @@ echo "Search data directory: $SEARCH_DATA_DIR"
 # TODO: fix permission issue
 chown -R 1000:1000 $HOME/.testdata/${moduleName}-search/
 
-docker run --rm --name ${moduleName}-test-elasticsearch \
+docker run --rm --name ${moduleName}-test-search \
   -p 127.0.0.1:9200:9200 \
   -v $SEARCH_DATA_DIR:/usr/share/elasticsearch/data \
   -e "discovery.type=single-node" \
