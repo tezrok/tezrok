@@ -24,9 +24,15 @@ internal class AuthFeature : TezrokFeature {
             context.addFile(apiDir, "/templates/auth/UserLoginDto.java.vm")
             context.addFile(apiDir, "/templates/auth/UserRegisterDto.java.vm")
 
+            val dtoSecurityDir = appPackageRoot.getOrAddJavaDirectory("dto").getOrAddJavaDirectory("security")
+            context.addFile(dtoSecurityDir, "/templates/auth/ApiKeyAuthenticationToken.java.vm")
+
             val serviceDir = appPackageRoot.getOrAddJavaDirectory("service")
             context.addFile(serviceDir, "/templates/auth/AuthService.java.vm")
             context.addFile(serviceDir, "/templates/auth/CurrentAuthService.java.vm")
+
+            val configDir = appPackageRoot.getOrAddJavaDirectory("config")
+            context.addFile(configDir, "/templates/auth/ApiKeyAuthFilter.java.vm")
 
             val webDir = appPackageRoot.getOrAddJavaDirectory("web")
             context.addFile(webDir, "/templates/auth/AuthController.java.vm")

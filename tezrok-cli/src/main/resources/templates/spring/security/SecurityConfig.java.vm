@@ -14,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.RememberMeServices;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -25,13 +26,16 @@ public class SecurityConfig {
     private final AppConfig appConfig;
     private final UserDetailsService userDetailsService;
     private final RememberMeTokenRepository rememberMeTokenRepository;
+    private final ApiKeyAuthFilter apiKeyAuthFilter;
 
     public SecurityConfig(final AppConfig appConfig,
                           final UserDetailsService userDetailsService,
-                          final RememberMeTokenRepository rememberMeTokenRepository) {
+                          final RememberMeTokenRepository rememberMeTokenRepository,
+                          final ApiKeyAuthFilter apiKeyAuthFilter) {
         this.appConfig = appConfig;
         this.userDetailsService = userDetailsService;
         this.rememberMeTokenRepository = rememberMeTokenRepository;
+        this.apiKeyAuthFilter = apiKeyAuthFilter;
     }
 
     @Bean
@@ -58,6 +62,8 @@ public class SecurityConfig {
 
         httpSecurity.rememberMe(rememberMe -> rememberMe
                 .rememberMeServices(rememberMeService()));
+
+        httpSecurity.addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();
     }
