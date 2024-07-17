@@ -79,6 +79,8 @@ docker run --rm \
     -e "MAIN_HOST=$MAIN_HOST" \
     -e "EMAIL_HOST=$EMAIL_HOST" \
     -e "EMAIL_PWD=$EMAIL_PWD" \
+    -e "RECAPTCHA_SITE_KEY=$RECAPTCHA_SITE_KEY" \
+    -e "RECAPTCHA_SECRET_KEY=$RECAPTCHA_SECRET_KEY" \
 #if ($searchEnabled)
     -e "SEARCH_HOST=$SEARCH_HOST" \
 #end

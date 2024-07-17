@@ -6,7 +6,8 @@ DB_DATA_DIR=$HOME/.testdata/${moduleName}-db
 
 echo "Database data directory: $DB_DATA_DIR"
 
-docker run --name ${dockerDbName} --rm -p 127.0.0.1:5432:5432 \
+# TODO: access only for localhost -> -p 127.0.0.1:5432:5432
+docker run --name ${dockerDbName} --rm -p 5432:5432 \
   --shm-size=1g \
   -e POSTGRES_DB=${dbName} \
   -e POSTGRES_USER=${dbUserName} \
