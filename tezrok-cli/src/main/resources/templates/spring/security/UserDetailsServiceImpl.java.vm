@@ -36,7 +36,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         this.entityGraphLoader = entityGraphLoader;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, noRollbackFor = {UsernameNotFoundException.class})
     @Override
     public UserDetails loadUserByUsername(final String username) throws UsernameNotFoundException {
         // add config to deny login by email
