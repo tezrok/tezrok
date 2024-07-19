@@ -73,7 +73,7 @@ open class SpringSecurityFeature : TezrokFeature {
             skipService = inheritEntity?.skipService,
             skipController = inheritEntity?.skipController,
             methods = inheritMethods + MethodElem(
-                "getByNameOrEmail",
+                "getByNameIgnoreCaseOrEmailIgnoreCase",
                 "Returns {@link ${NAME_USER}Dto} by name or email."
             ),
             stdMethodProps = applyAdminRole(inheritEntity?.stdMethodProps),

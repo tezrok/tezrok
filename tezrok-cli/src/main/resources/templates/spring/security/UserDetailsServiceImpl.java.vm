@@ -40,7 +40,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(final String username) throws UsernameNotFoundException {
         // add config to deny login by email
-        final UserDto userDto = userRepository.getByNameOrEmail(username, username);
+        final UserDto userDto = userRepository.getByNameIgnoreCaseOrEmailIgnoreCase(username, username);
         if (userDto == null) {
             throw new UsernameNotFoundException("User not found: " + username);
         }

@@ -574,7 +574,7 @@
                 ]
               },
               {
-                "name": "getByNameOrEmail",
+                "name": "getByNameIgnoreCaseOrEmailIgnoreCase",
                 "description": "Returns {@link UserDto} by name or email."
               },
               {

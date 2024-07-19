@@ -134,8 +134,14 @@ public class AuthService {
         try {
             final boolean activated = registerActivated || !appConfig.isActivationEnabled();
             final UserDto newUser = new UserDto();
-            newUser.setName(StringUtils.trim(user.getUsername()));
-            newUser.setEmail(StringUtils.trim(user.getEmail()));
+            final String username = StringUtils.trim(user.getUsername());
+            final String email = StringUtils.trim(user.getEmail());
+            if (userRepository.getByNameIgnoreCaseOrEmailIgnoreCase(username, email) != null) {
+                log.error("User registration failed, already exists: {}", user.getUsername());
+                return LoginApiResult.errorUserAlreadyExists(username);
+            }
+            newUser.setName(username);
+            newUser.setEmail(email);
             newUser.setPassword(passwordEncoder.encode(user.getPassword()));
             newUser.setActivated(activated);
             final UserDto userDto = userRepository.save(newUser);
@@ -331,9 +337,10 @@ public class AuthService {
 
     @NotNull
     private LoginApiResult loginInternal(final UserLoginDto user, final HttpServletRequest request, final HttpServletResponse response) {
+        final String username = StringUtils.trim(user.getUsername());
         try {
-            if (USER_SYSTEM.equalsIgnoreCase(user.getUsername()) || USER_ANON.equals(user.getUsername())) {
-                return LoginApiResult.error(user.getUsername(), "User reserved");
+            if (USER_SYSTEM.equalsIgnoreCase(username) || USER_ANON.equalsIgnoreCase(username)) {
+                return LoginApiResult.error(username, "User reserved");
             }
 
             if (appConfig.isReCaptchaInLoginEnable()) {
@@ -346,13 +353,13 @@ public class AuthService {
                 }
             }
 
-            final UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsService.loadUserByUsername(StringUtils.trim(user.getUsername()));
+            final UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsService.loadUserByUsername(username);
 
             if (!userDetails.getUser().getActivated() && appConfig.isActivationEnabled()) {
                 return LoginApiResult.error(user.getUsername(), "User not activated. Please, check out your email to activate user");
             }
 
-            final UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword());
+            final UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(username, user.getPassword());
             token.setDetails(userDetails);
             final Authentication authenticate = authenticationManager.authenticate(token);
             final SecurityContext securityContext = SecurityContextHolder.getContext();
@@ -366,15 +373,15 @@ public class AuthService {
                 cancelRememberMeCookie(response);
             }
 
-            return new LoginApiResult(true, userDetails.getUsername(), "User logged in");
+            return new LoginApiResult(true, username, "User logged in");
         } catch (final UsernameNotFoundException ex) {
-            return new LoginApiResult(false, user.getUsername(), "User not found");
+            return new LoginApiResult(false, username, "User not found");
         } catch (final LockedException ex) {
-            return new LoginApiResult(false, user.getUsername(), "User banned");
+            return new LoginApiResult(false, username, "User banned");
         } catch (final DisabledException ex) {
-            return new LoginApiResult(false, user.getUsername(), "User disabled");
+            return new LoginApiResult(false, username, "User disabled");
         } catch (final BadCredentialsException ex) {
-            return new LoginApiResult(false, user.getUsername(), "Bad credentials");
+            return new LoginApiResult(false, username, "Bad credentials");
         }
     }
 
