@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-./db-stop-test.sh
-
-./db-start-test.sh
