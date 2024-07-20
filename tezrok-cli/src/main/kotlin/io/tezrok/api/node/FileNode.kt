@@ -13,6 +13,8 @@ import java.io.OutputStream
 open class FileNode(name: String, parent: Node?) : BaseFileNode(name, parent), FileSupport {
     private var content: ByteArray = EMPTY_ARRAY
 
+    var strategy: StoreStrategy = StoreStrategy.SAVE
+
     override fun isEmpty(): Boolean = content.isEmpty()
 
     override fun getSize(): Long = content.size.toLong()

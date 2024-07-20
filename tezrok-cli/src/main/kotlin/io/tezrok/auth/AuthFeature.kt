@@ -5,6 +5,7 @@ import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.ModuleElem
 import io.tezrok.api.maven.ModuleNode
 import io.tezrok.api.maven.ProjectNode
+import io.tezrok.api.node.StoreStrategy
 import io.tezrok.util.addNewSettings
 
 internal class AuthFeature : TezrokFeature {
@@ -42,7 +43,7 @@ internal class AuthFeature : TezrokFeature {
 
             val thymeleafDir = module.source.main.resources.getOrAddDirectory("templates/thymeleaf")
             val values = mapOf("productName" to context.getProject().productName.ifBlank { context.getProject().name })
-            context.addFile(thymeleafDir, "/templates/auth/templates/index.html.vm", values)
+            context.addFile(thymeleafDir, "/templates/auth/templates/index.html.vm", values, StoreStrategy.SAVE_IF_NOT_EXISTS)
             context.addFile(thymeleafDir, "/templates/auth/templates/error.html.vm", values)
             context.addFile(thymeleafDir, "/templates/auth/templates/login.html.vm", values)
             context.addFile(thymeleafDir, "/templates/auth/templates/register.html.vm", values)

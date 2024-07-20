@@ -2,9 +2,10 @@ package io.tezrok.core.output
 
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.api.node.BaseFileNode
+import io.tezrok.api.node.FileNode
+import io.tezrok.api.node.StoreStrategy
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
-import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
 import kotlin.io.path.notExists
 import kotlin.io.path.outputStream
@@ -18,7 +19,6 @@ class ProjectOutputGenerator {
             field = value
         }
 
-    @OptIn(ExperimentalPathApi::class)
     fun generate(project: ProjectNode, outputDir: Path) {
         val startTime = System.currentTimeMillis()
         if (deleteOutputDir) {
@@ -42,12 +42,18 @@ class ProjectOutputGenerator {
             check(!walkedFiles.contains(file.getName())) { "Duplicate file name found: ${file.getName()} in ${dirNode.getName()}" }
             walkedFiles.add(file.getName())
 
-            if (file.isFile()) {
+            if (file is FileNode) {
                 val outputFile = outputDir.resolve(file.getName())
-                outputFile.outputStream().use { writer ->
-                    file.getInputStream().use { input ->
-                        input.copyTo(writer)
+                val saveFile = file.strategy == StoreStrategy.SAVE
+                        || file.strategy == StoreStrategy.SAVE_IF_NOT_EXISTS && outputFile.notExists()
+                if (saveFile) {
+                    outputFile.outputStream().use { writer ->
+                        file.getInputStream().use { input ->
+                            input.copyTo(writer)
+                        }
                     }
+                } else {
+                    log.warn("File already exists and strategy is not to overwrite: {}", outputFile)
                 }
             } else if (file.isDirectory()) {
                 val subDir = outputDir.resolve(file.getName())

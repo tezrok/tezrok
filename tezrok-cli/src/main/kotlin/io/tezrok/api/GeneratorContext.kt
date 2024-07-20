@@ -3,6 +3,7 @@ package io.tezrok.api
 import io.tezrok.api.input.ProjectElem
 import io.tezrok.api.io.OutStream
 import io.tezrok.api.node.DirectoryNode
+import io.tezrok.api.node.StoreStrategy
 import io.tezrok.util.ResourceUtil
 import org.apache.velocity.VelocityContext
 import org.apache.velocity.shaded.commons.io.FilenameUtils
@@ -61,12 +62,18 @@ interface GeneratorContext : GeneratorProvider {
      * Add a file to the target directory with the specified template.
      * Name of the file is the same as the template name without the .vm extension.
      */
-    fun addFile(targetDir: DirectoryNode, templatePath: String, values: Map<String, Any?> = emptyMap()) {
+    fun addFile(
+        targetDir: DirectoryNode,
+        templatePath: String,
+        values: Map<String, Any?> = emptyMap(),
+        strategy: StoreStrategy = StoreStrategy.SAVE
+    ) {
         val templateName = FilenameUtils.getName(templatePath)
         if (templateName.endsWith(".vm")) {
             val fileName = templateName.removeSuffix(".vm")
             val startDbFile = targetDir.getOrAddFile(fileName)
             if (startDbFile.isEmpty()) {
+                startDbFile.strategy = strategy
                 writeTemplate(startDbFile, templatePath, extendsValues(templatePath, values))
             } else {
                 log.warn("File {} already exists, skipping", fileName)
@@ -75,6 +82,7 @@ interface GeneratorContext : GeneratorProvider {
             check(values.isEmpty()) { "Values are not supported for non-vm files" }
             val startDbFile = targetDir.getOrAddFile(templateName)
             if (startDbFile.isEmpty()) {
+                startDbFile.strategy = strategy
                 startDbFile.getOutputStream().use { os ->
                     ResourceUtil.getResourceAsStream(templatePath).use { inputStream ->
                         inputStream.copyTo(os)
