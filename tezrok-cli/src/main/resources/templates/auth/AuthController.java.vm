@@ -47,8 +47,6 @@ public class AuthController {
 
         if (currentAuthService.isAuthenticated()) {
             log.warn("User already logged: {}, login action as {}", currentAuthService.getUsername(), userDto.getUsername());
-            bindingResult.rejectValue("username", "user.already.logged", "User already logged");
-            return "login";
         }
         if (bindingResult.hasErrors()) {
             return "login";
