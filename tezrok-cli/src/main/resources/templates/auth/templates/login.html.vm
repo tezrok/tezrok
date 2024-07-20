@@ -15,6 +15,9 @@
         <div th:if="${#fields.hasGlobalErrors()}" class="failed">
             <span th:errors="*{global}">Invalid username or password</span>
         </div>
+        <div th:if="${param.error403}" class="failed">
+            Current user does not have permission to access this page.
+        </div>
         <div th:if="${param.logout}" class="success">
             You have been logged out.
             <div><a href="/" title="Go home page">Visit home page</a></div>
