@@ -10,10 +10,14 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.*;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 
 /**
  * Controller maintaining form authentication.
@@ -31,7 +35,9 @@ public class AuthController {
     }
 
     @GetMapping("/login")
-    public String login(@ModelAttribute("userLogin") final UserLoginDto userDto) {
+    public String login(@ModelAttribute("userLogin") final UserLoginDto userDto,
+                        @RequestHeader(HttpHeaders.REFERER) final String referer) {
+        userDto.setRefererUrl(referer);
         return "login";
     }
 
@@ -56,6 +62,15 @@ public class AuthController {
             TimeUtil.sleepWhenSuspicious();
             bindErrors(bindingResult, result, "userLogin");
             return "login";
+        }
+
+        if (userDto.getRefererUrl() != null) {
+            try {
+                final URL url = new URL(userDto.getRefererUrl());
+                return "redirect:" + url.getPath();
+            } catch (final MalformedURLException e) {
+                log.error("Invalid referer URL: {}", userDto.getRefererUrl());
+            }
         }
 
         return "redirect:/";

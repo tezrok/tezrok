@@ -18,6 +18,10 @@ public class UserLoginDto {
     private String password;
     private boolean rememberMe;
     /**
+     * Url from which user came. After successful login user will be redirected to this url.
+     */
+    private String refererUrl;
+    /**
      * Captcha token.
      */
     private String captchaToken;

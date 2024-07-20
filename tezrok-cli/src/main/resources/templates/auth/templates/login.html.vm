@@ -50,6 +50,7 @@
             <label for="rememberMe">Remember Me</label>
         </div>
         <input type="hidden" id="captchaToken" name="captchaToken"/>
+        <input type="hidden" id="refererUrl" name="refererUrl" th:field="*{refererUrl}"/>
         <button type="submit">Login</button>
         <div>
             <a href="/register" title="Register new account">Create account</a>
