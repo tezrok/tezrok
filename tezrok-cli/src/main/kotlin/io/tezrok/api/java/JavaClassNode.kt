@@ -138,8 +138,9 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration, private
     }
 
     private fun addImportBySimpleName(javaDir: JavaDirectoryNode, simpleTypeName: String): Boolean {
+        val javaFileName = "$simpleTypeName.java"
         javaDir.getJavaFiles().forEach { javaFile ->
-            if (javaFile.getRootClass().getName() == simpleTypeName) {
+            if (javaFile.getName() == javaFileName) {
                 addImport(javaFile.getParentPackageWithSuffix() + simpleTypeName)
                 return true
             }
@@ -209,6 +210,7 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration, private
 
     fun addField(typeName: String, name: String, initInConstructor: Boolean = false): JavaFieldNode {
         addImportsByType(typeName)
+        addImportBySimpleName(typeName)
         val field = JavaFieldNode(clazz.addField(typeName, name, Modifier.Keyword.PRIVATE))
         if (initInConstructor) {
             initInConstructor(field)

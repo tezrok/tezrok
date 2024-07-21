@@ -18,7 +18,7 @@ import com.github.javaparser.ast.stmt.Statement
  */
 fun CompilationUnit.getRootClass(): ClassOrInterfaceDeclaration =
     this.types.filterIsInstance<ClassOrInterfaceDeclaration>().firstOrNull()
-        ?: throw IllegalStateException("Class not found in compilation unit")
+        ?: throw IllegalStateException("Class not found in compilation unit: $this")
 
 
 fun Expression.assignStatement(value: Expression, operator: AssignExpr.Operator): Statement =

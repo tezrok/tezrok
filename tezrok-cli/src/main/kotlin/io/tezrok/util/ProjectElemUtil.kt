@@ -79,6 +79,8 @@ fun EntityElem.getUniqueGroups(logic: Boolean): Map<String, List<FieldElem>> =
         .filter { if (logic) it.isNotSynthetic() else it.isNotLogic() }
         .groupBy { it.uniqueGroup!! }
 
+fun EntityElem.getServiceName(): String = "${name}Service"
+
 fun EntityElem.getRepositoryName(): String = "${name}Repository"
 
 fun EntityElem.getMapperName(): String = "${name}Mapper"

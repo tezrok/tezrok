@@ -1,5 +1,6 @@
 package io.tezrok.core.feature
 
+import io.tezrok.admin.AdminFeature
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.ProcessModelPhase
 import io.tezrok.api.TezrokFeature
@@ -71,6 +72,7 @@ internal class FeatureManager {
         features.add(TaskServiceFeature())
         features.add(SearchableFeature())
         features.add(LoggingFeature())
+        features.add(AdminFeature())
     }
 
     fun applyAll(project: ProjectNode, context: GeneratorContext) {
