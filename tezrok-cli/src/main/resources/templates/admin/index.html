@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline - Admin</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="shortcut icon" href="/favicon.png" type=image/x-icon>
+</head>
+<body>
+<div class="list-container">
+    <h1>Entities</h1>
+    <br/>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Count</th>
+            <th>Path</th>
+            <th>Description</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="entity : ${entities}">
+            <td th:text="${entity.name}"></td>
+            <td th:text="${entity.count}"></td>
+            <td><a th:href="@{/admin/{id}(id=${entity.id})}" th:text="${entity.id}">View</a></td>
+            <td th:text="${entity.description}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

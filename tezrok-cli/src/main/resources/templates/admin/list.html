@@ -9,6 +9,7 @@
 </head>
 <body>
 <div class="list-container">
+    <a href="/admin">Home</a>
     <h1 th:text="${entityPlural} + ' - (' + ${page.totalElements}+')'">Entities</h1>
     <form th:action="'/admin/' + ${path}" method="GET">
         <input type="text" id="term" name="term" th:value="${param.term}" placeholder="Search term"/>
@@ -29,7 +30,7 @@
         </tbody>
     </table>
     <div class="pagination" th:if="${page.totalElements > 0}">
-        <span th:text="${page.number + 1} + ' of ' + ${page.totalPages}">1</span>
+        <span th:if="${page.totalPages > 1}" th:text="${page.number + 1} + ' of ' + ${page.totalPages}">1</span>
         <br/>
         <br/>
         <a href="#" th:if="${page.hasPrevious}" th:href="@{/admin/{id}(id=${path}, page=0, term=${param.term}, size=${param.size})}" title="First page">First</a>

@@ -276,7 +276,7 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration, private
     }
 
     fun addInnerClass(className: String): JavaClassNode {
-        val innerClass = ClassOrInterfaceDeclaration().setName("InnerContext")
+        val innerClass = ClassOrInterfaceDeclaration().setName(className)
         // Create a new inner class
         clazz.addMember(innerClass)
         return JavaClassNode(innerClass, javaFile)

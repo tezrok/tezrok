@@ -11,6 +11,7 @@ import io.tezrok.api.java.JavaDirectoryNode
 import io.tezrok.api.java.JavaFieldNode
 import io.tezrok.api.maven.ProjectNode
 import io.tezrok.util.*
+import lombok.Data
 import org.springframework.data.domain.Pageable
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -25,6 +26,7 @@ class AdminFeature : TezrokFeature {
         if (appPackageRoot != null) {
             val thymeleafDir = module.source.main.resources.getOrAddDirectory("templates/thymeleaf/admin")
             context.addFile(thymeleafDir, "/templates/admin/list.html")
+            context.addFile(thymeleafDir, "/templates/admin/index.html")
             val adminDir = appPackageRoot.getOrAddJavaDirectory("web/admin")
             val entities = moduleElem.schema?.entities?.filter { it.isNotSynthetic() && it.hasFullDto() } ?: emptyList()
             addAdminController(
@@ -53,6 +55,28 @@ class AdminFeature : TezrokFeature {
         }
         fields.forEach(clazz::initInConstructor)
 
+        // add admin main page
+        val listOfEntities = entities.map { entity ->
+            val serviceField = entity.getServiceName().lowerFirst()
+            val pluralName = entity.name + "s"
+            val path = pluralName.toHyphenName()
+            "new EntityInfo(\"$path\", \"$pluralName\", \"${entity.description ?: ""}\", $serviceField.count())"
+        }.joinToString(separator = ",\n")
+
+        clazz.addMethod("admin")
+            .withModifiers(Modifier.Keyword.PUBLIC)
+            .addParameter("Map<String, Object>", "model")
+            .setReturnType("String")
+            .addAnnotation(GetMapping::class.java)
+            .setBody(
+                """
+model.put("entities", Arrays.asList(
+$listOfEntities
+));
+return "admin/index";""".parseAsBlock()
+            )
+
+        // add entities methods
         entities.forEach { entity ->
             val serviceField = entity.getServiceName().lowerFirst()
             val pluralName = entity.name + "s"
@@ -92,5 +116,14 @@ class AdminFeature : TezrokFeature {
     return "admin/list";""".parseAsBlock()
             )
         }
+
+        // add inner class
+        val infoClass = clazz.addInnerClass("EntityInfo")
+            .withModifiers(Modifier.Keyword.PRIVATE, Modifier.Keyword.STATIC)
+            .addAnnotation(Data::class.java)
+        infoClass.addField("String", "id").withModifiers(Modifier.Keyword.PRIVATE, Modifier.Keyword.FINAL)
+        infoClass.addField("String", "name").withModifiers(Modifier.Keyword.PRIVATE, Modifier.Keyword.FINAL)
+        infoClass.addField("String", "description").withModifiers(Modifier.Keyword.PRIVATE, Modifier.Keyword.FINAL)
+        infoClass.addField("Long", "count").withModifiers(Modifier.Keyword.PRIVATE, Modifier.Keyword.FINAL)
     }
 }
