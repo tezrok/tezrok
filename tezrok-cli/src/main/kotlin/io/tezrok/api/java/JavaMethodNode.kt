@@ -46,7 +46,7 @@ open class JavaMethodNode(private val method: MethodDeclaration, private val par
     }
 
     fun addParameter(paramClass: Class<*>, name: String, isFinal: Boolean = true): JavaMethodNode {
-        method.addParameter(paramClass, name).setFinal(isFinal)
+        method.addAndGetParameter(paramClass, name).setFinal(isFinal)
         return this
     }
 

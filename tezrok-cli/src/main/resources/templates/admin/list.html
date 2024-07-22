@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Timeline - Admin - ' + ${entityPlural}">Timeline - Admin</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="shortcut icon" href="/favicon.png" type=image/x-icon>
+</head>
+<body>
+<div class="list-container">
+    <h1 th:text="${entityPlural} + ' - (' + ${page.totalElements}+')'">Entities</h1>
+    <form th:action="'/admin/' + ${path}" method="GET">
+        <input type="text" id="term" name="term" th:value="${param.term}" placeholder="Search term"/>
+        <input type="hidden" id="size" name="size" th:value="${param.size}"/>
+        <button type="submit">Search</button>
+    </form>
+    <br/>
+    <table class="table">
+        <thead>
+        <tr>
+            <th th:each="column : ${columns}" th:text="${column}"></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${page}">
+            <td th:each="column : ${columns}" th:text="${item[column]}"></td>
+        </tr>
+        </tbody>
+    </table>
+    <div class="pagination" th:if="${page.totalElements > 0}">
+        <span th:text="${page.number + 1} + ' of ' + ${page.totalPages}">1</span>
+        <br/>
+        <br/>
+        <a href="#" th:if="${page.hasPrevious}" th:href="@{/admin/{id}(id=${path}, page=0, term=${param.term}, size=${param.size})}" title="First page">First</a>
+        <a href="#" th:if="${page.hasPrevious}" th:href="@{/admin/{id}(id=${path}, page=${page.number-1}, term=${param.term}, size=${param.size})}" title="Previous page">Previous</a>
+        <a href="#" th:if="${page.hasNext}" th:href="@{/admin/{id}(id=${path}, page=${page.number+1}, term=${param.term}, size=${param.size})}" title="Next page">Next</a>
+        <a href="#" th:if="${page.hasNext}" th:href="@{/admin/{id}(id=${path}, page=${page.totalPages-1}, term=${param.term}, size=${param.size})}" title="Last page">Last</a>
+    </div>
+</div>
+</body>
+</html>
