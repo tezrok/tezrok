@@ -91,14 +91,13 @@ return "admin/index";""".parseAsBlock()
 
             val fields = entity.fields
                 .filter { field -> field.isNotLogic() && !field.hasMetaType(MetaType.Sensitive) }
-                .map { field -> field.name.upperFirst() }
-                .joinToString(", ") { "\"$it\"" }
+                .joinToString(", ") { field -> "new ColumnInfo(\"${field.name.camelCaseToSqlCase()}\", \"${field.name.upperFirst()}\", \"${field.name.upperFirst()}\")" }
 
             method.addParameter("String", "searchTerm")
             method.getLastParameter()
                 .addAnnotation(
                     RequestParam::class.java,
-                    "value" to StringLiteralExpr("searchTerm"),
+                    "value" to StringLiteralExpr("term"),
                     "required" to BooleanLiteralExpr(false)
                 )
 
@@ -109,21 +108,34 @@ return "admin/index";""".parseAsBlock()
     final Sort sort = pageable.getSortOr(Sort.by("$primaryKey"));
     final Pageable finalPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
     final Page<$dtoName> result = $serviceField.searchByTerm(StringUtils.defaultString(searchTerm).trim(), finalPageable, MatchType.CONTAINS, true);
+    final Sort.Order order = sort.get().findFirst().get();
+    final Stream<ColumnInfo> infos = Stream.of($fields);
+    final List<ColumnInfo> columns = infos
+                .map(column -> order.getProperty().equals(column.getId()) ? new ColumnInfo(column.getId() + (order.isAscending() ? ",desc" : ""), column.getName(), column.getTitle() + (order.isAscending() ? "▲" : "▼")) : column)
+                .toList();
     model.put("page", result);
-    model.put("columns", Arrays.asList($fields));
+    model.put("columns", columns);    
     model.put("entityPlural", "$pluralName");
     model.put("path", "$path");
     return "admin/list";""".parseAsBlock()
             )
         }
 
-        // add inner class
+        // add inner class EntityInfo
         val infoClass = clazz.addInnerClass("EntityInfo")
             .withModifiers(Modifier.Keyword.PRIVATE, Modifier.Keyword.STATIC)
             .addAnnotation(Data::class.java)
         infoClass.addField("String", "id").withModifiers(Modifier.Keyword.PRIVATE, Modifier.Keyword.FINAL)
         infoClass.addField("String", "name").withModifiers(Modifier.Keyword.PRIVATE, Modifier.Keyword.FINAL)
         infoClass.addField("String", "description").withModifiers(Modifier.Keyword.PRIVATE, Modifier.Keyword.FINAL)
-        infoClass.addField("Long", "count").withModifiers(Modifier.Keyword.PRIVATE, Modifier.Keyword.FINAL)
+        infoClass.addField("long", "count").withModifiers(Modifier.Keyword.PRIVATE, Modifier.Keyword.FINAL)
+
+        // add inner class ColumnInfo
+        val columnClass = clazz.addInnerClass("ColumnInfo")
+            .withModifiers(Modifier.Keyword.PRIVATE, Modifier.Keyword.STATIC)
+            .addAnnotation(Data::class.java)
+        columnClass.addField("String", "id").withModifiers(Modifier.Keyword.PRIVATE, Modifier.Keyword.FINAL)
+        columnClass.addField("String", "name").withModifiers(Modifier.Keyword.PRIVATE, Modifier.Keyword.FINAL)
+        columnClass.addField("String", "title").withModifiers(Modifier.Keyword.PRIVATE, Modifier.Keyword.FINAL)
     }
 }

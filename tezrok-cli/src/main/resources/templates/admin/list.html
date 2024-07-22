@@ -14,18 +14,21 @@
     <form th:action="'/admin/' + ${path}" method="GET">
         <input type="text" id="term" name="term" th:value="${param.term}" placeholder="Search term"/>
         <input type="hidden" id="size" name="size" th:value="${param.size}"/>
+        <input type="hidden" id="sort" name="sort" th:value="${param.sort}"/>
         <button type="submit">Search</button>
     </form>
     <br/>
     <table class="table">
         <thead>
         <tr>
-            <th th:each="column : ${columns}" th:text="${column}"></th>
+            <th th:each="column : ${columns}">
+                <a th:href="@{/admin/{id}(id=${path}, page=${page.number}, term=${param.term}, size=${param.size}, sort=${column.id})}" th:text="${column.title}"></a>
+            </th>
         </tr>
         </thead>
         <tbody>
         <tr th:each="item : ${page}">
-            <td th:each="column : ${columns}" th:text="${item[column]}"></td>
+            <td th:each="column : ${columns}" th:text="${item[column.name]}"></td>
         </tr>
         </tbody>
     </table>
@@ -33,10 +36,10 @@
         <span th:if="${page.totalPages > 1}" th:text="${page.number + 1} + ' of ' + ${page.totalPages}">1</span>
         <br/>
         <br/>
-        <a href="#" th:if="${page.hasPrevious}" th:href="@{/admin/{id}(id=${path}, page=0, term=${param.term}, size=${param.size})}" title="First page">First</a>
-        <a href="#" th:if="${page.hasPrevious}" th:href="@{/admin/{id}(id=${path}, page=${page.number-1}, term=${param.term}, size=${param.size})}" title="Previous page">Previous</a>
-        <a href="#" th:if="${page.hasNext}" th:href="@{/admin/{id}(id=${path}, page=${page.number+1}, term=${param.term}, size=${param.size})}" title="Next page">Next</a>
-        <a href="#" th:if="${page.hasNext}" th:href="@{/admin/{id}(id=${path}, page=${page.totalPages-1}, term=${param.term}, size=${param.size})}" title="Last page">Last</a>
+        <a href="#" th:if="${page.hasPrevious}" th:href="@{/admin/{id}(id=${path}, page=0, term=${param.term}, size=${param.size}, sort=${param.sort})}" title="First page">First</a>
+        <a href="#" th:if="${page.hasPrevious}" th:href="@{/admin/{id}(id=${path}, page=${page.number-1}, term=${param.term}, size=${param.size}, sort=${param.sort})}" title="Previous page">Previous</a>
+        <a href="#" th:if="${page.hasNext}" th:href="@{/admin/{id}(id=${path}, page=${page.number+1}, term=${param.term}, size=${param.size}, sort=${param.sort})}" title="Next page">Next</a>
+        <a href="#" th:if="${page.hasNext}" th:href="@{/admin/{id}(id=${path}, page=${page.totalPages-1}, term=${param.term}, size=${param.size}, sort=${param.sort})}" title="Last page">Last</a>
     </div>
 </div>
 </body>
