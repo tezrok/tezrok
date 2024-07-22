@@ -33,7 +33,7 @@
         </tbody>
     </table>
     <div class="pagination" th:if="${page.totalElements > 0}">
-        <span th:if="${page.totalPages > 1}" th:text="${page.number + 1} + ' of ' + ${page.totalPages}">1</span>
+        <span th:if="${page.totalPages > 1}" th:text="'Page ' + ${page.number + 1} + ' of ' + ${page.totalPages}">1</span>
         <br/>
         <br/>
         <a href="#" th:if="${page.hasPrevious}" th:href="@{/admin/{id}(id=${path}, page=0, term=${param.term}, size=${param.size}, sort=${param.sort})}" title="First page">First</a>

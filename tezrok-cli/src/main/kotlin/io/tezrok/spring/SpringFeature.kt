@@ -80,7 +80,7 @@ internal class SpringFeature : TezrokFeature {
             "spring.datasource.username=$dbUser",
             "spring.datasource.password=$dbPwd",
             "spring.datasource.driver-class-name=${properties.getProperty("datasource.driver-class-name")}",
-            "spring.data.web.pageable.default-page-size=10",
+            "spring.data.web.pageable.default-page-size=20",
             "spring.data.web.pageable.max-page-size=20")
     }
 
