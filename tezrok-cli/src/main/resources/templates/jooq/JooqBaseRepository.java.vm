@@ -6,12 +6,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-
 import static org.jooq.impl.DSL.falseCondition;
+import static org.jooq.impl.DSL.trueCondition;
 
 /**
  * Base class for all Jooq repositories.
@@ -94,10 +93,15 @@ abstract class JooqBaseRepository<R extends UpdatableRecord<R>, P> {
 
     @NotNull
     protected Condition whereClause(final String term, final MatchType matchType) {
-        return switch (matchType) {
-            case EXACT -> stringFields.stream().map(f -> f.equalIgnoreCase(term)).map(Condition.class::cast).reduce(falseCondition(), Condition::or);
-            case STARTS_WITH, ENDS_WITH, CONTAINS -> stringFields.stream().map(f -> f.likeIgnoreCase(buildLikeExpression(term, matchType))).map(Condition.class::cast).reduce(falseCondition(), Condition::or);
-        };
+        if (!stringFields.isEmpty()) {
+            return switch (matchType) {
+                case EXACT ->
+                        stringFields.stream().map(f -> f.equalIgnoreCase(term)).map(Condition.class::cast).reduce(falseCondition(), Condition::or);
+                case STARTS_WITH, ENDS_WITH, CONTAINS ->
+                        stringFields.stream().map(f -> f.likeIgnoreCase(buildLikeExpression(term, matchType))).map(Condition.class::cast).reduce(falseCondition(), Condition::or);
+            };
+        }
+        return trueCondition();
     }
 
     protected long countByLikeExpression(final Condition where) {
