@@ -8,13 +8,13 @@ source ./docker/custom/dockerenv.sh
 # copy scripts to the remote server
 echo "Copy scripts to the remote server..."
 ssh $REMOTE_USER_DEV@$REMOTE_IP_DEV "mkdir -p /home/${moduleName}"
-scp ./docker/app-run-test.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/app-run-test.sh
-scp ./docker/app-stop-test.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/app-stop-test.sh
-scp ./docker/db-stop-test.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/db-stop-test.sh
-scp ./docker/db-start-test.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/db-start-test.sh
-scp ./docker/db-restart-test.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/db-restart-test.sh
+scp ./docker/app-run-dev.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/app-run-dev.sh
+scp ./docker/app-stop-dev.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/app-stop-dev.sh
+scp ./docker/db-stop-dev.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/db-stop-dev.sh
+scp ./docker/db-start-dev.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/db-start-dev.sh
+scp ./docker/db-restart-dev.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/db-restart-dev.sh
 #if ($searchEnabled)
-scp ./docker/search-start-test.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/search-start-test.sh
+scp ./docker/search-start-dev.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/search-start-dev.sh
 #end
 
 # copy secrets if not exist yet
