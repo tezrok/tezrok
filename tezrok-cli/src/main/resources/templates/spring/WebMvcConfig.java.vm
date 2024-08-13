@@ -14,6 +14,8 @@ import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 /**
  * WebMvc configuration.
@@ -48,16 +50,17 @@ public class WebMvcConfig implements WebMvcConfigurer {
         return new WebMvcConfigurer() {
             /**
              * Enable CORS globally
-             * <p>
-             * TODO: configure CORS only for development
              */
             @Override
             public void addCorsMappings(@NotNull final CorsRegistry registry) {
-                // registry.addMapping("/api/**").allowedOrigins("http://localhost:5173").allowedMethods("GET", "POST", "PUT", "DELETE");
+                final String frontendUrl = appConfig.isDebug() ? "http://localhost:5173" : null;
+                final String[] allowedOrigins = Stream.of(appConfig.getMainHost(), frontendUrl)
+                        .filter(Objects::nonNull)
+                        .toList()
+                        .toArray(new String[0]);
 
-                // FIXME: enable CORS for allowed origins only
                 registry.addMapping("/api/**")
-                        .allowedOrigins("*")
+                        .allowedOrigins(allowedOrigins)
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*");
             }
@@ -69,7 +72,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
             @Override
             public void addResourceHandlers(final ResourceHandlerRegistry registry) {
-                registry.addResourceHandler("/**").addResourceLocations("classpath:/public/", "classpath:/static/").resourceChain(true).addResolver(new AlternativePathResourceResolver());
+                registry.addResourceHandler("/**")
+                        .addResourceLocations("classpath:/public/", "classpath:/static/")
+                        .resourceChain(true)
+                        .addResolver(new AlternativePathResourceResolver());
             }
         };
     }

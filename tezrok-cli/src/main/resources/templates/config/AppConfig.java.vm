@@ -17,6 +17,11 @@ import java.util.Objects;
 @EqualsAndHashCode(callSuper = true)
 @ConfigurationProperties("${moduleName}")
 public class AppConfig extends AppCustomConfig {
+    /**
+     * When true, debug mode is enabled (used for local development).
+     */
+    private final boolean debug = "true".equals(System.getenv("appDebug"));
+
     private String mainHost;
 
     @Value("${spring.datasource.url}")
