@@ -23,6 +23,7 @@ import io.tezrok.jooq.*
 import io.tezrok.liquibase.LiquibaseFeature
 import io.tezrok.logging.LoggingFeature
 import io.tezrok.maven.MavenCoreFeature
+import io.tezrok.monitor.NewEntityRecordsFeature
 import io.tezrok.search.SearchableFeature
 import io.tezrok.spring.ControllerFeature
 import io.tezrok.spring.ServiceFeature
@@ -73,6 +74,7 @@ internal class FeatureManager {
         features.add(SearchableFeature())
         features.add(LoggingFeature())
         features.add(AdminFeature())
+        features.add(NewEntityRecordsFeature())
     }
 
     fun applyAll(project: ProjectNode, context: GeneratorContext) {

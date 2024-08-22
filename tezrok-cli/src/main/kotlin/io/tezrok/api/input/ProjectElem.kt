@@ -23,6 +23,11 @@ data class ProjectElem(
     val modules: List<ModuleElem> = emptyList(),
     val git: GitElem? = null,
 ) {
+    fun getModule(name: String): ModuleElem {
+        return modules.find { it.name == name }
+            ?: error("Module $name not found in project. Expected modules: " + modules.map { it.name })
+    }
+
     override fun toString(): String {
         return "ProjectElem(name='$name')"
     }
@@ -39,6 +44,8 @@ data class ModuleElem(
     val spring: SpringElem? = null,
     // if true, then in module default search repositories will be created
     val searchable: Boolean? = null,
+    // if true, then created service will have method to get new records from any entity
+    val newRecords: Boolean? = null,
     // properties should be sorted by key, so we use TreeMap
     val properties: MutableMap<String, String?> = TreeMap(),
     // used to sort modules in project, default is 100
