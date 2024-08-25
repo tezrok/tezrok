@@ -1,6 +1,8 @@
 package ${package}.repository;
 
 import ${package}.dto.WithId;
+import lombok.Data;
+import lombok.experimental.Accessors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
@@ -12,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
 /**
  * Base class for all Jooq repositories with single primary key.
@@ -20,7 +23,7 @@ import java.util.Objects;
  * @param <ID> primary type
  * @param <P>  Pojo type
  */
-abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId<ID>> extends JooqBaseRepository<R, P> {
+public abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId<ID>> extends JooqBaseRepository<R, P> {
 
     protected final Field<ID> idField;
 
@@ -89,6 +92,15 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
     }
 
     /**
+     * Get max ID.
+     *
+     * @return max ID
+     */
+    public ID maxId() {
+        return dsl.select(idField).from(table).orderBy(idField.desc()).limit(1).fetchOne(idField);
+    }
+
+    /**
      * Count records with ID greater than id.
      *
      * @param id last ID
@@ -114,6 +126,16 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
     }
 
     /**
+     * Execute custom query.
+     *
+     * @param queryHandler function with DSL context to execute query
+     * @return result of executed query
+     */
+    public <T> T execQuery(final Function<QueryContext<R, ID, P>, T> queryHandler) {
+        return (T) queryHandler.apply(new QueryContext(dsl, table, pojoClass, idField));
+    }
+
+    /**
      * Hook for updating record before storing it.
      *
      * @param newPojo   new pojo
@@ -121,5 +143,17 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
      */
     protected void beforeUpdateRecord(P newPojo, R oldRecord) {
         // no-op
+    }
+
+    @Data
+    @Accessors(fluent = true)
+    public static class QueryContext<R extends UpdatableRecord<R>, ID, P extends WithId<ID>> {
+        private final DSLContext dsl;
+
+        private final Table<R> table;
+
+        private final Class<P> pojoClass;
+
+        protected final Field<ID> idField;
     }
 }

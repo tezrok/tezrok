@@ -124,25 +124,27 @@ open class ServiceFeature : TezrokFeature {
         entityName: String = "",
         includeAbstract: Boolean = false
     ) {
-        repoClass.getMethods().filter { method -> method.isPublic() && (includeAbstract || !method.isAbstract()) }.forEach { method ->
-            val newMethod = serviceClass.addMethod(method.getName())
-                .withModifiers(Modifier.Keyword.PUBLIC)
-                .setReturnType(replaceType(method.getTypeAsString(), entityName, primaryFields))
-                .setTypeParameters(method.getTypeParameters())
-            val callExpr = newMethod.addCallExpression(fieldName + "." + method.getName())
+        repoClass.getMethods()
+            .filter { method -> method.isPublic() && !excludedRepoMethods.contains(method.getName()) && (includeAbstract || !method.isAbstract()) }
+            .forEach { method ->
+                val newMethod = serviceClass.addMethod(method.getName())
+                    .withModifiers(Modifier.Keyword.PUBLIC)
+                    .setReturnType(replaceType(method.getTypeAsString(), entityName, primaryFields))
+                    .setTypeParameters(method.getTypeParameters())
+                val callExpr = newMethod.addCallExpression(fieldName + "." + method.getName())
 
-            method.getParameters().forEach { param ->
-                val typeName = replaceType(param.getTypeAsString(), entityName, primaryFields)
-                newMethod.addParameter(typeName, param.getName())
-                callExpr.addNameArgument(param.getName())
-                serviceClass.addImportsByType(typeName)
+                method.getParameters().forEach { param ->
+                    val typeName = replaceType(param.getTypeAsString(), entityName, primaryFields)
+                    newMethod.addParameter(typeName, param.getName())
+                    callExpr.addNameArgument(param.getName())
+                    serviceClass.addImportsByType(typeName)
+                }
+                newMethod.addReturnToLastExpression()
+                if (isMethodNotReadOnly(method.getName())) {
+                    newMethod.addAnnotation(Transactional::class.java)
+                }
+                serviceClass.addImportsByType(method.getTypeAsString())
             }
-            newMethod.addReturnToLastExpression()
-            if (isMethodNotReadOnly(method.getName())) {
-                newMethod.addAnnotation(Transactional::class.java)
-            }
-            serviceClass.addImportsByType(method.getTypeAsString())
-        }
     }
 
     private fun isMethodNotReadOnly(name: String) = !isMethodReadOnly(name)
@@ -250,5 +252,6 @@ open class ServiceFeature : TezrokFeature {
         val idParamPattern = Regex("\\bID\\b")
         val id1ParamPattern = Regex("\\bID1\\b")
         val id2ParamPattern = Regex("\\bID2\\b")
+        val excludedRepoMethods = setOf("execQuery")
     }
 }
