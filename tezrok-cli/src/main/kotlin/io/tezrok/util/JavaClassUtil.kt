@@ -45,6 +45,9 @@ fun JavaClassNode.addImportsByType(vararg types: String) {
             "Pageable" -> {
                 addImport(Pageable::class.java)
             }
+            "Sort" -> {
+                addImport(org.springframework.data.domain.Sort::class.java)
+            }
         }
     }
 }

@@ -7,6 +7,7 @@ import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Table;
 import org.jooq.UpdatableRecord;
+import org.springframework.data.domain.Sort;
 
 import java.util.Collection;
 import java.util.List;
@@ -85,6 +86,31 @@ abstract class JooqRepository<R extends UpdatableRecord<R>, ID, P extends WithId
 
     public R getRecordById(ID id) {
         return dsl.selectFrom(table).where(idField.eq(id)).fetchOne();
+    }
+
+    /**
+     * Count records with ID greater than id.
+     *
+     * @param id last ID
+     * @return count of records
+     */
+    public long getCountFromId(final ID id) {
+        return dsl.selectCount().from(table).where(idField.greaterThan(id)).fetchOne(0, Long.class);
+    }
+
+    /**
+     * Find records with ID greater than id.
+     *
+     * @param id    last ID
+     * @param limit max number of records
+     * @param sort  sort order
+     * @return list of records
+     */
+    public List<P> findFromId(final ID id, final long limit, @Nullable final Sort sort) {
+        if (sort == null) {
+            return dsl.selectFrom(table).where(idField.greaterThan(id)).limit(limit).fetchInto(pojoClass);
+        }
+        return dsl.selectFrom(table).where(idField.greaterThan(id)).orderBy(getSortFields(sort)).limit(limit).fetchInto(pojoClass);
     }
 
     /**
