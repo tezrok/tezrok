@@ -1,11 +1,36 @@
 package ${package}.task;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
+
+/**
+ * Task unit for async execution by {@link TaskService}.
+ */
 public interface TaskItem {
 
+    /**
+     * Current task title.
+     *
+     * @return title of the task
+     */
     @NotNull
     String getTitle();
 
+    /**
+     * Execute task.
+     *
+     * @param context current task context
+     * @throws Exception if task failed
+     */
     void run(@NotNull TaskContext context) throws Exception;
+
+    /**
+     * Rerun this task after returned duration, if null - task will not be rerun.
+     */
+    @Nullable
+    default Duration getRepeatAfter() {
+        return null;
+    }
 }

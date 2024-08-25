@@ -5,12 +5,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.UnaryOperator;
 
 /**
@@ -21,6 +24,7 @@ import java.util.function.UnaryOperator;
 public class TaskService {
     private static final String TASK_NOT_FOUND = "Task not found";
     private final ExecutorService executor = Executors.newFixedThreadPool(5); // TODO: make configurable
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     // TODO: use database for tasks
     private final Map<UUID, TaskContextIml> tasks = new LinkedHashMap<>();
 
@@ -74,16 +78,27 @@ public class TaskService {
         }
     }
 
-    private static void runTaskInternal(final TaskItem task, final TaskContextIml context) {
+    private void runTaskInternal(final TaskItem task, final TaskContextIml context) {
         try {
             log.info("Task started: \"{}\", taskId: {}", context.getTitle(), context.getId());
             context.setState(st -> st.withStatus(TaskStatus.RUNNING));
             task.run(context);
             log.info("Task finished: \"{}\", taskId: {}", context.getTitle(), context.getId());
-            if (context.getStatus() == TaskStatus.CANCELING) {
+            final boolean canceled = context.getStatus() == TaskStatus.CANCELING;
+            if (canceled) {
                 context.setState(st -> st.withStatus(TaskStatus.CANCELED));
             } else {
                 context.setState(st -> st.withStatus(TaskStatus.FINISHED));
+            }
+            final Duration repeatAfter;
+            if (!canceled && (repeatAfter = task.getRepeatAfter()) != null) {
+                log.info("Task will be rerun in: {}, taskId: {} ({})", repeatAfter, context.getId(), task.getTitle());
+                scheduler.schedule(() -> {
+                    synchronized (tasks) {
+                        tasks.remove(context.getId());
+                    }
+                    runTask(task);
+                }, repeatAfter.getSeconds(), TimeUnit.SECONDS);
             }
         } catch (final Exception ex) {
             log.error("Error of running task: \"{}\", taskId: {}", context.getTitle(), context.getId(), ex);
