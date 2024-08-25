@@ -1,0 +1,52 @@
+package ${package}.dto;
+
+import ${package}.service.NewEntityRecordsService;
+import lombok.Data;
+
+import java.util.List;
+
+/**
+ * Information about new entities which can be got from {@link NewEntityRecordsService}.
+ */
+@Data
+public class NewEntitiesInfo<P extends WithId<ID>, ID> {
+    /**
+     * Unique name of the record.
+     */
+    private final String name;
+
+    /**
+     * Owner of the record.
+     */
+    private final long userId;
+
+    /**
+     * New count of entities.
+     */
+    private final long newCount;
+
+    /**
+     * Total count of entities.
+     */
+    private final long totalCount;
+
+    /**
+     * Last id of the record.
+     */
+    private final String lastId;
+
+    /**
+     * Current max id in the table.
+     */
+    private final ID nextId;
+
+    /**
+     * Class of the DTO.
+     */
+    private final Class<P> dtoClass;
+
+    /**
+     * List of last items (can be empty).
+     */
+    private final List<P> lastItems;
+}

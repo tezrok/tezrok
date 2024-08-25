@@ -11,6 +11,18 @@ import io.tezrok.core.BaseTezrokFeature
  */
 class NewEntityRecordsFeature : BaseTezrokFeature() {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
+        val module = project.getSingleModule()
+        val applicationPackageRoot = module.source.main.java.applicationPackageRoot
+        if (applicationPackageRoot != null) {
+            val schemaModule = context.getProject().getModule(module.getName())
+            if (schemaModule.newRecords == true) {
+                val serviceDir = applicationPackageRoot.getOrAddJavaDirectory("service")
+                context.addFile(serviceDir, "/templates/monitor/NewEntityRecordsService.java.vm")
+                val dtoDir = applicationPackageRoot.getOrAddJavaDirectory("dto")
+                context.addFile(dtoDir, "/templates/monitor/NewEntitiesInfo.java.vm")
+            }
+        }
+
         return true
     }
 
@@ -91,12 +103,6 @@ class NewEntityRecordsFeature : BaseTezrokFeature() {
                     description = "Last max id/datetime/etc of the monitored entity",
                     maxLength = 100,
                     minLength = 0
-                ),
-                FieldElem(
-                    name = "version",
-                    type = "Long",
-                    description = "Version of this record (used for optimistic locking)",
-                    required = true
                 )
             )
         )

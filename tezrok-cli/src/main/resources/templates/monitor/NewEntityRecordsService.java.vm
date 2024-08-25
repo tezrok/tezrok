@@ -1,0 +1,130 @@
+package ${package}.service;
+
+import ${package}.dto.NewEntitiesInfo;
+import ${package}.dto.NewEntityRecordDto;
+import ${package}.dto.UserDto;
+import ${package}.dto.WithId;
+import ${package}.jooq.Tables;
+import ${package}.repository.JooqRepository;
+import ${package}.repository.NewEntityRecordRepository;
+import ${package}.repository.UserRepository;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jooq.UpdatableRecord;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.function.BiFunction;
+
+/**
+ * Service to find manage new entity records functionality.
+ *
+ * @see NewEntitiesInfo
+ */
+@Service
+public class NewEntityRecordsService {
+    private final NewEntityRecordRepository newEntityRecordRepository;
+    private final UserRepository userRepository;
+
+    public NewEntityRecordsService(final NewEntityRecordRepository newEntityRecordRepository,
+                                   final UserRepository userRepository) {
+        this.newEntityRecordRepository = newEntityRecordRepository;
+        this.userRepository = userRepository;
+    }
+
+    /**
+     * Save current state of new entities.
+     */
+    @Transactional
+    public <P extends WithId<ID>, ID> boolean apply(@NotNull final NewEntitiesInfo<P, ID> info) {
+        final String nextId = info.getNextId() != null ? info.getNextId().toString() : null;
+        final NewEntityRecordDto record = newEntityRecordRepository.getByNameAndUserId(info.getName(), info.getUserId());
+        if (record != null) {
+            return newEntityRecordRepository.execQuery(context -> context.dsl().update(context.table())
+                    .set(Tables.NEW_ENTITY_RECORD.LAST_ID, nextId)
+                    .where(Tables.NEW_ENTITY_RECORD.ID.eq(record.getId()).and(Tables.NEW_ENTITY_RECORD.LAST_ID.eq(info.getLastId())))
+                    .execute()) > 0;
+        }
+
+        final NewEntityRecordDto newRecord = new NewEntityRecordDto();
+        newRecord.setName(info.getName());
+        newRecord.setUserId(info.getUserId());
+        newRecord.setFullTypeName(info.getDtoClass().getName());
+        newRecord.setLastId(nextId);
+        newEntityRecordRepository.create(newRecord);
+        return true;
+    }
+
+    /**
+     * Get information about new users.
+     */
+    @NotNull
+    @Transactional(readOnly = true)
+    public NewEntitiesInfo<UserDto, Long> getNewUsersInfo(final String name,
+                                                          final long userId,
+                                                          final int itemsCount,
+                                                          @Nullable final Sort itemsSort) {
+        return getNewEntitiesInfo(name, userId, UserDto.class, this::parseEntityId, itemsCount, itemsSort);
+    }
+
+    @NotNull
+    @Transactional(readOnly = true)
+    public <P extends WithId<ID>, ID> NewEntitiesInfo<P, ID> getNewEntitiesInfo(final String name,
+                                                                                final long userId,
+                                                                                final Class<P> dtoClass,
+                                                                                final BiFunction<Class<P>, String, ID> idParser,
+                                                                                final int itemsCount,
+                                                                                @Nullable final Sort itemsSort) {
+        var userRepository = getRepository(dtoClass);
+        final boolean getItems = itemsCount > 0;
+        final NewEntityRecordDto record = newEntityRecordRepository.getByNameAndUserId(name, userId);
+        final long totalCount = userRepository.count();
+        final boolean hasAnyRecord = totalCount > 0;
+        final ID nextId = hasAnyRecord ? userRepository.maxId() : null;
+        final ID lastId;
+        if (record != null && StringUtils.isNotBlank(record.getLastId())) {
+            if (!dtoClass.getName().equals(record.getFullTypeName())) {
+                throw new IllegalArgumentException(String.format("Record is not for %s but for %s", dtoClass.getName(), record.getFullTypeName()));
+            }
+            lastId = idParser.apply(dtoClass, record.getLastId());
+        } else {
+            lastId = null;
+        }
+
+        final List<P> items;
+        if (getItems && hasAnyRecord) {
+            // get requested number of items from zero id
+            items = lastId != null ? userRepository.findFromId(lastId, itemsCount, itemsSort) :
+                    userRepository.findFromId(idParser.apply(dtoClass, ""), itemsCount, itemsSort);
+        } else {
+            items = Collections.emptyList();
+        }
+        final long newCount = lastId != null ? userRepository.getCountFromId(lastId) : totalCount;
+        return new NewEntitiesInfo<>(name, userId, newCount, totalCount, record != null ? record.getLastId() : null, nextId, dtoClass, items);
+
+    }
+
+    protected <R extends UpdatableRecord<R>, ID, P extends WithId<ID>> JooqRepository<R, ID, P> getRepository(final Class<P> dtoClass) {
+        if (UserDto.class.equals(dtoClass)) {
+            return (JooqRepository<R, ID, P>) userRepository;
+        }
+
+        throw new IllegalArgumentException("Unsupported dto class: " + dtoClass);
+    }
+
+    protected <ID, P extends WithId<ID>> ID parseEntityId(final Class<P> dtoClass, final String idStr) {
+        if (UserDto.class.equals(dtoClass)) {
+            if (StringUtils.isNotBlank(idStr)) {
+                final Long id = Long.parseLong(idStr);
+                return (ID) id;
+            }
+            return (ID) Long.valueOf(0);
+        }
+
+        throw new IllegalArgumentException("Unsupported dto class: " + dtoClass);
+    }
+}
