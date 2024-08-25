@@ -134,6 +134,8 @@ data class EntitiesMap(private val entitiesIn: List<EntityElem>) {
             val uniqueIdsJavaDoc = fields.joinToString(", ") { it.name }
             result[entity.getGetPrimaryIdFieldByGroupFields(fields)] =
                 "Returns primary ID of {@link ${entity.name}Dto} by unique fields ($uniqueIdsJavaDoc) of group $group."
+            result[entity.getGetEntityByGroupFields(fields)] =
+                "Returns {@link ${entity.name}Dto} by unique fields ($uniqueIdsJavaDoc) of group $group."
             if (idFields.size > 1) {
                 val allIdsJavaDoc = idFields.joinToString(", ") { it.name }
                 result[entity.getGetIdFieldsByGroupFields(fields)] =

@@ -43,7 +43,8 @@ class NewEntityRecordsFeature : BaseTezrokFeature() {
             skipService = inheritEntity?.skipService ?: true,
             skipController = inheritEntity?.skipController ?: true,
             fields = createNewEntityRecordFields(inheritEntity),
-            init = inheritEntity?.init
+            init = inheritEntity?.init,
+            methods = inheritEntity?.methods ?: emptySet(),
         )
     }
 

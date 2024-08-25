@@ -137,12 +137,24 @@ fun EntityElem.getGetPrimaryIdFieldByGroupFields(fields: List<FieldElem>): Strin
     return "get${getPrimaryField().name.upperFirst()}By$fieldsPart"
 }
 
+fun EntityElem.getGetEntityByGroupFields(fields: List<FieldElem>): String {
+    val uniqueGroup = fields.first().uniqueGroup
+        ?: error("Unique group not found for fields: ${fields.map { it.name }} in entity $name")
+    fields.forEach { field ->
+        check(field.hasUniqueGroup()) { "Field ${field.name} is not in unique group" }
+        check(field.uniqueGroup == uniqueGroup) { "Field ${field.name} is not in unique group $uniqueGroup" }
+    }
+    val fieldsPart = fields.joinToString(separator = "And")
+    { field -> field.name.upperFirst() + if (field.isLogic()) "Id" else "" }
+    return "getBy$fieldsPart"
+}
+
 /**
  * Make method name to `getIdFieldsByUniqueName(String name, Class<T> type)`
  */
 fun EntityElem.getGetIdFieldsByGroupFields(fields: List<FieldElem>): String {
     val uniqueGroup = fields.first().uniqueGroup
-        ?: error("Unique group not found for fields: ${fields.map { it.name }}")
+        ?: error("Unique group not found for fields: ${fields.map { it.name }} in entity $name")
     fields.forEach { field ->
         check(field.hasUniqueGroup()) { "Field ${field.name} is not in unique group" }
         check(field.uniqueGroup == uniqueGroup) { "Field ${field.name} is not in unique group $uniqueGroup" }
