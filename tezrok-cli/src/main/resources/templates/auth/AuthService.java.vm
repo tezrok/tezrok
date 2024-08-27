@@ -136,9 +136,14 @@ public class AuthService {
             final UserDto newUser = new UserDto();
             final String username = StringUtils.trim(user.getUsername());
             final String email = StringUtils.trim(user.getEmail());
-            if (userRepository.getByNameIgnoreCaseOrEmailIgnoreCase(username, email) != null) {
-                log.error("User registration failed, already exists: {}", user.getUsername());
-                return LoginApiResult.errorUserAlreadyExists(username);
+            final UserDto foundUser;
+            if ((foundUser = userRepository.getByNameIgnoreCaseOrEmailIgnoreCase(username, email)) != null) {
+                if (username.equalsIgnoreCase(foundUser.getName())) {
+                    log.error("User registration failed ({}, {}), user already exists with email: {}", username, email, foundUser.getEmail());
+                    return LoginApiResult.errorUserAlreadyExists(username);
+                }
+                log.error("User registration failed ({}, {}), email already used by user: {}", username, email, foundUser.getName());
+                return LoginApiResult.errorEmailAlreadyExists(username);
             }
             newUser.setName(username);
             newUser.setEmail(email);
