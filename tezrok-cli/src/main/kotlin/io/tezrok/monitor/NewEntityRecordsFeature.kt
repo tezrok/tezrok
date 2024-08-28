@@ -20,6 +20,9 @@ class NewEntityRecordsFeature : BaseTezrokFeature() {
                 context.addFile(serviceDir, "/templates/monitor/NewEntityRecordsService.java.vm")
                 val dtoDir = applicationPackageRoot.getOrAddJavaDirectory("dto")
                 context.addFile(dtoDir, "/templates/monitor/NewEntitiesInfo.java.vm")
+                val values = mapOf("productName" to context.getProject().getFinalProductName())
+                val templateDir = module.source.main.resources.addDirectory("templates/velocity")
+                context.addFile(templateDir, "/templates/template/velocity/email-new-users.html.vm", values)
             }
         }
 

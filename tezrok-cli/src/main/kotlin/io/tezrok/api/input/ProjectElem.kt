@@ -28,6 +28,9 @@ data class ProjectElem(
             ?: error("Module $name not found in project. Expected modules: " + modules.map { it.name })
     }
 
+    @JsonIgnore
+    fun getFinalProductName(): String = productName.ifBlank { name }
+
     override fun toString(): String {
         return "ProjectElem(name='$name')"
     }

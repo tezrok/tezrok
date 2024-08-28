@@ -1,6 +1,9 @@
 package ${package}.service;
 
 import ${package}.config.AppConfig;
+#if($newEntityRecordsFeature)
+import ${package}.dto.NewEntitiesInfo;
+#end
 import ${package}.dto.UserDto;
 import ${package}.dto.UserProfileDto;
 import jakarta.mail.*;
@@ -42,7 +45,7 @@ public class EmailService {
 
         log.info("Sending activation link to user: {}, email: {}, link: {}", userDto.getName(), userDto.getEmail(), activationLink);
 
-        final Map<String, String> params = Map.of("username", userDto.getName(),
+        final Map<String, Object> params = Map.of("username", userDto.getName(),
                 "activationLink", activationLink, "siteUrl", appConfig.getMainHost());
         final String body = templateService.getTemplate("/templates/velocity/email-send-activation-link.html", params);
 
@@ -62,7 +65,7 @@ public class EmailService {
 
         log.info("Sending password recover link to user: {}, email: {}, link: {}", userDto.getName(), userDto.getEmail(), recoverLink);
 
-        final Map<String, String> params = Map.of("username", userDto.getName(),
+        final Map<String, Object> params = Map.of("username", userDto.getName(),
                 "recoverLink", recoverLink, "siteUrl", appConfig.getMainHost());
         final String body = templateService.getTemplate("/templates/velocity/email-send-password-recovery-link.html", params);
 
@@ -75,6 +78,23 @@ public class EmailService {
                 body,
                 true);
     }
+#if($newEntityRecordsFeature)
+
+    public void sendNewUsersEmail(final NewEntitiesInfo<UserDto, Long> info, final UserDto adminUser) throws MessagingException {
+        final Map<String, Object> params = Map.of("users", info.getLastItems(), "usersCount", info.getNewCount(),
+                "siteUrl", appConfig.getMainHost());
+        final String body = templateService.getTemplate("/templates/velocity/email-new-users.html", params);
+
+        send(appConfig.getEmailHost(),
+                appConfig.getEmailFrom(),
+                appConfig.getEmailPassword(),
+                adminUser.getEmail(),
+                null,
+                appConfig.getProductName() + " - New users",
+                body,
+                true);
+    }
+#end
 
     private void send(final String host,
                       final String emailFrom,

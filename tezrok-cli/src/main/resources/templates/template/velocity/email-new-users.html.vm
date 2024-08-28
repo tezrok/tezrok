@@ -1,0 +1,25 @@
+<p>
+    <strong style="font-size: 19px;">New $usersCount users have been added to the system:</strong>
+</p>
+
+<table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 18px; text-align: left;">
+    <caption style="caption-side: top; font-size: 19px; font-weight: bold; margin-bottom: 10px;">New Users</caption>
+    <tr>
+        <th style="padding: 12px; border: 1px solid #ddd; background-color: #f2f2f2;">Username</th>
+        <th style="padding: 12px; border: 1px solid #ddd; background-color: #f2f2f2;">Email</th>
+        <th style="padding: 12px; border: 1px solid #ddd; background-color: #f2f2f2;">Activated</th>
+        <th style="padding: 12px; border: 1px solid #ddd; background-color: #f2f2f2;">Created at</th>
+    </tr>
+    #[[#]]#foreach($user in $users)
+    <tr style="background-color: #f9f9f9;">
+        <td style="padding: 12px; border: 1px solid #ddd;">$user.name</td>
+        <td style="padding: 12px; border: 1px solid #ddd;">$user.email</td>
+        <td style="padding: 12px; border: 1px solid #ddd;">$user.activated</td>
+        <td style="padding: 12px; border: 1px solid #ddd;">$user.createdAt</td>
+    </tr>
+    #[[#]]#end
+</table>
+
+Best regards,<br/>
+${productName} Team <br/>
+${siteUrl}

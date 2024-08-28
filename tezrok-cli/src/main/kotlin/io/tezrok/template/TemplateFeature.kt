@@ -19,7 +19,7 @@ internal class TemplateFeature : TezrokFeature {
                 applicationPackageRoot.getOrAddJavaDirectory("service"),
                 "/templates/template/TemplateService.java.vm"
             )
-            val values = mapOf("productName" to context.getProject().productName.ifBlank { context.getProject().name })
+            val values = mapOf("productName" to context.getProject().getFinalProductName())
             val templateDir = module.source.main.resources.addDirectory("templates/velocity")
             context.addFile(templateDir, "/templates/template/velocity/email-send-activation-link.html.vm", values)
             context.addFile(

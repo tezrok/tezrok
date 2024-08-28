@@ -16,7 +16,10 @@ internal class EmailFeature : TezrokFeature {
 
         val applicationPackageRoot = module.source.main.java.applicationPackageRoot
         if (applicationPackageRoot != null) {
-            context.addFile(applicationPackageRoot.getOrAddJavaDirectory("service"), "/templates/email/EmailService.java.vm")
+            val moduleElem = context.getProject().getModule(module.getName())
+            val serviceDir = applicationPackageRoot.getOrAddJavaDirectory("service")
+            val values = mapOf("newEntityRecordsFeature" to (moduleElem.newRecords == true))
+            context.addFile(serviceDir, "/templates/email/EmailService.java.vm", values)
         }
 
         return true

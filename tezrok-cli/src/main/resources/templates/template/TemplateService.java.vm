@@ -19,7 +19,7 @@ import java.util.Map;
 @Service
 public class TemplateService {
     @NotNull
-    public String getTemplate(final String templatePath, final Map<String, String> params) {
+    public String getTemplate(final String templatePath, final Map<String, Object> params) {
         final Template masterTemplate = getTemplate(templatePath);
         final VelocityContext velocityContext = new VelocityContext();
         params.forEach(velocityContext::put);
