@@ -23,7 +23,10 @@
             <div><a href="/" title="Go home page">Visit home page</a></div>
         </div>
         <div th:if="${param.register}" class="success">
-            You have successfully registered.<br/> Please, check your email to activate your account.
+            You have successfully registered.
+        </div>
+        <div th:if="${param.email}" class="success">
+            Please, check your email to activate your account.
         </div>
         <div th:if="${param.activate}" class="success">
             User successfully activated. Please, login.

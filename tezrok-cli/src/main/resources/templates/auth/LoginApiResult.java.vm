@@ -14,23 +14,48 @@ import java.util.List;
 @ToString(callSuper = true)
 public class LoginApiResult extends BaseApiResult {
     private final String username;
+    private final boolean activationRequired;
 
-    public LoginApiResult(final boolean success, final String username, final String message, final List<FieldError> errors) {
+    public LoginApiResult(final boolean success,
+                          final String username,
+                          final String message,
+                          final boolean activationRequired,
+                          final List<FieldError> errors) {
         super(success, message, errors);
         this.username = username;
+        this.activationRequired = activationRequired;
     }
 
-    public LoginApiResult(final boolean success, final String username, final String message) {
-        this(success, username, message, null);
+    public LoginApiResult(final boolean success,
+                          final String username,
+                          final String message,
+                          final List<FieldError> errors) {
+        this(success, username, message, false, errors);
     }
 
-    public LoginApiResult(final boolean success, final String username) {
-        this(success, username, null, null);
+    public LoginApiResult(final boolean success,
+                          final String username,
+                          final String message,
+                          final boolean activationRequired) {
+        this(success, username, message, activationRequired, null);
+    }
+
+    public LoginApiResult(final boolean success,
+                          final String username,
+                          final String message) {
+        this(success, username, message, false, null);
+    }
+
+    public LoginApiResult(final boolean success,
+                          final String username,
+                          final boolean activationRequired) {
+        this(success, username, null, activationRequired, null);
     }
 
     @NotNull
-    public static LoginApiResult error(final String username, final String message) {
-        return new LoginApiResult(false, username, message);
+    public static LoginApiResult error(final String username,
+                                       final String message) {
+        return new LoginApiResult(false, username, message, false);
     }
 
     @NotNull
@@ -42,7 +67,7 @@ public class LoginApiResult extends BaseApiResult {
                 new String[]{"user.already.exists"},
                 null,
                 "A user with this name already exists"));
-        return new LoginApiResult(false, username, "Registration failed", errors);
+        return new LoginApiResult(false, username, "Registration failed", false, errors);
     }
 
     @NotNull
@@ -54,6 +79,6 @@ public class LoginApiResult extends BaseApiResult {
                 new String[]{"email.already.exists"},
                 null,
                 "A user with this email already exists"));
-        return new LoginApiResult(false, username, "Registration failed", errors);
+        return new LoginApiResult(false, username, "Registration failed", false, errors);
     }
 }

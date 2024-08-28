@@ -169,7 +169,7 @@ public class AuthService {
 
             log.info("User registered: {}, id: {}, email: {}, activated: {}", userDto.getName(), userDto.getId(), userDto.getEmail(), userDto.getActivated());
 
-            return new LoginApiResult(true, userDto.getName());
+            return new LoginApiResult(true, userDto.getName(), !activated);
         } catch (final DataIntegrityViolationException ex) {
             log.error("User registration failed: {}", user.getUsername(), ex);
             if (ex.getMessage().contains("user_name_key")) {
