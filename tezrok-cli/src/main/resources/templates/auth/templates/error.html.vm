@@ -1,20 +1,25 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${productName} - Error</title>
-    <link rel="stylesheet" href="/style.css">
     <link rel="shortcut icon" href="/favicon.png" type=image/x-icon>
+    <script src="/js/tailwindcss345.js"></script>
 </head>
-<body>
-<div class="error-container">
-    <h2>Oops! Something went wrong.</h2>
-    <div th:text="${error}"></div>
-    <div th:text="${status}"></div>
-    <div th:text="${message}"></div><br/>
-    <button onclick="goBack()">Go Back</button>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<header class="absolute top-0 left-0 w-full bg-white shadow-md">
+    <div class="mx-auto py-4 px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-start items-center">
+            <a href="/" class="text-xl font-bold text-indigo-600 hover:text-indigo-800">Home</a>
+        </div>
+    </div>
+</header>
+<div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md mt-16">
+    <h2 class="text-2xl font-bold mb-6 text-center">Oops! Something went wrong.</h2>
+    <div th:text="${error}" class="text-red-600 text-center"></div>
+    <div th:text="${status}" class="text-red-600 text-center mb-4"></div>
+    <button onclick="goBack()" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Go Back</button>
 </div>
 
 <script>

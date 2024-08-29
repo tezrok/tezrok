@@ -1,45 +1,52 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${productName} - Register new user</title>
-    <link rel="stylesheet" href="/style.css">
-    <link rel="shortcut icon" href="/favicon.png" type=image/x-icon>
+    <link rel="shortcut icon" href="/favicon.png" type="image/x-icon">
+    <script src="/js/tailwindcss345.js"></script>
     <script th:if="${@captchaService.isCaptchaInRegisterEnable()}" th:src="'https://www.google.com/recaptcha/api.js?render='+${@captchaService.getSiteKey()}" async defer="defer"></script>
 </head>
-<body>
-<div class="login-container">
-    <h2>Sing up</h2>
-    <form action="/register" method="POST" class="login-form" th:object="${userRegister}" id="registerForm">
-        <div th:if="${#fields.hasGlobalErrors()}" class="failed">
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<header class="absolute top-0 left-0 w-full bg-white shadow-md">
+    <div class="mx-auto py-4 px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-start items-center">
+            <a href="/" class="text-xl font-bold text-indigo-600 hover:text-indigo-800">Home</a>
+        </div>
+    </div>
+</header>
+<div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md mt-16">
+    <h2 class="text-2xl font-bold mb-6 text-center">Sign up</h2>
+    <form action="/register" method="POST" class="space-y-3" th:object="${userRegister}" id="registerForm">
+        <div th:if="${#fields.hasGlobalErrors()}" class="text-red-600 text-center mb-4">
             <span th:errors="*{global}">Invalid username or password</span>
         </div>
-        <div class="input-container">
-            <label for="username">Username</label>
-            <input type="text" th:field="*{username}" required/>
-            <div th:if="${#fields.hasErrors('username')}" th:errors="*{username}" class="validation-error">
+        <div class="space-y-2">
+            <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+            <input type="text" th:field="*{username}" required id="username" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/>
+            <div th:if="${#fields.hasErrors('username')}" th:errors="*{username}" class="text-red-600 mb-4">
                 User name error
             </div>
         </div>
-        <div class="input-container">
-            <label for="password">Password</label>
-            <input type="password" th:field="*{password}" required/>
-            <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="validation-error">
+        <div class="space-y-2">
+            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+            <input type="password" th:field="*{password}" required id="password" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/>
+            <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="text-red-600 mb-4">
                 Password error
             </div>
         </div>
-        <div class="input-container">
-            <label for="email">Email</label>
-            <input type="text" th:field="*{email}" required/>
-            <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="validation-error">
+        <div class="space-y-2">
+            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+            <input type="email" th:field="*{email}" required id="email" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/>
+            <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-red-600 mb-4">
                 Email error
             </div>
         </div>
         <input type="hidden" id="captchaToken" name="captchaToken"/>
-        <button type="submit">Register</button>
-        <div class="input-container">
-            Already have an account? <a href="/login">Login here</a>
+        <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Register</button>
+        <div class="text-center mt-4">
+            Already have an account? <a href="/login" class="text-blue-500">Login here</a>
         </div>
     </form>
 </div>
