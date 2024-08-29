@@ -30,7 +30,7 @@ import java.util.Set;
 public class AuthController {
     private final CurrentAuthService currentAuthService;
     private final AuthService authService;
-    private final Set<String> excludeRedirect = Set.of("register", "recover", "login");
+    private final Set<String> excludeRedirect = Set.of("register", "recover", "login", "recover-finish");
 
     public AuthController(final CurrentAuthService currentAuthService,
                           final AuthService authService) {
