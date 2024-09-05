@@ -459,6 +459,13 @@
                 ]
               },
               {
+                "name": "fullName",
+                "type": "String",
+                "description": "User full name",
+                "minLength": 0,
+                "maxLength": 100
+              },
+              {
                 "name": "password",
                 "type": "String",
                 "description": "Hashed user password",
@@ -599,7 +606,7 @@
                 "ROLE_ADMIN"
               ]
             },
-            "init": "admin,admin@site.com,admin"
+            "init": "admin,admin@site.com,Admin,admin"
           },
           {
             "name": "Role",

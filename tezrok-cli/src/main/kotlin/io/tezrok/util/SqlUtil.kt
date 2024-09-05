@@ -16,7 +16,8 @@ object SqlUtil {
 
         records.forEach { record ->
             if (record.size != fields.size) {
-                throw IllegalArgumentException("Record size (${record.size}) doesn't match entity fields size (${fields.size}) in entity ${entity.name}")
+                val names = fields.map { it.name }
+                throw IllegalArgumentException("Record size (${record.size}) doesn't match entity fields size (${fields.size}) in entity ${entity.name}; $record to $names")
             }
 
             val convertedRecord = mutableListOf<String>()

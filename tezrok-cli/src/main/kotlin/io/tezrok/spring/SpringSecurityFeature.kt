@@ -155,8 +155,8 @@ open class SpringSecurityFeature : BaseTezrokFeature() {
             return null
         }
 
-        // name, email, password
-        return "admin,admin@site.com,admin"
+        // name, email, fullName, password
+        return "admin,admin@site.com,Admin,admin"
     }
 
     /**
@@ -193,6 +193,13 @@ open class SpringSecurityFeature : BaseTezrokFeature() {
                     maxLength = USER_EMAIL_MAX,
                     minLength = USER_EMAIL_MIN,
                     metaTypes = setOf(MetaType.Email)
+                ),
+                FieldElem(
+                    name = "fullName",
+                    type = "String",
+                    description = "User full name",
+                    maxLength = FULL_NAME_MAX,
+                    minLength = FULL_NAME_MIN
                 ),
                 FieldElem(
                     name = "password",
@@ -350,6 +357,8 @@ open class SpringSecurityFeature : BaseTezrokFeature() {
         const val REMEMBER_ME_SIZE = 64
         const val USER_NAME_MIN: Int = 3
         const val USER_NAME_MAX: Int = 20
+        const val FULL_NAME_MIN: Int = 0
+        const val FULL_NAME_MAX: Int = 100
         const val ACTIVATION_CODE_MIN: Int = UUID_LENGTH
         const val ACTIVATION_CODE_MAX: Int = ACTIVATION_CODE_MIN
         const val PASSWORD_RESET_CODE_MIN: Int = UUID_LENGTH
