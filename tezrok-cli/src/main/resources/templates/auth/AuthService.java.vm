@@ -33,6 +33,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 /**
  * Service for user authentication.
@@ -46,7 +47,8 @@ public class AuthService {
     private static final String USER_ANON = "anon";
     private static final String USER_DEMO = "demo";
     private static final Set<String> SYSTEM_USERS = Set.of(USER_ADMIN, USER_SYSTEM, USER_ANON, USER_DEMO);
-    public static final int CAPTCHA_LOG_LENGTH = 20;
+    private static final Pattern NAME_PATTERN = Pattern.compile("^[A-Za-z0-9]+$");
+    private static final int CAPTCHA_LOG_LENGTH = 20;
 
     protected final UserRepository userRepository;
 
@@ -136,6 +138,10 @@ public class AuthService {
             final UserDto newUser = new UserDto();
             final String username = StringUtils.trim(user.getUsername());
             final String email = StringUtils.trim(user.getEmail());
+
+            if (!NAME_PATTERN.matcher(username).find()) {
+                return LoginApiResult.error(user.getUsername(), "User name must contain only letters and digits");
+            }
             final UserDto foundUser;
             if ((foundUser = userRepository.getByNameIgnoreCaseOrEmailIgnoreCase(username, email)) != null) {
                 if (username.equalsIgnoreCase(foundUser.getName())) {
