@@ -126,7 +126,6 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration, private
         try {
             // first check this type
             if (getName() == simpleTypeName) {
-                addImport(javaFile.getPackageWithSuffix() + simpleTypeName)
                 return this
             }
             // search in all classes by simple name
