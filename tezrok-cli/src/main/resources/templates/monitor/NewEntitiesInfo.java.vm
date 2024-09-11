@@ -21,7 +21,7 @@ public class NewEntitiesInfo<P extends WithId<ID>, ID> {
     private final long userId;
 
     /**
-     * New count of entities.
+     * Total count of new entities. Might be greater than length of {@link #lastItems}.
      */
     private final long newCount;
 

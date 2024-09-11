@@ -17,6 +17,7 @@ class NewEntityRecordsFeature : BaseTezrokFeature() {
             val schemaModule = context.getProject().getModule(module.getName())
             if (schemaModule.newRecords == true) {
                 val serviceDir = applicationPackageRoot.getOrAddJavaDirectory("service")
+                // TODO: generate service by entities
                 context.addFile(serviceDir, "/templates/monitor/NewEntityRecordsService.java.vm")
                 val dtoDir = applicationPackageRoot.getOrAddJavaDirectory("dto")
                 context.addFile(dtoDir, "/templates/monitor/NewEntitiesInfo.java.vm")

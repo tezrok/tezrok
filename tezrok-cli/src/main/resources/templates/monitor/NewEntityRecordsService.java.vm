@@ -1,12 +1,10 @@
 package ${package}.service;
 
-import ${package}.dto.NewEntitiesInfo;
-import ${package}.dto.NewEntityRecordDto;
-import ${package}.dto.UserDto;
-import ${package}.dto.WithId;
+import ${package}.dto.*;
 import ${package}.jooq.Tables;
 import ${package}.repository.JooqRepository;
 import ${package}.repository.NewEntityRecordRepository;
+import ${package}.repository.TimelineRepository;
 import ${package}.repository.UserRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -29,15 +27,21 @@ import java.util.function.BiFunction;
 public class NewEntityRecordsService {
     private final NewEntityRecordRepository newEntityRecordRepository;
     private final UserRepository userRepository;
+    private final TimelineRepository timelineRepository;
 
     public NewEntityRecordsService(final NewEntityRecordRepository newEntityRecordRepository,
-                                   final UserRepository userRepository) {
+                                   final UserRepository userRepository,
+                                   final TimelineRepository timelineRepository) {
         this.newEntityRecordRepository = newEntityRecordRepository;
         this.userRepository = userRepository;
+        this.timelineRepository = timelineRepository;
     }
 
     /**
-     * Save current state of new entities.
+     * Save current state of new entities (with optimistic lock).
+     *
+     * @param info information about new entities
+     * @return true if record was updated, false if another call was faster
      */
     @Transactional
     public <P extends WithId<ID>, ID> boolean apply(@NotNull final NewEntitiesInfo<P, ID> info) {
@@ -71,6 +75,18 @@ public class NewEntityRecordsService {
         return getNewEntitiesInfo(name, userId, UserDto.class, this::parseEntityId, itemsCount, itemsSort);
     }
 
+    /**
+     * Get information about new timelines.
+     */
+    @NotNull
+    @Transactional(readOnly = true)
+    public NewEntitiesInfo<TimelineDto, Long> getNewTimelinesInfo(final String name,
+                                                          final long userId,
+                                                          final int itemsCount,
+                                                          @Nullable final Sort itemsSort) {
+        return getNewEntitiesInfo(name, userId, TimelineDto.class, this::parseEntityId, itemsCount, itemsSort);
+    }
+
     @NotNull
     @Transactional(readOnly = true)
     public <P extends WithId<ID>, ID> NewEntitiesInfo<P, ID> getNewEntitiesInfo(final String name,
@@ -79,12 +95,12 @@ public class NewEntityRecordsService {
                                                                                 final BiFunction<Class<P>, String, ID> idParser,
                                                                                 final int itemsCount,
                                                                                 @Nullable final Sort itemsSort) {
-        var userRepository = getRepository(dtoClass);
+        var typeRepository = getRepository(dtoClass);
         final boolean getItems = itemsCount > 0;
         final NewEntityRecordDto record = newEntityRecordRepository.getByNameAndUserId(name, userId);
-        final long totalCount = userRepository.count();
+        final long totalCount = typeRepository.count();
         final boolean hasAnyRecord = totalCount > 0;
-        final ID nextId = hasAnyRecord ? userRepository.maxId() : null;
+        final ID nextId = hasAnyRecord ? typeRepository.maxId() : null;
         final ID lastId;
         if (record != null && StringUtils.isNotBlank(record.getLastId())) {
             if (!dtoClass.getName().equals(record.getFullTypeName())) {
@@ -98,12 +114,12 @@ public class NewEntityRecordsService {
         final List<P> items;
         if (getItems && hasAnyRecord) {
             // get requested number of items from zero id
-            items = lastId != null ? userRepository.findFromId(lastId, itemsCount, itemsSort) :
-                    userRepository.findFromId(idParser.apply(dtoClass, ""), itemsCount, itemsSort);
+            items = lastId != null ? typeRepository.findFromId(lastId, itemsCount, itemsSort) :
+                    typeRepository.findFromId(idParser.apply(dtoClass, ""), itemsCount, itemsSort);
         } else {
             items = Collections.emptyList();
         }
-        final long newCount = lastId != null ? userRepository.getCountFromId(lastId) : totalCount;
+        final long newCount = lastId != null ? typeRepository.getCountFromId(lastId) : totalCount;
         return new NewEntitiesInfo<>(name, userId, newCount, totalCount, record != null ? record.getLastId() : null, nextId, dtoClass, items);
 
     }
@@ -112,12 +128,15 @@ public class NewEntityRecordsService {
         if (UserDto.class.equals(dtoClass)) {
             return (JooqRepository<R, ID, P>) userRepository;
         }
+        if (TimelineDto.class.equals(dtoClass)) {
+            return (JooqRepository<R, ID, P>) timelineRepository;
+        }
 
         throw new IllegalArgumentException("Unsupported dto class: " + dtoClass);
     }
 
     protected <ID, P extends WithId<ID>> ID parseEntityId(final Class<P> dtoClass, final String idStr) {
-        if (UserDto.class.equals(dtoClass)) {
+        if (UserDto.class.equals(dtoClass) || TimelineDto.class.equals(dtoClass)) {
             if (StringUtils.isNotBlank(idStr)) {
                 final Long id = Long.parseLong(idStr);
                 return (ID) id;
