@@ -42,11 +42,6 @@ internal class ControllerFeature : TezrokFeature {
                 addControllerClass(entity, restDir, serviceDir, context)
             }
 
-            addRestHandlerExceptionResolver(
-                applicationPackageRoot.getOrAddJavaDirectory("error"),
-                projectElem.packagePath,
-                context
-            )
             val configDir = applicationPackageRoot.getOrAddJavaDirectory("config")
             context.addFile(configDir, "/templates/spring/WebMvcConfig.java.vm")
             context.addFile(configDir, "/templates/spring/AlternativePathResourceResolver.java.vm")
@@ -55,22 +50,6 @@ internal class ControllerFeature : TezrokFeature {
         }
 
         return true
-    }
-
-    private fun addRestHandlerExceptionResolver(
-        restDir: JavaDirectoryNode,
-        packagePath: String,
-        context: GeneratorContext
-    ) {
-        val fileName = "RestHandlerExceptionResolver.java"
-        if (!restDir.hasClass(fileName)) {
-            val controllerFile = restDir.addJavaFile(fileName)
-            context.writeTemplate(
-                controllerFile,
-                "/templates/spring/RestHandlerExceptionResolver.java.vm",
-                mapOf("package" to packagePath)
-            )
-        }
     }
 
     private fun addControllerClass(

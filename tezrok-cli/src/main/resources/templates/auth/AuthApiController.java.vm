@@ -46,7 +46,7 @@ public class AuthApiController {
     @NotNull
     @GetMapping("/me")
     public UserDto getCurrentUser() {
-        return Optional.ofNullable(currentAuthService.getUserDetails()).map(UserDetailsImpl::getUser).orElseGet(UserDto::new);
+        return Optional.ofNullable(currentAuthService.getUserDetails()).map(UserDetailsImpl::getUser).orElseThrow(UserNotFoundException::new);
     }
 
     @NotNull

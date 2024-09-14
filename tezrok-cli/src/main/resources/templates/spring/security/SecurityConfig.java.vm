@@ -48,6 +48,7 @@ public class SecurityConfig {
         httpSecurity.csrf(p -> p.disable());
         // TODO: properly configure security from input model
         httpSecurity.authorizeHttpRequests(req -> req
+                .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/**").authenticated()
                 .anyRequest().permitAll());
 
