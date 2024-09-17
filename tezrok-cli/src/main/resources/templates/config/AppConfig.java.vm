@@ -91,10 +91,12 @@ public class AppConfig extends AppCustomConfig {
 
     @Override
     protected void show() {
+        log.info("-------------------------------------");
         log.info("Main host: {}", getMainHost());
         log.info("Database url: {}", getDatasourceUrl());
         log.info("Email host: {}", getEmailHost());
         log.info("Activation enabled: {}", isActivationEnabled());
         super.show();
+        log.info("-------------------------------------");
     }
 }
