@@ -52,8 +52,8 @@ internal class AuthFeature : TezrokFeature {
 
             val staticDir = module.source.main.resources.getOrAddDirectory("static")
             context.addFile(staticDir, "/templates/auth/static/style.css")
-            context.addFile(staticDir, "/templates/auth/static/favicon.png")
-            context.addFile(staticDir, "/templates/auth/static/favicon.ico")
+            context.addFile(staticDir, "/templates/auth/static/favicon.png", strategy = StoreStrategy.SAVE_IF_NOT_EXISTS)
+            context.addFile(staticDir, "/templates/auth/static/favicon.ico", strategy = StoreStrategy.SAVE_IF_NOT_EXISTS)
             //context.addFile(staticDir, "/templates/auth/static/service-worker.js") TODO: add service worker
 
             addAppProperties(module, moduleElem)
