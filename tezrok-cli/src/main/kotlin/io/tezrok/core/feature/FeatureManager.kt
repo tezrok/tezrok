@@ -32,6 +32,7 @@ import io.tezrok.spring.SpringSecurityFeature
 import io.tezrok.task.TaskServiceFeature
 import io.tezrok.template.TemplateFeature
 import io.tezrok.util.UtilsFeature
+import io.tezrok.web.UserAgentFeature
 import io.tezrok.web.WebApiFeature
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -56,6 +57,7 @@ internal class FeatureManager {
         features.add(TemplateFeature())
         features.add(EmailFeature())
         features.add(SpringFeature())
+        features.add(UserAgentFeature())
         features.add(SpringSecurityFeature())
         features.add(WebApiFeature())
         features.add(CaptchaFeature())

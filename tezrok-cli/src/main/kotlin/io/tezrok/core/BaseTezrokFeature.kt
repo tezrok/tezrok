@@ -3,6 +3,7 @@ package io.tezrok.core
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.EntityElem
 import io.tezrok.api.input.FieldElem
+import io.tezrok.api.input.MethodProps
 
 abstract class BaseTezrokFeature : TezrokFeature {
     protected fun mergeFields(inheritEntity: EntityElem?, fields: List<FieldElem>): List<FieldElem> {
@@ -34,5 +35,9 @@ abstract class BaseTezrokFeature : TezrokFeature {
             defValue = field.defValue ?: fieldFrom.defValue,
             relation = field.relation ?: fieldFrom.relation
         )
+    }
+
+    protected fun applyAdminRole(inheritProps: MethodProps?): MethodProps {
+        return (inheritProps ?: MethodProps()).copy(roles = inheritProps?.roles ?: listOf("ROLE_ADMIN"))
     }
 }

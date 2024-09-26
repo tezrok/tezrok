@@ -42,6 +42,7 @@ data class ModuleElem(
     val type: ModuleType = ModuleType.Spring,
     val schema: SchemaElem? = null,
     val auth: AuthElem? = null,
+    val userAgent: Boolean? = null,
     val task: TaskElem? = null,
     val dependencies: List<String>? = null,
     val spring: SpringElem? = null,
@@ -60,6 +61,9 @@ data class ModuleElem(
 
     @JsonIgnore
     fun getFinalOrder(): Int = order ?: 100
+
+    @JsonIgnore
+    fun isUserAgent(): Boolean = userAgent == true || userAgent == null && auth != null
 
     override fun toString(): String {
         return "ModuleElem(name='$name')"

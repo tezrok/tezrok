@@ -143,10 +143,6 @@ open class SpringSecurityFeature : BaseTezrokFeature() {
         )
     }
 
-    private fun applyAdminRole(inheritProps: MethodProps?): MethodProps {
-        return (inheritProps ?: MethodProps()).copy(roles = inheritProps?.roles ?: listOf("ROLE_ADMIN"))
-    }
-
     /**
      * Returns standard users in csv format.
      */

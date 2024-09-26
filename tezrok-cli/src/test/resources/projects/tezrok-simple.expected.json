@@ -426,6 +426,119 @@
             ]
           },
           {
+            "name": "UserAgent",
+            "description": "Immutable entity which stores UserAgent",
+            "createdAt": true,
+            "updatedAt": false,
+            "skipService": false,
+            "skipController": false,
+            "fields": [
+              {
+                "name": "id",
+                "type": "Long",
+                "primary": true
+              },
+              {
+                "name": "value",
+                "type": "String",
+                "description": "Value of UserAgent",
+                "required": true,
+                "minLength": 1,
+                "maxLength": 512,
+                "unique": true
+              },
+              {
+                "name": "createdAt",
+                "type": "DateTimeTZ",
+                "description": "Date and time of entity creation",
+                "required": true,
+                "default": "now()",
+                "searchable": false,
+                "metaTypes": [
+                  "CreatedAt"
+                ]
+              }
+            ],
+            "methods": [
+              {
+                "name": "findAll",
+                "description": "Finds all {@link UserAgentDto}s.",
+                "api": true,
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
+              },
+              {
+                "name": "getById",
+                "description": "Gets {@link UserAgentDto} by id.",
+                "api": true,
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
+              },
+              {
+                "name": "getFullUserAgentById",
+                "description": "Gets {@link UserAgentFullDto} by id.",
+                "api": true,
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
+              },
+              {
+                "name": "createFullUserAgent",
+                "description": "Creates {@link UserAgentFullDto}.",
+                "api": true,
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
+              },
+              {
+                "name": "updateFullUserAgent",
+                "description": "Updates existing {@link UserAgentFullDto} by id.",
+                "api": true,
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
+              },
+              {
+                "name": "importFullUserAgent",
+                "description": "Imports {@link UserAgentFullDto}.",
+                "api": true,
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
+              },
+              {
+                "name": "searchUserAgentsByTerm",
+                "description": "Search {@link UserAgentDto} by term (by all string fields).",
+                "api": true,
+                "skipGenerate": true,
+                "roles": [
+                  "ROLE_ADMIN"
+                ]
+              },
+              {
+                "name": "getByValue",
+                "description": "Returns {@link UserAgentDto} by unique field {@link UserAgentDto#value}."
+              },
+              {
+                "name": "getIdByValue",
+                "description": "Returns primary ID of {@link UserAgentDto} by unique field (value)."
+              }
+            ],
+            "stdMethodProps": {
+              "roles": [
+                "ROLE_ADMIN"
+              ]
+            }
+          },
+          {
             "name": "User",
             "description": "User entity",
             "customRepository": true,
@@ -1061,23 +1174,23 @@
               },
               {
                 "name": "getIdFieldsById",
-                "description": "Returns ID fields (id, userId) of {@link UserProfileDto} into custom class."
+                "description": "Returns ID fields (id, userId, userAgentId) of {@link UserProfileDto} into custom class."
               },
               {
                 "name": "getIdFieldsByActivationCode",
-                "description": "Returns ID fields (id, userId) of {@link UserProfileDto} by unique field (activationCode) into custom class."
+                "description": "Returns ID fields (id, userId, userAgentId) of {@link UserProfileDto} by unique field (activationCode) into custom class."
               },
               {
                 "name": "getIdFieldsByPasswordResetCode",
-                "description": "Returns ID fields (id, userId) of {@link UserProfileDto} by unique field (passwordResetCode) into custom class."
+                "description": "Returns ID fields (id, userId, userAgentId) of {@link UserProfileDto} by unique field (passwordResetCode) into custom class."
               },
               {
                 "name": "getIdFieldsByApiKey",
-                "description": "Returns ID fields (id, userId) of {@link UserProfileDto} by unique field (apiKey) into custom class."
+                "description": "Returns ID fields (id, userId, userAgentId) of {@link UserProfileDto} by unique field (apiKey) into custom class."
               },
               {
                 "name": "findIdFieldsByIdIn",
-                "description": "Returns list of ID fields (id, userId) of {@link UserProfileDto} into custom class."
+                "description": "Returns list of ID fields (id, userId, userAgentId) of {@link UserProfileDto} into custom class."
               },
               {
                 "name": "getIdByActivationCode",
