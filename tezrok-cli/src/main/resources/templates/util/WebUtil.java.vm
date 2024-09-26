@@ -1,0 +1,39 @@
+package ${package}.util;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+/**
+ * Utility class for web-related operations.
+ */
+@UtilityClass
+public class WebUtil {
+    @Nullable
+    public static HttpServletRequest getRequest() {
+        if (RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes servletRequestAttributes) {
+            return servletRequestAttributes.getRequest();
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public static String getRemoteIp(@NotNull final HttpServletRequest request) {
+        return getRemoteIp(request, null);
+    }
+
+    @Nullable
+    public static String getRemoteIp(@NotNull final HttpServletRequest request, final String defaultIp) {
+        final String realIp = request.getHeader("X-Forwarded-For");
+        if (StringUtils.isNotEmpty(realIp)) {
+            return realIp;
+        }
+        final String remoteIp = request.getRemoteAddr();
+        return StringUtils.isNotEmpty(remoteIp) ? remoteIp : defaultIp;
+    }
+}

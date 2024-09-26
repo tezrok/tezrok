@@ -12,6 +12,7 @@ internal class UtilsFeature : TezrokFeature {
         if (applicationPackageRoot != null) {
             val utilDir = applicationPackageRoot.getOrAddJavaDirectory("util")
             context.addFile(utilDir, "/templates/util/TimeUtil.java.vm")
+            context.addFile(utilDir, "/templates/util/WebUtil.java.vm")
         }
 
         return true

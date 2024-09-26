@@ -299,7 +299,14 @@ open class SpringSecurityFeature : BaseTezrokFeature() {
                     name = "apiKeyExpireAt",
                     type = "DateTimeTZ",
                     description = "User API key expiration date and time"
-                )
+                ),
+                FieldElem(
+                    name = "remoteIp",
+                    type = "String",
+                    maxLength = IP_KEY_MAX,
+                    description = "User first IP address"
+                ),
+                FieldElem(name = "userAgent", type = "UserAgent", relation = EntityRelation.ManyToOne, description = "User first user agent")
             )
         )
     }
@@ -361,6 +368,7 @@ open class SpringSecurityFeature : BaseTezrokFeature() {
         const val PASSWORD_RESET_CODE_MAX: Int = PASSWORD_RESET_CODE_MIN
         const val API_KEY_MIN: Int = 42
         const val API_KEY_MAX: Int = API_KEY_MIN
+        const val IP_KEY_MAX: Int = 45
         const val USER_PASSWORD_MIN: Int = 5
         const val USER_PASSWORD_MAX: Int = 55
         const val USER_PASSWORD_HASH_MAX: Int = 100

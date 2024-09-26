@@ -1070,6 +1070,26 @@
                 "description": "User API key expiration date and time"
               },
               {
+                "name": "remoteIp",
+                "type": "String",
+                "description": "User first IP address",
+                "maxLength": 45
+              },
+              {
+                "name": "userAgent",
+                "type": "UserAgent",
+                "description": "User first user agent",
+                "logicField": true,
+                "relation": "ManyToOne"
+              },
+              {
+                "name": "userAgentId",
+                "type": "Long",
+                "foreignField": "UserAgent.id",
+                "description": "Synthetic field for \"UserProfile.userAgent\"",
+                "syntheticTo": "UserProfile.userAgent"
+              },
+              {
                 "name": "createdAt",
                 "type": "DateTimeTZ",
                 "description": "Date and time of entity creation",

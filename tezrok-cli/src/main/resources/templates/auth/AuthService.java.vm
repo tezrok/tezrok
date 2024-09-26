@@ -4,6 +4,7 @@ import ${package}.config.AppConfig;
 import ${package}.dto.*;
 import ${package}.dto.api.*;
 import ${package}.repository.*;
+import ${package}.util.WebUtil;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -58,6 +60,8 @@ public class AuthService {
 
     protected final UserProfileRepository userProfileRepository;
 
+    protected final UserAgentRepository userAgentRepository;
+
     protected final EntityGraphStore entityGraphStore;
 
     protected final PasswordEncoder passwordEncoder;
@@ -80,6 +84,7 @@ public class AuthService {
                        final RoleRepository roleRepository,
                        final UserRoleRolesRepository userRoleRolesRepository,
                        final UserProfileRepository userProfileRepository,
+                       final UserAgentRepository userAgentRepository,
                        final EntityGraphStore entityGraphStore,
                        final PasswordEncoder passwordEncoder,
                        final EmailService emailService,
@@ -93,6 +98,7 @@ public class AuthService {
         this.roleRepository = roleRepository;
         this.userRoleRolesRepository = userRoleRolesRepository;
         this.userProfileRepository = userProfileRepository;
+        this.userAgentRepository = userAgentRepository;
         this.entityGraphStore = entityGraphStore;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
@@ -159,12 +165,29 @@ public class AuthService {
             final RoleDto roleDto = Objects.requireNonNull(roleRepository.getByName("USER"), "Role USER not found");
             userRoleRolesRepository.save(new UserRoleRolesDto(userDto.getId(), roleDto.getId()));
 
+            final UserProfileDto userProfile = new UserProfileDto();
+            userProfile.setUserId(userDto.getId());
+            final HttpServletRequest request = WebUtil.getRequest();
+            if (request != null) {
+                final String remoteIp = WebUtil.getRemoteIp(request);
+                final String userAgent = request.getHeader(HttpHeaders.USER_AGENT);
+                if (StringUtils.isNotBlank(remoteIp)) {
+                    userProfile.setRemoteIp(remoteIp);
+                }
+                if (StringUtils.isNotBlank(userAgent)) {
+                    UserAgentDto userAgentRef = userAgentRepository.getByValue(userAgent);
+                    if (userAgentRef == null) {
+                        final UserAgentDto pojo = new UserAgentDto();
+                        pojo.setValue(userAgent);
+                        userAgentRef = userAgentRepository.save(pojo);
+                    }
+                    userProfile.setUserAgentId(userAgentRef.getId());
+                }
+            }
+
             if (appConfig.isActivationEnabled()) {
                 if (!activated) {
-                    final UserProfileDto userProfile = new UserProfileDto();
-                    userProfile.setUserId(userDto.getId());
                     userProfile.setActivationCode(UUID.randomUUID().toString());
-                    userProfileRepository.save(userProfile);
                     emailService.sendActivationLink(userDto, userProfile);
                 } else {
                     log.warn("User activated without email confirmation: {}", userDto.getName());
@@ -172,6 +195,7 @@ public class AuthService {
             } else {
                 log.debug("User registered without email confirmation: {}, activation disabled", userDto.getName());
             }
+            userProfileRepository.save(userProfile);
 
             log.info("User registered: {}, id: {}, email: {}, activated: {}", userDto.getName(), userDto.getId(), userDto.getEmail(), userDto.getActivated());
 
