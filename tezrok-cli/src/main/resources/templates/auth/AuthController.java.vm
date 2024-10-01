@@ -40,7 +40,7 @@ public class AuthController {
 
     @GetMapping("/login")
     public String login(@ModelAttribute("userLogin") final UserLoginDto userDto,
-                        @RequestHeader(HttpHeaders.REFERER) final String referer) {
+                        @RequestHeader(value = HttpHeaders.REFERER, required = false) final String referer) {
         userDto.setRefererUrl(referer);
         return "login";
     }
