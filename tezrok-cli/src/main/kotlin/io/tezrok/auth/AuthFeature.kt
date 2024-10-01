@@ -81,7 +81,7 @@ internal class AuthFeature : TezrokFeature {
             "${moduleName}.re-captcha-secret-key=${'$'}{RECAPTCHA_SECRET_KEY}",
             "${moduleName}.re-captcha-threshold=0.5",
             "${moduleName}.email-host=${'$'}{EMAIL_HOST:localhost}",
-            "${moduleName}.email-from=noreply@arusdev.me",
+            "${moduleName}.email-from=${'$'}{EMAIL_FROM:noreply@localhost}",
             "${moduleName}.email-password=${'$'}{EMAIL_PWD:${moduleName}EmailPwd}"
         )
     }

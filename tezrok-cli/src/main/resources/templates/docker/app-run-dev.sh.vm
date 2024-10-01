@@ -3,6 +3,7 @@
 MODULE_NAME=${moduleName}
 MAIN_HOST=http://localhost:8080
 EMAIL_HOST=smtphost.com
+EMAIL_FROM=noreply@smtphost.com
 echo "Run $MODULE_NAME app..."
 
 pushd "$(dirname "$0")" > /dev/null
@@ -78,6 +79,7 @@ docker run --rm \
     -e "DB_PWD=$DB_PWD" \
     -e "MAIN_HOST=$MAIN_HOST" \
     -e "EMAIL_HOST=$EMAIL_HOST" \
+    -e "EMAIL_FROM=$EMAIL_FROM" \
     -e "EMAIL_PWD=$EMAIL_PWD" \
     -e "RECAPTCHA_SITE_KEY=$RECAPTCHA_SITE_KEY" \
     -e "RECAPTCHA_SECRET_KEY=$RECAPTCHA_SECRET_KEY" \
