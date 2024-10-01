@@ -170,7 +170,7 @@ public class AuthService {
             final HttpServletRequest request = WebUtil.getRequest();
             if (request != null) {
                 final String remoteIp = WebUtil.getRemoteIp(request);
-                final String userAgent = request.getHeader(HttpHeaders.USER_AGENT);
+                final String userAgent = StringUtils.abbreviate(request.getHeader(HttpHeaders.USER_AGENT), "", UserAgentDto.VALUE_MAX_LENGTH);
                 if (StringUtils.isNotBlank(remoteIp)) {
                     userProfile.setRemoteIp(remoteIp);
                 }
