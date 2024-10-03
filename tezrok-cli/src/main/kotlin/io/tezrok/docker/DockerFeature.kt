@@ -31,22 +31,23 @@ internal class DockerFeature : TezrokFeature {
 
         context.addFile(project, "/templates/docker/.dockerignore.vm", values)
         val dockerDir = project.getOrAddDirectory("docker")
-        context.addFile(dockerDir, "/templates/docker/db-run-dev.sh.vm", values)
-        context.addFile(dockerDir, "/templates/docker/db-stop-dev.sh.vm", values)
-        context.addFile(dockerDir, "/templates/docker/db-restart-dev.sh.vm", values)
-        context.addFile(dockerDir, "/templates/docker/app-build-image.sh.vm", values)
-        context.addFile(dockerDir, "/templates/docker/app-run-dev.sh.vm", values)
-        context.addFile(dockerDir, "/templates/docker/app-stop-dev.sh.vm", values)
-        context.addFile(dockerDir, "/templates/docker/app-deploy-common.sh.vm", values)
-        context.addFile(dockerDir, "/templates/docker/app-deploy-dev.sh.vm", values)
-        context.addFile(dockerDir, "/templates/docker/secrets.sh.vm", values)
         context.addFile(dockerDir, "/templates/docker/Dockerfile.vm", values)
+        context.addFile(dockerDir, "/templates/docker/app-build-image.sh.vm", values)
+        context.addFile(dockerDir, "/templates/docker/app-deploy-common.sh.vm", values)
+        val dockerDevDir = dockerDir.getOrAddDirectory("dev")
+        context.addFile(dockerDevDir, "/templates/docker/dev/db-run-dev.sh.vm", values)
+        context.addFile(dockerDevDir, "/templates/docker/dev/db-stop-dev.sh.vm", values)
+        context.addFile(dockerDevDir, "/templates/docker/dev/db-restart-dev.sh.vm", values)
+        context.addFile(dockerDevDir, "/templates/docker/dev/app-run-dev.sh.vm", values)
+        context.addFile(dockerDevDir, "/templates/docker/dev/app-stop-dev.sh.vm", values)
+        context.addFile(dockerDevDir, "/templates/docker/dev/app-deploy-dev.sh.vm", values)
+        context.addFile(dockerDevDir, "/templates/docker/dev/secrets.sh.vm", values)
         properties.setPropertyIfAbsent("test.db.docker.name", dockerDbName)
 
         val customDir = dockerDir.getOrAddDirectory("custom")
         val physicalFile = customDir.getPhysicalPath()?.resolve("dockerenv.sh")
         if (physicalFile == null || !physicalFile.exists()) {
-            context.addFile(customDir, "/templates/docker/dockerenv.sh.vm", values)
+            context.addFile(customDir, "/templates/docker/custom/dockerenv.sh.vm", values)
         }
 
         return true

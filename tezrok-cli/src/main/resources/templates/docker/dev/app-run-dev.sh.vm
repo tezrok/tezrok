@@ -52,7 +52,7 @@ fi
 
 #if ($searchEnabled)
 SEARCH_HOST=$(get_search_host)
-if [ -z "SEARCH_HOST" ]; then
+if [ -z "$SEARCH_HOST" ]; then
     echo "SEARCH_HOST is empty. Exit..."
     exit 1
 fi
