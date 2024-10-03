@@ -13,6 +13,7 @@ internal class UtilsFeature : TezrokFeature {
             val utilDir = applicationPackageRoot.getOrAddJavaDirectory("util")
             context.addFile(utilDir, "/templates/util/TimeUtil.java.vm")
             context.addFile(utilDir, "/templates/util/WebUtil.java.vm")
+            context.addFile(utilDir, "/templates/util/GitProperties.java.vm")
         }
 
         return true

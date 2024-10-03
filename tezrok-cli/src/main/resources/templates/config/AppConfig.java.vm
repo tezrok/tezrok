@@ -1,6 +1,7 @@
 package ${package}.config;
 
 import ${package}.config.custom.AppCustomConfig;
+import ${package}.util.GitProperties;
 import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -96,6 +97,7 @@ public class AppConfig extends AppCustomConfig {
     @Override
     protected void show() {
         log.info("-------------------------------------");
+        log.info("App version: {}", GitProperties.getAppVersion());
         log.info("Main host: {}", getMainHost());
         log.info("Database url: {}", getDatasourceUrl());
         log.info("Email host: {}", getEmailHost());
