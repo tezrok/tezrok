@@ -44,6 +44,36 @@ if [ -z "$DB_HOST" ]; then
     exit 1
 fi
 
+if [ -z "$DB_USER" ]; then
+    echo "$DB_USER is empty. Exit..."
+    exit 1
+fi
+
+if [ -z "$DB_PWD" ]; then
+    echo "$DB_PWD is empty. Exit..."
+    exit 1
+fi
+
+if [ -z "$MAIN_HOST" ]; then
+    echo "$MAIN_HOST is empty. Exit..."
+    exit 1
+fi
+
+if [ -z "$EMAIL_HOST" ]; then
+    echo "$EMAIL_HOST is empty. Exit..."
+    exit 1
+fi
+
+if [ -z "$EMAIL_FROM" ]; then
+    echo "$EMAIL_FROM is empty. Exit..."
+    exit 1
+fi
+
+if [ -z "$EMAIL_PWD" ]; then
+    echo "$EMAIL_PWD is empty. Exit..."
+    exit 1
+fi
+
 #if ($searchEnabled)
 SEARCH_HOST=$(get_search_host)
 if [ -z "$SEARCH_HOST" ]; then
@@ -68,6 +98,7 @@ docker run --rm \
     --name $MODULE_NAME \
     -p 127.0.0.1:8080:8080 \
     -v /etc/$MODULE_NAME/logs:/app/logs \
+    -e "JAVA_OPTS=-Xms1024m -Xmx4096m" \
     -e "DB_HOST=$DB_HOST" \
     -e "DB_USER=$DB_USER" \
     -e "DB_PWD=$DB_PWD" \

@@ -3,4 +3,6 @@ RUN mkdir -p /app/logs
 COPY ./${moduleNameOriginal}/target/${moduleName}.jar /app/app.jar
 EXPOSE 8080
 WORKDIR /app
-CMD "java" "-jar" "app.jar" --server.port=8080
+
+ENV JAVA_OPTS="-Xms512m -Xmx1024m"
+CMD ["sh", "-c", "java $JAVA_OPTS -jar app.jar --server.port=8080"]

@@ -73,7 +73,8 @@ fi
 docker run --rm \
     --name $MODULE_NAME \
     -p 127.0.0.1:8080:8080 \
-    -v /etc/$MODULE_NAME/logs:/app/logs \
+    -v /etc/$MODULE_NAME-dev/logs:/app/logs \
+    -e "JAVA_OPTS=-Xms512m -Xmx1024m" \
     -e "DB_HOST=$DB_HOST" \
     -e "DB_USER=$DB_USER" \
     -e "DB_PWD=$DB_PWD" \
