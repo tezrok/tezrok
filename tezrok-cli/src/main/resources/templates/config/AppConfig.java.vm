@@ -5,10 +5,14 @@ import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+import java.util.List;
 import java.util.Objects;
 
 @Slf4j
@@ -97,6 +101,25 @@ public class AppConfig extends AppCustomConfig {
         log.info("Email host: {}", getEmailHost());
         log.info("Activation enabled: {}", isActivationEnabled());
         super.show();
+        showJvmFlags();
         log.info("-------------------------------------");
     }
+
+    protected void showJvmFlags() {
+        final RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
+        final List<String> inputArguments = runtimeMXBean.getInputArguments();
+        log.info("JVM Flags:");
+        for (String arg : inputArguments) {
+            log.info(arg);
+        }
+
+        // Get specific memory-related information
+        final long maxHeapSize = Runtime.getRuntime().maxMemory();
+        final long initialHeapSize = Runtime.getRuntime().totalMemory();
+
+        log.info("Memory Information:");
+        log.info("Max Heap Size: " + FileUtils.byteCountToDisplaySize(maxHeapSize));
+        log.info("Initial Heap Size: " + FileUtils.byteCountToDisplaySize(initialHeapSize));
+    }
+
 }
