@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+
+MODULE_NAME=${moduleName}
+MAIN_HOST=http://localhost:8080
+EMAIL_HOST=smtphost.com
+EMAIL_FROM=noreply@smtphost.com
+echo "Run $MODULE_NAME app..."
+
+pushd "$(dirname "$0")" > /dev/null
+
+# Load secrets from
+if [ -f "secrets.sh" ]; then
+    echo "File secrets.sh exists. Sourcing it..."
+    source secrets.sh
+fi
+
+docker_container_exists() {
+    docker ps -a --format '{{.Names}}' | grep -q "^$1\$" && echo "true"
+}
+
+get_db_host() {
+  if [ "$(docker_container_exists ${dockerDbName})" == "true" ]; then
+    docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${dockerDbName} || echo ""
+  else
+    echo ""
+  fi
+}
+
+#if ($searchEnabled)
+get_search_host() {
+  if [ "$(docker_container_exists ${moduleName}-search)" == "true" ]; then
+    docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${moduleName}-search || echo ""
+  else
+    echo ""
+  fi
+}
+#end
+
+DB_HOST=$(get_db_host)
+echo "DB_HOST=$DB_HOST"
+
+if [ -z "$DB_HOST" ]; then
+    echo "DB_HOST is empty. Exit..."
+    exit 1
+fi
+
+#if ($searchEnabled)
+SEARCH_HOST=$(get_search_host)
+if [ -z "$SEARCH_HOST" ]; then
+    echo "SEARCH_HOST is empty. Exit..."
+    exit 1
+fi
+echo "SEARCH_HOST=$SEARCH_HOST"
+#end
+
+DB_USER=${dbUserName}
+DB_PWD=${dbUserPassword}
+
+# check if container exists and remove it
+if [ "$(docker_container_exists $MODULE_NAME)" == "true" ]; then
+    echo "Container '$MODULE_NAME' exists. Stop and remove it"
+    docker stop $MODULE_NAME
+    docker rm $MODULE_NAME
+fi
+
+# run new container
+docker run --rm \
+    --name $MODULE_NAME \
+    -p 127.0.0.1:8080:8080 \
+    -v /etc/$MODULE_NAME/logs:/app/logs \
+    -e "DB_HOST=$DB_HOST" \
+    -e "DB_USER=$DB_USER" \
+    -e "DB_PWD=$DB_PWD" \
+    -e "MAIN_HOST=$MAIN_HOST" \
+    -e "EMAIL_HOST=$EMAIL_HOST" \
+    -e "EMAIL_FROM=$EMAIL_FROM" \
+    -e "EMAIL_PWD=$EMAIL_PWD" \
+    -e "RECAPTCHA_SITE_KEY=$RECAPTCHA_SITE_KEY" \
+    -e "RECAPTCHA_SECRET_KEY=$RECAPTCHA_SECRET_KEY" \
+#if ($searchEnabled)
+    -e "SEARCH_HOST=$SEARCH_HOST" \
+#end
+    -d ${projectName}/$MODULE_NAME
+
+# Restore the old current directory
+popd > /dev/null

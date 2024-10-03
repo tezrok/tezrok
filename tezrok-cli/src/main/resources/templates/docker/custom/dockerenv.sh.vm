@@ -3,3 +3,5 @@
 # This script is used to set environment variables for the docker containers
 export REMOTE_IP_DEV=
 export REMOTE_USER_DEV=
+export REMOTE_IP_PROD=
+export REMOTE_USER_PROD=

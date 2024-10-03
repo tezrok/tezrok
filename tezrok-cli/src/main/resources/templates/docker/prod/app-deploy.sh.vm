@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+# Script to deploy the docker image to the remote server
+source ./docker/custom/dockerenv.sh
+
+./docker/app-deploy-common.sh ${moduleName} $REMOTE_IP_PROD $REMOTE_USER_PROD
+
+# copy scripts to the remote server
+echo "Copy scripts to the remote server..."
+ssh $REMOTE_USER_PROD@$REMOTE_IP_PROD "mkdir -p /home/${moduleName}"
+scp ./docker/prod/app-run.sh $REMOTE_USER_PROD@$REMOTE_IP_PROD:/home/${moduleName}/app-run.sh
+scp ./docker/prod/app-stop.sh $REMOTE_USER_PROD@$REMOTE_IP_PROD:/home/${moduleName}/app-stop.sh
+scp ./docker/prod/db-stop.sh $REMOTE_USER_PROD@$REMOTE_IP_PROD:/home/${moduleName}/db-stop.sh
+scp ./docker/prod/db-run.sh $REMOTE_USER_PROD@$REMOTE_IP_PROD:/home/${moduleName}/db-run.sh
+scp ./docker/prod/db-restart.sh $REMOTE_USER_PROD@$REMOTE_IP_PROD:/home/${moduleName}/db-restart.sh
+#if ($searchEnabled)
+scp ./docker/prod/search-run.sh $REMOTE_USER_PROD@$REMOTE_IP_PROD:/home/${moduleName}/search-run.sh
+#end
+
+# copy secrets if not exist yet
+rsync -av --ignore-existing ./docker/prod/secrets.sh $REMOTE_USER_PROD@$REMOTE_IP_PROD:/home/${moduleName}/secrets.sh
+
+echo "Done"

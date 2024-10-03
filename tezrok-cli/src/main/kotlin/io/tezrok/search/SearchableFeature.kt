@@ -45,6 +45,11 @@ internal class SearchableFeature : TezrokFeature {
                 "moduleName" to module.getName().toHyphenName(),
             )
             context.addFile(dockerDevDir, "/templates/search/dev/search-run-dev.sh.vm", values)
+            val dockerProdDir = dockerDir.getOrAddDirectory("prod")
+            val prodValues = mapOf(
+                "moduleName" to module.getName().toHyphenName(),
+            )
+            context.addFile(dockerProdDir, "/templates/search/prod/search-run.sh.vm", prodValues)
 
             // add search DTOs
             if (entities.any { it.isSearchable() }) {
