@@ -75,6 +75,7 @@ docker run --rm \
     -p 127.0.0.1:8080:8080 \
     -v /etc/$MODULE_NAME-dev/logs:/app/logs \
     -e "JAVA_OPTS=-Xms512m -Xmx1024m" \
+    -e "SPRING_PROFILES_ACTIVE=dev" \
     -e "DB_HOST=$DB_HOST" \
     -e "DB_USER=$DB_USER" \
     -e "DB_PWD=$DB_PWD" \

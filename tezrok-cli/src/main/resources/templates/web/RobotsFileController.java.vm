@@ -1,27 +1,25 @@
 package ${package}.web;
 
 
-import org.springframework.core.env.Environment;
+import ${package}.config.AppConfig;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-
-import java.util.stream.Stream;
 
 /**
  * Supports file robots.txt depending on active release.
  */
 @Controller
 public class RobotsFileController {
-    private final Environment environment;
+    private final AppConfig appConfig;
 
-    public RobotsFileController(Environment environment) {
-        this.environment = environment;
+    public RobotsFileController(final AppConfig appConfig) {
+        this.appConfig = appConfig;
     }
+
 
     @GetMapping(value = "/robots.txt", produces = MediaType.TEXT_PLAIN_VALUE)
     public String robots() {
-        final String profile = Stream.of(environment.getActiveProfiles()).findFirst().orElse("dev");
-        return "robots-" + profile + ".txt";
+        return "robots-" + appConfig.firstActiveProfile() + ".txt";
     }
 }
