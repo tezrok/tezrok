@@ -53,7 +53,9 @@ data class ModuleElem(
     // properties should be sorted by key, so we use TreeMap
     val properties: MutableMap<String, String?> = TreeMap(),
     // used to sort modules in project, default is 100
-    val order: Int? = null
+    val order: Int? = null,
+    // if true, then file robots.txt will be created (by default is true)
+    val robots: Boolean? = null
 ) {
 
     @JsonIgnore
@@ -61,6 +63,9 @@ data class ModuleElem(
 
     @JsonIgnore
     fun getFinalOrder(): Int = order ?: 100
+
+    @JsonIgnore
+    fun hasRobotsFile(): Boolean = robots == true || robots == null
 
     @JsonIgnore
     fun isUserAgent(): Boolean = userAgent == true || userAgent == null && auth != null

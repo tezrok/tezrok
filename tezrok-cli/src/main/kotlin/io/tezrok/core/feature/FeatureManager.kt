@@ -32,6 +32,7 @@ import io.tezrok.spring.SpringSecurityFeature
 import io.tezrok.task.TaskServiceFeature
 import io.tezrok.template.TemplateFeature
 import io.tezrok.util.UtilsFeature
+import io.tezrok.web.RobotsFileFeature
 import io.tezrok.web.UserAgentFeature
 import io.tezrok.web.WebApiFeature
 import org.slf4j.Logger
@@ -77,6 +78,7 @@ internal class FeatureManager {
         features.add(LoggingFeature())
         features.add(AdminFeature())
         features.add(NewEntityRecordsFeature())
+        features.add(RobotsFileFeature())
     }
 
     fun applyAll(project: ProjectNode, context: GeneratorContext) {
