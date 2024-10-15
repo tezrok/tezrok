@@ -42,6 +42,7 @@ internal class DockerFeature : TezrokFeature {
         context.addFile(dockerDevDir, "/templates/docker/dev/app-stop-dev.sh.vm", testValues)
         context.addFile(dockerDevDir, "/templates/docker/dev/app-deploy-dev.sh.vm", testValues)
         context.addFile(dockerDevDir, "/templates/docker/dev/secrets.sh.vm", testValues)
+        context.addFile(dockerDevDir, "/templates/docker/dev/variables.env")
         properties.setPropertyIfAbsent("test.db.docker.name", dockerTestDbName)
 
         val dockerProdDbName = "$moduleName-db"
@@ -64,6 +65,7 @@ internal class DockerFeature : TezrokFeature {
         context.addFile(dockerProdDir, "/templates/docker/prod/app-stop.sh.vm", prodValues)
         context.addFile(dockerProdDir, "/templates/docker/prod/app-deploy.sh.vm", prodValues)
         context.addFile(dockerProdDir, "/templates/docker/prod/secrets.sh.vm", prodValues)
+        context.addFile(dockerProdDir, "/templates/docker/dev/variables.env")
         properties.setPropertyIfAbsent("prod.db.docker.name", dockerProdDbName)
 
         val customDir = dockerDir.getOrAddDirectory("custom")

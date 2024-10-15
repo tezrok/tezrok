@@ -16,8 +16,10 @@ scp ./docker/dev/db-restart-dev.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${modul
 #if ($searchEnabled)
 scp ./docker/dev/search-run-dev.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/search-run-dev.sh
 #end
+scp ./docker/dev/compose.yml $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/compose.yml
 
 # copy secrets if not exist yet
 rsync -av --ignore-existing ./docker/dev/secrets.sh $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/secrets.sh
+rsync -av --ignore-existing ./docker/dev/variables.env $REMOTE_USER_DEV@$REMOTE_IP_DEV:/home/${moduleName}/variables.env
 
 echo "Done"
