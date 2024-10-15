@@ -126,7 +126,14 @@ public class AuthService {
         Validate.notBlank(user.getPassword(), "User password is required");
 
         if (SYSTEM_USERS.contains(user.getUsername().trim().toLowerCase())) {
+            log.warn("User registration failed ({}), reserved name", user.getUsername());
             return LoginApiResult.errorUserAlreadyExists(user.getUsername());
+        }
+
+        final Set<String> allowedEMails = appConfig.finalAllowedEMails();
+        if (!allowedEMails.isEmpty() && !allowedEMails.contains(user.getEmail())) {
+            log.warn("User registration failed ({}), email not allowed: {}", user.getUsername(), user.getEmail());
+            return LoginApiResult.error(user.getUsername(), "Registration not allowed" );
         }
 
         if (appConfig.isReCaptchaInRegisterEnable()) {
