@@ -1,6 +1,7 @@
 package $package;
 
 import com.zaxxer.hikari.HikariDataSource;
+import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DataSourceConnectionProvider;
@@ -38,6 +39,10 @@ public class JooqConfiguration {
         dataSource.setUsername(environment.getRequiredProperty("spring.datasource.username"));
         dataSource.setPassword(environment.getRequiredProperty("spring.datasource.password"));
         dataSource.setDriverClassName(environment.getRequiredProperty("spring.datasource.driver-class-name"));
+
+        Validate.notBlank(dataSource.getJdbcUrl(), "Database URL is not set");
+        Validate.notBlank(dataSource.getUsername(), "Database username is not set");
+        Validate.notBlank(dataSource.getPassword(), "Database password is not set");
 
         return dataSource;
     }
