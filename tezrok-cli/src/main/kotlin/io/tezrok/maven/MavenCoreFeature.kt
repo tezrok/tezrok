@@ -29,8 +29,8 @@ internal class MavenCoreFeature : TezrokFeature {
 
         // add default properties
         pomFile.addProperty("commons-lang3.version", "3.14.0")
-        pomFile.addProperty("logback.version", "1.5.3")
-        pomFile.addProperty("slf4j-api.version", "2.0.12")
+        pomFile.addProperty("logback.version", "1.5.11")
+        pomFile.addProperty("slf4j-api.version", "2.0.16")
         pomFile.addProperty("junit.version", "5.10.2")
         pomFile.addProperty("lombok.version", "1.18.30")
 

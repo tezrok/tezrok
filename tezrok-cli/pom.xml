@@ -16,11 +16,11 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <junit.version>5.10.2</junit.version>
-        <logback.version>1.5.3</logback.version>
+        <logback.version>1.5.11</logback.version>
         <kotlin.version>1.9.23</kotlin.version>
         <jackson.version>2.16.2</jackson.version>
-        <slf4j-api.version>2.0.12</slf4j-api.version>
-        <spring-boot.version>3.2.3</spring-boot.version>
+        <slf4j-api.version>2.0.16</slf4j-api.version>
+        <spring-boot.version>3.3.4</spring-boot.version>
         <spring.version>6.1.4</spring.version>
         <jooq.version>3.19.6</jooq.version>
     </properties>
