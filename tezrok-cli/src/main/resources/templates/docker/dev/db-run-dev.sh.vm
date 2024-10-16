@@ -13,4 +13,4 @@ docker run --name ${dockerDbName} --rm -p 5432:5432 \
   -e POSTGRES_USER=${dbUserName} \
   -e POSTGRES_PASSWORD=${dbUserPassword} \
   -v $DB_DATA_DIR:/var/lib/postgresql/data \
-  -d postgres:15.2
+  -d postgres:16.4

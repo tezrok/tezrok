@@ -22,7 +22,7 @@ internal class JooqFeature : TezrokFeature {
         // update pom
         val pomFile = module.pom
         pomFile.addDependency("org.springframework.boot:spring-boot-starter-jooq:${'$'}{spring-boot.version}")
-        pomFile.addDependency("org.postgresql:postgresql:42.6.0")
+        pomFile.addDependency("org.postgresql:postgresql:42.7.4")
         pomFile.addDependency("org.jooq:jooq:${'$'}{jooq.version}")
         pomFile.addDependency("org.jooq:jooq:${'$'}{jooq.version}")
         pomFile.addDependency("org.testcontainers:postgresql:${'$'}{testcontainers.version}:test")
@@ -154,7 +154,7 @@ internal class JooqFeature : TezrokFeature {
 
     private companion object {
         // TODO: get version from configuration
-        const val POSTGRESQL_VER = "15.2"
+        const val POSTGRESQL_VER = "16.4"
         val log = LoggerFactory.getLogger(JooqFeature::class.java)!!
     }
 }
