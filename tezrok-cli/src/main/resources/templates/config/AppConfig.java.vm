@@ -8,6 +8,7 @@ import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -17,7 +18,6 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -118,12 +118,12 @@ public class AppConfig extends AppCustomConfig {
     protected void validate() {
         show();
 
-        Objects.requireNonNull(mainHost, "mainHost is required");
-        Objects.requireNonNull(emailFrom, "emailFrom is required");
-        Objects.requireNonNull(emailHost, "emailHost is required");
-        Objects.requireNonNull(emailPassword, "emailPassword is required");
-        Objects.requireNonNull(rememberMeKey, "rememberMeKey is required");
-        Objects.requireNonNull(adminPassword, "adminPassword is required");
+        Validate.notBlank(mainHost, "mainHost is required");
+        Validate.notBlank(emailFrom, "emailFrom is required");
+        Validate.notBlank(emailHost, "emailHost is required");
+        Validate.notBlank(emailPassword, "emailPassword is required");
+        Validate.notBlank(rememberMeKey, "rememberMeKey is required");
+        Validate.notBlank(adminPassword, "adminPassword is required");
         super.validate();
     }
 
@@ -154,8 +154,8 @@ public class AppConfig extends AppCustomConfig {
         final long initialHeapSize = Runtime.getRuntime().totalMemory();
 
         log.info("Memory Information:");
-        log.info("Max Heap Size: " + FileUtils.byteCountToDisplaySize(maxHeapSize));
-        log.info("Initial Heap Size: " + FileUtils.byteCountToDisplaySize(initialHeapSize));
+        log.info("Max Heap Size: {}", FileUtils.byteCountToDisplaySize(maxHeapSize));
+        log.info("Initial Heap Size: {}", FileUtils.byteCountToDisplaySize(initialHeapSize));
     }
 
 }
