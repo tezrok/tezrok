@@ -284,6 +284,8 @@ data class FieldElem(
     val uniqueGroup: String? = null,
     @JsonProperty("default")
     val defValue: String? = null,
+    // if true then create index for this field (B-tree index by default)
+    val index: Boolean? = null,
     // if true then field is not stored in database, mostly used for object fields
     val logicField: Boolean? = null,
     // true if field is synthetic and contains reference to another entity
@@ -335,6 +337,12 @@ data class FieldElem(
 
     @JsonIgnore
     fun isSearchable(): Boolean = searchable == true
+
+    @JsonIgnore
+    fun isUnique(): Boolean = unique == true
+
+    @JsonIgnore
+    fun hasIndex(): Boolean = index == true
 
     @JsonIgnore
     fun hasUniqueGroup(): Boolean = uniqueGroup != null

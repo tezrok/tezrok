@@ -53,6 +53,20 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
             }
         }
 
+        val indexedFields = getIndexedField(entities)
+        if (indexedFields.isNotEmpty()) {
+            addNewline(sb)
+            sb.append("-- indexes")
+            addNewline(sb)
+            indexedFields.forEach { (entity, field) ->
+                val tableName = toTableName(entity.name)
+                val columnName = toColumnName(field.name)
+                val indexName = "idx_${tableName}_${columnName}"
+                sb.append("CREATE INDEX $indexName ON ${schemaName}.${tableName} ($columnName);")
+                addNewline(sb)
+            }
+        }
+
         if (comments.isNotEmpty()) {
             addNewline(sb)
             sb.append("-- comments")
@@ -271,6 +285,19 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         }
 
         return foreignKeys
+    }
+
+    private fun getIndexedField(entities: List<EntityElem>): List<Pair<EntityElem, FieldElem>> {
+        val result = mutableListOf<Pair<EntityElem, FieldElem>>()
+
+        entities.forEach { entity ->
+            entity.fields.filter { it.hasIndex() && it.isNotLogic() }
+                .forEach { field ->
+                    result.add(entity to field)
+                }
+        }
+
+        return result
     }
 
     /**
