@@ -13,6 +13,7 @@ import java.util.Collection;
 @Data
 public class UserDetailsImpl implements UserDetails {
 
+    @NotNull
     private final UserDto user;
 
     private final Collection<? extends GrantedAuthority> roles;

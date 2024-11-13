@@ -57,6 +57,17 @@ public class CurrentAuthService {
      * @return the currently authenticated user or {@code null} if no authentication information is available
      */
     @Nullable
+    public UserDto getUser() {
+        final UserDetailsImpl userDetails = getUserDetails();
+        return userDetails != null ? userDetails.getUser() : null;
+    }
+
+    /**
+     * Returns the currently authenticated user. details
+     *
+     * @return the currently authenticated user details or {@code null} if no authentication information is available
+     */
+    @Nullable
     public UserDetailsImpl getUserDetails() {
         final Authentication authentication = getAuthentication();
         final Object principal = authentication != null ? authentication.getPrincipal() : null;
