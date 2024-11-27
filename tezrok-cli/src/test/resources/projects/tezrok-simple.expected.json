@@ -698,6 +698,14 @@
                 "description": "Returns {@link UserDto} by name or email."
               },
               {
+                "name": "getByNameIgnoreCase",
+                "description": "Returns {@link UserDto} by name."
+              },
+              {
+                "name": "getByEmailIgnoreCase",
+                "description": "Returns {@link UserDto} by email."
+              },
+              {
                 "name": "getByName",
                 "description": "Returns {@link UserDto} by unique field {@link UserDto#name}."
               },

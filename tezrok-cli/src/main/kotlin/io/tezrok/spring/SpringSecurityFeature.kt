@@ -75,6 +75,12 @@ open class SpringSecurityFeature : BaseTezrokFeature() {
             methods = inheritMethods + MethodElem(
                 "getByNameIgnoreCaseOrEmailIgnoreCase",
                 "Returns {@link ${NAME_USER}Dto} by name or email."
+            ) + MethodElem(
+                "getByNameIgnoreCase",
+                "Returns {@link ${NAME_USER}Dto} by name."
+            ) + MethodElem(
+                "getByEmailIgnoreCase",
+                "Returns {@link ${NAME_USER}Dto} by email."
             ),
             stdMethodProps = applyAdminRole(inheritEntity?.stdMethodProps),
             fields = createUserFields(inheritEntity),
@@ -306,7 +312,12 @@ open class SpringSecurityFeature : BaseTezrokFeature() {
                     maxLength = IP_KEY_MAX,
                     description = "User first IP address"
                 ),
-                FieldElem(name = "userAgent", type = "UserAgent", relation = EntityRelation.ManyToOne, description = "User first user agent")
+                FieldElem(
+                    name = "userAgent",
+                    type = "UserAgent",
+                    relation = EntityRelation.ManyToOne,
+                    description = "User first user agent"
+                )
             )
         )
     }
