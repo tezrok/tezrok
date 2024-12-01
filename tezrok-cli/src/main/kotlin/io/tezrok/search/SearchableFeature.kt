@@ -84,7 +84,7 @@ internal class SearchableFeature : TezrokFeature {
             val esEntityName = entity.name.camelCaseToLowerSnakeCase()
             val indexName = entity.searchEntity?.indexName ?: "${esEntityName}s"
             val dtoClass = dtoDir.addClass(entityName)
-                .setJavadocComment("Search DTO for {@link SubjectDto}.")
+                .setJavadocComment("Search DTO for {@link ${entity.name}Dto}.")
                 .addImport(FieldType::class.java)
                 .addAnnotation(Data::class.java)
                 .addAnnotation(TypeAlias::class.java, esEntityName)
