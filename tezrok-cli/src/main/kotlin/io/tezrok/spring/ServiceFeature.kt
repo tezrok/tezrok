@@ -151,7 +151,7 @@ open class ServiceFeature : TezrokFeature {
 
     private fun isMethodReadOnly(name: String) = name.let {
         it.startsWith("get") && !it.startsWith("getOrCreate") || it.startsWith("find") || it.startsWith("count")
-                || it.startsWith("exists") || it.startsWith("search") || it.startsWith("list")
+                || it.startsWith("exists") || it.startsWith("search") || it.startsWith("list") || it.startsWith("max")
     }
 
     private fun replaceType(typeName: String, entityName: String, primaryFields: List<String>): String {
