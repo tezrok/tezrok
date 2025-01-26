@@ -708,16 +708,27 @@ internal class JooqRepositoryFeature : TezrokFeature {
     }
 
     private fun processEntity(entity: EntityElem): EntityElem {
+        val alreadyProcessedFields = mutableSetOf<FieldElem>()
         // add custom methods for unique fields
-        val uniqueFields = entity.fields.filter { it.isUnique() }
-        if (uniqueFields.isNotEmpty()) {
+        val uniqueFields = entity.fields.filter { it.isUnique() && it.isNotLogic() }
+        val finalEntity = if (uniqueFields.isNotEmpty()) {
+            alreadyProcessedFields.addAll(uniqueFields)
             val methodComments =
-                uniqueFields.map { "getBy${it.name.capitalize()}" to "Returns {@link ${entity.name}Dto} by unique field {@link ${entity.name}Dto#${it.name}}." }
+                uniqueFields.map { "getBy${it.name.upperFirst()}" to "Returns {@link ${entity.name}Dto} by unique field {@link ${entity.name}Dto#${it.name}}." }
                     .toTypedArray()
-            return entity.withMethods(*methodComments)
+            entity.withMethods(*methodComments)
+        } else {
+            entity
         }
-
-        return entity
+        val indexFields = entity.fields.filter { it.hasIndex() && it.isNotLogic() }
+        return if (indexFields.isNotEmpty()) {
+            val methodComments = indexFields.filter { field -> field !in alreadyProcessedFields }
+                .map { "findBy${it.name.upperFirst()}" to "Returns list of {@link ${entity.name}Dto} by indexed field {@link ${entity.name}Dto#${it.name}}." }
+                .toTypedArray()
+            finalEntity.withMethods(*methodComments)
+        } else {
+            finalEntity
+        }
     }
 
     private fun FieldElem.maxSizeConstantName() = this.name.camelCaseToSnakeCase().uppercase() + "_MAX_LENGTH"
