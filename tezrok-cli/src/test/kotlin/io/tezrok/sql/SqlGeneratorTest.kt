@@ -37,7 +37,7 @@ internal class SqlGeneratorTest : BaseTest() {
         )
         val schema = projectElemRepository.schemaFromJson(jsonSchema, inheritSchema = inheritSchema).copy(schemaName = "tst1")
 
-        assertTrue(schema.entities!!.first().fields.first { it.name == "stateId" }.unique == true)
+        assertTrue(schema.entities!!.first().fields.first { it.name == "stateId" }.isUnique())
 
         val actualSql = sqlGenerator.generate(schema, generatorContext)
 

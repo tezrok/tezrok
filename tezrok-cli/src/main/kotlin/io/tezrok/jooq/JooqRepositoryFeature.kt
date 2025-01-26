@@ -709,7 +709,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
 
     private fun processEntity(entity: EntityElem): EntityElem {
         // add custom methods for unique fields
-        val uniqueFields = entity.fields.filter { it.unique == true }
+        val uniqueFields = entity.fields.filter { it.isUnique() }
         if (uniqueFields.isNotEmpty()) {
             val methodComments =
                 uniqueFields.map { "getBy${it.name.capitalize()}" to "Returns {@link ${entity.name}Dto} by unique field {@link ${entity.name}Dto#${it.name}}." }

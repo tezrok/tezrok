@@ -213,7 +213,7 @@ class CoreSqlGenerator(private val intent: String = "  ") : SqlGenerator {
         if (field.isPrimary() && singlePrimary) {
             // for composite primary key, primary key is added at the end of the table
             sb.append(" PRIMARY KEY")
-        } else if (field.unique == true) {
+        } else if (field.isUnique()) {
             sb.append(" UNIQUE")
         }
         if (field.defValue?.isNotBlank() == true) {

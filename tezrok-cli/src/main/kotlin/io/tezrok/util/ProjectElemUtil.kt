@@ -72,7 +72,7 @@ fun EntityElem.getPrimaryFieldType(tryPrimitive: Boolean = false): String = getP
 /**
  * Returns non-synthetic unique fields
  */
-fun EntityElem.getUniqueFields(): List<FieldElem> = fields.filter { it.unique == true && it.isNotSynthetic() }
+fun EntityElem.getUniqueFields(): List<FieldElem> = fields.filter { it.isUnique() && it.isNotSynthetic() }
 
 fun EntityElem.getUniqueGroups(logic: Boolean): Map<String, List<FieldElem>> =
     fields.filter { it.hasUniqueGroup() }
@@ -109,7 +109,7 @@ fun EntityElem.getGetIdFieldsByPrimaryId(): String {
  * Make method name to `getIdFieldsByUniqueName(String name, Class<T> type)`
  */
 fun EntityElem.getGetIdFieldsByUniqueField(field: FieldElem): String {
-    check(field.unique == true) { "Field ${field.name} is not unique" }
+    check(field.isUnique()) { "Field ${field.name} is not unique" }
     check(getUniqueFields().contains(field)) { "Field ${field.name} is not found in entity $name" }
 
     return "getIdFieldsBy${field.name.upperFirst()}"
@@ -119,7 +119,7 @@ fun EntityElem.getGetIdFieldsByUniqueField(field: FieldElem): String {
  * Make method name to `getPrimaryIdFieldByUniqueName(String name)`
  */
 fun EntityElem.getGetPrimaryIdFieldByUniqueField(field: FieldElem): String {
-    check(field.unique == true) { "Field ${field.name} is not unique" }
+    check(field.isUnique()) { "Field ${field.name} is not unique" }
     check(getUniqueFields().contains(field)) { "Field ${field.name} is not found in entity $name" }
 
     return "get${getPrimaryField().name.upperFirst()}By${field.name.upperFirst()}"
