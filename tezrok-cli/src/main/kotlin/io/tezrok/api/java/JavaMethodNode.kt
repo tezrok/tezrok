@@ -8,10 +8,12 @@ import com.github.javaparser.ast.expr.*
 import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.ast.stmt.ReturnStmt
 import com.github.javaparser.ast.stmt.Statement
+import com.github.javaparser.ast.type.ReferenceType
 import com.github.javaparser.ast.type.Type
 import com.github.javaparser.ast.type.TypeParameter
 import io.tezrok.util.addImportsByType
-import org.springframework.web.bind.annotation.RequestMethod
+import org.jetbrains.annotations.NotNull
+import org.jetbrains.annotations.Nullable
 
 /**
  * Node that represents a Java method
@@ -53,7 +55,8 @@ open class JavaMethodNode(private val method: MethodDeclaration, private val par
     fun getParameters(): List<JavaMethodParameter> = method.parameters.map { JavaMethodParameter(it, this) }
 
     fun getLastParameter(): JavaMethodParameter {
-        return method.parameters.lastOrNull()?.let { JavaMethodParameter(it, this) } ?: error("Method has no parameters")
+        return method.parameters.lastOrNull()?.let { JavaMethodParameter(it, this) }
+            ?: error("Method has no parameters")
     }
 
     fun setReturnType(typeName: String): JavaMethodNode {
@@ -140,7 +143,14 @@ open class JavaMethodNode(private val method: MethodDeclaration, private val par
         return this
     }
 
-    fun addAnnotation(annotationExpr: NormalAnnotationExpr): JavaMethodNode {
+    fun addAnnotation(annotationExpr: AnnotationExpr): JavaMethodNode {
+        val nameAsString = annotationExpr.nameAsString
+        if (nameAsString == "Nullable") {
+            parent.addImport(Nullable::class.java)
+        }
+        if (nameAsString == "NotNull") {
+            parent.addImport(NotNull::class.java)
+        }
         method.addAnnotation(annotationExpr)
         return this
     }
@@ -231,6 +241,20 @@ open class JavaMethodNode(private val method: MethodDeclaration, private val par
     fun setDefault(isDefault: Boolean): JavaMethodNode {
         method.setDefault(isDefault)
         return this
+    }
+
+    fun addThrownException(exceptionType: ReferenceType) {
+        addImportByType(exceptionType)
+        method.addThrownException(exceptionType)
+    }
+
+    fun addImportByType(typeNode: Type) {
+        typeNode.findCompilationUnit().ifPresent { compilationUnit ->
+            val exceptionName = "." + typeNode.asString()
+            compilationUnit.imports.map { it.nameAsString }.filter { it.endsWith(exceptionName) }.forEach {
+                parent.addImport(it)
+            }
+        }
     }
 }
 

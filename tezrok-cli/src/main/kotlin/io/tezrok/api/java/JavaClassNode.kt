@@ -4,6 +4,7 @@ import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
+import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.comments.JavadocComment
 import com.github.javaparser.ast.expr.*
 import com.github.javaparser.ast.stmt.BlockStmt
@@ -12,6 +13,7 @@ import com.github.javaparser.ast.stmt.ReturnStmt
 import com.github.javaparser.ast.stmt.Statement
 import com.github.javaparser.ast.type.TypeParameter
 import io.tezrok.util.addImportsByType
+import io.tezrok.util.nameWithParams
 import java.util.stream.Stream
 import kotlin.streams.asStream
 
@@ -35,6 +37,11 @@ open class JavaClassNode(private val clazz: ClassOrInterfaceDeclaration, private
     fun getOrAddMethod(name: String): JavaMethodNode = getMethod(name) ?: addMethod(name)
 
     fun hasMethod(name: String): Boolean = clazz.methods.any { it.nameAsString == name }
+
+    fun hasMethod(method: MethodDeclaration): Boolean  {
+        val descriptor = method.nameWithParams()
+        return clazz.methods.any { it -> it.nameWithParams() == descriptor }
+    }
 
     fun getMethods(): Stream<JavaMethodNode> = clazz.methods.asSequence().map { JavaMethodNode(it, this) }.asStream()
 

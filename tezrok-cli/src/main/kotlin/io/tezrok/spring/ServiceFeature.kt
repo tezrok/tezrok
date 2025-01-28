@@ -2,6 +2,7 @@ package io.tezrok.spring
 
 import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.body.MethodDeclaration
+import com.github.javaparser.ast.expr.AnnotationExpr
 import io.tezrok.api.GeneratorContext
 import io.tezrok.api.TezrokFeature
 import io.tezrok.api.input.EntityElem
@@ -197,16 +198,20 @@ open class ServiceFeature : TezrokFeature {
 
                     customClass.findAll(MethodDeclaration::class.java).filter { it.isPublic }.forEach { method ->
                         val methodName = method.nameAsString
-                        if (!serviceClass.hasMethod(methodName)) {
+                        if (!serviceClass.hasMethod(method)) {
                             addedMethods.add(methodName)
                             val newMethod = serviceClass.addMethod(methodName)
                                 .withModifiers(Modifier.Keyword.PUBLIC, Modifier.Keyword.ABSTRACT)
                                 .removeBody()
                                 .setReturnType(method.typeAsString)
+                            method.annotations.filter { allowAnnotationOfCustomMethod(it) }.forEach { annotation ->
+                                newMethod.addAnnotation(annotation)
+                            }
                             method.parameters.forEach { param ->
                                 // TODO: use type as fully qualified name
                                 newMethod.addParameter(param.typeAsString, param.nameAsString)
                             }
+                            method.thrownExceptions.forEach { newMethod.addThrownException(it) }
                         }
                     }
 
@@ -235,6 +240,8 @@ open class ServiceFeature : TezrokFeature {
             }
         }
     }
+
+    private fun allowAnnotationOfCustomMethod(annotation: AnnotationExpr): Boolean = annotation.nameAsString.let { it == "Nullable" || it == "NotNull"}
 
     private fun getCustomFilePath(serviceDir: JavaDirectoryNode, name: String): Path? {
         val servicePhysicalPath = serviceDir.getPhysicalPath()

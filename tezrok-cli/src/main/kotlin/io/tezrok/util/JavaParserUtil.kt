@@ -5,6 +5,7 @@ import com.github.javaparser.ParserConfiguration
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
+import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.AssignExpr
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.expr.NameExpr
@@ -41,6 +42,9 @@ fun Expression.asStatement(): Statement = ExpressionStmt(this)
 fun Statement.asBlock(): BlockStmt = BlockStmt(NodeList(this))
 
 fun Statement.withLineComment(comment: String): Statement = this.apply { setLineComment(comment) }
+
+fun MethodDeclaration.nameWithParams(): String =
+    "${this.nameAsString}${this.parameters.joinToString(", ", "(", ")") { it.typeAsString }}"
 
 fun String.asNameExpr(): NameExpr = NameExpr(this)
 
