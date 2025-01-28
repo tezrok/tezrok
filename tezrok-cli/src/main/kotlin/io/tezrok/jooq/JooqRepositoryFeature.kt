@@ -708,6 +708,7 @@ internal class JooqRepositoryFeature : TezrokFeature {
     }
 
     private fun processEntity(entity: EntityElem): EntityElem {
+        val alreadyProcessedFields = mutableSetOf<FieldElem>()
         // add custom methods for unique fields
         val uniqueFields = entity.fields.filter { it.isUnique() && it.isNotLogic() }
         val entityDto = "${entity.name}Dto"
@@ -718,14 +719,29 @@ internal class JooqRepositoryFeature : TezrokFeature {
                 .map { "getBy${it.name.upperFirst()}" to "Returns {@link $entityDto} by unique field {@link ${entity.name}Dto#${it.name}}." }
                 .toTypedArray()
             finalEntity = finalEntity.withMethods(*getMethods)
+            // generate method of deleting entity by unique fields
+            val deleteMethods = mutableListOf<Pair<String, String>>()
+            uniqueFields.forEach {
+                deleteMethods += "deleteBy${it.name.upperFirst()}" to "Deletes {@link $entityDto} by unique field {@link ${entity.name}Dto#${it.name}}.";
+                deleteMethods += "deleteBy${it.name.upperFirst()}In" to "Deletes list of {@link $entityDto} by list of unique fields {@link ${entity.name}Dto#${it.name}}.";
+            }
+            finalEntity = finalEntity.withMethods(*deleteMethods.toTypedArray())
+            // to avoid duplicate delete methods if field is indexed as well
+            alreadyProcessedFields.addAll(uniqueFields)
         }
         val indexFields = entity.fields.filter { it.hasIndex() && it.isNotLogic() }
         if (indexFields.isNotEmpty()) {
             // generate method of getting entity list by indexed fields
-            val findMethods = indexFields
+            val byIndexedMethods = indexFields
                 .map { "findBy${it.name.upperFirst()}" to "Returns list of {@link $entityDto} by indexed field {@link ${entity.name}Dto#${it.name}}." }
-                .toTypedArray()
-            finalEntity = finalEntity.withMethods(*findMethods)
+                .toMutableList()
+            // generate method of deleting entity by indexed fields
+            indexFields.filter { it !in alreadyProcessedFields }.forEach { field ->
+                byIndexedMethods += "deleteBy${field.name.upperFirst()}" to "Deletes {@link $entityDto} by indexed field {@link ${entity.name}Dto#${field.name}}.";
+                byIndexedMethods += "deleteBy${field.name.upperFirst()}In" to "Deletes list of {@link $entityDto} by list of indexed fields {@link ${entity.name}Dto#${field.name}}.";
+            }
+
+            finalEntity = finalEntity.withMethods(*byIndexedMethods.toTypedArray())
         }
 
         return finalEntity
