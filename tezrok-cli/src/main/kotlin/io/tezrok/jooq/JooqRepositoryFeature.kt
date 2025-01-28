@@ -708,27 +708,27 @@ internal class JooqRepositoryFeature : TezrokFeature {
     }
 
     private fun processEntity(entity: EntityElem): EntityElem {
-        val alreadyProcessedFields = mutableSetOf<FieldElem>()
         // add custom methods for unique fields
         val uniqueFields = entity.fields.filter { it.isUnique() && it.isNotLogic() }
-        val finalEntity = if (uniqueFields.isNotEmpty()) {
-            alreadyProcessedFields.addAll(uniqueFields)
-            val methodComments =
-                uniqueFields.map { "getBy${it.name.upperFirst()}" to "Returns {@link ${entity.name}Dto} by unique field {@link ${entity.name}Dto#${it.name}}." }
-                    .toTypedArray()
-            entity.withMethods(*methodComments)
-        } else {
-            entity
+        val entityDto = "${entity.name}Dto"
+        var finalEntity = entity
+        if (uniqueFields.isNotEmpty()) {
+            // generate method of getting entity by unique fields
+            val getMethods = uniqueFields
+                .map { "getBy${it.name.upperFirst()}" to "Returns {@link $entityDto} by unique field {@link ${entity.name}Dto#${it.name}}." }
+                .toTypedArray()
+            finalEntity = finalEntity.withMethods(*getMethods)
         }
         val indexFields = entity.fields.filter { it.hasIndex() && it.isNotLogic() }
-        return if (indexFields.isNotEmpty()) {
-            val methodComments = indexFields.filter { field -> field !in alreadyProcessedFields }
-                .map { "findBy${it.name.upperFirst()}" to "Returns list of {@link ${entity.name}Dto} by indexed field {@link ${entity.name}Dto#${it.name}}." }
+        if (indexFields.isNotEmpty()) {
+            // generate method of getting entity list by indexed fields
+            val findMethods = indexFields
+                .map { "findBy${it.name.upperFirst()}" to "Returns list of {@link $entityDto} by indexed field {@link ${entity.name}Dto#${it.name}}." }
                 .toTypedArray()
-            finalEntity.withMethods(*methodComments)
-        } else {
-            finalEntity
+            finalEntity = finalEntity.withMethods(*findMethods)
         }
+
+        return finalEntity
     }
 
     private fun FieldElem.maxSizeConstantName() = this.name.camelCaseToSnakeCase().uppercase() + "_MAX_LENGTH"
@@ -737,7 +737,6 @@ internal class JooqRepositoryFeature : TezrokFeature {
 
     private companion object {
         val log = LoggerFactory.getLogger(JooqRepositoryFeature::class.java)!!
-        val excludeFieldsFromPartyUpdate = setOf("active", "createdAt", "updatedAt")
         const val JOOQ_SINGLE_ID_REPO = "JooqRepository.java"
         const val JOOQ_TWO_ID_REPO = "JooqRepository2.java"
         const val JOOQ_BASE_REPO = "JooqBaseRepository.java"
