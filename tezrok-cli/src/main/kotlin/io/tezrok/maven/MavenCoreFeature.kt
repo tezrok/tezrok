@@ -28,15 +28,15 @@ internal class MavenCoreFeature : TezrokFeature {
             .withVersion(parentPomDependency.version)
 
         // add default properties
-        pomFile.addProperty("commons-lang3.version", "3.14.0")
-        pomFile.addProperty("logback.version", "1.5.11")
+        pomFile.addProperty("commons-lang3.version", "3.17.0")
+        pomFile.addProperty("logback.version", "1.5.16")
         pomFile.addProperty("slf4j-api.version", "2.0.16")
-        pomFile.addProperty("junit.version", "5.10.2")
-        pomFile.addProperty("lombok.version", "1.18.30")
+        pomFile.addProperty("junit.version", "5.11.4")
+        pomFile.addProperty("lombok.version", "1.18.36")
 
         // add default dependencies
         pomFile.addDependency("org.apache.commons:commons-lang3:${'$'}{commons-lang3.version}")
-        pomFile.addDependency("org.jetbrains:annotations:24.0.1")
+        pomFile.addDependency("org.jetbrains:annotations:26.0.2")
         pomFile.addDependency("org.projectlombok:lombok:${'$'}{lombok.version}")
         // add logging dependencies
         pomFile.addDependency("ch.qos.logback:logback-classic:${'$'}{logback.version}")
@@ -44,7 +44,7 @@ internal class MavenCoreFeature : TezrokFeature {
         // add testing dependencies
         pomFile.addDependency("org.junit.jupiter:junit-jupiter-api:${'$'}{junit.version}:test")
         pomFile.addDependency("org.junit.jupiter:junit-jupiter-engine:${'$'}{junit.version}:test")
-        pomFile.addDependency("org.junit.platform:junit-platform-launcher:1.10.2:test")
+        pomFile.addDependency("org.junit.platform:junit-platform-launcher:1.11.4:test")
         pomFile.addDependency("org.mockito:mockito-core:5.11.0:test");
 
         // add dependencies from project
@@ -79,7 +79,7 @@ internal class MavenCoreFeature : TezrokFeature {
      * Add maven-compiler-plugin to pom.xml
      */
     private fun addMavenCompilerPlugin(pomFile: PomNode, configPath: Boolean = false) {
-        val pluginNode = pomFile.addPluginDependency("org.apache.maven.plugins:maven-compiler-plugin:3.12.1")
+        val pluginNode = pomFile.addPluginDependency("org.apache.maven.plugins:maven-compiler-plugin:3.13.0")
         val configuration = pluginNode.getConfiguration().node
         // TODO: get java version from context
         configuration.getOrAdd("source", "17")

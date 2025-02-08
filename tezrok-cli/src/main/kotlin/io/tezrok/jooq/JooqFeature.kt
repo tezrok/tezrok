@@ -26,8 +26,8 @@ internal class JooqFeature : TezrokFeature {
         pomFile.addDependency("org.jooq:jooq:${'$'}{jooq.version}")
         pomFile.addDependency("org.jooq:jooq:${'$'}{jooq.version}")
         pomFile.addDependency("org.testcontainers:postgresql:${'$'}{testcontainers.version}:test")
-        pomFile.addProperty("testcontainers.version", "1.19.3")
-        pomFile.addProperty("jooq.version", "3.19.6")
+        pomFile.addProperty("testcontainers.version", "1.20.4")
+        pomFile.addProperty("jooq.version", "3.19.18")
         pomFile.addProperty("db.username", "postgres")
         pomFile.addProperty("db.password", "postgres")
 

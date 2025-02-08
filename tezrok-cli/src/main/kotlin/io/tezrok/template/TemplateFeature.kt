@@ -11,7 +11,7 @@ internal class TemplateFeature : TezrokFeature {
     override fun apply(project: ProjectNode, context: GeneratorContext): Boolean {
         val module = project.getSingleModule()
         val pom = module.pom
-        pom.addDependency("org.apache.velocity:velocity-engine-core:2.3")
+        pom.addDependency("org.apache.velocity:velocity-engine-core:2.4.1")
 
         val applicationPackageRoot = module.source.main.java.applicationPackageRoot
         if (applicationPackageRoot != null) {

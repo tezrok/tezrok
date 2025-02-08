@@ -28,7 +28,7 @@ internal class LiquibaseFeature : TezrokFeature {
         updateApplicationProperties(module, moduleElem)
         // update pom
         val pomFile = module.pom
-        pomFile.addProperty("liquibase.version", "4.25.0")
+        pomFile.addProperty("liquibase.version", "4.31.0")
         // create changelog files
         val properties = module.properties
         val resource = module.source.main.resources

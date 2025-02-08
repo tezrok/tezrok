@@ -21,7 +21,7 @@ internal class SpringFeature : TezrokFeature {
         val module = project.getSingleModule()
         val pom = module.pom
         // TODO: get spring version from context
-        pom.addProperty("spring-boot.version", "3.3.4")
+        pom.addProperty("spring-boot.version", "3.4.2")
         pom.addDependency("org.springframework.boot:spring-boot-starter:${'$'}{spring-boot.version}")
         pom.addDependency("org.springframework.boot:spring-boot-starter-validation:${'$'}{spring-boot.version}")
         pom.addDependency("org.springframework.data:spring-data-commons:${'$'}{spring-boot.version}")

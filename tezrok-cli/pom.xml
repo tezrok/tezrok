@@ -15,14 +15,16 @@
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <junit.version>5.10.2</junit.version>
-        <logback.version>1.5.11</logback.version>
-        <kotlin.version>1.9.23</kotlin.version>
-        <jackson.version>2.16.2</jackson.version>
+        <junit.version>5.11.4</junit.version>
+        <logback.version>1.5.16</logback.version>
+        <kotlin.version>2.1.10</kotlin.version>
+        <jackson.version>2.18.2</jackson.version>
         <slf4j-api.version>2.0.16</slf4j-api.version>
-        <spring-boot.version>3.3.4</spring-boot.version>
-        <spring.version>6.1.4</spring.version>
-        <jooq.version>3.19.6</jooq.version>
+        <spring-boot.version>3.4.2</spring-boot.version>
+        <spring.version>6.2.2</spring.version>
+        <jooq.version>3.19.18</jooq.version>
+        <lombok.version>1.18.36</lombok.version>
+        <velocity.version>2.3</velocity.version>
     </properties>
 
     <dependencies>
@@ -34,7 +36,7 @@
         <dependency>
             <groupId>org.apache.velocity</groupId>
             <artifactId>velocity-engine-core</artifactId>
-            <version>2.3</version>
+            <version>${velocity.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -106,7 +108,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.30</version>
+            <version>${lombok.version}</version>
         </dependency>
         <dependency>
             <groupId>jakarta.validation</groupId>
@@ -142,7 +144,7 @@
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-launcher</artifactId>
-            <version>1.10.2</version>
+            <version>1.11.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -154,13 +156,13 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>5.11.0</version>
+            <version>5.15.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito.kotlin</groupId>
             <artifactId>mockito-kotlin</artifactId>
-            <version>5.2.1</version>
+            <version>5.4.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -201,7 +203,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.12.1</version>
+                <version>3.13.0</version>
                 <executions>
                     <execution>
                         <id>compile</id>
@@ -226,7 +228,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.7.0</version>
+                <version>3.7.1</version>
                 <configuration>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
