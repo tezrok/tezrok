@@ -6,7 +6,7 @@
     <parent>
         <groupId>io.tezrok</groupId>
         <artifactId>tezrok</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>1.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>tezrok-cli</artifactId>
@@ -115,6 +115,11 @@
             <artifactId>jakarta.validation-api</artifactId>
             <version>3.0.2</version>
         </dependency>
+        <dependency>
+            <groupId>info.picocli</groupId>
+            <artifactId>picocli</artifactId>
+            <version>4.7.7</version>
+        </dependency>
 
         <!-- logging -->
         <dependency>
@@ -168,6 +173,7 @@
     </dependencies>
 
     <build>
+        <finalName>tezrok</finalName>
         <sourceDirectory>src/main/kotlin</sourceDirectory>
         <testSourceDirectory>src/test/kotlin</testSourceDirectory>
         <plugins>
@@ -235,7 +241,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>io.tezrok.cli.MainApp</mainClass>
+                            <mainClass>io.tezrok.cli.TezrokCliApp</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
