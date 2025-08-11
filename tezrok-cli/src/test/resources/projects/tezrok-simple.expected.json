@@ -153,6 +153,22 @@
                 "description": "Returns {@link OrderDto} by unique field {@link OrderDto#nextOrderId}."
               },
               {
+                "name": "deleteByName",
+                "description": "Deletes {@link OrderDto} by unique field {@link OrderDto#name}."
+              },
+              {
+                "name": "deleteByNameIn",
+                "description": "Deletes list of {@link OrderDto} by list of unique fields {@link OrderDto#name}."
+              },
+              {
+                "name": "deleteByNextOrderId",
+                "description": "Deletes {@link OrderDto} by unique field {@link OrderDto#nextOrderId}."
+              },
+              {
+                "name": "deleteByNextOrderIdIn",
+                "description": "Deletes list of {@link OrderDto} by list of unique fields {@link OrderDto#nextOrderId}."
+              },
+              {
                 "name": "findOrderLinkedOrdersByOrderId",
                 "description": "Returns list of {@link OrderDto} by primary field to support ManyToMany relation for field {@link OrderFullDto#linkedOrders}."
               },
@@ -528,6 +544,14 @@
                 "description": "Returns {@link UserAgentDto} by unique field {@link UserAgentDto#value}."
               },
               {
+                "name": "deleteByValue",
+                "description": "Deletes {@link UserAgentDto} by unique field {@link UserAgentDto#value}."
+              },
+              {
+                "name": "deleteByValueIn",
+                "description": "Deletes list of {@link UserAgentDto} by list of unique fields {@link UserAgentDto#value}."
+              },
+              {
                 "name": "getIdByValue",
                 "description": "Returns primary ID of {@link UserAgentDto} by unique field (value)."
               }
@@ -714,6 +738,22 @@
                 "description": "Returns {@link UserDto} by unique field {@link UserDto#email}."
               },
               {
+                "name": "deleteByName",
+                "description": "Deletes {@link UserDto} by unique field {@link UserDto#name}."
+              },
+              {
+                "name": "deleteByNameIn",
+                "description": "Deletes list of {@link UserDto} by list of unique fields {@link UserDto#name}."
+              },
+              {
+                "name": "deleteByEmail",
+                "description": "Deletes {@link UserDto} by unique field {@link UserDto#email}."
+              },
+              {
+                "name": "deleteByEmailIn",
+                "description": "Deletes list of {@link UserDto} by list of unique fields {@link UserDto#email}."
+              },
+              {
                 "name": "getIdByName",
                 "description": "Returns primary ID of {@link UserDto} by unique field (name)."
               },
@@ -856,6 +896,14 @@
                 "description": "Returns {@link RoleDto} by unique field {@link RoleDto#name}."
               },
               {
+                "name": "deleteByName",
+                "description": "Deletes {@link RoleDto} by unique field {@link RoleDto#name}."
+              },
+              {
+                "name": "deleteByNameIn",
+                "description": "Deletes list of {@link RoleDto} by list of unique fields {@link RoleDto#name}."
+              },
+              {
                 "name": "findUserRolesByUserId",
                 "description": "Returns list of {@link RoleDto} by primary field to support ManyToMany relation for field {@link UserFullDto#roles}."
               },
@@ -994,6 +1042,14 @@
               {
                 "name": "getByName",
                 "description": "Returns {@link PermissionDto} by unique field {@link PermissionDto#name}."
+              },
+              {
+                "name": "deleteByName",
+                "description": "Deletes {@link PermissionDto} by unique field {@link PermissionDto#name}."
+              },
+              {
+                "name": "deleteByNameIn",
+                "description": "Deletes list of {@link PermissionDto} by list of unique fields {@link PermissionDto#name}."
               },
               {
                 "name": "findRolePermissionsByRoleId",
@@ -1199,6 +1255,38 @@
               {
                 "name": "getByApiKey",
                 "description": "Returns {@link UserProfileDto} by unique field {@link UserProfileDto#apiKey}."
+              },
+              {
+                "name": "deleteByUserId",
+                "description": "Deletes {@link UserProfileDto} by unique field {@link UserProfileDto#userId}."
+              },
+              {
+                "name": "deleteByUserIdIn",
+                "description": "Deletes list of {@link UserProfileDto} by list of unique fields {@link UserProfileDto#userId}."
+              },
+              {
+                "name": "deleteByActivationCode",
+                "description": "Deletes {@link UserProfileDto} by unique field {@link UserProfileDto#activationCode}."
+              },
+              {
+                "name": "deleteByActivationCodeIn",
+                "description": "Deletes list of {@link UserProfileDto} by list of unique fields {@link UserProfileDto#activationCode}."
+              },
+              {
+                "name": "deleteByPasswordResetCode",
+                "description": "Deletes {@link UserProfileDto} by unique field {@link UserProfileDto#passwordResetCode}."
+              },
+              {
+                "name": "deleteByPasswordResetCodeIn",
+                "description": "Deletes list of {@link UserProfileDto} by list of unique fields {@link UserProfileDto#passwordResetCode}."
+              },
+              {
+                "name": "deleteByApiKey",
+                "description": "Deletes {@link UserProfileDto} by unique field {@link UserProfileDto#apiKey}."
+              },
+              {
+                "name": "deleteByApiKeyIn",
+                "description": "Deletes list of {@link UserProfileDto} by list of unique fields {@link UserProfileDto#apiKey}."
               },
               {
                 "name": "getIdFieldsById",
