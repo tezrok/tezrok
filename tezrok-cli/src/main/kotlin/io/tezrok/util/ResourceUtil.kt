@@ -13,7 +13,7 @@ object ResourceUtil {
     }
 
     fun getResourceAsLines(path: String): List<String> {
-        return javaClass.getResource(path)?.toURI()?.toPath()?.toFile()?.readLines()
+        return javaClass.getResourceAsStream(path)?.bufferedReader()?.readLines()
             ?: throw Exception("Resource not found: $path")
     }
 

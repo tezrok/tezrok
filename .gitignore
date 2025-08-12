@@ -3,3 +3,4 @@
 target
 tezrok-core/output
 /tezrok-cli/output/
+/samples/tezrok-hello/

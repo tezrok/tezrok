@@ -30,7 +30,7 @@ internal class ControllerFeature : TezrokFeature {
         val applicationPackageRoot = module.source.main.java.applicationPackageRoot
         val pom = module.pom
         pom.addDependency("org.springframework.boot:spring-boot-starter-web:${'$'}{spring-boot.version}")
-        pom.addDependency("org.apache.httpcomponents.client5:httpclient5:5.3.1")
+        pom.addDependency("org.apache.httpcomponents.client5:httpclient5:5.5")
 
         if (applicationPackageRoot != null) {
             val projectElem = context.getProject()

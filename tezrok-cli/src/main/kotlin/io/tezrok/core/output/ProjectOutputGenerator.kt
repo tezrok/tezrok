@@ -32,7 +32,7 @@ class ProjectOutputGenerator {
         generateFiles(project, outputDir)
 
         val seconds = (System.currentTimeMillis() - startTime) / 1000
-        log.debug("Project generated in {} sec", seconds)
+        log.debug("Project generated in {} sec into {}", seconds, outputDir.toAbsolutePath())
     }
 
     private fun generateFiles(dirNode: BaseFileNode, outputDir: Path) {

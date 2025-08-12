@@ -24,8 +24,7 @@ class TezrokCliApp : Callable<Int> {
 
     @CommandLine.Option(
         names = ["-o", "--output"],
-        description = ["output directory for generated project files"],
-        defaultValue = "output"
+        description = ["output directory for generated project files"]
     )
     private var projectOutput: Path? = null
 
@@ -43,13 +42,15 @@ class TezrokCliApp : Callable<Int> {
             return 2
         }
 
-        val projectOutput = projectOutput ?: projectPath.parent.resolve("output")
+        val projectFolderName = projectPath.fileName.toString().removeSuffix(".json")
+        val projectOutput = projectOutput ?: projectPath.parent.resolve(projectFolderName)
 
+        val username = System.getProperty("user.name")
         val builder = TezrokBuilder.from(projectPath)
             .setOutput(projectOutput)
             .setOutputFinalProject(true)
             .setGenerateTime(false)
-            .setAuthorLogin("timelineAdmin")
+            .setAuthorLogin(username)
             .setFinalProjectPath(projectPath.parent)
 
         val fixedTime = fixedTime
